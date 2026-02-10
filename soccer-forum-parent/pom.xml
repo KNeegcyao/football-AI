@@ -24,7 +24,7 @@
         <springdoc.version>2.2.0</springdoc.version>
         <hutool.version>5.8.25</hutool.version>
         <langchain4j.version>0.31.0</langchain4j.version>
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <wx-java.version>4.7.0</wx-java.version>
     </properties>
 
@@ -33,7 +33,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.34</version>
+                <version>${lombok.version}</version>
             </dependency>
             <!-- Spring Boot Dependencies -->
             <dependency>

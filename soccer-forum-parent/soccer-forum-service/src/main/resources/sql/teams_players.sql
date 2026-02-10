@@ -1,0 +1,50 @@
+-- 球队表
+CREATE TABLE IF NOT EXISTS teams (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL COMMENT '球队名称',
+    logo_url VARCHAR(500) COMMENT '队徽URL',
+    founded_year INT COMMENT '成立年份',
+    home_stadium VARCHAR(100) COMMENT '主场',
+    league VARCHAR(50) COMMENT '所属联赛',
+    coach_name VARCHAR(50) COMMENT '主教练',
+    formation VARCHAR(20) COMMENT '常用阵型',
+    total_matches INT DEFAULT 0 COMMENT '总比赛场次',
+    wins INT DEFAULT 0 COMMENT '胜场',
+    draws INT DEFAULT 0 COMMENT '平场',
+    losses INT DEFAULT 0 COMMENT '负场',
+    goals_for INT DEFAULT 0 COMMENT '进球数',
+    goals_against INT DEFAULT 0 COMMENT '失球数',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_league (league),
+    INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='球队表';
+
+-- 球员表
+CREATE TABLE IF NOT EXISTS players (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT '球员姓名',
+    photo_url VARCHAR(500) COMMENT '照片URL',
+    birth_date DATE COMMENT '出生日期',
+    nationality VARCHAR(50) COMMENT '国籍',
+    position VARCHAR(20) COMMENT '场上位置',
+    height INT COMMENT '身高(cm)',
+    weight INT COMMENT '体重(kg)',
+    preferred_foot VARCHAR(10) COMMENT '惯用脚',
+    current_team_id BIGINT COMMENT '当前所属球队ID',
+    jersey_number INT COMMENT '球衣号码',
+    market_value DECIMAL(12,2) COMMENT '身价(万欧元)',
+    contract_until DATE COMMENT '合同到期日',
+    appearances INT DEFAULT 0 COMMENT '出场次数',
+    goals INT DEFAULT 0 COMMENT '进球数',
+    assists INT DEFAULT 0 COMMENT '助攻数',
+    yellow_cards INT DEFAULT 0 COMMENT '黄牌数',
+    red_cards INT DEFAULT 0 COMMENT '红牌数',
+    career_history JSON COMMENT '生涯轨迹(JSON)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (current_team_id) REFERENCES teams(id),
+    INDEX idx_name (name),
+    INDEX idx_team (current_team_id),
+    INDEX idx_position (position)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='球员表';
