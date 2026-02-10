@@ -1,7 +1,8 @@
 package com.soccer.forum.service.config;
 
 import com.soccer.forum.service.security.filter.JwtAuthenticationTokenFilter;
-import com.soccer.forum.service.security.handle.AuthenticationEntryPointImpl;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import com.soccer.forum.service.utils.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,21 +18,27 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationTokenFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
-    private final AuthenticationEntryPointImpl unauthorizedHandler;
+    private final AuthenticationEntryPoint unauthorizedHandler;
+    private final JwtUtils jwtUtils;
 
-    public SecurityConfig(JwtAuthenticationTokenFilter jwtAuthFilter, 
-                          UserDetailsService userDetailsService, 
-                          AuthenticationEntryPointImpl unauthorizedHandler) {
-        this.jwtAuthFilter = jwtAuthFilter;
+    public SecurityConfig(UserDetailsService userDetailsService, 
+                          AuthenticationEntryPoint unauthorizedHandler,
+                          JwtUtils jwtUtils) {
         this.userDetailsService = userDetailsService;
         this.unauthorizedHandler = unauthorizedHandler;
+        this.jwtUtils = jwtUtils;
+    }
+
+    @Bean
+    public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter() {
+        return new JwtAuthenticationTokenFilter(userDetailsService, jwtUtils);
     }
 
     @Bean
@@ -41,11 +48,15 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
             
         return http.build();
     }

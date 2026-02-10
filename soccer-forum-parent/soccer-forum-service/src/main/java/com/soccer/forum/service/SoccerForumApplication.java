@@ -10,6 +10,8 @@ import org.springframework.context.annotation.ComponentScan;
 @MapperScan("com.soccer.forum.service.mapper")
 public class SoccerForumApplication {
     public static void main(String[] args) {
+        System.err.println("DEBUG: Application Starting...");
         SpringApplication.run(SoccerForumApplication.class, args);
+        System.err.println("DEBUG: Application Started...");
     }
 }

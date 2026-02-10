@@ -5,18 +5,20 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationTokenFilter.class);
 
     private final UserDetailsService userDetailsService;
     private final JwtUtils jwtUtils;
@@ -27,8 +29,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        
         final String authHeader = request.getHeader("Authorization");
+
         final String jwt;
         final String username;
 
@@ -53,7 +58,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Token invalid or expired, ignore to let AuthenticationEntryPoint handle it
+            log.error("Token processing error: {}", e.getMessage());
         }
         
         filterChain.doFilter(request, response);

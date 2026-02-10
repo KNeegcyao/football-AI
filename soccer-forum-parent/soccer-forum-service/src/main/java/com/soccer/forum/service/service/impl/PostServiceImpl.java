@@ -9,6 +9,7 @@ import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.service.PostService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import java.time.LocalDateTime;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -20,7 +21,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void createPost(PostCreateReq req, Long userId) {
+    public Long createPost(PostCreateReq req, Long userId) {
         Post post = new Post();
         post.setTitle(req.getTitle());
         post.setContent(req.getContent());
@@ -28,7 +29,10 @@ public class PostServiceImpl implements PostService {
         post.setViews(0);
         post.setLikes(0);
         post.setStatus(1);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
         postMapper.insert(post);
+        return post.getId();
     }
 
     @Override

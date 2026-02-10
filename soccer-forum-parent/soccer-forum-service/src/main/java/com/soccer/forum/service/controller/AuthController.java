@@ -10,9 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
 
@@ -22,6 +26,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody LoginBody loginBody) {
+        log.info("DEBUG: AuthController.login called with username: {}", loginBody.getUsername());
         String token = authService.login(loginBody);
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);

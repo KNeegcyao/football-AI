@@ -6,7 +6,7 @@ import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
 
 public interface PostService {
-    void createPost(PostCreateReq req, Long userId);
+    Long createPost(PostCreateReq req, Long userId);
     Post getPostById(Long id);
     Page<Post> getPostPage(PostPageReq req);
     void deletePost(Long id, Long userId);

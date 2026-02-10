@@ -18,12 +18,12 @@
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.2.0</spring-boot.version>
+        <spring-boot.version>3.2.5</spring-boot.version>
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <jjwt.version>0.11.5</jjwt.version>
         <springdoc.version>2.2.0</springdoc.version>
         <hutool.version>5.8.25</hutool.version>
-        <langchain4j.version>0.25.0</langchain4j.version>
+        <langchain4j.version>0.31.0</langchain4j.version>
         <lombok.version>1.18.34</lombok.version>
         <wx-java.version>4.7.0</wx-java.version>
     </properties>
@@ -63,9 +63,9 @@
                 <version>${mybatis-plus.version}</version>
             </dependency>
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>8.0.33</version>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>8.3.0</version>
             </dependency>
 
             <!-- Utils -->
@@ -123,8 +123,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.12.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
         </plugins>

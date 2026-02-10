@@ -9,6 +9,7 @@ import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.service.FavoriteService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +41,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             Favorite favorite = new Favorite();
             favorite.setPostId(postId);
             favorite.setUserId(userId);
+            favorite.setCreatedAt(LocalDateTime.now());
             favoriteMapper.insert(favorite);
             return true;
         }

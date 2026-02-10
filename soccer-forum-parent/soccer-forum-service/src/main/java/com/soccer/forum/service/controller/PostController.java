@@ -7,22 +7,27 @@ import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.Map;
+import org.springframework.web.bind.annotation.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-
+    
     private final PostService postService;
 
     public PostController(PostService postService) {
         this.postService = postService;
     }
 
+
     @PostMapping
-    public String create(@RequestBody PostCreateReq req, @AuthenticationPrincipal LoginUser loginUser) {
-        postService.createPost(req, loginUser.getUser().getId());
-        return "success";
+    public Map<String, Object> create(@RequestBody PostCreateReq req, @AuthenticationPrincipal LoginUser loginUser) {
+        Long postId = postService.createPost(req, loginUser.getUser().getId());
+        return Map.of("code", 200, "msg", "success", "data", Map.of("id", postId));
     }
 
     @GetMapping("/{id}")
