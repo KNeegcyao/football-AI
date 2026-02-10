@@ -61,3 +61,10 @@ desktop.ini
 # Local configuration
 application-local.yml
 .env
+# Ignore accidental dependency extraction
+/soccer-forum-parent/ch/
+/soccer-forum-parent/com/
+/soccer-forum-parent/io/
+/soccer-forum-parent/jakarta/
+/soccer-forum-parent/mysql/
+/soccer-forum-parent/org/
