@@ -5,9 +5,11 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.model.dto.FavoriteReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.FavoriteService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "收藏管理", description = "收藏功能接口")
 @RestController
 @RequestMapping("/api/favorites")
 public class FavoriteController {

@@ -6,9 +6,11 @@ import com.soccer.forum.service.model.dto.CommentPageReq;
 import com.soccer.forum.service.model.dto.CommentResp;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.CommentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "评论管理", description = "评论功能接口")
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {
