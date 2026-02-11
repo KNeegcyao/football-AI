@@ -3,14 +3,17 @@ package com.soccer.forum.service.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Comment;
+import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.service.mapper.CommentMapper;
+import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.mapper.UserMapper;
 import com.soccer.forum.service.model.dto.CommentCreateReq;
 import com.soccer.forum.service.model.dto.CommentPageReq;
 import com.soccer.forum.service.model.dto.CommentResp;
 import com.soccer.forum.service.service.CommentService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +28,14 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentMapper commentMapper;
     private final UserMapper userMapper;
+    private final PostMapper postMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public CommentServiceImpl(CommentMapper commentMapper, UserMapper userMapper) {
+    public CommentServiceImpl(CommentMapper commentMapper, UserMapper userMapper, PostMapper postMapper, RedisTemplate<String, Object> redisTemplate) {
         this.commentMapper = commentMapper;
         this.userMapper = userMapper;
+        this.postMapper = postMapper;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -62,6 +69,17 @@ public class CommentServiceImpl implements CommentService {
         }
 
         commentMapper.insert(comment);
+        
+        // 更新帖子评论数
+        Post post = postMapper.selectById(req.getPostId());
+        if (post != null) {
+            post.setCommentCount(post.getCommentCount() + 1);
+            postMapper.updateById(post);
+            
+            // 清除帖子详情缓存
+            String cacheKey = "post:detail:" + req.getPostId();
+            redisTemplate.delete(cacheKey);
+        }
     }
 
     @Override
@@ -123,11 +141,23 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long id, Long userId) {
         Comment comment = commentMapper.selectById(id);
         if (comment != null && comment.getUserId().equals(userId)) {
             comment.setStatus(0);
             commentMapper.updateById(comment);
+            
+            // 更新帖子评论数
+            Post post = postMapper.selectById(comment.getPostId());
+            if (post != null && post.getCommentCount() > 0) {
+                post.setCommentCount(post.getCommentCount() - 1);
+                postMapper.updateById(post);
+                
+                // 清除帖子详情缓存
+                String cacheKey = "post:detail:" + comment.getPostId();
+                redisTemplate.delete(cacheKey);
+            }
         }
     }
 

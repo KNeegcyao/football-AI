@@ -14,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,10 +28,10 @@ class PostServiceTest {
     private PostMapper postMapper;
 
     @Mock
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Mock
-    private ValueOperations<String, String> valueOperations;
+    private ValueOperations<String, Object> valueOperations;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -74,6 +74,7 @@ class PostServiceTest {
     void getPostById_Found_IncrementsViews_Redis() {
         when(postMapper.selectById(postId)).thenReturn(post);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(null); // Cache miss
         when(valueOperations.increment(anyString())).thenReturn(1L);
 
         Post result = postService.getPostById(postId);
@@ -88,6 +89,7 @@ class PostServiceTest {
     void getPostById_Found_SyncsToDB_Every10thView() {
         when(postMapper.selectById(postId)).thenReturn(post);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(null); // Cache miss
         when(valueOperations.increment(anyString())).thenReturn(10L);
 
         Post result = postService.getPostById(postId);
@@ -98,7 +100,22 @@ class PostServiceTest {
     }
 
     @Test
+    void getPostById_CacheHit() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("post:detail:" + postId)).thenReturn(post);
+        when(valueOperations.increment(anyString())).thenReturn(1L);
+
+        Post result = postService.getPostById(postId);
+
+        assertNotNull(result);
+        assertEquals(postId, result.getId());
+        verify(postMapper, never()).selectById(anyLong());
+    }
+
+    @Test
     void getPostById_NotFound() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(null);
         when(postMapper.selectById(999L)).thenReturn(null);
 
         Post result = postService.getPostById(999L);
@@ -131,6 +148,7 @@ class PostServiceTest {
         
         assertEquals(0, post.getStatus()); // Should be marked as deleted
         verify(postMapper).updateById(post);
+        verify(redisTemplate).delete("post:detail:" + postId);
     }
 
     @Test

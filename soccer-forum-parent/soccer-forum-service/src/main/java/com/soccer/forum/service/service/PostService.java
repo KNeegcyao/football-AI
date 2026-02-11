@@ -42,6 +42,15 @@ public interface PostService {
     Page<Post> getPostPage(PostPageReq req);
 
     /**
+     * 更新帖子
+     *
+     * @param id 帖子 ID
+     * @param req 更新请求参数
+     * @param userId 操作用户 ID
+     */
+    void updatePost(Long id, PostCreateReq req, Long userId);
+
+    /**
      * 删除帖子
      *
      * @param id 帖子 ID

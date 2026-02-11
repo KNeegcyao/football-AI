@@ -16,6 +16,7 @@ public class Post implements Serializable {
     private Long userId;
     private Integer views;
     private Integer likes;
+    private Integer commentCount;
     private Integer status; // 1:正常 0:删除
 
     @TableField(fill = FieldFill.INSERT)
@@ -42,6 +43,9 @@ public class Post implements Serializable {
 
     public Integer getLikes() { return likes; }
     public void setLikes(Integer likes) { this.likes = likes; }
+
+    public Integer getCommentCount() { return commentCount; }
+    public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
 
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }

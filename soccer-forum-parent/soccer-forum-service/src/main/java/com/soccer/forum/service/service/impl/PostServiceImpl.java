@@ -9,10 +9,12 @@ import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.service.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 帖子服务实现类
@@ -29,9 +31,9 @@ public class PostServiceImpl implements PostService {
     private static final Logger log = LoggerFactory.getLogger(PostServiceImpl.class);
 
     private final PostMapper postMapper;
-    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public PostServiceImpl(PostMapper postMapper, org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+    public PostServiceImpl(PostMapper postMapper, RedisTemplate<String, Object> redisTemplate) {
         this.postMapper = postMapper;
         this.redisTemplate = redisTemplate;
     }
@@ -55,6 +57,7 @@ public class PostServiceImpl implements PostService {
         post.setUserId(userId);
         post.setViews(0);
         post.setLikes(0);
+        post.setCommentCount(0);
         post.setStatus(1); // 1: Normal
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
@@ -77,20 +80,44 @@ public class PostServiceImpl implements PostService {
     @Override
     public Post getPostById(Long id) {
         log.debug("获取帖子详情: id={}", id);
+        
+        // 1. 查缓存
+        String cacheKey = "post:detail:" + id;
+        Object cachedPost = redisTemplate.opsForValue().get(cacheKey);
+        if (cachedPost instanceof Post) {
+            log.debug("帖子详情命中缓存: id={}", id);
+            Post post = (Post) cachedPost;
+            
+            // 异步增加浏览量 (Redis)
+            String viewKey = "post:views:" + id;
+            redisTemplate.opsForValue().increment(viewKey);
+            
+            // 简单处理：返回时合并实时浏览量
+            // 注意：这里没有从Redis读最新的view count覆盖缓存里的，
+            // 而是为了性能直接返回缓存。浏览量更新逻辑在下面。
+            return post;
+        }
+
+        // 2. 查数据库
         Post post = postMapper.selectById(id);
         if (post != null) {
+            // 3. 写缓存 (TTL 10分钟)
+            redisTemplate.opsForValue().set(cacheKey, post, 10, TimeUnit.MINUTES);
+            
             // 使用 Redis 增加浏览量
-            String key = "post:views:" + id;
-            Long views = redisTemplate.opsForValue().increment(key);
+            String viewKey = "post:views:" + id;
+            Long views = redisTemplate.opsForValue().increment(viewKey);
             
             // 每 10 次访问同步一次数据库，减轻数据库压力
             if (views != null && views % 10 == 0) {
                 post.setViews(post.getViews() + 10);
                 postMapper.updateById(post);
                 log.debug("同步帖子浏览量到数据库: id={}, views={}", id, post.getViews());
+                
+                // 更新数据库后，更新缓存
+                redisTemplate.opsForValue().set(cacheKey, post, 10, TimeUnit.MINUTES);
             } else {
                 // 仅在内存对象中增加，用于返回给前端展示实时数据
-                // 注意：这里只是临时显示，数据库中可能滞后
                 post.setViews(post.getViews() + (views == null ? 0 : views.intValue() % 10));
             }
         }
@@ -124,6 +151,36 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
+     * 更新帖子实现
+     *
+     * @param id 帖子 ID
+     * @param req 更新请求参数
+     * @param userId 操作用户 ID
+     */
+    @Override
+    public void updatePost(Long id, PostCreateReq req, Long userId) {
+        log.debug("更新帖子: id={}, 用户ID={}", id, userId);
+        Post post = postMapper.selectById(id);
+        if (post == null) {
+            throw new RuntimeException("帖子不存在");
+        }
+        if (!post.getUserId().equals(userId)) {
+            throw new RuntimeException("权限不足: 只能更新自己的帖子");
+        }
+
+        post.setTitle(req.getTitle());
+        post.setContent(req.getContent());
+        post.setUpdatedAt(LocalDateTime.now());
+        
+        postMapper.updateById(post);
+        
+        // 清除缓存
+        String cacheKey = "post:detail:" + id;
+        redisTemplate.delete(cacheKey);
+        log.debug("更新帖子并清除缓存: id={}", id);
+    }
+
+    /**
      * 删除帖子实现
      * <p>
      * 校验操作权限（仅作者可删），执行逻辑删除（状态置为0）。
@@ -141,6 +198,11 @@ public class PostServiceImpl implements PostService {
             if (post.getUserId().equals(userId)) {
                 post.setStatus(0); // 0: Deleted
                 postMapper.updateById(post);
+                
+                // 清除缓存
+                String cacheKey = "post:detail:" + id;
+                redisTemplate.delete(cacheKey);
+                
                 log.info("帖子删除成功(逻辑删除): id={}", id);
             } else {
                 log.warn("删除失败: 用户 {} 尝试删除非本人帖子 {}", userId, id);
