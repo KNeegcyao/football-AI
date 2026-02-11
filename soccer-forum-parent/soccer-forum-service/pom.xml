@@ -16,6 +16,10 @@
             <groupId>com.soccer.forum</groupId>
             <artifactId>soccer-forum-domain</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.soccer.forum</groupId>
+            <artifactId>soccer-forum-common</artifactId>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.github.binarywang</groupId>-->
 <!--            <artifactId>wx-java-miniapp-spring-boot-starter</artifactId>-->
