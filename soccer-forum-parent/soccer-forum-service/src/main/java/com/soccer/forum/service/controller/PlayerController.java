@@ -1,6 +1,7 @@
 package com.soccer.forum.service.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.service.service.PlayerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 球员管理控制器
@@ -46,20 +45,15 @@ public class PlayerController {
      */
     @Operation(summary = "创建球员", description = "录入新球员信息")
     @PostMapping("/players")
-    public Map<String, Object> create(@RequestBody Player player) {
+    public R<Long> create(@RequestBody Player player) {
         log.info("收到创建球员请求: 姓名={}", player.getName());
         try {
             Long id = playerService.createPlayer(player);
             log.info("球员创建成功: id={}, 姓名={}", id, player.getName());
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            result.put("data", id);
-            return result;
+            return R.ok(id);
         } catch (Exception e) {
             log.error("球员创建失败: 姓名={}", player.getName(), e);
-            throw e;
+            return R.fail("球员创建失败: " + e.getMessage());
         }
     }
 
@@ -74,15 +68,10 @@ public class PlayerController {
      */
     @Operation(summary = "获取球员详情", description = "根据ID查询球员详细信息")
     @GetMapping("/players/{id}")
-    public Map<String, Object> get(@PathVariable Long id) {
+    public R<Player> get(@PathVariable Long id) {
         log.info("收到获取球员详情请求: id={}", id);
         Player player = playerService.getPlayerDetail(id);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", player);
-        return result;
+        return R.ok(player);
     }
 
     /**
@@ -97,19 +86,15 @@ public class PlayerController {
      */
     @Operation(summary = "更新球员信息", description = "更新已存在的球员信息")
     @PutMapping("/players/{id}")
-    public Map<String, Object> update(@PathVariable Long id, @RequestBody Player player) {
+    public R<Void> update(@PathVariable Long id, @RequestBody Player player) {
         log.info("收到更新球员请求: id={}", id);
         try {
             playerService.updatePlayer(id, player);
             log.info("球员更新成功: id={}", id);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            return result;
+            return R.ok();
         } catch (Exception e) {
             log.error("球员更新失败: id={}", id, e);
-            throw e;
+            return R.fail("球员更新失败: " + e.getMessage());
         }
     }
 
@@ -124,19 +109,15 @@ public class PlayerController {
      */
     @Operation(summary = "删除球员", description = "删除球员数据")
     @DeleteMapping("/players/{id}")
-    public Map<String, Object> delete(@PathVariable Long id) {
+    public R<Void> delete(@PathVariable Long id) {
         log.info("收到删除球员请求: id={}", id);
         try {
             playerService.deletePlayer(id);
             log.info("球员删除成功: id={}", id);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            return result;
+            return R.ok();
         } catch (Exception e) {
             log.error("球员删除失败: id={}", id, e);
-            throw e;
+            return R.fail("球员删除失败: " + e.getMessage());
         }
     }
 
@@ -154,18 +135,13 @@ public class PlayerController {
      */
     @Operation(summary = "分页查询球员", description = "支持按名称、国籍、位置等关键词搜索，或按球队筛选")
     @GetMapping("/players")
-    public Map<String, Object> list(@RequestParam(defaultValue = "1") Integer page,
-                                    @RequestParam(defaultValue = "10") Integer size,
-                                    @RequestParam(required = false) String keyword,
-                                    @RequestParam(required = false) Long teamId) {
+    public R<Page<Player>> list(@RequestParam(defaultValue = "1") Integer page,
+                                @RequestParam(defaultValue = "10") Integer size,
+                                @RequestParam(required = false) String keyword,
+                                @RequestParam(required = false) Long teamId) {
         log.info("收到分页查询球员请求: 页码={}, 大小={}, 关键词={}, 球队ID={}", page, size, keyword, teamId);
         Page<Player> result = playerService.listPlayers(page, size, keyword, teamId);
-        
-        Map<String, Object> map = new HashMap<>();
-        map.put("code", 200);
-        map.put("msg", "success");
-        map.put("data", result);
-        return map;
+        return R.ok(result);
     }
 
     /**
@@ -179,14 +155,9 @@ public class PlayerController {
      */
     @Operation(summary = "查询球队所有球员", description = "获取指定球队的球员列表")
     @GetMapping("/teams/{teamId}/players")
-    public Map<String, Object> listByTeam(@PathVariable Long teamId) {
+    public R<List<Player>> listByTeam(@PathVariable Long teamId) {
         log.info("收到查询球队球员请求: 球队ID={}", teamId);
         List<Player> players = playerService.getPlayersByTeam(teamId);
-        
-        Map<String, Object> map = new HashMap<>();
-        map.put("code", 200);
-        map.put("msg", "success");
-        map.put("data", players);
-        return map;
+        return R.ok(players);
     }
 }

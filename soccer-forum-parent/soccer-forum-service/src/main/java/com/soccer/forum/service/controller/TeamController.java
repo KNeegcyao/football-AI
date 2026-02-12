@@ -1,6 +1,7 @@
 package com.soccer.forum.service.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,9 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 球队管理控制器
@@ -45,20 +43,15 @@ public class TeamController {
      */
     @Operation(summary = "创建球队", description = "录入新球队信息")
     @PostMapping
-    public Map<String, Object> create(@RequestBody Team team) {
+    public R<Long> create(@RequestBody Team team) {
         log.info("收到创建球队请求: 名称={}", team.getName());
         try {
             Long id = teamService.createTeam(team);
             log.info("球队创建成功: id={}, 名称={}", id, team.getName());
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            result.put("data", id);
-            return result;
+            return R.ok(id);
         } catch (Exception e) {
             log.error("球队创建失败: 名称={}", team.getName(), e);
-            throw e;
+            return R.fail("球队创建失败: " + e.getMessage());
         }
     }
 
@@ -73,15 +66,10 @@ public class TeamController {
      */
     @Operation(summary = "获取球队详情", description = "根据ID查询球队详细信息")
     @GetMapping("/{id}")
-    public Map<String, Object> get(@PathVariable Long id) {
+    public R<Team> get(@PathVariable Long id) {
         log.info("收到获取球队详情请求: id={}", id);
         Team team = teamService.getTeamDetail(id);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", team);
-        return result;
+        return R.ok(team);
     }
 
     /**
@@ -96,19 +84,15 @@ public class TeamController {
      */
     @Operation(summary = "更新球队信息", description = "更新已存在的球队信息")
     @PutMapping("/{id}")
-    public Map<String, Object> update(@PathVariable Long id, @RequestBody Team team) {
+    public R<Void> update(@PathVariable Long id, @RequestBody Team team) {
         log.info("收到更新球队请求: id={}", id);
         try {
             teamService.updateTeam(id, team);
             log.info("球队更新成功: id={}", id);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            return result;
+            return R.ok();
         } catch (Exception e) {
             log.error("球队更新失败: id={}", id, e);
-            throw e;
+            return R.fail("球队更新失败: " + e.getMessage());
         }
     }
 
@@ -123,19 +107,15 @@ public class TeamController {
      */
     @Operation(summary = "删除球队", description = "删除球队数据")
     @DeleteMapping("/{id}")
-    public Map<String, Object> delete(@PathVariable Long id) {
+    public R<Void> delete(@PathVariable Long id) {
         log.info("收到删除球队请求: id={}", id);
         try {
             teamService.deleteTeam(id);
             log.info("球队删除成功: id={}", id);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            return result;
+            return R.ok();
         } catch (Exception e) {
             log.error("球队删除失败: id={}", id, e);
-            throw e;
+            return R.fail("球队删除失败: " + e.getMessage());
         }
     }
 
@@ -152,16 +132,11 @@ public class TeamController {
      */
     @Operation(summary = "分页查询球队", description = "支持按名称或联赛关键词搜索")
     @GetMapping
-    public Map<String, Object> list(@RequestParam(defaultValue = "1") Integer page,
-                                    @RequestParam(defaultValue = "10") Integer size,
-                                    @RequestParam(required = false) String keyword) {
+    public R<Page<Team>> list(@RequestParam(defaultValue = "1") Integer page,
+                              @RequestParam(defaultValue = "10") Integer size,
+                              @RequestParam(required = false) String keyword) {
         log.info("收到分页查询球队请求: 页码={}, 大小={}, 关键词={}", page, size, keyword);
         Page<Team> result = teamService.listTeams(page, size, keyword);
-        
-        Map<String, Object> map = new HashMap<>();
-        map.put("code", 200);
-        map.put("msg", "success");
-        map.put("data", result);
-        return map;
+        return R.ok(result);
     }
 }
