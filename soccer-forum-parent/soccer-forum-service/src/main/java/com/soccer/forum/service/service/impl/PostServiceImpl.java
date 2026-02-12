@@ -2,6 +2,8 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.model.dto.PostCreateReq;
@@ -11,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -49,6 +52,7 @@ public class PostServiceImpl implements PostService {
      * @return 新创建帖子的 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createPost(PostCreateReq req, Long userId) {
         log.debug("创建帖子: 用户ID={}, 标题={}", userId, req.getTitle());
         Post post = new Post();
@@ -120,6 +124,9 @@ public class PostServiceImpl implements PostService {
                 // 仅在内存对象中增加，用于返回给前端展示实时数据
                 post.setViews(post.getViews() + (views == null ? 0 : views.intValue() % 10));
             }
+        } else {
+            log.warn("获取帖子失败, 帖子不存在: id={}", id);
+            throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
         return post;
     }
@@ -158,14 +165,15 @@ public class PostServiceImpl implements PostService {
      * @param userId 操作用户 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updatePost(Long id, PostCreateReq req, Long userId) {
         log.debug("更新帖子: id={}, 用户ID={}", id, userId);
         Post post = postMapper.selectById(id);
         if (post == null) {
-            throw new RuntimeException("帖子不存在");
+            throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
         if (!post.getUserId().equals(userId)) {
-            throw new RuntimeException("权限不足: 只能更新自己的帖子");
+            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
         }
 
         post.setTitle(req.getTitle());
@@ -191,26 +199,25 @@ public class PostServiceImpl implements PostService {
      * @throws RuntimeException 当帖子不存在或无权删除时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePost(Long id, Long userId) {
         log.debug("删除帖子: 帖子ID={}, 用户ID={}", id, userId);
         Post post = postMapper.selectById(id);
-        if (post != null) {
-            if (post.getUserId().equals(userId)) {
-                post.setStatus(0); // 0: Deleted
-                postMapper.updateById(post);
-                
-                // 清除缓存
-                String cacheKey = "post:detail:" + id;
-                redisTemplate.delete(cacheKey);
-                
-                log.info("帖子删除成功(逻辑删除): id={}", id);
-            } else {
-                log.warn("删除失败: 用户 {} 尝试删除非本人帖子 {}", userId, id);
-                throw new RuntimeException("权限不足: 只能删除自己的帖子");
-            }
-        } else {
-            log.warn("删除失败: 未找到帖子 id={}", id);
-            throw new RuntimeException("未找到帖子");
+        if (post == null) {
+            throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
+        if (!post.getUserId().equals(userId)) {
+            log.warn("删除失败: 用户 {} 尝试删除非本人帖子 {}", userId, id);
+            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+        }
+        
+        post.setStatus(0); // 0: Deleted
+        post.setUpdatedAt(LocalDateTime.now());
+        postMapper.updateById(post);
+        
+        // 清除缓存
+        String cacheKey = "post:detail:" + id;
+        redisTemplate.delete(cacheKey);
+        log.info("帖子删除成功: id={}", id);
     }
 }

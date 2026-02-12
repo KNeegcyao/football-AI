@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Post;
@@ -55,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
 
         Post post = postMapper.selectById(req.getPostId());
         if (post == null) {
-            throw new ServiceException("帖子不存在");
+            throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
 
         if (req.getParentId() != null && req.getParentId() > 0) {
@@ -149,20 +150,25 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long id, Long userId) {
         Comment comment = commentMapper.selectById(id);
-        if (comment != null && comment.getUserId().equals(userId)) {
-            comment.setStatus(0);
-            commentMapper.updateById(comment);
+        if (comment == null) {
+            throw new ServiceException(ServiceErrorCode.COMMENT_NOT_FOUND);
+        }
+        if (!comment.getUserId().equals(userId)) {
+            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+        }
+        
+        comment.setStatus(0);
+        commentMapper.updateById(comment);
+        
+        // 更新帖子评论数
+        Post post = postMapper.selectById(comment.getPostId());
+        if (post != null && post.getCommentCount() > 0) {
+            post.setCommentCount(post.getCommentCount() - 1);
+            postMapper.updateById(post);
             
-            // 更新帖子评论数
-            Post post = postMapper.selectById(comment.getPostId());
-            if (post != null && post.getCommentCount() > 0) {
-                post.setCommentCount(post.getCommentCount() - 1);
-                postMapper.updateById(post);
-                
-                // 清除帖子详情缓存
-                String cacheKey = "post:detail:" + comment.getPostId();
-                redisTemplate.delete(cacheKey);
-            }
+            // 清除帖子详情缓存
+            String cacheKey = "post:detail:" + comment.getPostId();
+            redisTemplate.delete(cacheKey);
         }
     }
 

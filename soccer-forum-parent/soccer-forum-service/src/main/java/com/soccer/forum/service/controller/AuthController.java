@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -43,7 +44,7 @@ public class AuthController {
      */
     @Operation(summary = "登录", description = "用户登录并获取 Token")
     @PostMapping("/login")
-    public R<Map<String, String>> login(@RequestBody LoginBody loginBody) {
+    public R<Map<String, String>> login(@Validated @RequestBody LoginBody loginBody) {
         log.info("收到用户登录请求: 用户名={}", loginBody.getUsername());
         String token = authService.login(loginBody);
         log.info("用户登录成功: 用户名={}", loginBody.getUsername());
@@ -61,7 +62,7 @@ public class AuthController {
      */
     @Operation(summary = "注册", description = "用户注册新账号")
     @PostMapping("/register")
-    public R<Void> register(@RequestBody LoginBody loginBody) {
+    public R<Void> register(@Validated @RequestBody LoginBody loginBody) {
         log.info("收到用户注册请求: 用户名={}", loginBody.getUsername());
         authService.register(loginBody);
         log.info("用户注册成功: 用户名={}", loginBody.getUsername());

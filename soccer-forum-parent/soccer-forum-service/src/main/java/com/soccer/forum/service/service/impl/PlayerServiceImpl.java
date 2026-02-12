@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.service.mapper.PlayerMapper;
@@ -70,7 +71,7 @@ public class PlayerServiceImpl implements PlayerService {
         Player player = playerMapper.selectById(id);
         if (player == null) {
             log.warn("球员详情查询失败, 未找到球员: id={}", id);
-            throw new ServiceException("未找到球员");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         return player;
     }
@@ -142,7 +143,7 @@ public class PlayerServiceImpl implements PlayerService {
         int rows = playerMapper.updateById(player);
         if (rows == 0) {
             log.warn("球员更新失败, 未找到球员: id={}", id);
-            throw new ServiceException("未找到球员");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("球员更新成功: id={}", id);
     }
@@ -163,7 +164,7 @@ public class PlayerServiceImpl implements PlayerService {
         int rows = playerMapper.deleteById(id);
         if (rows == 0) {
             log.warn("球员删除失败, 未找到球员: id={}", id);
-            throw new ServiceException("未找到球员");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("球员删除成功: id={}", id);
     }

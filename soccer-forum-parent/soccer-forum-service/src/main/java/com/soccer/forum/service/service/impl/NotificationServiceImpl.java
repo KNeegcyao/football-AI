@@ -2,6 +2,8 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Notification;
 import com.soccer.forum.service.mapper.NotificationMapper;
 import com.soccer.forum.service.service.NotificationService;
@@ -57,10 +59,14 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(rollbackFor = Exception.class)
     public void markAsRead(Long id, Long userId) {
         Notification notification = notificationMapper.selectById(id);
-        if (notification != null && notification.getUserId().equals(userId)) {
-            notification.setIsRead(1);
-            notificationMapper.updateById(notification);
+        if (notification == null) {
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
+        if (!notification.getUserId().equals(userId)) {
+            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+        }
+        notification.setIsRead(1);
+        notificationMapper.updateById(notification);
     }
 
     @Override

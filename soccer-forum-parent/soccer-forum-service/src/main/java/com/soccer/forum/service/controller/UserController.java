@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -57,7 +58,7 @@ public class UserController {
      */
     @Operation(summary = "更新个人资料", description = "修改当前登录用户的昵称、头像、邮箱或手机号")
     @PutMapping("/profile")
-    public R<Void> updateProfile(@Parameter(description = "更新内容") @RequestBody UserUpdateReq req,
+    public R<Void> updateProfile(@Parameter(description = "更新内容") @Validated @RequestBody UserUpdateReq req,
                                  @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("更新用户资料: 用户ID={}", loginUser.getUser().getId());
         userService.updateUserInfo(loginUser.getUser().getId(), req);

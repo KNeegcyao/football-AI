@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.mapper.TeamMapper;
 import com.soccer.forum.service.service.TeamService;
@@ -69,7 +70,7 @@ public class TeamServiceImpl implements TeamService {
         Team team = teamMapper.selectById(id);
         if (team == null) {
             log.warn("球队详情查询失败, 未找到球队: id={}", id);
-            throw new ServiceException("未找到球队");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         return team;
     }
@@ -117,7 +118,7 @@ public class TeamServiceImpl implements TeamService {
         int rows = teamMapper.updateById(team);
         if (rows == 0) {
             log.warn("球队更新失败, 未找到球队: id={}", id);
-            throw new ServiceException("未找到球队");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("球队更新成功: id={}", id);
     }
@@ -137,7 +138,7 @@ public class TeamServiceImpl implements TeamService {
         int rows = teamMapper.deleteById(id);
         if (rows == 0) {
             log.warn("球队删除失败, 未找到球队: id={}", id);
-            throw new ServiceException("未找到球队");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("球队删除成功: id={}", id);
     }

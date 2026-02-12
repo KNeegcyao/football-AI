@@ -2,10 +2,11 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.mapper.NewsMapper;
 import com.soccer.forum.service.service.NewsService;
-import com.soccer.forum.common.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -147,7 +148,7 @@ public class NewsServiceImpl implements NewsService {
         int rows = newsMapper.updateById(news);
         if (rows == 0) {
             log.warn("资讯更新失败, 未找到资讯: id={}", id);
-            throw new ServiceException("未找到资讯");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("资讯更新成功: id={}", id);
     }
@@ -168,7 +169,7 @@ public class NewsServiceImpl implements NewsService {
         int rows = newsMapper.deleteById(id);
         if (rows == 0) {
             log.warn("资讯删除失败, 未找到资讯: id={}", id);
-            throw new ServiceException("未找到资讯");
+            throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("资讯删除成功: id={}", id);
     }

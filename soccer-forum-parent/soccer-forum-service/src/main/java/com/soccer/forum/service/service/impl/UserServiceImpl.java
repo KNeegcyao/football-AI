@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.Like;
@@ -40,7 +41,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public UserInfoResp getUserInfo(Long userId) {
         User user = this.getById(userId);
         if (user == null) {
-            throw new ServiceException("用户不存在");
+            throw new ServiceException(ServiceErrorCode.USER_NOT_FOUND);
         }
         return UserInfoResp.fromEntity(user);
     }
@@ -83,7 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void updateUserInfo(Long userId, UserUpdateReq req) {
         User user = this.getById(userId);
         if (user == null) {
-            throw new ServiceException("用户不存在");
+            throw new ServiceException(ServiceErrorCode.USER_NOT_FOUND);
         }
 
         if (req.getNickname() != null) {

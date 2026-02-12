@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +49,7 @@ public class LikeController {
      */
     @Operation(summary = "切换点赞状态", description = "对帖子或评论进行点赞或取消点赞")
     @PostMapping
-    public R<Map<String, Boolean>> toggle(@Parameter(description = "点赞信息") @RequestBody LikeReq req,
+    public R<Map<String, Boolean>> toggle(@Parameter(description = "点赞信息") @Validated @RequestBody LikeReq req,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到点赞切换请求: 用户ID={}, 目标ID={}, 类型={}", 
                 loginUser.getUser().getId(), req.getTargetId(), req.getTargetType());

@@ -73,6 +73,6 @@ public class GlobalExceptionHandler {
     public R<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error("参数校验异常: {}", e.getMessage());
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
-        return R.<Void>fail(message);
+        return R.<Void>fail(3001, message); // 3001 为 PARAM_ERROR
     }
 }

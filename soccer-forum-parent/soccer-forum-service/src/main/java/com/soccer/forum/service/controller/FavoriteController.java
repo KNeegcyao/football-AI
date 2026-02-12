@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -47,7 +48,7 @@ public class FavoriteController {
      */
     @Operation(summary = "切换收藏状态", description = "用户收藏或取消收藏帖子")
     @PostMapping
-    public R<Map<String, Boolean>> toggle(@Parameter(description = "收藏信息") @RequestBody FavoriteReq req,
+    public R<Map<String, Boolean>> toggle(@Parameter(description = "收藏信息") @Validated @RequestBody FavoriteReq req,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到收藏切换请求: 用户ID={}, 帖子ID={}", loginUser.getUser().getId(), req.getPostId());
         

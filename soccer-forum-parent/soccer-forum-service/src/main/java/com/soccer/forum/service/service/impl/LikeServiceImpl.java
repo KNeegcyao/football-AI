@@ -1,6 +1,8 @@
 package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.soccer.forum.common.enums.ServiceErrorCode;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Like;
 import com.soccer.forum.domain.entity.Post;
@@ -33,6 +35,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public boolean toggleLike(Long targetId, Integer targetType, Long userId) {
         String typeStr = (targetType == 1) ? "post" : "comment";
         String userSetKey = "like:" + typeStr + ":" + targetId + ":users";
@@ -44,16 +47,18 @@ public class LikeServiceImpl implements LikeService {
         String titleOrContent = "";
         if (targetType == 1) {
             Post post = postMapper.selectById(targetId);
-            if (post != null) {
-                targetOwnerId = post.getUserId();
-                titleOrContent = post.getTitle();
+            if (post == null) {
+                throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
             }
+            targetOwnerId = post.getUserId();
+            titleOrContent = post.getTitle();
         } else {
             Comment comment = commentMapper.selectById(targetId);
-            if (comment != null) {
-                targetOwnerId = comment.getUserId();
-                titleOrContent = comment.getContent();
+            if (comment == null) {
+                throw new ServiceException(ServiceErrorCode.COMMENT_NOT_FOUND);
             }
+            targetOwnerId = comment.getUserId();
+            titleOrContent = comment.getContent();
         }
 
         // ... existing logic for count initialization ...

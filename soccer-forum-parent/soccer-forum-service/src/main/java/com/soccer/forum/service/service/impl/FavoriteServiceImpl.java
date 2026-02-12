@@ -2,6 +2,8 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.enums.ServiceErrorCode;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.mapper.FavoriteMapper;
@@ -29,6 +31,11 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean toggleFavorite(Long postId, Long userId) {
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
+        }
+
         LambdaQueryWrapper<Favorite> query = new LambdaQueryWrapper<>();
         query.eq(Favorite::getPostId, postId)
              .eq(Favorite::getUserId, userId);

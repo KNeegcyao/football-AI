@@ -68,7 +68,7 @@ public class CommentController {
      */
     @Operation(summary = "获取评论列表", description = "分页获取指定帖子的评论列表")
     @GetMapping("/list")
-    public R<Page<CommentResp>> list(@Parameter(description = "分页及查询参数") CommentPageReq req) {
+    public R<Page<CommentResp>> list(@Parameter(description = "分页及查询参数") @Validated CommentPageReq req) {
         log.info("收到获取评论列表请求: 帖子ID={}, page={}", req.getPostId(), req.getPage());
         Page<CommentResp> commentPage = commentService.getCommentPage(req);
         return R.ok(commentPage);

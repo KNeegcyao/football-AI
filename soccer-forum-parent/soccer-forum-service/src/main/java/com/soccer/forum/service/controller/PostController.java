@@ -88,7 +88,7 @@ public class PostController {
      */
     @Operation(summary = "获取帖子列表", description = "分页获取帖子列表，支持关键词搜索")
     @GetMapping("/list")
-    public R<Page<Post>> list(PostPageReq req) {
+    public R<Page<Post>> list(@Validated PostPageReq req) {
         log.info("收到获取帖子列表请求: keyword={}, page={}", req.getKeyword(), req.getPage());
         Page<Post> postPage = postService.getPostPage(req);
         return R.ok(postPage);
