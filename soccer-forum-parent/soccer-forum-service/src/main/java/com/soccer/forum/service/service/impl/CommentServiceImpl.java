@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.User;
@@ -30,12 +31,16 @@ public class CommentServiceImpl implements CommentService {
     private final UserMapper userMapper;
     private final PostMapper postMapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final com.soccer.forum.service.service.NotificationService notificationService;
 
-    public CommentServiceImpl(CommentMapper commentMapper, UserMapper userMapper, PostMapper postMapper, RedisTemplate<String, Object> redisTemplate) {
+    public CommentServiceImpl(CommentMapper commentMapper, UserMapper userMapper, PostMapper postMapper, 
+                              RedisTemplate<String, Object> redisTemplate,
+                              com.soccer.forum.service.service.NotificationService notificationService) {
         this.commentMapper = commentMapper;
         this.userMapper = userMapper;
         this.postMapper = postMapper;
         this.redisTemplate = redisTemplate;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -48,38 +53,38 @@ public class CommentServiceImpl implements CommentService {
         comment.setLikes(0);
         comment.setStatus(1);
 
+        Post post = postMapper.selectById(req.getPostId());
+        if (post == null) {
+            throw new ServiceException("帖子不存在");
+        }
+
         if (req.getParentId() != null && req.getParentId() > 0) {
             Comment parent = commentMapper.selectById(req.getParentId());
             if (parent != null) {
-                // 如果父评论本身就是子评论(parentId != 0)，则新评论的parentId应该指向根评论
-                // 这里我们简化模型：两级评论。
-                // 如果 parent.getParentId() == 0，说明 parent 是根评论。
-                // 如果 parent.getParentId() != 0，说明 parent 是子评论，那新评论的 parentId 应该取 parent.getParentId()。
-                
                 Long rootId = parent.getParentId() == 0 ? parent.getId() : parent.getParentId();
                 comment.setParentId(rootId);
-                
-                // 设置被回复的人
                 comment.setReplyToUserId(parent.getUserId());
+                
+                // 发送回复评论通知
+                notificationService.sendNotification(parent.getUserId(), userId, 4, req.getPostId(), req.getContent());
             } else {
                 comment.setParentId(0L);
             }
         } else {
             comment.setParentId(0L);
+            // 发送评论帖子通知
+            notificationService.sendNotification(post.getUserId(), userId, 3, post.getId(), req.getContent());
         }
 
         commentMapper.insert(comment);
         
         // 更新帖子评论数
-        Post post = postMapper.selectById(req.getPostId());
-        if (post != null) {
-            post.setCommentCount(post.getCommentCount() + 1);
-            postMapper.updateById(post);
-            
-            // 清除帖子详情缓存
-            String cacheKey = "post:detail:" + req.getPostId();
-            redisTemplate.delete(cacheKey);
-        }
+        post.setCommentCount(post.getCommentCount() + 1);
+        postMapper.updateById(post);
+        
+        // 清除帖子详情缓存
+        String cacheKey = "post:detail:" + req.getPostId();
+        redisTemplate.delete(cacheKey);
     }
 
     @Override

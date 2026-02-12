@@ -1,17 +1,14 @@
 package com.soccer.forum.service.controller;
 
+import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.service.security.model.LoginBody;
 import com.soccer.forum.service.security.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,22 +41,13 @@ public class AuthController {
      * @param loginBody 包含用户名和密码的请求体
      * @return 包含 token 的响应结果
      */
-    @Operation(summary = "用户登录", description = "使用用户名和密码登录，返回JWT令牌")
+    @Operation(summary = "登录", description = "用户登录并获取 Token")
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody LoginBody loginBody) {
+    public R<Map<String, String>> login(@RequestBody LoginBody loginBody) {
         log.info("收到用户登录请求: 用户名={}", loginBody.getUsername());
-        try {
-            String token = authService.login(loginBody);
-            log.info("用户登录成功: 用户名={}", loginBody.getUsername());
-            Map<String, Object> result = new HashMap<>();
-            result.put("token", token);
-            result.put("code", 200);
-            result.put("msg", "登录成功");
-            return result;
-        } catch (Exception e) {
-            log.error("用户登录失败: 用户名={}", loginBody.getUsername(), e);
-            throw e;
-        }
+        String token = authService.login(loginBody);
+        log.info("用户登录成功: 用户名={}", loginBody.getUsername());
+        return R.ok(Map.of("token", token), "登录成功");
     }
 
     /**
@@ -71,21 +59,13 @@ public class AuthController {
      * @param loginBody 包含用户名、密码和昵称的请求体
      * @return 注册结果
      */
-    @Operation(summary = "用户注册", description = "注册新用户")
+    @Operation(summary = "注册", description = "用户注册新账号")
     @PostMapping("/register")
-    public Map<String, Object> register(@RequestBody LoginBody loginBody) {
+    public R<Void> register(@RequestBody LoginBody loginBody) {
         log.info("收到用户注册请求: 用户名={}", loginBody.getUsername());
-        try {
-            authService.register(loginBody);
-            log.info("用户注册成功: 用户名={}", loginBody.getUsername());
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "注册成功");
-            return result;
-        } catch (Exception e) {
-            log.error("用户注册失败: 用户名={}", loginBody.getUsername(), e);
-            throw e;
-        }
+        authService.register(loginBody);
+        log.info("用户注册成功: 用户名={}", loginBody.getUsername());
+        return R.ok(null, "注册成功");
     }
 
     /**
@@ -98,19 +78,11 @@ public class AuthController {
      * @return 包含 token 的响应结果
      */
     @Operation(summary = "微信登录", description = "使用微信code登录 (暂未启用)")
-    @PostMapping("/wechat")
-    public Map<String, Object> wechatLogin(@RequestBody Map<String, String> body) {
+    @PostMapping("/weixin")
+    public R<Map<String, String>> weixinLogin(@RequestBody Map<String, String> body) {
         String code = body.get("code");
         log.info("收到微信登录请求: code={}", code);
-        try {
-            String token = authService.wechatLogin(code);
-            Map<String, Object> result = new HashMap<>();
-            result.put("token", token);
-            result.put("code", 200);
-            return result;
-        } catch (Exception e) {
-            log.error("微信登录失败", e);
-            throw e;
-        }
+        // 暂未实现完整微信登录逻辑
+        return R.fail("微信登录功能暂未启用");
     }
 }

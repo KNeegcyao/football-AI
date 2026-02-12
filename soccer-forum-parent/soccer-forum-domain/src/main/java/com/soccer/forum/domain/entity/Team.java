@@ -4,32 +4,50 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
 @TableName("teams")
+@Schema(description = "球队实体")
 public class Team {
     @TableId(type = IdType.AUTO)
+    @Schema(description = "球队ID")
     private Long id;
 
+    @Schema(description = "名称")
     private String name;
+    @Schema(description = "Logo URL")
     private String logoUrl;
+    @Schema(description = "成立年份")
     private Integer foundedYear;
+    @Schema(description = "主场馆")
     private String homeStadium;
+    @Schema(description = "联赛")
     private String league;
+    @Schema(description = "教练姓名")
     private String coachName;
+    @Schema(description = "阵型")
     private String formation;
+    @Schema(description = "总场次")
     private Integer totalMatches;
+    @Schema(description = "胜场")
     private Integer wins;
+    @Schema(description = "平场")
     private Integer draws;
+    @Schema(description = "负场")
     private Integer losses;
+    @Schema(description = "进球数")
     private Integer goalsFor;
+    @Schema(description = "失球数")
     private Integer goalsAgainst;
 
     @TableField(value = "created_at")
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @TableField(value = "updated_at")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
     public Long getId() { return id; }

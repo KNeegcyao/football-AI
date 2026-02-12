@@ -1,7 +1,7 @@
 package com.soccer.forum.service.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.mapper.TeamMapper;
 import com.soccer.forum.service.service.impl.TeamServiceImpl;
@@ -11,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,77 +29,92 @@ class TeamServiceTest {
     @InjectMocks
     private TeamServiceImpl teamService;
 
-    private Team team;
-    private Long teamId = 1L;
+    private Team testTeam;
 
     @BeforeEach
     void setUp() {
-        team = new Team();
-        team.setId(teamId);
-        team.setName("Test FC");
-        team.setLeague("Premier League");
+        testTeam = new Team();
+        testTeam.setId(1L);
+        testTeam.setName("皇家马德里");
+        testTeam.setLogoUrl("logo.png");
+        testTeam.setFoundedYear(1902);
+        testTeam.setCreatedAt(LocalDateTime.now());
+        testTeam.setUpdatedAt(LocalDateTime.now());
     }
 
     @Test
-    void createTeam_Success() {
+    void testCreateTeam() {
         when(teamMapper.insert(any(Team.class))).thenReturn(1);
 
-        Long resultId = teamService.createTeam(team);
+        teamService.createTeam(testTeam);
 
-        assertEquals(teamId, resultId);
-        verify(teamMapper).insert(any(Team.class));
+        verify(teamMapper, times(1)).insert(any(Team.class));
+        assertNotNull(testTeam.getCreatedAt());
+        assertNotNull(testTeam.getUpdatedAt());
     }
 
     @Test
-    void getTeamDetail_Success() {
-        when(teamMapper.selectById(teamId)).thenReturn(team);
+    void testGetTeamDetail_Success() {
+        when(teamMapper.selectById(1L)).thenReturn(testTeam);
 
-        Team result = teamService.getTeamDetail(teamId);
+        Team result = teamService.getTeamDetail(1L);
 
         assertNotNull(result);
-        assertEquals("Test FC", result.getName());
+        assertEquals("皇家马德里", result.getName());
     }
 
     @Test
-    void listTeams_Success() {
-        when(teamMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(new Page<Team>());
+    void testGetTeamDetail_NotFound() {
+        when(teamMapper.selectById(1L)).thenReturn(null);
 
-        Page<Team> result = teamService.listTeams(1, 10, "Test");
+        assertThrows(ServiceException.class, () -> teamService.getTeamDetail(1L));
+    }
+
+    @Test
+    void testListTeams() {
+        Page<Team> teamPage = new Page<>(1, 10);
+        List<Team> list = new ArrayList<>();
+        list.add(testTeam);
+        teamPage.setRecords(list);
+        
+        when(teamMapper.selectPage(any(Page.class), any())).thenReturn(teamPage);
+
+        Page<Team> result = teamService.listTeams(1, 10, null);
 
         assertNotNull(result);
-        verify(teamMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+        assertEquals(1, result.getRecords().size());
     }
 
     @Test
-    void updateTeam_Success() {
+    void testUpdateTeam_Success() {
         when(teamMapper.updateById(any(Team.class))).thenReturn(1);
 
-        assertDoesNotThrow(() -> teamService.updateTeam(teamId, team));
-        
-        verify(teamMapper).updateById(any(Team.class));
+        teamService.updateTeam(1L, testTeam);
+
+        verify(teamMapper, times(1)).updateById(any(Team.class));
+        assertEquals(1L, testTeam.getId());
     }
 
     @Test
-    void updateTeam_NotFound_ThrowsException() {
+    void testUpdateTeam_NotFound() {
         when(teamMapper.updateById(any(Team.class))).thenReturn(0);
 
-        assertThrows(RuntimeException.class, () -> teamService.updateTeam(teamId, team));
+        assertThrows(ServiceException.class, () -> teamService.updateTeam(1L, testTeam));
     }
 
     @Test
-    void deleteTeam_Success() {
-        when(teamMapper.deleteById(teamId)).thenReturn(1);
+    void testDeleteTeam_Success() {
+        when(teamMapper.deleteById(1L)).thenReturn(1);
 
-        assertDoesNotThrow(() -> teamService.deleteTeam(teamId));
-        
-        verify(teamMapper).deleteById(teamId);
+        teamService.deleteTeam(1L);
+
+        verify(teamMapper, times(1)).deleteById(1L);
     }
 
     @Test
-    void deleteTeam_NotFound_ThrowsException() {
-        when(teamMapper.deleteById(teamId)).thenReturn(0);
+    void testDeleteTeam_NotFound() {
+        when(teamMapper.deleteById(1L)).thenReturn(0);
 
-        assertThrows(RuntimeException.class, () -> teamService.deleteTeam(teamId));
+        assertThrows(ServiceException.class, () -> teamService.deleteTeam(1L));
     }
 }

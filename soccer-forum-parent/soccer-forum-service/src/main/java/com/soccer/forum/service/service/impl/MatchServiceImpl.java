@@ -2,12 +2,14 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Match;
 import com.soccer.forum.service.mapper.MatchMapper;
 import com.soccer.forum.service.service.MatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -45,6 +47,7 @@ public class MatchServiceImpl implements MatchService {
      * @return 新创建赛事的 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createMatch(Match match) {
         log.debug("创建赛事: 主队ID={} vs 客队ID={}", match.getHomeTeamId(), match.getAwayTeamId());
         match.setCreatedAt(LocalDateTime.now());
@@ -66,7 +69,12 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public Match getMatchDetail(Long id) {
         log.debug("获取赛事详情: id={}", id);
-        return matchMapper.selectById(id);
+        Match match = matchMapper.selectById(id);
+        if (match == null) {
+            log.warn("赛事详情查询失败, 未找到赛事: id={}", id);
+            throw new ServiceException("未找到赛事");
+        }
+        return match;
     }
 
     /**
@@ -127,9 +135,10 @@ public class MatchServiceImpl implements MatchService {
      *
      * @param id 赛事 ID
      * @param match 更新后的赛事实体对象
-     * @throws RuntimeException 当赛事不存在时抛出
+     * @throws ServiceException 当赛事不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateMatch(Long id, Match match) {
         log.debug("更新赛事: id={}", id);
         match.setId(id);
@@ -137,7 +146,7 @@ public class MatchServiceImpl implements MatchService {
         int rows = matchMapper.updateById(match);
         if (rows == 0) {
             log.warn("赛事更新失败, 未找到赛事: id={}", id);
-            throw new RuntimeException("未找到赛事");
+            throw new ServiceException("未找到赛事");
         }
         log.info("赛事更新成功: id={}", id);
     }
@@ -149,15 +158,16 @@ public class MatchServiceImpl implements MatchService {
      * </p>
      *
      * @param id 赛事 ID
-     * @throws RuntimeException 当赛事不存在时抛出
+     * @throws ServiceException 当赛事不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteMatch(Long id) {
         log.debug("删除赛事: id={}", id);
         int rows = matchMapper.deleteById(id);
         if (rows == 0) {
             log.warn("赛事删除失败, 未找到赛事: id={}", id);
-            throw new RuntimeException("未找到赛事");
+            throw new ServiceException("未找到赛事");
         }
         log.info("赛事删除成功: id={}", id);
     }

@@ -1,6 +1,7 @@
 package com.soccer.forum.service.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
@@ -12,9 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -51,22 +52,12 @@ public class PostController {
      */
     @Operation(summary = "发布帖子", description = "用户发布新帖子")
     @PostMapping
-    public Map<String, Object> create(@RequestBody PostCreateReq req, 
+    public R<Map<String, Long>> create(@Validated @RequestBody PostCreateReq req, 
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到发布帖子请求: 用户ID={}, 标题={}", loginUser.getUser().getId(), req.getTitle());
-        try {
-            Long postId = postService.createPost(req, loginUser.getUser().getId());
-            log.info("帖子发布成功: id={}", postId);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            result.put("data", Map.of("id", postId));
-            return result;
-        } catch (Exception e) {
-            log.error("帖子发布失败", e);
-            throw e;
-        }
+        Long postId = postService.createPost(req, loginUser.getUser().getId());
+        log.info("帖子发布成功: id={}", postId);
+        return R.ok(Map.of("id", postId));
     }
 
     /**
@@ -80,15 +71,10 @@ public class PostController {
      */
     @Operation(summary = "获取帖子详情", description = "根据ID获取帖子详情，并增加浏览量")
     @GetMapping("/{id}")
-    public Map<String, Object> get(@PathVariable Long id) {
+    public R<Post> get(@Parameter(description = "帖子ID") @PathVariable Long id) {
         log.info("收到获取帖子详情请求: id={}", id);
         Post post = postService.getPostById(id);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", post);
-        return result;
+        return R.ok(post);
     }
 
     /**
@@ -98,47 +84,32 @@ public class PostController {
      * </p>
      *
      * @param req 分页及查询参数对象
-     * @return 包含分页数据的响应结果
+     * @return 帖子分页列表结果
      */
-    @Operation(summary = "分页获取帖子列表", description = "支持按关键词搜索")
-    @GetMapping
-    public Map<String, Object> list(PostPageReq req) {
-        log.info("收到分页获取帖子列表请求: 页码={}, 大小={}, 关键词={}", req.getPage(), req.getSize(), req.getKeyword());
-        Page<Post> page = postService.getPostPage(req);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", page);
-        return result;
+    @Operation(summary = "获取帖子列表", description = "分页获取帖子列表，支持关键词搜索")
+    @GetMapping("/list")
+    public R<Page<Post>> list(PostPageReq req) {
+        log.info("收到获取帖子列表请求: keyword={}, page={}", req.getKeyword(), req.getPage());
+        Page<Post> postPage = postService.getPostPage(req);
+        return R.ok(postPage);
     }
 
     /**
      * 删除帖子接口
      * <p>
-     * 用户仅可删除自己发布的帖子（逻辑删除）。
+     * 逻辑删除帖子，仅允许发帖人或管理员操作。
      * </p>
      *
      * @param id 帖子 ID
      * @param loginUser 当前登录用户信息
      * @return 操作结果
      */
-    @Operation(summary = "删除帖子", description = "用户删除自己的帖子")
+    @Operation(summary = "删除帖子", description = "逻辑删除指定帖子")
     @DeleteMapping("/{id}")
-    public Map<String, Object> delete(@PathVariable Long id, 
-                                      @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
-        log.info("收到删除帖子请求: 帖子ID={}, 用户ID={}", id, loginUser.getUser().getId());
-        try {
-            postService.deletePost(id, loginUser.getUser().getId());
-            log.info("帖子删除成功(逻辑删除): id={}", id);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("code", 200);
-            result.put("msg", "success");
-            return result;
-        } catch (Exception e) {
-            log.error("帖子删除失败: id={}", id, e);
-            throw e;
-        }
+    public R<Void> delete(@Parameter(description = "帖子ID") @PathVariable Long id, 
+                         @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        log.info("收到删除帖子请求: 用户ID={}, 帖子ID={}", loginUser.getUser().getId(), id);
+        postService.deletePost(id, loginUser.getUser().getId());
+        return R.ok(null, "帖子删除成功");
     }
 }

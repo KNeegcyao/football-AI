@@ -2,12 +2,14 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.service.mapper.PlayerMapper;
 import com.soccer.forum.service.service.PlayerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -43,6 +45,7 @@ public class PlayerServiceImpl implements PlayerService {
      * @return 新创建球员的 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createPlayer(Player player) {
         log.debug("创建球员: 姓名={}", player.getName());
         player.setCreatedAt(LocalDateTime.now());
@@ -64,7 +67,12 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public Player getPlayerDetail(Long id) {
         log.debug("获取球员详情: id={}", id);
-        return playerMapper.selectById(id);
+        Player player = playerMapper.selectById(id);
+        if (player == null) {
+            log.warn("球员详情查询失败, 未找到球员: id={}", id);
+            throw new ServiceException("未找到球员");
+        }
+        return player;
     }
 
     /**
@@ -123,9 +131,10 @@ public class PlayerServiceImpl implements PlayerService {
      *
      * @param id 球员 ID
      * @param player 更新后的球员实体对象
-     * @throws RuntimeException 当球员不存在时抛出
+     * @throws ServiceException 当球员不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updatePlayer(Long id, Player player) {
         log.debug("更新球员: id={}", id);
         player.setId(id);
@@ -133,7 +142,7 @@ public class PlayerServiceImpl implements PlayerService {
         int rows = playerMapper.updateById(player);
         if (rows == 0) {
             log.warn("球员更新失败, 未找到球员: id={}", id);
-            throw new RuntimeException("未找到球员");
+            throw new ServiceException("未找到球员");
         }
         log.info("球员更新成功: id={}", id);
     }
@@ -145,15 +154,16 @@ public class PlayerServiceImpl implements PlayerService {
      * </p>
      *
      * @param id 球员 ID
-     * @throws RuntimeException 当球员不存在时抛出
+     * @throws ServiceException 当球员不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePlayer(Long id) {
         log.debug("删除球员: id={}", id);
         int rows = playerMapper.deleteById(id);
         if (rows == 0) {
             log.warn("球员删除失败, 未找到球员: id={}", id);
-            throw new RuntimeException("未找到球员");
+            throw new ServiceException("未找到球员");
         }
         log.info("球员删除成功: id={}", id);
     }

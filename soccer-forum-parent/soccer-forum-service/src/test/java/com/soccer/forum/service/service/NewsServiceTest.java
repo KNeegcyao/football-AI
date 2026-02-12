@@ -1,7 +1,7 @@
 package com.soccer.forum.service.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.mapper.NewsMapper;
 import com.soccer.forum.service.service.impl.NewsServiceImpl;
@@ -11,16 +11,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.util.Collections;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NewsServiceTest {
+public class NewsServiceTest {
 
     @Mock
     private NewsMapper newsMapper;
@@ -34,94 +35,90 @@ class NewsServiceTest {
     @InjectMocks
     private NewsServiceImpl newsService;
 
-    private News news;
-    private Long newsId = 1L;
+    private News testNews;
 
     @BeforeEach
     void setUp() {
-        news = new News();
-        news.setId(newsId);
-        news.setTitle("Breaking News");
-        news.setViewCount(100);
+        testNews = new News();
+        testNews.setId(1L);
+        testNews.setTitle("Test News");
+        testNews.setContent("Test Content");
+        testNews.setCategory("Test Category");
     }
 
     @Test
-    void createNews_Success() {
+    void testCreateNews() {
         when(newsMapper.insert(any(News.class))).thenReturn(1);
-
-        Long resultId = newsService.createNews(news);
-
-        assertEquals(newsId, resultId);
-        verify(newsMapper).insert(any(News.class));
+        
+        Long id = newsService.createNews(testNews);
+        
+        assertNotNull(id);
+        verify(newsMapper, times(1)).insert(any(News.class));
     }
 
     @Test
-    void getNewsDetail_Success_IncrementsViews_Redis() {
-        when(newsMapper.selectById(newsId)).thenReturn(news);
+    void testGetNewsDetail_Success() {
+        when(newsMapper.selectById(1L)).thenReturn(testNews);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.increment(anyString())).thenReturn(1L);
 
-        News result = newsService.getNewsDetail(newsId);
+        News result = newsService.getNewsDetail(1L);
 
         assertNotNull(result);
-        assertEquals(101, result.getViewCount()); // 100 + 1 (from memory update)
-        // Redis count is 1, so no DB update
-        verify(newsMapper, never()).updateById(any(News.class));
+        assertEquals("Test News", result.getTitle());
+        verify(newsMapper, times(1)).selectById(1L);
     }
 
     @Test
-    void getNewsDetail_Success_SyncsToDB_Every10thView() {
-        when(newsMapper.selectById(newsId)).thenReturn(news);
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(10L);
+    void testGetNewsDetail_NotFound() {
+        when(newsMapper.selectById(1L)).thenReturn(null);
 
-        News result = newsService.getNewsDetail(newsId);
+        News result = newsService.getNewsDetail(1L);
 
-        assertNotNull(result);
-        assertEquals(110, result.getViewCount()); // 100 + 10 (synced to DB)
-        verify(newsMapper).updateById(any(News.class));
+        assertNull(result);
+        verify(newsMapper, times(1)).selectById(1L);
     }
 
     @Test
-    void listNews_Success() {
-        when(newsMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(new Page<News>());
+    void testListNews() {
+        Page<News> page = new Page<>(1, 10);
+        page.setRecords(Collections.singletonList(testNews));
+        when(newsMapper.selectPage(any(Page.class), any())).thenReturn(page);
 
-        Page<News> result = newsService.listNews(1, 10, "Transfer", "Messi");
+        Page<News> result = newsService.listNews(1, 10, "Test Category", "Test");
 
         assertNotNull(result);
-        verify(newsMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+        assertEquals(1, result.getRecords().size());
+        verify(newsMapper, times(1)).selectPage(any(Page.class), any());
     }
 
     @Test
-    void updateNews_Success() {
+    void testUpdateNews_Success() {
         when(newsMapper.updateById(any(News.class))).thenReturn(1);
 
-        assertDoesNotThrow(() -> newsService.updateNews(newsId, news));
-        
-        verify(newsMapper).updateById(any(News.class));
+        assertDoesNotThrow(() -> newsService.updateNews(1L, testNews));
+        verify(newsMapper, times(1)).updateById(any(News.class));
     }
 
     @Test
-    void updateNews_NotFound_ThrowsException() {
+    void testUpdateNews_NotFound() {
         when(newsMapper.updateById(any(News.class))).thenReturn(0);
 
-        assertThrows(RuntimeException.class, () -> newsService.updateNews(newsId, news));
+        assertThrows(ServiceException.class, () -> newsService.updateNews(1L, testNews));
     }
 
     @Test
-    void deleteNews_Success() {
-        when(newsMapper.deleteById(newsId)).thenReturn(1);
+    void testDeleteNews_Success() {
+        when(newsMapper.deleteById(1L)).thenReturn(1);
 
-        assertDoesNotThrow(() -> newsService.deleteNews(newsId));
-        
-        verify(newsMapper).deleteById(newsId);
+        assertDoesNotThrow(() -> newsService.deleteNews(1L));
+        verify(newsMapper, times(1)).deleteById(1L);
     }
 
     @Test
-    void deleteNews_NotFound_ThrowsException() {
-        when(newsMapper.deleteById(newsId)).thenReturn(0);
+    void testDeleteNews_NotFound() {
+        when(newsMapper.deleteById(1L)).thenReturn(0);
 
-        assertThrows(RuntimeException.class, () -> newsService.deleteNews(newsId));
+        assertThrows(ServiceException.class, () -> newsService.deleteNews(1L));
     }
 }

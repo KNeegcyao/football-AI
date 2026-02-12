@@ -1,27 +1,40 @@
 package com.soccer.forum.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @TableName("comments")
+@Schema(description = "评论实体")
 public class Comment implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
+    @Schema(description = "评论ID")
     private Long id;
+    @Schema(description = "帖子ID")
     private Long postId;
+    @Schema(description = "用户ID")
     private Long userId;
+    @Schema(description = "父评论ID")
     private Long parentId;
+    @Schema(description = "回复给哪个用户ID")
     private Long replyToUserId;
+    @Schema(description = "评论内容")
     private String content;
+    @Schema(description = "点赞数")
     private Integer likes;
+    @Schema(description = "状态 (1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
 
     @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
     // Getters and Setters

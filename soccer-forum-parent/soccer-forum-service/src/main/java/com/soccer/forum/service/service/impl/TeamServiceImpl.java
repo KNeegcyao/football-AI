@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.mapper.TeamMapper;
 import com.soccer.forum.service.service.TeamService;
+import com.soccer.forum.common.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -42,6 +44,7 @@ public class TeamServiceImpl implements TeamService {
      * @return 新创建球队的 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createTeam(Team team) {
         log.debug("创建球队: 名称={}", team.getName());
         team.setCreatedAt(LocalDateTime.now());
@@ -63,7 +66,12 @@ public class TeamServiceImpl implements TeamService {
     @Override
     public Team getTeamDetail(Long id) {
         log.debug("获取球队详情: id={}", id);
-        return teamMapper.selectById(id);
+        Team team = teamMapper.selectById(id);
+        if (team == null) {
+            log.warn("球队详情查询失败, 未找到球队: id={}", id);
+            throw new ServiceException("未找到球队");
+        }
+        return team;
     }
 
     /**
@@ -98,9 +106,10 @@ public class TeamServiceImpl implements TeamService {
      *
      * @param id 球队 ID
      * @param team 更新后的球队实体对象
-     * @throws RuntimeException 当球队不存在时抛出
+     * @throws ServiceException 当球队不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateTeam(Long id, Team team) {
         log.debug("更新球队: id={}", id);
         team.setId(id);
@@ -108,7 +117,7 @@ public class TeamServiceImpl implements TeamService {
         int rows = teamMapper.updateById(team);
         if (rows == 0) {
             log.warn("球队更新失败, 未找到球队: id={}", id);
-            throw new RuntimeException("未找到球队");
+            throw new ServiceException("未找到球队");
         }
         log.info("球队更新成功: id={}", id);
     }
@@ -116,19 +125,19 @@ public class TeamServiceImpl implements TeamService {
     /**
      * 删除球队实现
      * <p>
-     * 根据 ID 删除球队数据。
+     * 根据 ID 删除球队信息。
      * </p>
      *
      * @param id 球队 ID
-     * @throws RuntimeException 当球队不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteTeam(Long id) {
         log.debug("删除球队: id={}", id);
         int rows = teamMapper.deleteById(id);
         if (rows == 0) {
             log.warn("球队删除失败, 未找到球队: id={}", id);
-            throw new RuntimeException("未找到球队");
+            throw new ServiceException("未找到球队");
         }
         log.info("球队删除成功: id={}", id);
     }

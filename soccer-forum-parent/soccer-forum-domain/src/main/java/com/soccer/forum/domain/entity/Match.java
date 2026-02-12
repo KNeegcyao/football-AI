@@ -4,30 +4,46 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
 @TableName("matches")
+@Schema(description = "赛事实体")
 public class Match {
     @TableId(type = IdType.AUTO)
+    @Schema(description = "赛事ID")
     private Long id;
 
+    @Schema(description = "主队ID")
     private Long homeTeamId;
+    @Schema(description = "客队ID")
     private Long awayTeamId;
+    @Schema(description = "赛事名称")
     private String competitionName;
+    @Schema(description = "比赛时间")
     private LocalDateTime matchTime;
+    @Schema(description = "场馆")
     private String venue;
-    private Integer status; // 0-未开始, 1-进行中, 2-已结束, 3-延期
+    @Schema(description = "状态 (0:未开始, 1:进行中, 2:已结束, 3:延期)")
+    private Integer status;
+    @Schema(description = "主队得分")
     private Integer homeScore;
+    @Schema(description = "客队得分")
     private Integer awayScore;
+    @Schema(description = "轮次")
     private String round;
+    @Schema(description = "转播地址")
     private String broadcastUrl;
+    @Schema(description = "图文直播ID")
     private Long liveTextId;
 
     @TableField(value = "created_at")
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @TableField(value = "updated_at")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
     public Long getId() { return id; }

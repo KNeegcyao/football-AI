@@ -4,28 +4,49 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
 @TableName("news")
+@Schema(description = "资讯实体")
 public class News {
     @TableId(type = IdType.AUTO)
+    @Schema(description = "资讯ID")
     private Long id;
 
+    @Schema(description = "标题")
+    @NotBlank(message = "资讯标题不能为空")
+    @Size(min = 2, max = 200, message = "标题长度必须在2-200个字符之间")
     private String title;
+
+    @Schema(description = "摘要")
     private String summary;
+
+    @Schema(description = "内容")
+    @NotBlank(message = "资讯内容不能为空")
     private String content;
+    @Schema(description = "封面图URL")
     private String coverUrl;
+    @Schema(description = "作者")
     private String author;
+    @Schema(description = "发布时间")
     private LocalDateTime publishTime;
+    @Schema(description = "浏览量")
     private Integer viewCount;
+    @Schema(description = "标签")
     private String tags;
+    @Schema(description = "分类")
     private String category;
 
     @TableField(value = "created_at")
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @TableField(value = "updated_at")
+    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
     public Long getId() { return id; }

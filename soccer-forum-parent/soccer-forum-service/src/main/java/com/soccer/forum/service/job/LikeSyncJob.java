@@ -40,35 +40,39 @@ public class LikeSyncJob {
      */
     @Scheduled(fixedRate = 300000)
     public void syncPostLikes() {
-        log.info("开始同步帖子点赞数据...");
-        String dirtyKey = "like:dirty:posts";
-        Set<Object> dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
+        try {
+            log.info("开始同步帖子点赞数据...");
+            String dirtyKey = "like:dirty:posts";
+            Set<Object> dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
 
-        if (dirtyIds == null || dirtyIds.isEmpty()) {
-            log.info("没有需要同步的帖子点赞数据");
-            return;
-        }
-
-        for (Object idObj : dirtyIds) {
-            Long postId = Long.valueOf(idObj.toString());
-            String countKey = "like:post:" + postId + ":count";
-            Object countObj = redisTemplate.opsForValue().get(countKey);
-
-            if (countObj != null) {
-                Integer count = Integer.valueOf(countObj.toString());
-                
-                // 更新数据库
-                UpdateWrapper<Post> update = new UpdateWrapper<>();
-                update.set("likes", count).eq("id", postId);
-                postMapper.update(null, update);
-                
-                log.debug("同步帖子点赞: id={}, count={}", postId, count);
-                
-                // 从脏集合中移除
-                redisTemplate.opsForSet().remove(dirtyKey, idObj);
+            if (dirtyIds == null || dirtyIds.isEmpty()) {
+                log.info("没有需要同步的帖子点赞数据");
+                return;
             }
+
+            for (Object idObj : dirtyIds) {
+                Long postId = Long.valueOf(idObj.toString());
+                String countKey = "like:post:" + postId + ":count";
+                Object countObj = redisTemplate.opsForValue().get(countKey);
+
+                if (countObj != null) {
+                    Integer count = Integer.valueOf(countObj.toString());
+                    
+                    // 更新数据库
+                    UpdateWrapper<Post> update = new UpdateWrapper<>();
+                    update.set("likes", count).eq("id", postId);
+                    postMapper.update(null, update);
+                    
+                    log.debug("同步帖子点赞: id={}, count={}", postId, count);
+                    
+                    // 从脏集合中移除
+                    redisTemplate.opsForSet().remove(dirtyKey, idObj);
+                }
+            }
+            log.info("帖子点赞数据同步完成");
+        } catch (Exception e) {
+            log.error("同步帖子点赞数据失败: {}", e.getMessage());
         }
-        log.info("帖子点赞数据同步完成");
     }
 
     /**
@@ -77,34 +81,38 @@ public class LikeSyncJob {
      */
     @Scheduled(fixedRate = 300000)
     public void syncCommentLikes() {
-        log.info("开始同步评论点赞数据...");
-        String dirtyKey = "like:dirty:comments";
-        Set<Object> dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
+        try {
+            log.info("开始同步评论点赞数据...");
+            String dirtyKey = "like:dirty:comments";
+            Set<Object> dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
 
-        if (dirtyIds == null || dirtyIds.isEmpty()) {
-            log.info("没有需要同步的评论点赞数据");
-            return;
-        }
-
-        for (Object idObj : dirtyIds) {
-            Long commentId = Long.valueOf(idObj.toString());
-            String countKey = "like:comment:" + commentId + ":count";
-            Object countObj = redisTemplate.opsForValue().get(countKey);
-
-            if (countObj != null) {
-                Integer count = Integer.valueOf(countObj.toString());
-                
-                // 更新数据库
-                UpdateWrapper<Comment> update = new UpdateWrapper<>();
-                update.set("likes", count).eq("id", commentId);
-                commentMapper.update(null, update);
-                
-                log.debug("同步评论点赞: id={}, count={}", commentId, count);
-                
-                // 从脏集合中移除
-                redisTemplate.opsForSet().remove(dirtyKey, idObj);
+            if (dirtyIds == null || dirtyIds.isEmpty()) {
+                log.info("没有需要同步的评论点赞数据");
+                return;
             }
+
+            for (Object idObj : dirtyIds) {
+                Long commentId = Long.valueOf(idObj.toString());
+                String countKey = "like:comment:" + commentId + ":count";
+                Object countObj = redisTemplate.opsForValue().get(countKey);
+
+                if (countObj != null) {
+                    Integer count = Integer.valueOf(countObj.toString());
+                    
+                    // 更新数据库
+                    UpdateWrapper<Comment> update = new UpdateWrapper<>();
+                    update.set("likes", count).eq("id", commentId);
+                    commentMapper.update(null, update);
+                    
+                    log.debug("同步评论点赞: id={}, count={}", commentId, count);
+                    
+                    // 从脏集合中移除
+                    redisTemplate.opsForSet().remove(dirtyKey, idObj);
+                }
+            }
+            log.info("评论点赞数据同步完成");
+        } catch (Exception e) {
+            log.error("同步评论点赞数据失败: {}", e.getMessage());
         }
-        log.info("评论点赞数据同步完成");
     }
 }

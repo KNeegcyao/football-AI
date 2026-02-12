@@ -1,20 +1,35 @@
 package com.soccer.forum.service.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Schema(description = "评论信息响应")
 public class CommentResp {
+    @Schema(description = "评论ID")
     private Long id;
+    @Schema(description = "帖子ID")
     private Long postId;
+    @Schema(description = "用户ID")
     private Long userId;
+    @Schema(description = "昵称")
     private String nickname;
+    @Schema(description = "头像")
     private String avatar;
+    @Schema(description = "父评论ID")
     private Long parentId;
+    @Schema(description = "回复给哪个用户ID")
     private Long replyToUserId;
+    @Schema(description = "回复给哪个用户的昵称")
     private String replyToNickname;
+    @Schema(description = "内容")
     private String content;
+    @Schema(description = "点赞数")
     private Integer likes;
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
+    @Schema(description = "子评论列表")
     private List<CommentResp> replies; // 子评论
 
     public Long getId() { return id; }

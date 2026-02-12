@@ -3,30 +3,53 @@ package com.soccer.forum.domain.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.soccer.forum.domain.enums.UserRole;
 import com.soccer.forum.domain.enums.UserStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @TableName("users")
+@Schema(description = "用户实体")
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
+    @Schema(description = "用户ID")
     private Long id;
+
+    @Schema(description = "用户名")
     private String username;
+
+    @Schema(description = "密码", accessMode = Schema.AccessMode.WRITE_ONLY)
     private String password;
+
+    @Schema(description = "邮箱")
     private String email;
+
+    @Schema(description = "手机号")
     private String phone;
+
+    @Schema(description = "昵称")
     private String nickname;
+
+    @Schema(description = "头像URL")
     private String avatar;
+
+    @Schema(description = "微信OpenID")
     private String openid;
+
+    @Schema(description = "角色")
     private UserRole role;
+
+    @Schema(description = "状态")
     private UserStatus status;
 
     @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
     // Getters and Setters

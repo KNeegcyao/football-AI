@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.mapper.NewsMapper;
 import com.soccer.forum.service.service.NewsService;
+import com.soccer.forum.common.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -44,6 +46,7 @@ public class NewsServiceImpl implements NewsService {
      * @return 新创建资讯的 ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createNews(News news) {
         log.debug("创建资讯: 标题={}", news.getTitle());
         news.setCreatedAt(LocalDateTime.now());
@@ -71,18 +74,23 @@ public class NewsServiceImpl implements NewsService {
         log.debug("获取资讯详情: id={}", id);
         News news = newsMapper.selectById(id);
         if (news != null) {
-            // 使用 Redis 增加浏览量
-            String key = "news:views:" + id;
-            Long views = redisTemplate.opsForValue().increment(key);
-            
-            // 每 10 次访问同步一次数据库，减轻数据库压力
-            if (views != null && views % 10 == 0) {
-                news.setViewCount(news.getViewCount() == null ? 10 : news.getViewCount() + 10);
-                newsMapper.updateById(news);
-                log.debug("同步资讯浏览量到数据库: id={}, views={}", id, news.getViewCount());
-            } else {
-                // 仅在内存对象中增加，用于返回给前端展示实时数据
-                news.setViewCount((news.getViewCount() == null ? 0 : news.getViewCount()) + (views == null ? 0 : views.intValue() % 10));
+            try {
+                // 使用 Redis 增加浏览量
+                String key = "news:views:" + id;
+                Long views = redisTemplate.opsForValue().increment(key);
+                
+                // 每 10 次访问同步一次数据库，减轻数据库压力
+                if (views != null && views % 10 == 0) {
+                    news.setViewCount(news.getViewCount() == null ? 10 : news.getViewCount() + 10);
+                    newsMapper.updateById(news);
+                    log.debug("同步资讯浏览量到数据库: id={}, views={}", id, news.getViewCount());
+                } else {
+                    // 仅在内存对象中增加，用于返回给前端展示实时数据
+                    news.setViewCount((news.getViewCount() == null ? 0 : news.getViewCount()) + (views == null ? 0 : views.intValue() % 10));
+                }
+            } catch (Exception e) {
+                log.warn("Redis 操作失败, 仅使用数据库数据: {}", e.getMessage());
+                // Redis 失败时，返回数据库中的数据，并记录日志
             }
         }
         return news;
@@ -131,6 +139,7 @@ public class NewsServiceImpl implements NewsService {
      * @throws RuntimeException 当资讯不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateNews(Long id, News news) {
         log.debug("更新资讯: id={}", id);
         news.setId(id);
@@ -138,7 +147,7 @@ public class NewsServiceImpl implements NewsService {
         int rows = newsMapper.updateById(news);
         if (rows == 0) {
             log.warn("资讯更新失败, 未找到资讯: id={}", id);
-            throw new RuntimeException("未找到资讯");
+            throw new ServiceException("未找到资讯");
         }
         log.info("资讯更新成功: id={}", id);
     }
@@ -150,15 +159,16 @@ public class NewsServiceImpl implements NewsService {
      * </p>
      *
      * @param id 资讯 ID
-     * @throws RuntimeException 当资讯不存在时抛出
+     * @throws ServiceException 当资讯不存在时抛出
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteNews(Long id) {
         log.debug("删除资讯: id={}", id);
         int rows = newsMapper.deleteById(id);
         if (rows == 0) {
             log.warn("资讯删除失败, 未找到资讯: id={}", id);
-            throw new RuntimeException("未找到资讯");
+            throw new ServiceException("未找到资讯");
         }
         log.info("资讯删除成功: id={}", id);
     }
