@@ -86,8 +86,7 @@ docker-compose up -d
    git clone https://github.com/your-repo/football-community.git
    ```
 2. 导入数据库脚本：
-   - 执行 `sql/init.sql` 初始化表结构。
-   - 执行 `sql/data.sql` 导入基础数据。
+   - 执行 `soccer-forum-parent/sql/` 目录下的脚本初始化表结构。
 3. 修改配置 `application.yml`：
    ```yaml
    spring:
