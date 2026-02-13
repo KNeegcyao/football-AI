@@ -1,2 +1,15 @@
 /* uni.scss */
 @import 'uview-plus/theme.scss';
+
+// Stitch 导出的品牌色
+$pitch-pulse-primary: #f9d406;
+$pitch-pulse-bg-dark: #1a1811;
+$pitch-pulse-bg-gradient: #23200f;
+$pitch-pulse-deep-crimson: #4a0404;
+
+// 覆盖 uView 主题色
+$u-primary: $pitch-pulse-primary;
+$u-bg-color: $pitch-pulse-bg-dark;
+$u-main-color: #ffffff;
+$u-content-color: rgba(255, 255, 255, 0.9);
+$u-tips-color: rgba(255, 255, 255, 0.6);
