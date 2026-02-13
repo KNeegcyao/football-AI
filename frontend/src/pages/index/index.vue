@@ -47,11 +47,11 @@
           <view class="hero-meta">
               <view class="meta-item">
                 <u-icon name="clock" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
-                <text class="meta-text">2小时前</text>
+                <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
                 <u-icon name="chat" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
-                <text class="meta-text">1.2k 评论</text>
+                <text class="meta-text">{{ heroPost.comments }} 评论</text>
               </view>
             </view>
         </view>
@@ -150,6 +150,20 @@ const getFullImageUrl = (url) => {
   return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 
+const formatTime = (timeStr) => {
+  if (!timeStr) return '刚刚'
+  const date = new Date(timeStr)
+  const now = new Date()
+  const diff = (now - date) / 1000 // 秒
+  
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return Math.floor(diff / 60) + '分钟前'
+  if (diff < 86400) return Math.floor(diff / 3600) + '小时前'
+  if (diff < 2592000) return Math.floor(diff / 86400) + '天前'
+  
+  return timeStr.split('T')[0] // 返回日期部分
+}
+
 // 加载数据
 const loadData = async () => {
   try {
@@ -161,9 +175,9 @@ const loadData = async () => {
         title: item.title,
         image: getFullImageUrl(item.coverUrl),
         category: item.category || '足球',
-        time: '刚刚',
-        likes: item.viewCount || 0,
-        comments: 0,
+        time: formatTime(item.publishTime),
+        likes: item.likeCount || 0,
+        comments: item.commentCount || 0,
         isAi: true,
         aiSummary: item.summary
       }))
@@ -185,7 +199,7 @@ const loadData = async () => {
           title: item.title,
           image: item.images ? getFullImageUrl(JSON.parse(item.images)[0]) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuA3a1YaN0N9eGVEJt27x1pvl9bmA_s1bXVgR5SdN9DFsrcqh6uzFlCKQvzphdGraw6VAXJOL5xegk1zZJscCAfDzZfGT4Fejcexhqu_xRMaGLwAyC_dwx8QT7G51wSlpvwCfM0s_1gUg5P-ukoYTMarx8NlDRmwAi91_C2xGc72pSqbXHKu8-PoTd87oU497A_XdyMvzv_I_h0RJiCgkPZHjNdFRYVe0WX4_DdpS88_1KhVnI26khp2KS9dOKUy089md8x3oQERrucF',
           category: '社区',
-          time: '1小时前',
+          time: formatTime(item.createdAt),
           likes: item.likeCount,
           comments: item.commentCount,
           isAi: false

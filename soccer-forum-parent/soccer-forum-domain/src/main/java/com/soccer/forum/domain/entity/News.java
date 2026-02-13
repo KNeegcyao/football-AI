@@ -40,6 +40,10 @@ public class News {
     private String tags;
     @Schema(description = "分类")
     private String category;
+    @Schema(description = "点赞数")
+    private Integer likeCount;
+    @Schema(description = "评论数")
+    private Integer commentCount;
 
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
@@ -73,4 +77,8 @@ public class News {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Integer getLikeCount() { return likeCount; }
+    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
+    public Integer getCommentCount() { return commentCount; }
+    public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
 }
