@@ -65,9 +65,10 @@ public class NewsController {
     public R<Page<News>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
                               @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
                               @Parameter(description = "分类 (如：转会, 战报, 花边)") @RequestParam(required = false) String category,
+                              @Parameter(description = "分类ID") @RequestParam(required = false) Integer categoryId,
                               @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword) {
-        log.info("收到查询资讯列表请求: page={}, size={}, category={}, keyword={}", page, size, category, keyword);
-        Page<News> newsPage = newsService.listNews(page, size, category, keyword);
+        log.info("收到查询资讯列表请求: page={}, size={}, category={}, categoryId={}, keyword={}", page, size, category, categoryId, keyword);
+        Page<News> newsPage = newsService.listNews(page, size, category, categoryId, keyword);
         return R.ok(newsPage);
     }
 

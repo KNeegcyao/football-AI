@@ -36,10 +36,11 @@ public interface NewsService {
      * @param page 页码
      * @param size 每页大小
      * @param category 资讯分类（可选）
+     * @param categoryId 资讯分类ID（可选）
      * @param keyword 搜索关键词（可选）
      * @return 资讯分页对象
      */
-    Page<News> listNews(Integer page, Integer size, String category, String keyword);
+    Page<News> listNews(Integer page, Integer size, String category, Integer categoryId, String keyword);
 
     /**
      * 更新资讯信息

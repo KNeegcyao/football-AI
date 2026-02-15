@@ -3,6 +3,7 @@ package com.soccer.forum.service.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Match;
+import com.soccer.forum.service.model.dto.MatchVO;
 import com.soccer.forum.service.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,9 +55,9 @@ public class MatchController {
      */
     @Operation(summary = "获取赛事详情", description = "根据ID获取比赛详细信息")
     @GetMapping("/{id}")
-    public R<Match> get(@Parameter(description = "赛事ID") @PathVariable Long id) {
+    public R<MatchVO> get(@Parameter(description = "赛事ID") @PathVariable Long id) {
         log.info("收到获取赛事详情请求: id={}", id);
-        Match match = matchService.getMatchDetail(id);
+        MatchVO match = matchService.getMatchDetail(id);
         return R.ok(match);
     }
 
@@ -65,9 +66,9 @@ public class MatchController {
      */
     @Operation(summary = "查询每日赛事", description = "获取指定日期的所有比赛列表")
     @GetMapping("/date")
-    public R<List<Match>> listByDate(@Parameter(description = "日期 (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public R<List<MatchVO>> listByDate(@Parameter(description = "日期 (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         log.info("收到查询日期赛事请求: date={}", date);
-        List<Match> matches = matchService.getMatchesByDate(date);
+        List<MatchVO> matches = matchService.getMatchesByDate(date);
         return R.ok(matches);
     }
 
@@ -76,12 +77,12 @@ public class MatchController {
      */
     @Operation(summary = "查询赛事列表", description = "分页获取赛事日程，支持按状态筛选")
     @GetMapping("/list")
-    public R<Page<Match>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+    public R<Page<MatchVO>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
                                @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
                                @Parameter(description = "赛事名称 (如：英超, 西甲)") @RequestParam(required = false) String competition,
                                @Parameter(description = "比赛状态 (0:未开赛, 1:进行中, 2:已结束)") @RequestParam(required = false) Integer status) {
         log.info("收到查询赛事列表请求: page={}, size={}, competition={}, status={}", page, size, competition, status);
-        Page<Match> matchPage = matchService.listMatches(page, size, competition, status);
+        Page<MatchVO> matchPage = matchService.listMatches(page, size, competition, status);
         return R.ok(matchPage);
     }
 

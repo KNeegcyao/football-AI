@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Match;
 import com.soccer.forum.service.mapper.MatchMapper;
+import com.soccer.forum.service.model.dto.MatchVO;
 import com.soccer.forum.service.service.impl.MatchServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,9 +51,13 @@ class MatchServiceTest {
 
     @Test
     void getMatchDetail_Success() {
+        MatchVO matchVO = new MatchVO();
+        matchVO.setId(matchId);
+        matchVO.setCompetitionName("Premier League");
         when(matchMapper.selectById(matchId)).thenReturn(match);
-
-        Match result = matchService.getMatchDetail(matchId);
+        // 注意：ServiceImpl 内部会将 Match 转为 MatchVO
+        
+        MatchVO result = matchService.getMatchDetail(matchId);
 
         assertNotNull(result);
         assertEquals("Premier League", result.getCompetitionName());
@@ -63,7 +68,7 @@ class MatchServiceTest {
         when(matchMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(new Page<Match>());
 
-        Page<Match> result = matchService.listMatches(1, 10, "Premier League", 1);
+        Page<MatchVO> result = matchService.listMatches(1, 10, "Premier League", 1);
 
         assertNotNull(result);
         verify(matchMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
@@ -74,7 +79,7 @@ class MatchServiceTest {
         when(matchMapper.selectList(any(LambdaQueryWrapper.class)))
                 .thenReturn(List.of(match));
 
-        List<Match> result = matchService.getMatchesByDate(LocalDate.now());
+        List<MatchVO> result = matchService.getMatchesByDate(LocalDate.now());
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

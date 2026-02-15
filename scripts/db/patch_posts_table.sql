@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN comment_count INT DEFAULT 0 AFTER likes;

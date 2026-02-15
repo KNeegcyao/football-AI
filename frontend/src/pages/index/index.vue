@@ -26,8 +26,8 @@
       <view class="category-list">
         <view v-for="(item, index) in categories" :key="index" 
               class="category-item" :class="{ active: currentCategory === index }"
-              @click="currentCategory = index">
-          <text class="category-text">{{ item }}</text>
+              @click="changeCategory(index)">
+          <text class="category-text">{{ item.name }}</text>
           <view v-if="currentCategory === index" class="active-line"></view>
         </view>
       </view>
@@ -41,7 +41,7 @@
         <view class="hero-overlay">
           <view class="tag-row">
             <text class="hero-tag">今日要闻</text>
-            <text class="hero-subtag">英超联赛</text>
+            <text class="hero-subtag" v-if="heroPost.category">{{ heroPost.category }}</text>
           </view>
           <text class="hero-title">{{ heroPost.title }}</text>
           <view class="hero-meta">
@@ -111,8 +111,8 @@
     <!-- 底部导航栏 -->
     <view class="tab-bar">
       <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
-        @click="currentTab = index">
-        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : '#666'" size="48rpx"></u-icon>
+        @tap="handleTabClick(index)">
+        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : '#7A7E83'" size="24"></u-icon>
         <text class="tab-text">{{ tab.text }}</text>
       </view>
     </view>
@@ -124,19 +124,28 @@ import { ref, onMounted } from 'vue'
 import { postApi, newsApi } from '@/api'
 
 const currentCategory = ref(0)
-const categories = ['推荐', '中超', '英超', '欧冠', '西甲', '意甲', '德甲', '法甲']
+const categories = [
+  { name: '推荐', id: 0 },
+  { name: '中超', id: 1 },
+  { name: '英超', id: 2 },
+  { name: '德甲', id: 3 },
+  { name: '意甲', id: 4 },
+  { name: '欧冠', id: 5 },
+  { name: '西甲', id: 6 }
+]
 
 const currentTab = ref(0)
 const tabs = [
-  { text: '首页', icon: 'home' },
-  { text: '赛程', icon: 'calendar' },
-  { text: '社区', icon: 'chat' },
-  { text: '我的', icon: 'account' }
+  { text: '首页', icon: 'home', path: 'pages/index/index' },
+  { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
+  { text: '社区', icon: 'chat', path: 'pages/index/index' },
+  { text: '我的', icon: 'account', path: 'pages/index/index' }
 ]
 
 const heroPost = ref({
   id: 1,
   title: '正在加载最新资讯...',
+  category: '足球',
   image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_e4YK349efMWAzc6iiczsM5tSzTnAKKVMkYWXuj_EZTKUOgmCBpnnu9Nbnv6E_FPf3uOXeVMAZeYmf3_CFGfrFh2zP8C9IllzF46IRUKxa5PkZCETfbd_SN_sf9OYPfbrjmRnDvFxK5Zh72kjxUmQdfZmWyAQPUswEsB_JPZ7Lg8vKjR7v9NW95_dy2rxLJT3_kqmFCXRt_rhPduU4AnhbTzNaY_CEkRqdE9LXCnbCiDBBS46kbHrjJNLAf_GrFim5hEkkJELnzex'
 })
 
@@ -145,9 +154,10 @@ const recommendPosts = ref([])
 const getFullImageUrl = (url) => {
   if (!url) return 'https://lh3.googleusercontent.com/aida-public/AB6AXuB0ptLMlSVayrxqg7fSU6QDrJuEJuUNPhe-FL1oaNUhm5hTHeodIRF-8F-Rhnt-zmJoOquOmsQNkJZBxgkbYOOFqHH1PmXnGA1CbyV6PA9hrFDxkLutFdYm13dkV64EU91kS5OhqpWiTd-1LJLAhJEGACSHdpuxggaRg43262dPjrfJeJh2pEQjQD49zmdB7sz_ar6feJpTa1Fd9ZDHSaAUKmXEic6DkqfyodMJkt3egV4exRVQQbB_9cITUjEiy5btIR-1DrGQbFS1'
   if (url.startsWith('http')) return url
-  // 拼接后端根地址
+  // 拼接后端根地址，强制使用 8080
   const BASE_URL = 'http://localhost:8080'
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
+  const fullUrl = BASE_URL + (url.startsWith('/') ? url : '/' + url)
+  return fullUrl
 }
 
 const formatTime = (timeStr) => {
@@ -164,12 +174,27 @@ const formatTime = (timeStr) => {
   return timeStr.split('T')[0] // 返回日期部分
 }
 
+const changeCategory = (index) => {
+  currentCategory.value = index
+  loadData()
+}
+
 // 加载数据
 const loadData = async () => {
   try {
-    // 1. 加载资讯列表作为推荐
-    const newsRes = await newsApi.getList({ page: 1, size: 10 })
-    if (newsRes && newsRes.records) {
+    recommendPosts.value = [] // 清空旧数据
+    
+    // 1. 加载资讯列表
+    const params = { page: 1, size: 20 }
+    // 如果当前选中的不是“推荐”（index 0），则传递 categoryId 参数进行过滤
+    if (currentCategory.value > 0) {
+      params.categoryId = categories[currentCategory.value].id
+    }
+    
+    const newsRes = await newsApi.getList(params)
+    let hasNewsData = false
+    if (newsRes && newsRes.records && newsRes.records.length > 0) {
+      hasNewsData = true
       const records = newsRes.records.map(item => ({
         id: item.id,
         title: item.title,
@@ -182,16 +207,21 @@ const loadData = async () => {
         aiSummary: item.summary
       }))
       
-      if (records.length > 0) {
-        // 设置第一条为英雄贴
-        heroPost.value = records[0]
-        // 其余为推荐列表
-        recommendPosts.value = records.slice(1)
+      // 设置第一条为英雄贴
+      heroPost.value = records[0]
+      // 其余为推荐列表
+      recommendPosts.value = records.slice(1)
+    } else {
+      // 如果当前分类没有数据，清空英雄贴
+      heroPost.value = {
+        id: 0,
+        title: '暂无相关资讯',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_e4YK349efMWAzc6iiczsM5tSzTnAKKVMkYWXuj_EZTKUOgmCBpnnu9Nbnv6E_FPf3uOXeVMAZeYmf3_CFGfrFh2zP8C9IllzF46IRUKxa5PkZCETfbd_SN_sf9OYPfbrjmRnDvFxK5Zh72kjxUmQdfZmWyAQPUswEsB_JPZ7Lg8vKjR7v9NW95_dy2rxLJT3_kqmFCXRt_rhPduU4AnhbTzNaY_CEkRqdE9LXCnbCiDBBS46kbHrjJNLAf_GrFim5hEkkJELnzex'
       }
     }
 
-    // 2. 如果资讯为空，尝试加载帖子
-    if (recommendPosts.value.length === 0) {
+    // 2. 只有在完全没有资讯数据时，才回退加载社区帖子
+    if (!hasNewsData) {
       const postRes = await postApi.getList({ page: 1, size: 10 })
       if (postRes && postRes.records) {
         recommendPosts.value = postRes.records.map(item => ({
@@ -208,6 +238,12 @@ const loadData = async () => {
     }
   } catch (e) {
     console.error('加载数据失败:', e)
+    // 打印更详细的错误堆栈或属性
+    if (e instanceof Error) {
+      console.error('Error Name:', e.name)
+      console.error('Error Message:', e.message)
+      console.error('Error Stack:', e.stack)
+    }
   }
 }
 
@@ -220,6 +256,66 @@ const goToDetail = (id) => {
     url: `/pages/detail/detail?id=${id}`
   })
 }
+
+const handleTabClick = (index) => {
+  try {
+    const tab = tabs[index]
+    if (!tab || !tab.path) return
+
+    currentTab.value = index
+    
+    // 统一路径格式：pages/schedule/schedule
+    const path = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path
+
+    // #ifdef H5
+    // 检查是否已经是当前路径，避免重复刷新
+    const currentHash = window.location.hash.replace('#/', '')
+    if (currentHash === path) {
+      console.log('已经在当前页面，无需跳转')
+      return
+    }
+
+    console.log('执行强制重载跳转:', path)
+    
+    // 彻底放弃框架路由，改用物理重载
+    const newUrl = window.location.origin + window.location.pathname + '#/' + path
+    window.location.href = newUrl
+    
+    // 增加延迟，确保 hash 变更已被浏览器记录，减少 ERR_ABORTED 风险
+    setTimeout(() => {
+      window.location.reload()
+    }, 100)
+    // #endif
+
+    // #ifndef H5
+    uni.reLaunch({
+      url: '/' + path
+    })
+    // #endif
+  } catch (e) {
+    console.error('跳转异常:', e)
+  }
+}
+
+const switchTab = (index) => {
+  // 保持向后兼容性
+  handleTabClick(index)
+}
+
+// 页面挂载时修正当前 Tab 索引
+onMounted(() => {
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  if (currentPage) {
+    const route = '/' + currentPage.route
+    // 兼容路径前缀比较
+    const index = tabs.findIndex(tab => ('/' + tab.path) === route)
+    if (index !== -1) {
+      currentTab.value = index
+    }
+  }
+})
+
 </script>
 
 <style lang="scss">
@@ -607,7 +703,7 @@ const goToDetail = (id) => {
    /* #endif */ 
    
    height: 120rpx; 
-   background-color: rgba($pitch-pulse-bg-dark, 0.98); // 增加不透明度防止内容透出 
+   background-color: rgba(26, 24, 17, 0.98); 
    backdrop-filter: blur(20px); 
    border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
    display: flex; 
@@ -615,8 +711,9 @@ const goToDetail = (id) => {
    align-items: center; 
    padding-bottom: constant(safe-area-inset-bottom); 
    padding-bottom: env(safe-area-inset-bottom); 
-   z-index: 1000; 
+   z-index: 9999; 
    box-sizing: border-box; 
+   pointer-events: auto;
  } 
  
  /* 3. 修正 tab-item：确保宽度平分 */ 

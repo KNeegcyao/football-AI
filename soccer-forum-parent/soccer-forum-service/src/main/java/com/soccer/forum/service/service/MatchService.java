@@ -2,6 +2,7 @@ package com.soccer.forum.service.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Match;
+import com.soccer.forum.service.model.dto.MatchVO;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,7 +32,7 @@ public interface MatchService {
      * @param id 赛事 ID
      * @return 赛事实体对象，若不存在返回 null
      */
-    Match getMatchDetail(Long id);
+    MatchVO getMatchDetail(Long id);
 
     /**
      * 分页查询赛事列表
@@ -42,7 +43,7 @@ public interface MatchService {
      * @param status 比赛状态（可选）
      * @return 赛事分页对象
      */
-    Page<Match> listMatches(Integer page, Integer size, String competition, Integer status);
+    Page<MatchVO> listMatches(Integer page, Integer size, String competition, Integer status);
 
     /**
      * 根据日期查询赛事
@@ -50,7 +51,7 @@ public interface MatchService {
      * @param date 查询日期
      * @return 当日赛事列表
      */
-    List<Match> getMatchesByDate(LocalDate date);
+    List<MatchVO> getMatchesByDate(LocalDate date);
 
     /**
      * 更新赛事信息

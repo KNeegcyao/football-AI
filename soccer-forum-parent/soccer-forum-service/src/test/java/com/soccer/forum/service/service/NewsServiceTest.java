@@ -85,7 +85,7 @@ public class NewsServiceTest {
         page.setRecords(Collections.singletonList(testNews));
         when(newsMapper.selectPage(any(Page.class), any())).thenReturn(page);
 
-        Page<News> result = newsService.listNews(1, 10, "Test Category", "Test");
+        Page<News> result = newsService.listNews(1, 10, "Test Category", null, "Test");
 
         assertNotNull(result);
         assertEquals(1, result.getRecords().size());

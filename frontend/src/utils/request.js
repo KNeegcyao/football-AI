@@ -24,13 +24,20 @@ const request = (options = {}) => {
     uni.request({
       ...options,
       success: (res) => {
+        // 打印原始响应，方便调试
+        console.log('API Response:', res)
+        
+        if (!res.data) {
+          reject(new Error('服务器未返回数据'))
+          return
+        }
+
         const { code, msg, data } = res.data
         if (code === 200) {
           resolve(data)
         } else if (code === 401) {
           // Token 过期或未登录
           uni.showToast({ title: '登录已过期', icon: 'none' })
-          // 实际项目中这里应跳转登录页
           reject(new Error(msg || '未登录'))
         } else {
           uni.showToast({ title: msg || '请求失败', icon: 'none' })
@@ -38,6 +45,7 @@ const request = (options = {}) => {
         }
       },
       fail: (err) => {
+        console.error('Request Fail:', err)
         uni.showToast({ title: '网络连接失败', icon: 'none' })
         reject(err)
       }

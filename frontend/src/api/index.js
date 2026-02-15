@@ -39,3 +39,18 @@ export const searchApi = {
    */
   globalSearch: (params) => request.get('/api/search', params)
 }
+
+/**
+ * 赛事相关接口
+ */
+export const matchApi = {
+  /**
+   * 获取指定日期的赛事
+   */
+  getByDate: (date) => request.get('/api/matches/date', { date }),
+
+  /**
+   * 分页获取赛事列表
+   */
+  getList: (params) => request.get('/api/matches/list', params)
+}

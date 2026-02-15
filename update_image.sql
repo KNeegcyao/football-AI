@@ -1,1 +1,0 @@
-UPDATE news SET cover_url = '/uploads/csl.jpg' WHERE id = (SELECT id FROM (SELECT id FROM news ORDER BY id ASC LIMIT 1) as t);

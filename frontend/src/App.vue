@@ -2,6 +2,18 @@
 export default {
   onLaunch: function () {
     console.log('App Launch')
+    // #ifdef H5
+    // 仅在启动时尝试隐藏原生 TabBar
+    uni.hideTabBar({
+      animation: false,
+      fail: () => {
+        // 如果当前不是 Tab 页面，延迟重试一次
+        setTimeout(() => {
+          uni.hideTabBar({ animation: false, fail: () => {} })
+        }, 100)
+      }
+    })
+    // #endif
   },
   onShow: function () {
     console.log('App Show')
@@ -13,7 +25,6 @@ export default {
 </script>
 
 <style lang="scss">
-/* 注意要写在第一行，同时给style标签加入lang="scss"属性 */
 @import "uview-plus/index.scss";
 
 view, text, image, scroll-view, swiper, swiper-item {
@@ -25,7 +36,6 @@ body {
   background-color: #000;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
 }
 uni-page-body {
   max-width: 500px !important;
@@ -33,10 +43,10 @@ uni-page-body {
   min-height: 100vh;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   background-color: #1a1811;
-  overflow-x: hidden;
 }
-uni-app {
-  display: block;
+/* 强制隐藏原生 TabBar 容器 */
+.uni-tabbar {
+  display: none !important;
 }
 /* #endif */
 </style>

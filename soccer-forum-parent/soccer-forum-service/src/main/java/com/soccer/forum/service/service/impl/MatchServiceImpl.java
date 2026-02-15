@@ -5,10 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Match;
+import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.mapper.MatchMapper;
+import com.soccer.forum.service.mapper.TeamMapper;
+import com.soccer.forum.service.model.dto.MatchVO;
 import com.soccer.forum.service.service.MatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -17,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 赛事服务实现类
@@ -33,9 +38,11 @@ public class MatchServiceImpl implements MatchService {
     private static final Logger log = LoggerFactory.getLogger(MatchServiceImpl.class);
 
     private final MatchMapper matchMapper;
+    private final TeamMapper teamMapper;
 
-    public MatchServiceImpl(MatchMapper matchMapper) {
+    public MatchServiceImpl(MatchMapper matchMapper, TeamMapper teamMapper) {
         this.matchMapper = matchMapper;
+        this.teamMapper = teamMapper;
     }
 
     /**
@@ -61,21 +68,21 @@ public class MatchServiceImpl implements MatchService {
     /**
      * 获取赛事详情实现
      * <p>
-     * 根据 ID 查询赛事信息。
+     * 根据 ID 查询赛事信息并填充球队详情。
      * </p>
      *
      * @param id 赛事 ID
-     * @return 赛事实体对象
+     * @return 赛事详情对象
      */
     @Override
-    public Match getMatchDetail(Long id) {
+    public MatchVO getMatchDetail(Long id) {
         log.debug("获取赛事详情: id={}", id);
         Match match = matchMapper.selectById(id);
         if (match == null) {
             log.warn("赛事详情查询失败, 未找到赛事: id={}", id);
             throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
-        return match;
+        return convertToVO(match);
     }
 
     /**
@@ -91,7 +98,7 @@ public class MatchServiceImpl implements MatchService {
      * @return 赛事分页对象
      */
     @Override
-    public Page<Match> listMatches(Integer page, Integer size, String competition, Integer status) {
+    public Page<MatchVO> listMatches(Integer page, Integer size, String competition, Integer status) {
         log.debug("分页查询赛事: 页码={}, 大小={}, 赛事={}, 状态={}", page, size, competition, status);
         Page<Match> matchPage = new Page<>(page, size);
         LambdaQueryWrapper<Match> query = new LambdaQueryWrapper<>();
@@ -105,7 +112,14 @@ public class MatchServiceImpl implements MatchService {
         }
         
         query.orderByAsc(Match::getMatchTime);
-        return matchMapper.selectPage(matchPage, query);
+        Page<Match> resultPage = matchMapper.selectPage(matchPage, query);
+        
+        Page<MatchVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        List<MatchVO> voList = resultPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     /**
@@ -118,14 +132,30 @@ public class MatchServiceImpl implements MatchService {
      * @return 赛事列表
      */
     @Override
-    public List<Match> getMatchesByDate(LocalDate date) {
+    public List<MatchVO> getMatchesByDate(LocalDate date) {
         log.debug("按日期查询赛事: 日期={}", date);
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
         
-        return matchMapper.selectList(new LambdaQueryWrapper<Match>()
+        List<Match> matches = matchMapper.selectList(new LambdaQueryWrapper<Match>()
                 .between(Match::getMatchTime, startOfDay, endOfDay)
                 .orderByAsc(Match::getMatchTime));
+        
+        return matches.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+    }
+
+    private MatchVO convertToVO(Match match) {
+        MatchVO vo = new MatchVO();
+        BeanUtils.copyProperties(match, vo);
+        if (match.getHomeTeamId() != null) {
+            vo.setHomeTeam(teamMapper.selectById(match.getHomeTeamId()));
+        }
+        if (match.getAwayTeamId() != null) {
+            vo.setAwayTeam(teamMapper.selectById(match.getAwayTeamId()));
+        }
+        return vo;
     }
 
     /**

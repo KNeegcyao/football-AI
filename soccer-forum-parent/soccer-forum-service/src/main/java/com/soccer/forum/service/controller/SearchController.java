@@ -59,7 +59,7 @@ public class SearchController {
         result.setPosts(postPage);
         
         // 2. 搜索资讯
-        Page<News> newsPage = newsService.listNews(page, size, null, keyword);
+        Page<News> newsPage = newsService.listNews(page, size, null, null, keyword);
         result.setNews(newsPage);
         
         // 3. 搜索球队

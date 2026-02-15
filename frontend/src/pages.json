@@ -10,16 +10,42 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "Soccer Forum"
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/schedule/schedule",
+      "style": {
+        "navigationBarTitleText": "赛程"
       }
     }
   ],
   "globalStyle": {
     "navigationStyle": "custom",
-    "navigationBarTextStyle": "black",
+    "navigationBarTextStyle": "white",
     "navigationBarTitleText": "Soccer Forum",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "navigationBarBackgroundColor": "#1A1811",
+    "backgroundColor": "#1A1811"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#f9d406",
+    "borderStyle": "black",
+    "backgroundColor": "#1A1A1A",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/soccer-logo.png",
+        "selectedIconPath": "static/soccer-logo.png"
+      },
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "赛程",
+        "iconPath": "static/soccer-logo.png",
+        "selectedIconPath": "static/soccer-logo.png"
+      }
+    ]
   },
   "uniIdRouter": {}
 }

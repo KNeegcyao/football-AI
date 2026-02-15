@@ -106,17 +106,22 @@ public class NewsServiceImpl implements NewsService {
      * @param page 页码
      * @param size 每页大小
      * @param category 资讯分类
+     * @param categoryId 资讯分类ID
      * @param keyword 搜索关键词
      * @return 资讯分页对象
      */
     @Override
-    public Page<News> listNews(Integer page, Integer size, String category, String keyword) {
-        log.debug("分页查询资讯: 页码={}, 大小={}, 分类={}, 关键词={}", page, size, category, keyword);
+    public Page<News> listNews(Integer page, Integer size, String category, Integer categoryId, String keyword) {
+        log.debug("分页查询资讯: 页码={}, 大小={}, 分类={}, 分类ID={}, 关键词={}", page, size, category, categoryId, keyword);
         Page<News> newsPage = new Page<>(page, size);
         LambdaQueryWrapper<News> query = new LambdaQueryWrapper<>();
         
         if (StringUtils.hasText(category)) {
             query.eq(News::getCategory, category);
+        }
+
+        if (categoryId != null && categoryId > 0) {
+            query.eq(News::getCategoryId, categoryId);
         }
         
         if (StringUtils.hasText(keyword)) {

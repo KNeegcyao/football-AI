@@ -40,6 +40,10 @@ public class News {
     private String tags;
     @Schema(description = "分类")
     private String category;
+
+    @Schema(description = "分类ID")
+    private Integer categoryId;
+
     @Schema(description = "点赞数")
     private Integer likeCount;
     @Schema(description = "评论数")
@@ -73,6 +77,8 @@ public class News {
     public void setTags(String tags) { this.tags = tags; }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+    public Integer getCategoryId() { return categoryId; }
+    public void setCategoryId(Integer categoryId) { this.categoryId = categoryId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
