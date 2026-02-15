@@ -6,23 +6,31 @@
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
           <text class="material-icons text-2xl">chevron_left</text>
         </button>
-        <view class="flex-1 relative">
+        
+        <!-- 搜索框容器 -->
+        <view 
+          class="flex-1 relative flex items-center h-10 bg-white/5 border rounded-full px-3 transition-all duration-300"
+          :class="[isFocus ? 'border-primary shadow-[0_0_10px_rgba(235,60,60,0.2)] bg-white/10' : 'border-white/10']"
+        >
+          <text class="material-icons text-gray-500 text-lg mr-2">search</text>
           <input 
             v-model="keyword" 
             type="text" 
             placeholder="搜索资讯或帖子..." 
-            class="w-full h-10 bg-white/5 border border-white/10 rounded-full px-10 text-sm focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all"
+            class="flex-1 h-full bg-transparent text-sm focus:outline-none"
             @confirm="handleSearch"
-            :focus="true"
+            @focus="isFocus = true"
+            @blur="isFocus = false"
+            :focus="autoFocus"
           />
-          <text class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg">search</text>
           <text 
             v-if="keyword" 
-            @click="keyword = ''" 
-            class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg cursor-pointer hover:text-white"
+            @click="clearSearch" 
+            class="material-icons text-gray-500 text-lg cursor-pointer hover:text-white ml-2"
           >close</text>
         </view>
-        <button @click="handleSearch" class="text-primary font-bold text-sm bg-transparent border-none px-2">搜索</button>
+        
+        <button @click="handleSearch" class="text-primary font-bold text-sm bg-transparent border-none px-2 active:opacity-70 transition-opacity">搜索</button>
       </view>
     </header>
 
@@ -89,6 +97,8 @@ const keyword = ref('')
 const loading = ref(false)
 const searched = ref(false)
 const results = ref([])
+const isFocus = ref(false)
+const autoFocus = ref(true)
 
 const handleSearch = async () => {
   if (!keyword.value.trim()) {
@@ -107,22 +117,15 @@ const handleSearch = async () => {
       page: 1,
       size: 50
     }
-    console.log('发送请求参数:', params)
     
     const res = await searchApi.globalSearch(params)
-    console.log('收到后端响应 (Raw):', res)
-    
-    if (!res) {
-      console.warn('后端返回结果为空对象')
-      return
-    }
+    if (!res) return
     
     const combinedResults = []
     
     // 1. 处理资讯
     const newsData = res.news || res.News
     if (newsData && newsData.records) {
-      console.log('找到资讯数量:', newsData.records.length)
       newsData.records.forEach(item => {
         combinedResults.push({
           ...item,
@@ -130,14 +133,11 @@ const handleSearch = async () => {
           displayTime: item.publishTime
         })
       })
-    } else {
-      console.log('未发现资讯数据或 records 为空')
     }
     
     // 2. 处理帖子
     const postsData = res.posts || res.Posts
     if (postsData && postsData.records) {
-      console.log('找到帖子数量:', postsData.records.length)
       postsData.records.forEach(item => {
         combinedResults.push({
           ...item,
@@ -146,8 +146,6 @@ const handleSearch = async () => {
           author: item.username || '社区用户'
         })
       })
-    } else {
-      console.log('未发现帖子数据或 records 为空')
     }
     
     // 按时间倒序排序
@@ -158,13 +156,18 @@ const handleSearch = async () => {
     })
     
     results.value = combinedResults
-    console.log('最终展示结果列表:', results.value)
   } catch (e) {
-    console.error('搜索请求异常:', e)
-    uni.showToast({ title: '搜索失败: ' + (e.message || '网络错误'), icon: 'none' })
+    console.error('搜索失败:', e)
+    uni.showToast({ title: '搜索失败', icon: 'none' })
   } finally {
     loading.value = false
   }
+}
+
+const clearSearch = () => {
+  keyword.value = ''
+  results.value = []
+  searched.value = false
 }
 
 const goBack = () => {
@@ -210,4 +213,11 @@ uni-page-head {
   display: none;
 }
 /* #endif */
+
+input {
+  /* 确保在所有平台上移除默认样式 */
+  -webkit-appearance: none;
+  outline: none;
+  border: none;
+}
 </style>
