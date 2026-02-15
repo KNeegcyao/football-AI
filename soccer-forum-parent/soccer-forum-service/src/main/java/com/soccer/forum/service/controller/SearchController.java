@@ -70,6 +70,9 @@ public class SearchController {
         Page<Player> playerPage = playerService.listPlayers(page, size, keyword, null);
         result.setPlayers(playerPage);
         
+        log.info("搜索完成: 帖子数={}, 资讯数={}, 球队数={}, 球员数={}", 
+                postPage.getTotal(), newsPage.getTotal(), teamPage.getTotal(), playerPage.getTotal());
+        
         return R.ok(result);
     }
 }

@@ -11,7 +11,7 @@
             v-model="keyword" 
             type="text" 
             placeholder="搜索资讯或帖子..." 
-            class="w-full h-10 bg-white/5 border border-white/10 rounded-full px-10 text-sm focus:border-primary focus:bg-white/10 transition-all"
+            class="w-full h-10 bg-white/5 border border-white/10 rounded-full px-10 text-sm focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all"
             @confirm="handleSearch"
             :focus="true"
           />
@@ -96,54 +96,72 @@ const handleSearch = async () => {
     return
   }
 
+  console.log('开始搜索, 关键词:', keyword.value)
   loading.value = true
   searched.value = true
+  results.value = []
   
   try {
-    const res = await searchApi.globalSearch({ 
+    const params = { 
       keyword: keyword.value,
       page: 1,
       size: 50
-    })
+    }
+    console.log('发送请求参数:', params)
     
-    // 统一处理后端返回的数据格式
-    // 后端返回的是 SearchResultResp 对象，包含 news, posts, teams, players 四个分页对象
-    const combinedResults = []
+    const res = await searchApi.globalSearch(params)
+    console.log('收到后端响应 (Raw):', res)
     
-    if (res) {
-      console.log('搜索原始结果:', res)
-      // 1. 处理资讯
-      if (res.news && res.news.records) {
-        res.news.records.forEach(item => {
-          combinedResults.push({
-            ...item,
-            type: 'news',
-            displayTime: item.publishTime
-          })
-        })
-      }
-      
-      // 2. 处理帖子
-      if (res.posts && res.posts.records) {
-        res.posts.records.forEach(item => {
-          combinedResults.push({
-            ...item,
-            type: 'post',
-            displayTime: item.createdAt, // 后端 Post 实体使用 createdAt
-            author: item.username || '社区用户' // 帖子可能需要显示用户名
-          })
-        })
-      }
-      
-      // 按时间倒序排序
-      combinedResults.sort((a, b) => new Date(b.displayTime) - new Date(a.displayTime))
+    if (!res) {
+      console.warn('后端返回结果为空对象')
+      return
     }
     
+    const combinedResults = []
+    
+    // 1. 处理资讯
+    const newsData = res.news || res.News
+    if (newsData && newsData.records) {
+      console.log('找到资讯数量:', newsData.records.length)
+      newsData.records.forEach(item => {
+        combinedResults.push({
+          ...item,
+          type: 'news',
+          displayTime: item.publishTime
+        })
+      })
+    } else {
+      console.log('未发现资讯数据或 records 为空')
+    }
+    
+    // 2. 处理帖子
+    const postsData = res.posts || res.Posts
+    if (postsData && postsData.records) {
+      console.log('找到帖子数量:', postsData.records.length)
+      postsData.records.forEach(item => {
+        combinedResults.push({
+          ...item,
+          type: 'post',
+          displayTime: item.createdAt,
+          author: item.username || '社区用户'
+        })
+      })
+    } else {
+      console.log('未发现帖子数据或 records 为空')
+    }
+    
+    // 按时间倒序排序
+    combinedResults.sort((a, b) => {
+      const timeA = new Date(a.displayTime || 0)
+      const timeB = new Date(b.displayTime || 0)
+      return timeB - timeA
+    })
+    
     results.value = combinedResults
-    console.log('合并后的搜索结果:', results.value)
+    console.log('最终展示结果列表:', results.value)
   } catch (e) {
-    console.error('搜索失败:', e)
-    uni.showToast({ title: '搜索失败，请稍后重试', icon: 'none' })
+    console.error('搜索请求异常:', e)
+    uni.showToast({ title: '搜索失败: ' + (e.message || '网络错误'), icon: 'none' })
   } finally {
     loading.value = false
   }
