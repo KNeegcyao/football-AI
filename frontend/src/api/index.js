@@ -27,7 +27,12 @@ export const newsApi = {
   /**
    * 分页获取资讯列表
    */
-  getList: (params) => request.get('/api/news/list', params)
+  getList: (params) => request.get('/api/news/list', params),
+
+  /**
+   * 获取资讯详情
+   */
+  getDetail: (id) => request.get(`/api/news/${id}`)
 }
 
 /**

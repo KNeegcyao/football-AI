@@ -64,7 +64,7 @@
       </view>
 
       <view class="post-list">
-        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item">
+        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item" @click="goToDetail(post.id)">
           <view class="post-main">
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
@@ -252,8 +252,9 @@ onMounted(() => {
 })
 
 const goToDetail = (id) => {
+  if (!id) return
   uni.navigateTo({
-    url: `/pages/detail/detail?id=${id}`
+    url: `/pages/news/detail?id=${id}`
   })
 }
 

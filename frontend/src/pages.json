@@ -18,6 +18,13 @@
       "style": {
         "navigationBarTitleText": "赛程"
       }
+    },
+    {
+      "path": "pages/news/detail",
+      "style": {
+        "navigationBarTitleText": "新闻详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
