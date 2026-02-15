@@ -12,7 +12,7 @@
         <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
       </view>
       <view class="nav-actions">
-        <view class="action-btn">
+        <view class="action-btn" @click="goToSearch">
           <u-icon name="search" color="#fff" size="44rpx"></u-icon>
         </view>
         <view class="avatar-box">
@@ -102,11 +102,6 @@
       <!-- 底部占位 -->
       <view class="bottom-placeholder"></view>
     </scroll-view>
-
-    <!-- 悬浮发布按钮 -->
-    <view class="fab-btn">
-      <u-icon name="plus" color="#000" size="48rpx"></u-icon>
-    </view>
 
     <!-- 底部导航栏 -->
     <view class="tab-bar">
@@ -255,6 +250,12 @@ const goToDetail = (id) => {
   if (!id) return
   uni.navigateTo({
     url: `/pages/news/detail?id=${id}`
+  })
+}
+
+const goToSearch = () => {
+  uni.navigateTo({
+    url: '/pages/search/search'
   })
 }
 

@@ -25,6 +25,13 @@
         "navigationBarTitleText": "新闻详情",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/search/search",
+      "style": {
+        "navigationBarTitleText": "搜索",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
