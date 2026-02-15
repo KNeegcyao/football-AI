@@ -12,16 +12,20 @@
         <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
       </view>
       <view class="nav-actions">
-        <view class="action-btn">
+        <view class="action-btn" @click="goToSearch">
           <u-icon name="search" color="#fff" size="44rpx"></u-icon>
         </view>
         <view class="avatar-box">
-          <image class="avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIQzgWcNfhgZFvam6mBjP3SQ_yGWwerChZs_eM8_z1o9qWN1QnojbmioWRE4k-7JCMz3wyTItaNxPRS96uepbCycNWyeFd5CG59XlkU87Xapse9FwdEkK2Zx1w8ht2xUwawr5W2_YCj4et1disriTjbEFli9UPYJNPga5CS2cxoieZu8XSCzo0RPa4yG7saKzV_HIw3mDGt75bzRZba9L3kB0HwXM3AyVsiTFG6TPJ51agHPrnr6rJ6i2lggc-umhels7SEKP-34Nv" mode="aspectFill"></image>
+          <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
         </view>
       </view>
     </view>
 
     <!-- 日期选择器 -->
+    <view class="calendar-header">
+      <text class="current-month">{{ currentYearMonth }}</text>
+      <text class="view-calendar-btn">查看日历</text>
+    </view>
     <scroll-view scroll-x class="date-selector" show-scrollbar="false">
       <view class="date-list">
         <view 
@@ -32,7 +36,8 @@
           @click="selectDate(index)"
         >
           <text class="date-week">{{ item.week }}</text>
-          <text class="date-day">{{ item.day }}</text>
+          <text class="date-day">{{ item.day }}日</text>
+          <view class="date-dot" v-if="activeDateIndex === index"></view>
         </view>
       </view>
     </scroll-view>
@@ -43,7 +48,7 @@
       <view class="section" v-if="liveMatches.length > 0">
         <view class="match-card live-card" v-for="match in liveMatches" :key="match.id">
           <view class="live-badge">
-            <text class="live-text">LIVE {{ match.matchMinute || "67'" }}</text>
+            <text class="live-text">LIVE {{ match.liveTime || match.matchMinute || "" }}</text>
           </view>
           <view class="card-body">
             <view class="match-info">
@@ -52,7 +57,7 @@
             <view class="teams-score">
               <view class="team">
                 <view class="team-logo">
-                  <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit"></image>
+                  <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
                 </view>
                 <text class="team-name">{{ match.homeTeam?.name }}</text>
               </view>
@@ -64,7 +69,7 @@
               </view>
               <view class="team">
                 <view class="team-logo">
-                  <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit"></image>
+                  <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
                 </view>
                 <text class="team-name">{{ match.awayTeam?.name }}</text>
               </view>
@@ -97,14 +102,14 @@
           <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit"></image>
+                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
               <text class="mini-name">{{ match.homeTeam?.name }}</text>
             </view>
             <text class="vs-text">VS</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit"></image>
+                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
               <text class="mini-name">{{ match.awayTeam?.name }}</text>
             </view>
@@ -125,7 +130,7 @@
           <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit"></image>
+                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
               <view class="team-info">
                 <text class="mini-name">{{ match.homeTeam?.name }}</text>
@@ -135,7 +140,7 @@
             <text class="vs-dash">-</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit"></image>
+                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
               <view class="team-info reverse">
                 <text class="mini-name">{{ match.awayTeam?.name }}</text>
@@ -173,14 +178,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { matchApi } from '@/api/index'
 
 const dates = ref([])
 const activeDateIndex = ref(0)
+const currentYearMonth = ref('')
 const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
+const userAvatar = ref('https://lh3.googleusercontent.com/aida-public/AB6AXuAIQzgWcNfhgZFvam6mBjP3SQ_yGWwerChZs_eM8_z1o9qWN1QnojbmioWRE4k-7JCMz3wyTItaNxPRS96uepbCycNWyeFd5CG59XlkU87Xapse9FwdEkK2Zx1w8ht2xUwawr5W2_YCj4et1disriTjbEFli9UPYJNPga5CS2cxoieZu8XSCzo0RPa4yG7saKzV_HIw3mDGt75bzRZba9L3kB0HwXM3AyVsiTFG6TPJ51agHPrnr6rJ6i2lggc-umhels7SEKP-34Nv')
+let refreshTimer = null
+
+const handleAvatarError = () => {
+  userAvatar.value = '/static/soccer-logo.png'
+}
 
 const currentTab = ref(1)
 const tabs = [
@@ -189,6 +201,168 @@ const tabs = [
   { text: '社区', icon: 'chat', path: 'pages/index/index' },
   { text: '我的', icon: 'account', path: 'pages/index/index' }
 ]
+
+// 初始化日期列表（前后3天）
+const initDates = () => {
+  const list = []
+  const today = new Date()
+  
+  // 前3天
+  for (let i = 3; i >= 1; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    list.push({
+      week: getWeekName(d),
+      day: d.getDate(),
+      fullDate: formatFullDate(d),
+      isToday: false
+    })
+  }
+  
+  // 今天
+  list.push({
+    week: '今天',
+    day: today.getDate(),
+    fullDate: formatFullDate(today),
+    isToday: true
+  })
+  
+  // 后3天
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    list.push({
+      week: getWeekName(d),
+      day: d.getDate(),
+      fullDate: formatFullDate(d),
+      isToday: false
+    })
+  }
+  
+  dates.value = list
+  // 默认选中今天 (索引为3)
+  activeDateIndex.value = 3
+  updateCurrentYearMonth(today)
+}
+
+const updateCurrentYearMonth = (date) => {
+  const y = date.getFullYear()
+  const m = date.getMonth() + 1
+  currentYearMonth.value = `${y}年${m}月`
+}
+
+const getWeekName = (date) => {
+  const weeks = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return weeks[date.getDay()]
+}
+
+const formatDate = (date) => {
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`
+}
+
+const formatFullDate = (date) => {
+  const y = date.getFullYear()
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${y}-${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`
+}
+
+const formatMatchTime = (timeStr) => {
+  if (!timeStr) return ''
+  const date = new Date(timeStr)
+  const h = date.getHours()
+  const m = date.getMinutes()
+  return `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}`
+}
+
+const formatMatchDate = (timeStr) => {
+  if (!timeStr) return ''
+  const date = new Date(timeStr)
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`
+}
+
+const getFullImageUrl = (url) => {
+  if (!url) return '/static/soccer-logo.png'
+  
+  // 外部链接处理 (包含 http, //, 或特定域名)
+  if (url.startsWith('http') || url.startsWith('//') || 
+      url.includes('pstatp.com') || url.includes('zhibo8.cc') ||
+      url.includes('wikimedia.org')) {
+    return url
+  }
+  // 本地静态资源
+  if (url.startsWith('/static/')) return url
+  // 后端资源
+  return 'http://localhost:8080' + url
+}
+
+const handleImageError = (team) => {
+  if (team) {
+    team.logoUrl = '/static/soccer-logo.png'
+  }
+}
+
+const goToSearch = () => {
+  uni.navigateTo({
+    url: '/pages/search/search'
+  })
+}
+
+// 获取比赛数据
+const fetchMatches = async () => {
+  try {
+    const dateItem = dates.value[activeDateIndex.value]
+    if (!dateItem) return
+    
+    const matches = await matchApi.getByDate(dateItem.fullDate)
+    if (matches) {
+      liveMatches.value = matches.filter(m => m.status === 1)
+      upcomingMatches.value = matches.filter(m => m.status === 0)
+      finishedMatches.value = matches.filter(m => m.status === 2)
+    } else {
+      liveMatches.value = []
+      upcomingMatches.value = []
+      finishedMatches.value = []
+    }
+  } catch (e) {
+    console.error('获取赛程失败:', e)
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  }
+}
+
+const selectDate = (index) => {
+  activeDateIndex.value = index
+  const selectedDate = new Date(dates.value[index].fullDate)
+  updateCurrentYearMonth(selectedDate)
+  fetchMatches()
+  
+  // 如果选中今天，重启自动刷新
+  if (dates.value[index].isToday) {
+    startAutoRefresh()
+  } else {
+    stopAutoRefresh()
+  }
+}
+
+// 自动刷新逻辑
+const startAutoRefresh = () => {
+  stopAutoRefresh()
+  // 只有选中“今天”时才刷新
+  if (dates.value[activeDateIndex.value]?.isToday) {
+    refreshTimer = setInterval(fetchMatches, 30000)
+  }
+}
+
+const stopAutoRefresh = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+}
 
 const handleTabClick = (index) => {
   try {
@@ -246,90 +420,14 @@ onMounted(() => {
       currentTab.value = index
     }
   }
-})
-
-
-
-// 初始化日期列表
-const initDates = () => {
-  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  const today = new Date()
-  for (let i = -1; i < 6; i++) {
-    const date = new Date()
-    date.setDate(today.getDate() + i)
-    dates.value.push({
-      fullDate: date.toISOString().split('T')[0],
-      day: date.getDate(),
-      week: i === 0 ? '今天' : (i === -1 ? '昨天' : weekDays[date.getDay()])
-    })
-  }
-  // 默认选中“今天”
-  activeDateIndex.value = 1
-}
-
-const selectDate = (index) => {
-  activeDateIndex.value = index
-  fetchMatches()
-}
-
-const fetchMatches = async () => {
-  const selectedDate = dates.value[activeDateIndex.value].fullDate
-  try {
-    const res = await matchApi.getByDate(selectedDate)
-    // request.js 已经处理了 code === 200 并返回了 data
-    if (res && Array.isArray(res)) {
-      const allMatches = res
-      liveMatches.value = allMatches.filter(m => m.status === 1)
-      upcomingMatches.value = allMatches.filter(m => m.status === 0)
-      finishedMatches.value = allMatches.filter(m => m.status === 2)
-    } else {
-      liveMatches.value = []
-      upcomingMatches.value = []
-      finishedMatches.value = []
-    }
-  } catch (error) {
-    console.error('获取赛事失败:', error)
-    liveMatches.value = []
-    upcomingMatches.value = []
-    finishedMatches.value = []
-  }
-}
-
-const getFullImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
-
-const formatMatchTime = (timeStr) => {
-  if (!timeStr) return ''
-  try {
-    return timeStr.split('T')[1].substring(0, 5)
-  } catch (e) {
-    return timeStr
-  }
-}
-
-const formatMatchDate = (timeStr) => {
-  if (!timeStr) return ''
-  try {
-    const date = timeStr.split('T')[0]
-    const today = new Date().toISOString().split('T')[0]
-    if (date === today) return '今天'
-    
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    if (date === yesterday.toISOString().split('T')[0]) return '昨天'
-    
-    return date.substring(5) // MM-DD
-  } catch (e) {
-    return timeStr
-  }
-}
-
-onMounted(() => {
+  
   initDates()
   fetchMatches()
+  startAutoRefresh()
+})
+
+onUnmounted(() => {
+  stopAutoRefresh()
 })
 </script>
 
@@ -437,10 +535,31 @@ onMounted(() => {
   }
 }
 
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 40rpx 20rpx;
+  background-color: #1a1811;
+
+  .current-month {
+    font-size: 36rpx;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1rpx;
+  }
+
+  .view-calendar-btn {
+    font-size: 26rpx;
+    font-weight: 600;
+    color: #ff2e63;
+  }
+}
+
 .date-selector {
   background-color: #1a1811;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 20rpx 0;
+  padding-bottom: 30rpx;
+  margin-bottom: 20rpx;
 
   .date-list {
     display: flex;
@@ -450,33 +569,53 @@ onMounted(() => {
 
   .date-item {
     flex-shrink: 0;
-    width: 96rpx;
-    height: 112rpx;
-    border-radius: 24rpx;
-    background-color: rgba(255, 255, 255, 0.05);
+    width: 100rpx;
+    height: 140rpx;
+    border-radius: 28rpx;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
 
     .date-week {
-      font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 4rpx;
+      font-size: 22rpx;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 12rpx;
+      font-weight: 500;
     }
 
     .date-day {
-      font-size: 36rpx;
+      font-size: 32rpx;
       font-weight: 800;
-      color: rgba(255, 255, 255, 0.6);
+      color: #fff;
+      margin-bottom: 4rpx;
+    }
+
+    .date-dot {
+      width: 8rpx;
+      height: 8rpx;
+      background-color: #fff;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 20rpx;
     }
 
     &.active {
-      background-color: #f9d406;
-      .date-week, .date-day {
-        color: #000;
-        font-weight: 800;
+      background: linear-gradient(180deg, #ff4b5c 0%, #ff2e63 100%);
+      border-color: transparent;
+      box-shadow: 0 8rpx 20rpx rgba(255, 46, 99, 0.3);
+      transform: translateY(-4rpx);
+
+      .date-week {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .date-day {
+        font-size: 36rpx;
       }
     }
   }
@@ -548,18 +687,18 @@ onMounted(() => {
         gap: 16rpx;
 
         .team-logo {
-          width: 112rpx;
-          height: 112rpx;
+          width: 200rpx;
+          height: 200rpx;
           background-color: #fff;
           border-radius: 50%;
-          padding: 16rpx;
+          padding: 8rpx;
           display: flex;
           justify-content: center;
           align-items: center;
 
           image {
-            width: 80rpx;
-            height: 80rpx;
+            width: 184rpx;
+            height: 184rpx;
           }
         }
 
@@ -671,19 +810,19 @@ onMounted(() => {
       flex: 1;
 
       .mini-logo {
-        width: 64rpx;
-        height: 64rpx;
+        width: 120rpx;
+        height: 120rpx;
         background-color: #fff;
         border-radius: 50%;
-        padding: 8rpx;
+        padding: 6rpx;
         display: flex;
         justify-content: center;
         align-items: center;
         flex-shrink: 0;
 
         image {
-          width: 48rpx;
-          height: 48rpx;
+          width: 108rpx;
+          height: 108rpx;
         }
       }
 

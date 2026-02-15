@@ -6,6 +6,7 @@ import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
+import com.soccer.forum.service.model.dto.MatchVO;
 
 import java.io.Serializable;
 
@@ -24,6 +25,8 @@ public class SearchResultResp implements Serializable {
     private Page<Team> teams;
     @Schema(description = "球员搜索结果")
     private Page<Player> players;
+    @Schema(description = "赛事搜索结果")
+    private Page<MatchVO> matches;
 
     public Page<Post> getPosts() { return posts; }
     public void setPosts(Page<Post> posts) { this.posts = posts; }
@@ -36,4 +39,7 @@ public class SearchResultResp implements Serializable {
 
     public Page<Player> getPlayers() { return players; }
     public void setPlayers(Page<Player> players) { this.players = players; }
+
+    public Page<MatchVO> getMatches() { return matches; }
+    public void setMatches(Page<MatchVO> matches) { this.matches = matches; }
 }

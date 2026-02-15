@@ -8,6 +8,8 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.model.dto.SearchResultResp;
+import com.soccer.forum.service.model.dto.MatchVO;
+import com.soccer.forum.service.service.MatchService;
 import com.soccer.forum.service.service.NewsService;
 import com.soccer.forum.service.service.PlayerService;
 import com.soccer.forum.service.service.PostService;
@@ -33,12 +35,14 @@ public class SearchController {
     private final NewsService newsService;
     private final TeamService teamService;
     private final PlayerService playerService;
+    private final MatchService matchService;
 
-    public SearchController(PostService postService, NewsService newsService, TeamService teamService, PlayerService playerService) {
+    public SearchController(PostService postService, NewsService newsService, TeamService teamService, PlayerService playerService, MatchService matchService) {
         this.postService = postService;
         this.newsService = newsService;
         this.teamService = teamService;
         this.playerService = playerService;
+        this.matchService = matchService;
     }
 
     @Operation(summary = "全局搜索", description = "一次性搜索帖子、资讯、球队和球员")
@@ -69,9 +73,13 @@ public class SearchController {
         // 4. 搜索球员
         Page<Player> playerPage = playerService.listPlayers(page, size, keyword, null);
         result.setPlayers(playerPage);
+
+        // 5. 搜索赛事
+        Page<MatchVO> matchPage = matchService.searchMatches(page, size, keyword);
+        result.setMatches(matchPage);
         
-        log.info("搜索完成: 帖子数={}, 资讯数={}, 球队数={}, 球员数={}", 
-                postPage.getTotal(), newsPage.getTotal(), teamPage.getTotal(), playerPage.getTotal());
+        log.info("搜索完成: 帖子数={}, 资讯数={}, 球队数={}, 球员数={}, 赛事数={}", 
+                postPage.getTotal(), newsPage.getTotal(), teamPage.getTotal(), playerPage.getTotal(), matchPage.getTotal());
         
         return R.ok(result);
     }

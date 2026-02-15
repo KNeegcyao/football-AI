@@ -8,16 +8,17 @@
         </button>
         
         <!-- 搜索框容器 -->
-        <view 
+        <view
           class="flex-1 relative flex items-center h-10 bg-white/5 border rounded-full px-3 transition-all duration-300"
-          :class="[isFocus ? 'border-primary shadow-[0_0_10px_rgba(235,60,60,0.2)] bg-white/10' : 'border-white/10']"
+          :class="[isFocus ? 'border-white/20 bg-white/10' : 'border-white/10']"
         >
           <text class="material-icons text-gray-500 text-lg mr-2">search</text>
-          <input 
-            v-model="keyword" 
-            type="text" 
-            placeholder="搜索资讯或帖子..." 
-            class="flex-1 h-full bg-transparent text-sm focus:outline-none"
+          <input
+            v-model="keyword"
+            type="text"
+            placeholder="搜索资讯或帖子..."
+            class="flex-1 h-full bg-transparent text-sm focus:outline-none border-none"
+            style="outline: none; border-color: transparent;"
             @confirm="handleSearch"
             @focus="isFocus = true"
             @blur="isFocus = false"
@@ -52,38 +53,85 @@
       <!-- Results List -->
       <view v-else class="space-y-4">
         <view 
-          v-for="(item, index) in results" 
-          :key="index" 
-          class="bg-white/5 rounded-xl p-4 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-          @click="goToDetail(item)"
-        >
-          <view class="flex gap-4">
-            <view class="flex-1 min-w-0">
-              <view class="flex items-center gap-2 mb-2">
-                <text class="text-[10px] font-bold uppercase tracking-wider text-primary px-1.5 py-0.5 bg-primary/10 rounded">
-                  {{ item.type === 'news' ? '资讯' : '社区' }}
+        v-for="(item, index) in results" 
+        :key="index" 
+        class="bg-white/5 rounded-xl p-4 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+        @click="goToDetail(item)"
+      >
+        <!-- 赛事卡片 -->
+        <view v-if="item.type === 'match'" class="flex flex-col gap-2">
+           <view class="flex items-center justify-between mb-2">
+              <view class="flex items-center gap-2">
+                <text class="text-[10px] font-bold uppercase tracking-wider text-[#34d399] px-1.5 py-0.5 bg-[#34d399]/10 rounded">
+                  赛事
                 </text>
-                <text class="text-xs text-gray-500">{{ formatTime(item.displayTime) }}</text>
+                <text class="text-xs text-gray-400">{{ item.competitionName }}</text>
               </view>
-              <text class="text-base font-bold text-white leading-snug line-clamp-2 mb-2">
-                {{ item.title }}
+              <text class="text-xs text-gray-500">{{ formatTime(item.matchTime) }}</text>
+           </view>
+           <view class="flex items-center justify-between px-2 py-2 bg-black/20 rounded-lg">
+              <view class="flex flex-col items-center gap-1 w-1/3">
+                 <image :src="getFullImageUrl(item.homeTeam?.logoUrl)" class="w-10 h-10 rounded-full bg-white/5 p-1" mode="aspectFit" @error="handleImageError(item.homeTeam)"></image>
+                 <text class="text-xs font-bold text-white text-center line-clamp-1">{{ item.homeTeam?.name }}</text>
+              </view>
+              <view class="flex flex-col items-center justify-center w-1/3">
+                 <text class="text-2xl font-bold text-white leading-none mb-1" v-if="item.status > 0">{{ item.homeScore }} - {{ item.awayScore }}</text>
+                 <text class="text-xl font-bold text-[#f9d406]" v-else>VS</text>
+                 <text class="text-[10px] text-gray-400 mt-1 px-2 py-0.5 bg-white/5 rounded-full">
+                  {{ item.status === 1 && item.liveTime ? item.liveTime : getStatusText(item.status) }}
+                </text>
+              </view>
+              <view class="flex flex-col items-center gap-1 w-1/3">
+                 <image :src="getFullImageUrl(item.awayTeam?.logoUrl)" class="w-10 h-10 rounded-full bg-white/5 p-1" mode="aspectFit" @error="handleImageError(item.awayTeam)"></image>
+                 <text class="text-xs font-bold text-white text-center line-clamp-1">{{ item.awayTeam?.name }}</text>
+              </view>
+           </view>
+        </view>
+
+        <!-- 资讯/帖子卡片 -->
+        <view v-else class="flex gap-4">
+          <view class="flex-1 min-w-0">
+            <view class="flex items-center gap-2 mb-2">
+              <text class="text-[10px] font-bold uppercase tracking-wider text-primary px-1.5 py-0.5 bg-primary/10 rounded">
+                {{ item.type === 'news' ? '资讯' : '社区' }}
               </text>
-              <view class="flex items-center gap-3 text-xs text-gray-500">
-                <text>{{ item.author }}</text>
-                <view class="flex items-center gap-1">
-                  <text class="material-icons text-sm">visibility</text>
-                  <text>{{ item.viewCount || 0 }}</text>
-                </view>
-              </view>
+              <text class="text-xs text-gray-500">{{ formatTime(item.displayTime) }}</text>
             </view>
+            <text class="text-base font-bold text-white leading-snug line-clamp-2 mb-2">
+              {{ item.title }}
+            </text>
+            <text class="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+              {{ item.summary || item.content }}
+            </text>
+            <view class="flex items-center gap-4 text-xs text-gray-500">
+              <text v-if="item.author" class="flex items-center gap-1">
+                <u-icon name="account" size="14"></u-icon>
+                {{ item.author }}
+              </text>
+              <text class="flex items-center gap-1">
+                <u-icon name="eye" size="14"></u-icon>
+                {{ item.views || 0 }}
+              </text>
+              <text v-if="item.comments !== undefined" class="flex items-center gap-1">
+                <u-icon name="chat" size="14"></u-icon>
+                {{ item.comments || 0 }}
+              </text>
+            </view>
+          </view>
+          
+          <view 
+            v-if="item.cover" 
+            class="w-24 h-24 rounded-lg overflow-hidden bg-white/5 flex-shrink-0"
+          >
             <image 
-              v-if="item.coverUrl || item.image" 
-              :src="getFullImageUrl(item.coverUrl || item.image)" 
-              mode="aspectFill" 
-              class="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-            />
+              :src="getFullImageUrl(item.cover)" 
+              class="w-full h-full object-cover"
+              mode="aspectFill"
+              @error="item.cover = null"
+            ></image>
           </view>
         </view>
+      </view>
       </view>
     </main>
   </view>
@@ -123,19 +171,51 @@ const handleSearch = async () => {
     
     const combinedResults = []
     
-    // 1. 处理资讯
+    // 1. 处理赛事 (优先显示)
+    const matchesData = res.matches || res.Matches
+    if (matchesData && matchesData.records) {
+      matchesData.records.forEach(item => {
+        combinedResults.push({
+          ...item,
+          type: 'match',
+          displayTime: item.matchTime
+        })
+      })
+    }
+
+    // 2. 处理资讯
     const newsData = res.news || res.News
     if (newsData && newsData.records) {
       newsData.records.forEach(item => {
+        // 提取封面图 (如果没封面，尝试从内容提取第一张图)
+        let cover = item.cover
+        if (!cover && item.content) {
+          const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/)
+          if (imgMatch) {
+            cover = imgMatch[1]
+          }
+        }
+        
+        // 处理摘要 (去除 HTML 标签)
+        let summary = item.summary
+        if (!summary && item.content) {
+          // 移除 HTML 标签
+          const textContent = item.content.replace(/<[^>]+>/g, '')
+          // 移除多余空白
+          summary = textContent.replace(/\s+/g, ' ').trim().substring(0, 60) + '...'
+        }
+
         combinedResults.push({
           ...item,
           type: 'news',
-          displayTime: item.publishTime
+          displayTime: item.publishTime,
+          cover: cover,
+          summary: summary
         })
       })
     }
     
-    // 2. 处理帖子
+    // 3. 处理帖子
     const postsData = res.posts || res.Posts
     if (postsData && postsData.records) {
       postsData.records.forEach(item => {
@@ -174,11 +254,39 @@ const goBack = () => {
   uni.navigateBack()
 }
 
+const getStatusText = (status) => {
+  const statusMap = {
+    0: '未开始',
+    1: '进行中',
+    2: '已结束',
+    3: '推迟',
+    4: '取消'
+  }
+  return statusMap[status] || '未开始'
+}
+
+const handleImageError = (team) => {
+  if (team) {
+    team.logoUrl = '/static/soccer-logo.png'
+  }
+}
+
 const goToDetail = (item) => {
+  if (item.type === 'match') {
+    // 赛事没有详情页，跳转到赛程页面
+    uni.switchTab({
+      url: '/pages/schedule/schedule'
+    })
+    return
+  }
+  
   const url = item.type === 'news' 
-    ? `/pages/news/detail?id=${item.id}` 
+    ? `/pages/news/detail?id=${item.id}`
     : `/pages/community/detail?id=${item.id}`
-  uni.navigateTo({ url })
+    
+  uni.navigateTo({
+    url
+  })
 }
 
 const formatTime = (timeStr) => {

@@ -37,6 +37,8 @@ public class Match {
     private String broadcastUrl;
     @Schema(description = "图文直播ID")
     private Long liveTextId;
+    @Schema(description = "实时比赛时间")
+    private String liveTime;
 
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
@@ -70,6 +72,8 @@ public class Match {
     public void setBroadcastUrl(String broadcastUrl) { this.broadcastUrl = broadcastUrl; }
     public Long getLiveTextId() { return liveTextId; }
     public void setLiveTextId(Long liveTextId) { this.liveTextId = liveTextId; }
+    public String getLiveTime() { return liveTime; }
+    public void setLiveTime(String liveTime) { this.liveTime = liveTime; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

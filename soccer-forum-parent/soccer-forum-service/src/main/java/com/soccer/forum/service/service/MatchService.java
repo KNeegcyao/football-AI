@@ -67,4 +67,14 @@ public interface MatchService {
      * @param id 赛事 ID
      */
     void deleteMatch(Long id);
+
+    /**
+     * 搜索赛事
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @param keyword 搜索关键词（球队名或赛事名）
+     * @return 赛事分页对象
+     */
+    Page<MatchVO> searchMatches(Integer page, Integer size, String keyword);
 }

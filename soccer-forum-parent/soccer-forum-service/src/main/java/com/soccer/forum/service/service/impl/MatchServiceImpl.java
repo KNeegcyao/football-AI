@@ -20,7 +20,11 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -201,5 +205,69 @@ public class MatchServiceImpl implements MatchService {
             throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
         log.info("赛事删除成功: id={}", id);
+    }
+
+    @Override
+    public Page<MatchVO> searchMatches(Integer page, Integer size, String keyword) {
+        log.debug("搜索赛事: keyword={}, page={}, size={}", keyword, page, size);
+        Page<Match> matchPage = new Page<>(page, size);
+        LambdaQueryWrapper<Match> query = new LambdaQueryWrapper<>();
+
+        if (StringUtils.hasText(keyword)) {
+            // 定义常见球队别名映射
+            Map<String, String> aliasMap = new HashMap<>();
+            aliasMap.put("曼城", "曼彻斯特城");
+            aliasMap.put("皇马", "皇家马德里");
+            aliasMap.put("巴萨", "巴塞罗那");
+            aliasMap.put("尤文", "尤文图斯");
+            aliasMap.put("拜仁", "拜仁慕尼黑");
+            aliasMap.put("巴黎", "巴黎圣日耳曼");
+            aliasMap.put("枪手", "阿森纳");
+            aliasMap.put("红军", "利物浦");
+            aliasMap.put("蓝军", "切尔西");
+            aliasMap.put("药厂", "勒沃库森");
+            aliasMap.put("曼联", "曼彻斯特联");
+            aliasMap.put("国米", "国际米兰");
+            aliasMap.put("马竞", "马德里竞技");
+
+            List<String> searchKeywords = new ArrayList<>();
+            searchKeywords.add(keyword);
+            if (aliasMap.containsKey(keyword)) {
+                searchKeywords.add(aliasMap.get(keyword));
+            }
+
+            // 1. 查找包含关键词的球队
+            LambdaQueryWrapper<Team> teamQuery = new LambdaQueryWrapper<>();
+            for (String k : searchKeywords) {
+                teamQuery.or().like(Team::getName, k).or().like(Team::getEnglishName, k);
+            }
+            List<Team> teams = teamMapper.selectList(teamQuery);
+            
+            List<Long> teamIds = teams.stream()
+                    .map(Team::getId)
+                    .collect(Collectors.toList());
+
+            // 2. 构建查询条件：主队或客队在列表内，或者赛事名称包含关键词
+            query.and(wrapper -> {
+                if (!teamIds.isEmpty()) {
+                    wrapper.in(Match::getHomeTeamId, teamIds)
+                           .or()
+                           .in(Match::getAwayTeamId, teamIds);
+                }
+                for (String k : searchKeywords) {
+                    wrapper.or().like(Match::getCompetitionName, k);
+                }
+            });
+        }
+
+        query.orderByDesc(Match::getMatchTime);
+        Page<Match> resultPage = matchMapper.selectPage(matchPage, query);
+
+        Page<MatchVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        List<MatchVO> voList = resultPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        voPage.setRecords(voList);
+        return voPage;
     }
 }

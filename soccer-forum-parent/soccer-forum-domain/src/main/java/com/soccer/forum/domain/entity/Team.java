@@ -42,6 +42,9 @@ public class Team {
     @Schema(description = "失球数")
     private Integer goalsAgainst;
 
+    @Schema(description = "英文名称")
+    private String englishName;
+
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -78,6 +81,8 @@ public class Team {
     public void setGoalsFor(Integer goalsFor) { this.goalsFor = goalsFor; }
     public Integer getGoalsAgainst() { return goalsAgainst; }
     public void setGoalsAgainst(Integer goalsAgainst) { this.goalsAgainst = goalsAgainst; }
+    public String getEnglishName() { return englishName; }
+    public void setEnglishName(String englishName) { this.englishName = englishName; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

@@ -60,7 +60,7 @@
       <!-- 推荐列表 -->
       <view class="section-header">
         <text class="section-title">为你推荐</text>
-        <text class="view-all">查看全部</text>
+        <text class="view-all" @click="goToSearch">查看全部</text>
       </view>
 
       <view class="post-list">
