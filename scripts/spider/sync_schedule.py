@@ -154,18 +154,21 @@ def fetch_livescore_data(date_str):
     URL: https://prod-public-api.livescore.com/v1/api/app/date/soccer/{date}/8
     """
     url = f"https://prod-public-api.livescore.com/v1/api/app/date/soccer/{date_str}/8"
-    try:
-        # Debug script worked without headers, so let's try minimal headers or none if problematic
-        # But requests default UA is often blocked. Debug script used requests default.
-        # Let's try to match debug script exactly (no headers passed)
-        response = requests.get(url, timeout=15)
-        if response.status_code != 200:
-            logger.error(f"请求失败 {date_str}: {response.status_code}")
-            return None
-        return response.json()
-    except Exception as e:
-        logger.error(f"请求异常 {date_str}: {e}")
-        return None
+    for attempt in range(3):
+        try:
+            # Debug script worked without headers, so let's try minimal headers or none if problematic
+            # But requests default UA is often blocked. Debug script used requests default.
+            # Let's try to match debug script exactly (no headers passed)
+            response = requests.get(url, timeout=15)
+            if response.status_code != 200:
+                logger.error(f"请求失败 {date_str}: {response.status_code}")
+                time.sleep(2)
+                continue
+            return response.json()
+        except Exception as e:
+            logger.error(f"请求异常 {date_str} (尝试 {attempt+1}/3): {e}")
+            time.sleep(2)
+    return None
 
 def process_stage(cursor, stage, date_str):
     """处理单个赛事阶段 (League)"""
@@ -269,8 +272,9 @@ def sync_schedule():
     conn = get_connection()
     try:
         with conn.cursor() as cursor:
-            # 循环未来7天
-            for i in range(8):
+            # 循环过去1天到未来7天 (共9天)
+            # 这样可以确保昨天的比赛状态被更新为完赛
+            for i in range(-1, 8):
                 target_date = datetime.now() + timedelta(days=i)
                 date_str = target_date.strftime('%Y%m%d')
                 logger.info(f"开始抓取 {date_str} 的数据...")
@@ -301,11 +305,11 @@ if __name__ == "__main__":
         try:
             logger.info(f"=== 开始同步: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
             sync_schedule()
-            logger.info("=== 同步完成，等待 60 秒 ===")
-            time.sleep(60)
+            logger.info("=== 同步完成，等待 180 秒 ===")
+            time.sleep(180)
         except KeyboardInterrupt:
             logger.info("停止监控服务")
             break
         except Exception as e:
             logger.error(f"监控循环异常: {e}")
-            time.sleep(60)
+            time.sleep(180)
