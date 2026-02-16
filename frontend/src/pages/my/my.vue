@@ -126,6 +126,26 @@
         <text class="tab-text">{{ tab.text }}</text>
       </view>
     </view>
+    <!-- Logout Modal -->
+    <view v-if="showLogoutModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <view class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showLogoutModal = false"></view>
+      <view class="relative w-full max-w-[280px] bg-[#1A1811] rounded-2xl border border-[#f9d406]/20 p-6 flex flex-col items-center">
+        <view class="w-12 h-12 rounded-full bg-[#f9d406]/10 flex items-center justify-center mb-4 text-[#f9d406]">
+          <text class="material-icons-round" style="font-size: 24px;">logout</text>
+        </view>
+        <text class="text-white text-lg font-bold mb-2">退出登录</text>
+        <text class="text-gray-400 text-sm text-center mb-6">确定要退出当前账号吗？</text>
+        
+        <view class="flex flex-row w-full gap-3">
+          <view class="flex-1 bg-white/5 active:bg-white/10 text-white text-sm py-2.5 rounded-xl border border-white/5 text-center flex items-center justify-center" @click="showLogoutModal = false">
+            取消
+          </view>
+          <view class="flex-1 bg-[#f9d406] active:bg-[#eac406] text-[#1A1811] text-sm font-bold py-2.5 rounded-xl shadow-lg shadow-[#f9d406]/20 text-center flex items-center justify-center" @click="confirmLogout">
+            确认退出
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -154,6 +174,9 @@ const userInfo = ref({
   },
   newPosts: 0
 })
+
+const showLogoutModal = ref(false)
+
 
 
 onShow(() => {
@@ -340,26 +363,23 @@ const goTo = (page) => {
 }
 
 const logout = () => {
-  uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        console.log('User confirmed logout')
-        // 清除 Token
-        uni.removeStorageSync('token')
-        uni.removeStorageSync('userInfo')
-        
-        uni.showToast({
-          title: '已退出',
-          icon: 'success'
-        })
-        setTimeout(() => {
-          handleTabClick(0) // Go to home
-        }, 1500)
-      }
-    }
+  showLogoutModal.value = true
+}
+
+const confirmLogout = () => {
+  showLogoutModal.value = false
+  console.log('User confirmed logout')
+  // 清除 Token
+  uni.removeStorageSync('token')
+  uni.removeStorageSync('userInfo')
+  
+  uni.showToast({
+    title: '已退出',
+    icon: 'success'
   })
+  setTimeout(() => {
+    handleTabClick(0) // Go to home
+  }, 1500)
 }
 </script>
 
