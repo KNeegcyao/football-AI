@@ -11,8 +11,12 @@
     </script>
     <title>Soccer Forum</title>
     <meta name="referrer" content="no-referrer" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    
+    <!-- Added Fonts from User Request -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
       tailwind.config = {
@@ -20,12 +24,24 @@
         theme: {
           extend: {
             colors: {
-              "primary": "#f20d33",
-              "background-light": "#f8f5f6",
-              "background-dark": "#0A0A0A",
-            }
-          }
-        }
+              "primary": "#ec1337",
+              "background-light": "#f8f6f6",
+              "background-dark": "#0a0a0a",
+              "gold": "#D4AF37",
+              "surface-dark": "#1a080a",
+              "border-dark": "#2d161a",
+            },
+            fontFamily: {
+              "display": ["Lexend", "PingFang SC", "Microsoft YaHei", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+          },
+        },
       }
     </script>
     <!--preload-links-->

@@ -70,7 +70,17 @@ graph TD
 - **JDK**: 17+
 - **Maven**: 3.8+
 - **Node.js**: 18+ (用于前端编译)
-- **Docker**: 建议安装 Docker Desktop 以快速启动中间件
+- Docker: 建议安装 Docker Desktop 以快速启动中间件
+
+### 🚀 一键启动 (Trae/VS Code)
+推荐直接在 IDE 内部运行，无需弹出黑框：
+1. 按下快捷键 `Ctrl + Shift + B` (Windows)。
+2. 选择 **"🚀 一键启动所有服务 (Start All)"**。
+3. 稍等片刻，IDE 下方的终端面板将自动分屏运行后端和前端服务。
+
+### 💻 一键启动 (Windows 外部运行)
+如果不使用 IDE，可以直接运行项目根目录下的脚本：
+- 双击 `start_dev.bat`：自动启动后端 (Spring Boot) 和前端 (H5模式) 服务。
 
 ### 1. 启动基础设施
 使用 Docker Compose 启动 MySQL 和 Redis：

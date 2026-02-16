@@ -101,6 +101,17 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(loginBody.getUsername());
         user.setPassword(passwordEncoder.encode(loginBody.getPassword()));
         user.setNickname(loginBody.getNickname() != null ? loginBody.getNickname() : "User_" + System.currentTimeMillis());
+        
+        if (loginBody.getEmail() != null && !loginBody.getEmail().isEmpty()) {
+            user.setEmail(loginBody.getEmail());
+        }
+        
+        if (loginBody.getPhone() != null && !loginBody.getPhone().isEmpty()) {
+            user.setPhone(loginBody.getPhone());
+        } else if (loginBody.getUsername().matches("^1[3-9]\\d{9}$")) {
+            user.setPhone(loginBody.getUsername());
+        }
+        
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.NORMAL);
         

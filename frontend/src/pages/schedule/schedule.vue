@@ -199,7 +199,7 @@ const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
   { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
   { text: '社区', icon: 'chat', path: 'pages/index/index' },
-  { text: '我的', icon: 'account', path: 'pages/index/index' }
+  { text: '我的', icon: 'account', path: 'pages/my/my' }
 ]
 
 // 初始化日期列表（前后3天）

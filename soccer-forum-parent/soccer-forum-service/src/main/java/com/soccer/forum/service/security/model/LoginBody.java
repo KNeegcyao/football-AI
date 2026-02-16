@@ -17,6 +17,10 @@ public class LoginBody {
     private String password;
     @Schema(description = "昵称 (注册时使用)")
     private String nickname;
+    @Schema(description = "邮箱 (注册时使用)")
+    private String email;
+    @Schema(description = "手机号 (注册时使用)")
+    private String phone;
 
     @Schema(description = "用户名", example = "admin", requiredMode = Schema.RequiredMode.REQUIRED)
     public String getUsername() { return username; }
@@ -27,4 +31,8 @@ public class LoginBody {
     @Schema(description = "昵称 (注册时使用)")
     public String getNickname() { return nickname; }
     public void setNickname(String nickname) { this.nickname = nickname; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 }

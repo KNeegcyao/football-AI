@@ -32,6 +32,34 @@
         "navigationBarTitleText": "搜索",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/my/edit",
+      "style": {
+        "navigationBarTitleText": "编辑资料",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
@@ -56,6 +84,12 @@
       {
         "pagePath": "pages/schedule/schedule",
         "text": "赛程",
+        "iconPath": "static/soccer-logo.png",
+        "selectedIconPath": "static/soccer-logo.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
         "iconPath": "static/soccer-logo.png",
         "selectedIconPath": "static/soccer-logo.png"
       }
