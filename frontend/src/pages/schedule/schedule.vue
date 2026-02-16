@@ -431,7 +431,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .schedule-container {
   min-height: 100vh;
   background-color: #1a1811;

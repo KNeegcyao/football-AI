@@ -14,7 +14,25 @@ export const authApi = {
    * 注册
    * @param {Object} data { username, password, nickname }
    */
-  register: (data) => request.post('/api/auth/register', data)
+  register: (data) => request.post('/api/auth/register', data),
+
+  /**
+   * 重置密码
+   * @param {Object} data { username, password, code }
+   */
+  resetPassword: (data) => request.post('/api/auth/reset-password', data),
+
+  /**
+   * 发送验证码
+   * @param {Object} data { phone }
+   */
+  sendCode: (data) => request.post('/api/auth/send-code', data),
+
+  /**
+   * 验证码登录
+   * @param {Object} data { phone, code }
+   */
+  loginByCode: (data) => request.post('/api/auth/login-code', data)
 }
 
 /**

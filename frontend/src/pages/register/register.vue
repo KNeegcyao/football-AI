@@ -189,7 +189,7 @@ const handleAgreementChange = (e) => {
   isAgreed.value = e.detail.value.includes('agreed')
 }
 
-const getVerificationCode = () => {
+const getVerificationCode = async () => {
   if (!form.value.username) {
     uni.showToast({ title: '请输入手机号', icon: 'none' })
     return
@@ -200,11 +200,16 @@ const getVerificationCode = () => {
   }
   if (countdown.value > 0) return
   
-  // 模拟发送验证码
   uni.showLoading({ title: '发送中...' })
-  setTimeout(() => {
+  try {
+    const code = await authApi.sendCode({ phone: form.value.username })
     uni.hideLoading()
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
+    
+    // For development/demo purposes, we can show the code in a toast or console
+    // In production, the user receives SMS
+    console.log('Verification code:', code)
+    uni.showToast({ title: '验证码已发送: ' + code, icon: 'none', duration: 3000 })
+
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
@@ -212,7 +217,10 @@ const getVerificationCode = () => {
         clearInterval(timer)
       }
     }, 1000)
-  }, 1000)
+  } catch (e) {
+    uni.hideLoading()
+    console.error('发送验证码失败:', e)
+  }
 }
 
 const handleRegister = async () => {
@@ -284,7 +292,6 @@ const goToLogin = () => {
 </script>
 
 <style>
-@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 
 .bg-stadium-gradient {
   background: radial-gradient(circle at top right, #2d1418 0%, #12080a 70%);

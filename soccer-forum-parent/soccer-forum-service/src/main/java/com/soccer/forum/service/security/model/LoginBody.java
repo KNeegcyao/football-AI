@@ -21,6 +21,9 @@ public class LoginBody {
     private String email;
     @Schema(description = "手机号 (注册时使用)")
     private String phone;
+    
+    @Schema(description = "验证码")
+    private String code;
 
     @Schema(description = "用户名", example = "admin", requiredMode = Schema.RequiredMode.REQUIRED)
     public String getUsername() { return username; }
@@ -35,4 +38,7 @@ public class LoginBody {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
 }

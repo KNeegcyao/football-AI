@@ -35,4 +35,27 @@ public interface AuthService {
      * @return 登录成功后生成的 JWT 令牌
      */
     String wechatLogin(String code);
+
+    /**
+     * 重置密码
+     *
+     * @param loginBody 重置密码请求参数（用户名、新密码）
+     */
+    void resetPassword(LoginBody loginBody);
+
+    /**
+     * 发送验证码
+     *
+     * @param phone 手机号
+     * @return 生成的验证码
+     */
+    String sendCode(String phone);
+
+    /**
+     * 验证码登录
+     *
+     * @param loginBody 登录请求参数（手机号、验证码）
+     * @return 登录成功后生成的 JWT 令牌
+     */
+    String loginByCode(LoginBody loginBody);
 }

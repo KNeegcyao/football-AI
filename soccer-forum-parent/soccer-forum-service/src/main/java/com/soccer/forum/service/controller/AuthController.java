@@ -86,4 +86,47 @@ public class AuthController {
         // 暂未实现完整微信登录逻辑
         return R.fail("微信登录功能暂未启用");
     }
+
+    /**
+     * 重置密码接口
+     * <p>
+     * 接收用户名和新密码，重置用户密码。
+     * </p>
+     *
+     * @param loginBody 包含用户名和新密码的请求体
+     * @return 结果
+     */
+    @Operation(summary = "重置密码", description = "重置用户密码")
+    @PostMapping("/reset-password")
+    public R<Void> resetPassword(@Validated @RequestBody LoginBody loginBody) {
+        log.info("收到重置密码请求: 用户名={}", loginBody.getUsername());
+        authService.resetPassword(loginBody);
+        return R.ok(null, "密码重置成功");
+    }
+
+    /**
+     * 发送验证码接口
+     *
+     * @param body 包含手机号的 JSON 对象
+     * @return 结果
+     */
+    @Operation(summary = "发送验证码", description = "发送手机验证码")
+    @PostMapping("/send-code")
+    public R<String> sendCode(@RequestBody Map<String, String> body) {
+        String phone = body.get("phone");
+        if (phone == null || phone.isEmpty()) {
+            return R.fail("手机号不能为空");
+        }
+        log.info("收到发送验证码请求: 手机号={}", phone);
+        String code = authService.sendCode(phone);
+        return R.ok(code, "验证码发送成功");
+    }
+
+    @Operation(summary = "验证码登录", description = "使用手机号和验证码登录")
+    @PostMapping("/login-code")
+    public R<Map<String, String>> loginByCode(@RequestBody LoginBody loginBody) {
+        log.info("收到验证码登录请求: 手机号={}", loginBody.getPhone());
+        String token = authService.loginByCode(loginBody);
+        return R.ok(Map.of("token", token), "登录成功");
+    }
 }
