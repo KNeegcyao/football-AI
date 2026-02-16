@@ -49,8 +49,112 @@ def map_status(eps):
 def get_connection():
     return pymysql.connect(**DB_CONFIG)
 
+# 手动翻译映射表 (English -> Chinese)
+MANUAL_TRANSLATIONS = {
+    'Wolves': '狼队',
+    'Qarabag FK': '卡拉巴赫',
+    'Bodoe/Glimt': '博德闪耀',
+    'Club Brugge': '布鲁日',
+    'Club Brugge KV': '布鲁日',
+    'Como 1907': '科莫',
+    'Olympiacos': '奥林匹亚科斯',
+    'Olympiacos FC': '奥林匹亚科斯',
+    'PSV Eindhoven': '埃因霍温',
+    'Sporting CP': '葡萄牙体育',
+    'Galatasaray': '加拉塔萨雷',
+    'Fenerbahce': '费内巴切',
+    'Besiktas': '贝西克塔斯',
+    'Shakhtar Donetsk': '顿涅茨克矿工',
+    'Benfica': '本菲卡',
+    'Porto': '波尔图',
+    'Ajax': '阿贾克斯',
+    'Feyenoord': '费耶诺德',
+    'Celtic': '凯尔特人',
+    'Rangers': '流浪者',
+    'Dynamo Kyiv': '基辅迪纳摩',
+    'Slavia Prague': '布拉格斯拉维亚',
+    'Sparta Prague': '布拉格斯巴达',
+    'Red Star Belgrade': '贝尔格莱德红星',
+    'Young Boys': '年轻人',
+    'RB Salzburg': '萨尔茨堡红牛',
+    'Sturm Graz': '格拉茨风暴',
+    'Brest': '布雷斯特',
+    'Girona': '赫罗纳',
+    'Bologna': '博洛尼亚',
+    'Aston Villa': '阿斯顿维拉',
+    'Newcastle United': '纽卡斯尔联',
+    'Brighton & Hove Albion': '布莱顿',
+    'West Ham United': '西汉姆联',
+    'Real Sociedad': '皇家社会',
+    'Real Betis': '皇家贝蒂斯',
+    'Villarreal': '比利亚雷亚尔',
+    'Athletic Club': '毕尔巴鄂竞技',
+    'Lazio': '拉齐奥',
+    'Roma': '罗马',
+    'Atalanta': '亚特兰大',
+    'Fiorentina': '佛罗伦萨',
+    'Nice': '尼斯',
+    'Lille': '里尔',
+    'Monaco': '摩纳哥',
+    'Lens': '朗斯',
+    'Marseille': '马赛',
+    'Lyon': '里昂',
+    'Stuttgart': '斯图加特',
+    'Eintracht Frankfurt': '法兰克福',
+    'Hoffenheim': '霍芬海姆',
+    'Freiburg': '弗赖堡',
+    'Union Berlin': '柏林联合',
+    'Mainz 05': '美因茨',
+    'Augsburg': '奥格斯堡',
+    'Heidenheim': '海登海姆',
+    'Werder Bremen': '不莱梅',
+    'Wolfsburg': '沃尔夫斯堡',
+    'Borussia Monchengladbach': '门兴',
+    'Bochum': '波鸿',
+    'Darmstadt 98': '达姆施塔特',
+    'FC Koln': '科隆',
+    'Las Palmas': '拉斯帕尔马斯',
+    'Alaves': '阿拉维斯',
+    'Osasuna': '奥萨苏纳',
+    'Getafe': '赫塔菲',
+    'Valencia': '瓦伦西亚',
+    'Mallorca': '马洛卡',
+    'Sevilla': '塞维利亚',
+    'Celta Vigo': '塞尔塔',
+    'Rayo Vallecano': '巴列卡诺',
+    'Cadiz': '加的斯',
+    'Granada': '格拉纳达',
+    'Almeria': '阿尔梅里亚',
+    'Torino': '都灵',
+    'Napoli': '那不勒斯',
+    'Genoa': '热那亚',
+    'Monza': '蒙扎',
+    'Lecce': '莱切',
+    'Udinese': '乌迪内斯',
+    'Cagliari': '卡利亚里',
+    'Empoli': '恩波利',
+    'Frosinone': '弗罗西诺内',
+    'Sassuolo': '萨索洛',
+    'Salernitana': '萨勒尼塔纳',
+    'Verona': '维罗纳',
+    'Rennes': '雷恩',
+    'Reims': '兰斯',
+    'Toulouse': '图卢兹',
+    'Strasbourg': '斯特拉斯堡',
+    'Montpellier': '蒙彼利埃',
+    'Nantes': '南特',
+    'Le Havre': '勒阿弗尔',
+    'Metz': '梅斯',
+    'Lorient': '洛里昂',
+    'Clermont Foot': '克莱蒙',
+}
+
 def translate_team_name(english_name):
     """使用 DDGS 将英文队名翻译为中文"""
+    # 0. 查表优先
+    if english_name in MANUAL_TRANSLATIONS:
+        return MANUAL_TRANSLATIONS[english_name]
+
     try:
         logger.info(f"正在翻译球队名称: {english_name}...")
         with DDGS() as ddgs:
@@ -113,6 +217,14 @@ def get_or_create_team(cursor, english_name, logo_url):
     result = cursor.fetchone()
     
     if result:
+        # 修正错误的中文名 (如 "有什么区别" -> "布鲁日")
+        if english_name in MANUAL_TRANSLATIONS:
+            correct_name = MANUAL_TRANSLATIONS[english_name]
+            if result['name'] != correct_name:
+                 logger.info(f"修正球队中文名: {result['name']} -> {correct_name}")
+                 update_sql = "UPDATE teams SET name = %s WHERE id = %s"
+                 cursor.execute(update_sql, (correct_name, result['id']))
+
         # 更新 logo 如果需要
         if logo_url and (not result['logo_url'] or result['logo_url'] == '/static/soccer-logo.png'):
              update_sql = "UPDATE teams SET logo_url = %s WHERE id = %s"
