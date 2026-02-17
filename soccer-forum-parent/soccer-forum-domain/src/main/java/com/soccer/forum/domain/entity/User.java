@@ -44,6 +44,12 @@ public class User implements Serializable {
     @Schema(description = "状态")
     private UserStatus status;
 
+    @Schema(description = "等级")
+    private Integer level;
+
+    @Schema(description = "经验值")
+    private Integer experience;
+
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -82,6 +88,12 @@ public class User implements Serializable {
 
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
+
+    public Integer getLevel() { return level; }
+    public void setLevel(Integer level) { this.level = level; }
+
+    public Integer getExperience() { return experience; }
+    public void setExperience(Integer experience) { this.experience = experience; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -2,7 +2,8 @@
   <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden">
     <!-- Background Overlay Texture -->
     <image 
-      class="fixed inset-0 z-0 opacity-10 w-full h-full object-cover pointer-events-none" 
+      class="fixed inset-0 z-0 opacity-30 w-full h-full object-cover pointer-events-none" 
+      style="object-position: right bottom;"
       src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1000" 
       mode="aspectFill"
     ></image>

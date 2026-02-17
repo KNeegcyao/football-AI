@@ -15,8 +15,8 @@
         <view class="action-btn" @click="goToSearch">
           <u-icon name="search" color="#fff" size="44rpx"></u-icon>
         </view>
-        <view class="avatar-box">
-          <image class="avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIQzgWcNfhgZFvam6mBjP3SQ_yGWwerChZs_eM8_z1o9qWN1QnojbmioWRE4k-7JCMz3wyTItaNxPRS96uepbCycNWyeFd5CG59XlkU87Xapse9FwdEkK2Zx1w8ht2xUwawr5W2_YCj4et1disriTjbEFli9UPYJNPga5CS2cxoieZu8XSCzo0RPa4yG7saKzV_HIw3mDGt75bzRZba9L3kB0HwXM3AyVsiTFG6TPJ51agHPrnr6rJ6i2lggc-umhels7SEKP-34Nv"></image>
+        <view class="avatar-box" @click="goToProfile">
+          <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
         </view>
       </view>
     </view>
@@ -116,7 +116,43 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { postApi, newsApi } from '@/api'
+import { onShow } from '@dcloudio/uni-app'
+import { postApi, newsApi, userApi, fileApi } from '@/api'
+
+const userAvatar = ref('/static/soccer-logo.png')
+
+const handleAvatarError = () => {
+  userAvatar.value = '/static/soccer-logo.png'
+}
+
+const getUserProfile = async () => {
+  try {
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      userAvatar.value = '/static/soccer-logo.png'
+      return
+    }
+    const res = await userApi.getProfile()
+    if (res && res.avatar) {
+      userAvatar.value = fileApi.getFileUrl(res.avatar)
+    } else {
+      userAvatar.value = '/static/soccer-logo.png'
+    }
+  } catch (e) {
+    console.error('获取用户信息失败:', e)
+    userAvatar.value = '/static/soccer-logo.png'
+  }
+}
+
+const goToProfile = () => {
+  uni.switchTab({
+    url: '/pages/my/my'
+  })
+}
+
+onShow(() => {
+  getUserProfile()
+})
 
 const currentCategory = ref(0)
 const categories = [

@@ -258,7 +258,6 @@ const loadUserProfile = async () => {
       userInfo.value.nickname = profileRes.nickname || profileRes.username
       userInfo.value.username = '@' + profileRes.username
       userInfo.value.avatar = profileRes.avatar ? fileApi.getFileUrl(profileRes.avatar) : '/static/soccer-logo.png'
-      // 假设后端返回 level，如果没有则默认为 1
       userInfo.value.level = profileRes.level || 1
     }
 

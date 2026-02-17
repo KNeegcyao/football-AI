@@ -28,6 +28,12 @@ public class UserInfoResp {
     @Schema(description = "角色")
     private UserRole role;
 
+    @Schema(description = "等级")
+    private Integer level;
+
+    @Schema(description = "经验值")
+    private Integer experience;
+
     public static UserInfoResp fromEntity(User user) {
         UserInfoResp resp = new UserInfoResp();
         resp.setId(user.getId());
@@ -37,6 +43,8 @@ public class UserInfoResp {
         resp.setEmail(user.getEmail());
         resp.setPhone(user.getPhone());
         resp.setRole(user.getRole());
+        resp.setLevel(user.getLevel() == null ? 1 : user.getLevel());
+        resp.setExperience(user.getExperience() == null ? 0 : user.getExperience());
         return resp;
     }
 
@@ -54,4 +62,8 @@ public class UserInfoResp {
     public void setPhone(String phone) { this.phone = phone; }
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
+    public Integer getLevel() { return level; }
+    public void setLevel(Integer level) { this.level = level; }
+    public Integer getExperience() { return experience; }
+    public void setExperience(Integer experience) { this.experience = experience; }
 }
