@@ -87,41 +87,40 @@
         </view>
 
         <view class="comments-list">
-          <!-- Comment 1 -->
-          <view class="comment-item">
-            <image class="comment-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUXudDBE16DhOai6np2yUPZLffzpmi2V7ZJdl5lTIhsGlQCUCOyu5n95GdKQryAjFB_eqiVsbIZP7wnv-QiDI00TGNBQ-TsxtVaum5gaGXiT9JqnpdahlV24jtv45QhoVkAiJgwIBeb_IaZQC52v6bDbe1gnbPfbdQcP6jCytd2FeulAEd_vwptCcpDz2kLqLL7c4Qpn784dQmIR_bR0fXrkfbBEZ36Fek9Ac8TzTNoGsFFwFioL44eirMqWoIG10jxI02pu5nTSKU"></image>
+          <view class="comment-item" v-for="(comment, index) in comments" :key="index">
+            <image class="comment-avatar" :src="comment.user.avatar" mode="aspectFill"></image>
             <view class="comment-content-wrapper">
               <view class="comment-bubble">
                 <view class="comment-user-row">
-                  <text class="comment-username">Kylian_Stan7</text>
-                  <text class="comment-time">1h ago</text>
+                  <text class="comment-username">{{ comment.user.name }}</text>
+                  <text class="comment-time">{{ comment.time }}</text>
                 </view>
-                <text class="comment-text">The AI missed the Rodri factor. If he plays deep, Madrid's transition will be suffocated. Look at the stats from the last 5 games!</text>
+                <text class="comment-text">{{ comment.content }}</text>
               </view>
               <view class="comment-actions">
                 <view class="action-item">
                   <text class="material-icons" style="font-size: 14px;">favorite_border</text>
-                  <text class="action-text">24</text>
+                  <text class="action-text">{{ comment.likes }}</text>
                 </view>
                 <text class="reply-btn">Reply</text>
               </view>
 
               <!-- Nested Replies -->
-              <view class="nested-replies">
-                <view class="comment-item nested">
-                  <image class="comment-avatar small" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCorKt5rGdLNiUO420dckysCDHIMz84gOyqb6R2B1M-GqPihcabXVPHJco5fmqyb5BeEgsyNNNM4KfaodSyTYwTSqm-4GE8C8yE5flsAUSG2v6I7NhMFaU9Rt8o2-vwHXq55daSZPP0S80AgNVMxqmpFBQ9flHryatFRT_BMxBNwJFphBAbCjkPTfU9KlX_Zw-FC0vELpC6kNyZSrV4F6jAvNiq8nN11-4bk-ASgKnecdW-ypHtQ6vYrCfVSU__qhXOToKT2zWqxfmp"></image>
+              <view class="nested-replies" v-if="comment.replies && comment.replies.length > 0">
+                <view class="comment-item nested" v-for="(reply, rIndex) in comment.replies" :key="rIndex">
+                  <image class="comment-avatar small" :src="reply.user.avatar" mode="aspectFill"></image>
                   <view class="comment-content-wrapper">
                     <view class="comment-bubble semi-transparent">
                       <view class="comment-user-row">
-                        <text class="comment-username">SarahStats</text>
-                        <text class="comment-time">45m ago</text>
+                        <text class="comment-username">{{ reply.user.name }}</text>
+                        <text class="comment-time">{{ reply.time }}</text>
                       </view>
-                      <text class="comment-text">Actually, <text class="highlight-text">@Kylian_Stan7</text> the heatmaps show Rodri is pushing higher this season. Leaving the gap for Vini Jr.</text>
+                      <text class="comment-text">{{ reply.content }}</text>
                     </view>
                     <view class="comment-actions">
-                      <view class="action-item active">
+                      <view class="action-item">
                         <text class="material-icons" style="font-size: 12px; color: #f2b90d;">favorite</text>
-                        <text class="action-text">8</text>
+                        <text class="action-text">{{ reply.likes }}</text>
                       </view>
                       <text class="reply-btn">Reply</text>
                     </view>
@@ -137,15 +136,62 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { postApi } from '@/api';
+
+const comments = ref([]);
+const postId = ref(null);
 
 const goBack = () => {
   uni.navigateBack();
 };
 
+// Default Mock Data
+const defaultComments = [
+  {
+    user: {
+      name: 'Kylian_Stan7',
+      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAUXudDBE16DhOai6np2yUPZLffzpmi2V7ZJdl5lTIhsGlQCUCOyu5n95GdKQryAjFB_eqiVsbIZP7wnv-QiDI00TGNBQ-TsxtVaum5gaGXiT9JqnpdahlV24jtv45QhoVkAiJgwIBeb_IaZQC52v6bDbe1gnbPfbdQcP6jCytd2FeulAEd_vwptCcpDz2kLqLL7c4Qpn784dQmIR_bR0fXrkfbBEZ36Fek9Ac8TzTNoGsFFwFioL44eirMqWoIG10jxI02pu5nTSKU'
+    },
+    time: '1h ago',
+    content: "The AI missed the Rodri factor. If he plays deep, Madrid's transition will be suffocated. Look at the stats from the last 5 games!",
+    likes: 24,
+    replies: [
+      {
+        user: {
+          name: 'SarahStats',
+          avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCorKt5rGdLNiUO420dckysCDHIMz84gOyqb6R2B1M-GqPihcabXVPHJco5fmqyb5BeEgsyNNNM4KfaodSyTYwTSqm-4GE8C8yE5flsAUSG2v6I7NhMFaU9Rt8o2-vwHXq55daSZPP0S80AgNVMxqmpFBQ9flHryatFRT_BMxBNwJFphBAbCjkPTfU9KlX_Zw-FC0vELpC6kNyZSrV4F6jAvNiq8nN11-4bk-ASgKnecdW-ypHtQ6vYrCfVSU__qhXOToKT2zWqxfmp'
+        },
+        time: '45m ago',
+        content: "Actually, @Kylian_Stan7 the heatmaps show Rodri is pushing higher this season. Leaving the gap for Vini Jr.",
+        likes: 8
+      }
+    ]
+  }
+];
+
+// Initialize with default data
+comments.value = defaultComments;
+
+const loadComments = async (id) => {
+  try {
+    const res = await postApi.getComments(id);
+    if (res) {
+      comments.value = res;
+    }
+  } catch (e) {
+    console.error('Failed to load comments:', e);
+    // Keep default data
+  }
+};
+
 onLoad((options) => {
+  if (options.id) {
+    postId.value = options.id;
+    loadComments(options.id);
+  }
   if (options.title) {
-    // Optionally update title or fetch data
     console.log('Post loaded for topic:', decodeURIComponent(options.title));
   }
 });

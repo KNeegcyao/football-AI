@@ -36,6 +36,21 @@ export const authApi = {
 }
 
 /**
+ * 社区相关接口
+ */
+export const communityApi = {
+  /**
+   * 获取热门圈子
+   */
+  getHotCircles: () => request.get('/api/community/circles/hot'),
+
+  /**
+   * 获取趋势话题
+   */
+  getTrendTopics: () => request.get('/api/community/topics/trending')
+}
+
+/**
  * 帖子相关接口
  */
 export const postApi = {
@@ -48,6 +63,11 @@ export const postApi = {
    * 获取帖子详情
    */
   getDetail: (id) => request.get(`/api/posts/${id}`),
+
+  /**
+   * 获取帖子评论
+   */
+  getComments: (id, params) => request.get('/api/comments/list', { postId: id, ...params }),
 
   /**
    * 发布帖子

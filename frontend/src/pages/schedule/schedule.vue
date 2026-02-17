@@ -395,43 +395,19 @@ const stopAutoRefresh = () => {
 }
 
 const handleTabClick = (index) => {
-  try {
-    const tab = tabs[index]
-    if (!tab || !tab.path) return
+  const tab = tabs[index]
+  if (!tab || !tab.path) return
+  
+  if (currentTab.value === index) return
 
-    currentTab.value = index
-    
-    // 统一路径格式：pages/schedule/schedule
-    const path = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path
-
-    // #ifdef H5
-    // 检查是否已经是当前路径，避免重复刷新
-    const currentHash = window.location.hash.replace('#/', '')
-    if (currentHash === path) {
-      console.log('已经在当前页面，无需跳转')
-      return
+  const url = tab.path.startsWith('/') ? tab.path : '/' + tab.path
+  
+  uni.switchTab({
+    url: url,
+    fail: () => {
+      uni.reLaunch({ url })
     }
-
-    console.log('执行强制重载跳转:', path)
-    
-    // 彻底放弃框架路由，改用物理重载
-    const newUrl = window.location.origin + window.location.pathname + '#/' + path
-    window.location.href = newUrl
-    
-    // 增加延迟，确保 hash 变更已被浏览器记录，减少 ERR_ABORTED 风险
-    setTimeout(() => {
-      window.location.reload()
-    }, 100)
-    // #endif
-
-    // #ifndef H5
-    uni.reLaunch({
-      url: '/' + path
-    })
-    // #endif
-  } catch (e) {
-    console.error('跳转异常:', e)
-  }
+  })
 }
 
 const switchTab = (index) => {
@@ -504,12 +480,6 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 100;
-  
-  /* #ifdef H5 */
-  max-width: 440px;
-  left: 50%;
-  transform: translateX(-50%);
-  /* #endif */
 }
 
 .logo-area {

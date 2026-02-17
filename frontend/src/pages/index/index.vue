@@ -296,43 +296,19 @@ const goToSearch = () => {
 }
 
 const handleTabClick = (index) => {
-  try {
-    const tab = tabs[index]
-    if (!tab || !tab.path) return
+  const tab = tabs[index]
+  if (!tab || !tab.path) return
+  
+  if (currentTab.value === index) return
 
-    currentTab.value = index
-    
-    // 统一路径格式：pages/schedule/schedule
-    const path = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path
-
-    // #ifdef H5
-    // 检查是否已经是当前路径，避免重复刷新
-    const currentHash = window.location.hash.replace('#/', '')
-    if (currentHash === path) {
-      console.log('已经在当前页面，无需跳转')
-      return
+  const url = tab.path.startsWith('/') ? tab.path : '/' + tab.path
+  
+  uni.switchTab({
+    url: url,
+    fail: () => {
+      uni.reLaunch({ url })
     }
-
-    console.log('执行强制重载跳转:', path)
-    
-    // 彻底放弃框架路由，改用物理重载
-    const newUrl = window.location.origin + window.location.pathname + '#/' + path
-    window.location.href = newUrl
-    
-    // 增加延迟，确保 hash 变更已被浏览器记录，减少 ERR_ABORTED 风险
-    setTimeout(() => {
-      window.location.reload()
-    }, 100)
-    // #endif
-
-    // #ifndef H5
-    uni.reLaunch({
-      url: '/' + path
-    })
-    // #endif
-  } catch (e) {
-    console.error('跳转异常:', e)
-  }
+  })
 }
 
 const switchTab = (index) => {
@@ -699,68 +675,34 @@ onMounted(() => {
   font-weight: 700;
 }
 
-/* 2. 修正悬浮按钮：让它相对于 tab-bar 稳定悬浮 */ 
- .fab-btn { 
-   position: fixed; 
-   bottom: 180rpx; /* 抬高位置，避免遮挡 tab-bar */ 
-   
-   /* 重点：在 H5 居中模式下，右边距需要特殊处理 */ 
-   /* #ifdef H5 */ 
-   left: 50%; 
-   transform: translateX(140rpx); /* 通过位移精确控制它在容器右侧 */ 
-   margin-left: 0;
-   /* 440px / 2 = 220px. 按钮宽 110rpx ≈ 55px. 边距 16px.
-      偏移量 = 220 - 55 - 16 = 149px. 
-      transform: translateX(149px) */
-   transform: translateX(149px);
-   /* #endif */ 
-   
-   /* 非 H5 环境（如真机）使用常规右定位 */ 
-   /* #ifndef H5 */ 
-   right: 40rpx; 
-   /* #endif */ 
-   
-   width: 110rpx; 
-   height: 110rpx; 
-   background-color: $pitch-pulse-primary; 
-   border-radius: 50%; 
-   display: flex; 
-   justify-content: center; 
-   align-items: center; 
-   box-shadow: 0 10rpx 30rpx rgba($pitch-pulse-primary, 0.4); 
-   z-index: 999; 
- } 
- 
- /* 1. 修正底部导航栏：确保在居中模式下也能对齐 */
+/* 1. 修正底部导航栏：确保在居中模式下也能对齐 */
 .tab-bar {
   position: fixed;
   bottom: 0;
-  /* 取消之前的 transform 居中，改用 auto 以适配外层容器 */
   left: 0;
   right: 0;
   margin: 0 auto;
   width: 100%;
   
   /* #ifdef H5 */
-  max-width: 440px; /* 必须与你的模拟器宽度一致 */
+  max-width: 500px;
   /* #endif */
   
   height: 120rpx; 
-   background-color: rgba(26, 24, 17, 0.98); 
-   backdrop-filter: blur(20px); 
-   border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-   display: flex; 
-   justify-content: space-around; 
-   align-items: center; 
-   padding-bottom: constant(safe-area-inset-bottom); 
-   padding-bottom: env(safe-area-inset-bottom); 
-   z-index: 9999; 
-   box-sizing: border-box; 
-   pointer-events: auto;
- } 
- 
- /* 3. 修正 tab-item：确保宽度平分 */ 
- .tab-item { 
+  background-color: rgba(26, 24, 17, 0.98); 
+  backdrop-filter: blur(20px); 
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
+  display: flex; 
+  justify-content: space-around; 
+  align-items: center; 
+  padding-bottom: env(safe-area-inset-bottom); 
+  z-index: 9999; 
+  box-sizing: border-box; 
+  pointer-events: auto;
+} 
+
+/* 3. 修正 tab-item：确保宽度平分 */ 
+.tab-item { 
    flex: 1; /* 强制平分布局 */ 
    display: flex; 
    flex-direction: column; 

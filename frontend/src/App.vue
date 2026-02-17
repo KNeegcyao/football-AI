@@ -38,7 +38,7 @@ body {
   padding: 0;
 }
 uni-page-body {
-  max-width: 440px !important;
+  max-width: 500px !important;
   margin: 0 auto !important;
   min-height: 100vh;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);

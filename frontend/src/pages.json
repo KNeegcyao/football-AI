@@ -27,6 +27,20 @@
       }
     },
     {
+      "path": "pages/community/circle-detail",
+      "style": {
+        "navigationBarTitleText": "圈子详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/community/topic-detail",
+      "style": {
+        "navigationBarTitleText": "话题详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/post/detail",
       "style": {
         "navigationBarTitleText": "帖子详情",

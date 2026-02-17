@@ -50,7 +50,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/news").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/news/**", "/api/posts/**", "/api/matches/**", "/api/teams/**", "/api/players/**", "/api/search/**", "/uploads/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/news/**", "/api/posts/**", "/api/matches/**", "/api/teams/**", "/api/players/**", "/api/search/**", "/api/community/**", "/uploads/**").permitAll()
                 .requestMatchers("/doc.html", "/favicon.ico", "/webjars/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .anyRequest().authenticated()

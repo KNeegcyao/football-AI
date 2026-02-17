@@ -99,6 +99,17 @@ public class TeamServiceImpl implements TeamService {
         return teamMapper.selectPage(teamPage, query);
     }
 
+    @Override
+    public java.util.List<Team> getTeamsByNames(java.util.List<String> names) {
+        log.debug("根据名称获取球队: names={}", names);
+        if (names == null || names.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        LambdaQueryWrapper<Team> query = new LambdaQueryWrapper<>();
+        query.in(Team::getName, names);
+        return teamMapper.selectList(query);
+    }
+
     /**
      * 更新球队信息实现
      * <p>

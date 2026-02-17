@@ -43,7 +43,13 @@ public class LikeSyncJob {
         try {
             log.info("开始同步帖子点赞数据...");
             String dirtyKey = "like:dirty:posts";
-            Set<Object> dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
+            Set<Object> dirtyIds;
+            try {
+                dirtyIds = redisTemplate.opsForSet().members(dirtyKey);
+            } catch (Exception e) {
+                log.error("连接 Redis 失败，跳过本次同步: {}", e.getMessage());
+                return;
+            }
 
             if (dirtyIds == null || dirtyIds.isEmpty()) {
                 log.info("没有需要同步的帖子点赞数据");

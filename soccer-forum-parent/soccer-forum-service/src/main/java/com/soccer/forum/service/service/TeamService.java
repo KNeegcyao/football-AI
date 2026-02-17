@@ -41,6 +41,14 @@ public interface TeamService {
     Page<Team> listTeams(Integer page, Integer size, String keyword);
 
     /**
+     * 根据名称列表获取球队
+     *
+     * @param names 球队名称列表
+     * @return 球队列表
+     */
+    java.util.List<Team> getTeamsByNames(java.util.List<String> names);
+
+    /**
      * 更新球队信息
      *
      * @param id 球队 ID

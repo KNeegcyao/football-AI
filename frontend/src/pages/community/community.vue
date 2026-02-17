@@ -33,7 +33,7 @@
         
         <scroll-view scroll-x class="circles-scroll" show-scrollbar="false">
           <view class="circles-container">
-            <view class="circle-item" v-for="(circle, index) in hotCircles" :key="index">
+            <view class="circle-item" v-for="(circle, index) in hotCircles" :key="index" @click="navigateToCircle(circle)">
               <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
                 <view class="circle-avatar-inner">
                   <image class="circle-avatar" :src="circle.image" mode="aspectFill"></image>
@@ -109,6 +109,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { communityApi } from '@/api';
 
 const scrollHeight = ref(800); // Should be calculated based on window height
 
@@ -121,44 +122,20 @@ const tabs = [
 ];
 
 const handleTabClick = (index) => {
-  try {
-    const tab = tabs[index]
-    if (!tab || !tab.path) return
+  const tab = tabs[index]
+  if (!tab || !tab.path) return
+  
+  if (currentTab.value === index) return
 
-    currentTab.value = index
-    
-    // 统一路径格式：pages/schedule/schedule
-    const path = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path
-
-    // #ifdef H5
-    // 检查是否已经是当前路径，避免重复刷新
-    const currentHash = window.location.hash.replace('#/', '')
-    if (currentHash === path) {
-      console.log('已经在当前页面，无需跳转')
-      return
+  const url = tab.path.startsWith('/') ? tab.path : '/' + tab.path
+  
+  uni.switchTab({
+    url: url,
+    fail: () => {
+      uni.reLaunch({ url })
     }
-
-    console.log('执行强制重载跳转:', path)
-    
-    // 彻底放弃框架路由，改用物理重载
-    const newUrl = window.location.origin + window.location.pathname + '#/' + path
-    window.location.href = newUrl
-    
-    // 增加延迟，确保 hash 变更已被浏览器记录，减少 ERR_ABORTED 风险
-    setTimeout(() => {
-      window.location.reload()
-    }, 100)
-    // #endif
-
-    // #ifndef H5
-    uni.reLaunch({
-      url: '/' + path
-    })
-    // #endif
-  } catch (e) {
-    console.error('跳转异常:', e)
-  }
-};
+  })
+}
 
 const handlePostClick = () => {
   uni.showToast({
@@ -167,15 +144,41 @@ const handlePostClick = () => {
   })
 };
 
-// Mock Data
-const hotCircles = ref([
+const navigateToCircle = (circle) => {
+  console.log('Navigate to circle:', circle);
+  uni.navigateTo({
+    url: `/pages/community/circle-detail?name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`,
+    fail: () => {
+      uni.showToast({
+        title: '圈子详情页加载失败',
+        icon: 'none'
+      });
+    }
+  });
+};
+
+const navigateToPost = (topic) => {
+  console.log('Navigate to topic:', topic);
+  uni.navigateTo({
+    url: `/pages/community/topic-detail?id=${topic.id || 0}&title=${encodeURIComponent(topic.title)}`,
+    fail: () => {
+      uni.showToast({
+        title: '话题详情页加载失败',
+        icon: 'none'
+      });
+    }
+  });
+};
+
+// Mock Data as Fallback
+const defaultHotCircles = [
   { name: '皇家马德里', members: '240万', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVNO1DpjWhPQCmDKg01xb5yAMwrIDN-8i_4q50S47genicKUfZQsx0u64atjcu_w2D88dyPoW1vStbL_XEappjN6xfxsvGY1Yp5yWml1bRHZLQeVuW1BuQ8rEO4YpZlIdqV2bnvYm-rtCCR1FkX_JHG1j2RqNJacKVq4pzVshDKCTMJGPntSn5CC6R44xAJzY3nZUBxkAATRoTcfNIzMSrt6Ae7iXSEY0Q3sI1gEpm7cNTo3wGk-qZusFIOpI9GYstGHpDXEjKDW9p' },
   { name: '曼联', members: '180万', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDKhJshhyD3-gYgPHCiTdXJYVKaTZAP6S1WDBxDEEzPv-Kte1XRlZViGK1OeIBiA-kTJ4IRN1WOUCZc6n0onlYH1fspyLYfwgNyzy8b1qo62r5W3WxHiO3VoIpqMAfz06BakxfCieqW1tIEv5CZqHnE1OsHPeejvEPQC0rmwg7YywZ2Dq0F6-GFfop8hSdmiKw_VVMlaz8D98KNQVKUDMxUud5VzYtVjZQHYH_XoLieaUTWyGOtEWjfKEOesuufbnHKkl0fiVX9obVK' },
   { name: '利物浦', members: '150万', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCcrGz0sfXaED5Xq0eMoDHjivd0idgIGpK2sMp66mRmG_igyA3gU7DCnIggN-wrA95P-SI8xm9F6-khvkPCHa76ESZFWCuWdbBTUsuEnwTuc7EKO6REi8eYw1AkLLBoZ5mU0vEyAzufWOUDUWeu7PoTfYbPvhqlvz0Et5DgzSJ6a4UoCIb9fJZifzNckrmdGeCHKLUtZSFklVKnHvrQ_uNGZ3iB71Fd5YYI4beqxqUS1XOfUmykhcDASnEnnxPTLW7eNtqj4jXwMozs' },
   { name: '拜仁慕尼黑', members: '98万', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAIjqoKGelhhsIODjdGSO3CDhFsVv7j3h50hmxGGLpcCHbcNTc8FxKcm9S50xwqMcn3aWUdDaIPZ4TcQ36y819Lmo_92CmXGw0vgx5oLhh-IM5h0UtnTFT2-N3Of-x-id1X8Y34H09_ICTh4wlKfLzzIi8Xpi_20Siy7N0YfzvdANO6IBqeAR5Vx-z6gNH0q9azRcKlIqgynr66g2Yt2ui9D8tVcTPVJQoFqao3K6q2fDZr4iztmkEKPfBBGWn2YyR9aGExVBGL_1r_' }
-]);
+];
 
-const trendTopics = ref([
+const defaultTrendTopics = [
   { 
     title: '#转会窗口动态', 
     stats: '每小时 1.25万 帖子', 
@@ -201,23 +204,72 @@ const trendTopics = ref([
     tags: ['比赛日'],
     time: '5分钟前活跃'
   }
-]);
+];
 
-const navigateToPost = (topic) => {
-  uni.navigateTo({
-    url: '/pages/post/detail?title=' + encodeURIComponent(topic.title)
-  });
+const hotCircles = ref(defaultHotCircles);
+const trendTopics = ref(defaultTrendTopics);
+
+const loadData = async () => {
+  try {
+    // 尝试从 API 获取数据
+    const [circlesRes, topicsRes] = await Promise.allSettled([
+      communityApi.getHotCircles(),
+      communityApi.getTrendTopics()
+    ]);
+
+    if (circlesRes.status === 'fulfilled' && circlesRes.value) {
+      hotCircles.value = circlesRes.value;
+    } else {
+      console.warn('Failed to load hot circles, using default data');
+    }
+
+    if (topicsRes.status === 'fulfilled' && topicsRes.value) {
+      trendTopics.value = topicsRes.value;
+    } else {
+      console.warn('Failed to load trend topics, using default data');
+    }
+  } catch (e) {
+    console.error('Error loading community data:', e);
+    // 保持默认数据
+  }
 };
 
-// Calculate scroll height
-uni.getSystemInfo({
-  success: (res) => {
-    scrollHeight.value = res.windowHeight - 100; // Adjust as needed
-  }
+onMounted(() => {
+  loadData();
+  
+  // Calculate scroll height
+  uni.getSystemInfo({
+    success: (res) => {
+      // 减去头部高度、底部导航栏高度等
+      scrollHeight.value = res.windowHeight; 
+    }
+  });
 });
 </script>
 
 <style scoped>
+/* FAB Button Style */
+.fab-btn {
+  position: fixed;
+  bottom: calc(160rpx + env(safe-area-inset-bottom));
+  right: 40rpx;
+  width: 110rpx;
+  height: 110rpx;
+  background: linear-gradient(135deg, #f2b90d 0%, #e0a800 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 20rpx rgba(242, 185, 13, 0.4);
+  z-index: 9990;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fab-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 4rpx 10rpx rgba(242, 185, 13, 0.4);
+}
+
 /* TabBar Styles aligned with schedule.vue */
 /* 底部导航占位 */
 .safe-area-bottom {
@@ -235,7 +287,7 @@ uni.getSystemInfo({
   width: 100%;
   
   /* #ifdef H5 */
-  max-width: 440px; /* 必须与你的模拟器宽度一致 */
+  max-width: 500px;
   /* #endif */
   
   height: 120rpx;
@@ -593,9 +645,9 @@ uni.getSystemInfo({
   /* #ifdef H5 */
   left: 50%;
   right: auto;
-  /* 440px / 2 = 220px. 按钮宽 110rpx ≈ 55px. 边距 16px.
-     偏移量 = 220 - 55 - 16 = 149px ≈ 298rpx */
-  margin-left: 149px;
+  /* 500px / 2 = 250px. 按钮宽 110rpx ≈ 55px. 边距 16px.
+     偏移量 = 250 - 55 - 16 = 179px */
+  margin-left: 179px;
   /* #endif */
 
   width: 110rpx;
