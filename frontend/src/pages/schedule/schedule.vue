@@ -228,7 +228,7 @@ const currentTab = ref(1)
 const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
   { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/index/index' },
+  { text: '社区', icon: 'chat', path: 'pages/community/community' },
   { text: '我的', icon: 'account', path: 'pages/my/my' }
 ]
 
@@ -504,6 +504,12 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 100;
+  
+  /* #ifdef H5 */
+  max-width: 440px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* #endif */
 }
 
 .logo-area {

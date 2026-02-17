@@ -118,6 +118,9 @@
       </view>
     </scroll-view>
 
+    <!-- 底部导航占位 -->
+    <view class="safe-area-bottom"></view>
+
     <!-- 底部导航栏 -->
     <view class="tab-bar">
       <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
@@ -158,7 +161,7 @@ const currentTab = ref(3)
 const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
   { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/index/index' },
+  { text: '社区', icon: 'chat', path: 'pages/community/community' },
   { text: '我的', icon: 'account', path: 'pages/my/my' }
 ]
 
@@ -397,41 +400,57 @@ const confirmLogout = () => {
 </style>
 
 <style lang="scss">
-  .tab-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 100rpx;
-    background-color: #1A1A1A;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-top: 1rpx solid #000;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 999;
-  }
+/* 底部导航占位 */
+.safe-area-bottom {
+  height: 160rpx;
+}
 
-  .tab-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    flex: 1;
-  }
+/* 底部导航栏 */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  
+  /* #ifdef H5 */
+  max-width: 440px;
+  /* #endif */
+  
+  height: 120rpx;
+  background-color: rgba(26, 24, 17, 0.98);
+  backdrop-filter: blur(20px);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 9999;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
 
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  
   .tab-text {
     font-size: 20rpx;
-    margin-top: 6rpx;
-    color: #7A7E83;
-    
-    &.active {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+  }
+  
+  &.active {
+    .tab-text {
       color: #f9d406;
+      font-weight: 700;
     }
   }
-
-  .tab-item.active .tab-text {
-    color: #f9d406;
-  }
+}
 </style>

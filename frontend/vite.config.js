@@ -7,9 +7,9 @@ export default defineConfig({
     uni(),
   ],
   server: {
-    port: 5173,
+    port: 5174,
     host: '0.0.0.0',
-    strictPort: true, // Try next port if 5173 is busy, but we prefer 5173
-    open: false // We use launch.json to open browser
+    strictPort: false,
+    open: false
   }
 })

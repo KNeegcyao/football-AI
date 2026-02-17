@@ -20,6 +20,20 @@
       }
     },
     {
+      "path": "pages/community/community",
+      "style": {
+        "navigationBarTitleText": "社区",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/post/detail",
+      "style": {
+        "navigationBarTitleText": "帖子详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/news/detail",
       "style": {
         "navigationBarTitleText": "新闻详情",
@@ -84,6 +98,12 @@
       {
         "pagePath": "pages/schedule/schedule",
         "text": "赛程",
+        "iconPath": "static/soccer-logo.png",
+        "selectedIconPath": "static/soccer-logo.png"
+      },
+      {
+        "pagePath": "pages/community/community",
+        "text": "社区",
         "iconPath": "static/soccer-logo.png",
         "selectedIconPath": "static/soccer-logo.png"
       },

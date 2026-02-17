@@ -169,7 +169,7 @@ const currentTab = ref(0)
 const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
   { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/index/index' },
+  { text: '社区', icon: 'chat', path: 'pages/community/community' },
   { text: '我的', icon: 'account', path: 'pages/my/my' }
 ]
 
@@ -708,6 +708,11 @@ onMounted(() => {
    /* #ifdef H5 */ 
    left: 50%; 
    transform: translateX(140rpx); /* 通过位移精确控制它在容器右侧 */ 
+   margin-left: 0;
+   /* 440px / 2 = 220px. 按钮宽 110rpx ≈ 55px. 边距 16px.
+      偏移量 = 220 - 55 - 16 = 149px. 
+      transform: translateX(149px) */
+   transform: translateX(149px);
    /* #endif */ 
    
    /* 非 H5 环境（如真机）使用常规右定位 */ 
@@ -726,21 +731,21 @@ onMounted(() => {
    z-index: 999; 
  } 
  
- /* 1. 修正底部导航栏：确保在居中模式下也能对齐 */ 
- .tab-bar { 
-   position: fixed; 
-   bottom: 0; 
-   /* 取消之前的 transform 居中，改用 auto 以适配外层容器 */ 
-   left: 0; 
-   right: 0; 
-   margin: 0 auto; 
-   width: 100%; 
-   
-   /* #ifdef H5 */ 
-   max-width: 500px; /* 必须与你的模拟器宽度一致 */ 
-   /* #endif */ 
-   
-   height: 120rpx; 
+ /* 1. 修正底部导航栏：确保在居中模式下也能对齐 */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  /* 取消之前的 transform 居中，改用 auto 以适配外层容器 */
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  
+  /* #ifdef H5 */
+  max-width: 440px; /* 必须与你的模拟器宽度一致 */
+  /* #endif */
+  
+  height: 120rpx; 
    background-color: rgba(26, 24, 17, 0.98); 
    backdrop-filter: blur(20px); 
    border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
