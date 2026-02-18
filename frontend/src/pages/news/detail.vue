@@ -97,7 +97,7 @@ const getFullImageUrl = (url) => {
 <template>
   <view class="news-detail-container bg-[#1a1811] font-display text-gray-200 min-h-screen">
     <!-- Header / Navigation -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5 h5-header-fix">
       <view class="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
           <text class="material-icons">chevron_left</text>
@@ -185,6 +185,15 @@ const getFullImageUrl = (url) => {
     </view>
   </view>
 </template>
+
+<style>
+/* #ifdef H5 */
+.h5-header-fix {
+  max-width: 500px;
+  margin: 0 auto;
+}
+/* #endif */
+</style>
 
 <style scoped>
 .article-content {

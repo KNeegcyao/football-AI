@@ -95,8 +95,13 @@ public class CommentServiceImpl implements CommentService {
         LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Comment::getPostId, req.getPostId())
                .eq(Comment::getParentId, 0)
-               .eq(Comment::getStatus, 1)
-               .orderByDesc(Comment::getCreatedAt);
+               .eq(Comment::getStatus, 1);
+        
+        if ("hottest".equalsIgnoreCase(req.getSort())) {
+            wrapper.orderByDesc(Comment::getLikes);
+        } else {
+            wrapper.orderByDesc(Comment::getCreatedAt);
+        }
         
         Page<Comment> commentPage = commentMapper.selectPage(page, wrapper);
         

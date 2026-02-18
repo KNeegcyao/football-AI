@@ -20,6 +20,9 @@ public class CommentPageReq {
     @NotNull(message = "帖子ID不能为空")
     private Long postId;
 
+    @Schema(description = "排序方式: newest-最新, hottest-最热", example = "newest")
+    private String sort = "newest";
+
     @Schema(description = "页码", example = "1")
     public Integer getPage() { return page; }
     public void setPage(Integer page) { this.page = page; }
@@ -31,4 +34,7 @@ public class CommentPageReq {
     @Schema(description = "帖子ID", requiredMode = Schema.RequiredMode.REQUIRED)
     public Long getPostId() { return postId; }
     public void setPostId(Long postId) { this.postId = postId; }
+
+    public String getSort() { return sort; }
+    public void setSort(String sort) { this.sort = sort; }
 }

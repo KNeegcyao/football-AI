@@ -480,6 +480,10 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 100;
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  /* #endif */
 }
 
 .logo-area {

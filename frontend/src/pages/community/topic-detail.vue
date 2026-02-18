@@ -207,7 +207,7 @@
 <script setup>
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { communityApi } from '@/api';
+import { communityApi, fileApi } from '@/api';
 
 const topicTitle = ref('梅西中国行');
 const topicInfo = ref({});
@@ -251,16 +251,30 @@ const loadPosts = async (id) => {
     const data = await communityApi.getTopicPosts(id, { page: 1, size: 10 })
     if (data) {
       const records = data.records || []
-      postList.value = records.map(post => ({
-        ...post,
-        userName: post.userName || '用户' + Math.floor(Math.random() * 1000),
-        userAvatar: post.userAvatar || `/static/avatar/${Math.floor(Math.random() * 4) + 1}.png`,
-        images: post.images ? (typeof post.images === 'string' ? JSON.parse(post.images) : post.images) : [],
-        likeCount: post.likes || Math.floor(Math.random() * 100),
-        commentCount: post.commentCount || Math.floor(Math.random() * 20),
-        shareCount: Math.floor(Math.random() * 10),
-        createTime: post.createTime || '刚刚'
-      }))
+      postList.value = records.map(post => {
+        let postImages = [];
+        try {
+          if (post.images) {
+            if (Array.isArray(post.images)) {
+                postImages = post.images;
+            } else if (typeof post.images === 'string') {
+                postImages = JSON.parse(post.images);
+            }
+          }
+        } catch (e) {
+          console.error('解析图片失败:', e);
+        }
+
+        return {
+          ...post,
+          userName: post.userName || '未知用户',
+          userAvatar: post.userAvatar ? fileApi.getFileUrl(post.userAvatar) : '/static/default-avatar.png',
+          images: postImages.map(img => fileApi.getFileUrl(img)),
+          likeCount: post.likeCount || 0,
+          commentCount: post.commentCount || 0,
+          createTime: post.createdAt || post.createTime
+        }
+      })
     }
   } catch (error) {
     console.error('获取帖子列表失败:', error)
@@ -703,6 +717,10 @@ const previewImage = (images, current) => {
   bottom: 48rpx;
   left: 0;
   right: 0;
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  /* #endif */
   display: flex;
   justify-content: center;
   z-index: 50;

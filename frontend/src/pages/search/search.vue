@@ -1,7 +1,7 @@
 <template>
   <view class="search-page bg-[#1a1811] min-h-screen font-display text-gray-200">
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5 h5-header-fix">
       <view class="flex items-center gap-3 px-4 h-16 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
           <text class="material-icons text-2xl">chevron_left</text>
@@ -36,7 +36,7 @@
     </header>
 
     <!-- Content -->
-    <main class="pt-20 pb-10 px-4 max-w-2xl mx-auto">
+    <main class="pt-20 pb-10 px-4 w-full mx-auto">
       <!-- Loading State -->
       <view v-if="loading" class="flex flex-col items-center justify-center py-20">
         <view class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></view>
@@ -306,6 +306,15 @@ const getFullImageUrl = (url) => {
   return `http://localhost:8080${url}`
 }
 </script>
+
+<style>
+/* #ifdef H5 */
+.h5-header-fix {
+  max-width: 500px;
+  margin: 0 auto;
+}
+/* #endif */
+</style>
 
 <style scoped>
 .line-clamp-2 {

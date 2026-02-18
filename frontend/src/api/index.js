@@ -86,8 +86,16 @@ export const postApi = {
 
   /**
    * 获取帖子评论
+   * @param {String} id 帖子ID
+   * @param {Object} params { page, size, sort } sort: newest|hottest
    */
   getComments: (id, params) => request.get('/api/comments/list', { postId: id, ...params }),
+
+  /**
+   * 发布评论
+   * @param {Object} data { postId, content, parentId }
+   */
+  createComment: (data) => request.post('/api/comments', data),
 
   /**
    * 发布帖子
@@ -98,7 +106,22 @@ export const postApi = {
    * 点赞/取消点赞
    * @param {Object} data { targetId, targetType } type: 1帖子, 2评论
    */
-  like: (data) => request.post('/api/likes', data)
+  like: (data) => request.post('/api/likes/toggle', data),
+
+  /**
+   * 关注用户
+   */
+  followUser: (userId) => request.post(`/api/relationships/follow/${userId}`),
+
+  /**
+   * 取消关注
+   */
+  unfollowUser: (userId) => request.post(`/api/relationships/unfollow/${userId}`),
+
+  /**
+   * 检查关注状态
+   */
+  checkFollowStatus: (userId) => request.get(`/api/relationships/isFollowing/${userId}`),
 }
 
 /**
@@ -178,4 +201,21 @@ export const fileApi = {
     if (url.startsWith('http')) return url
     return 'http://localhost:8080' + (url.startsWith('/') ? url : '/' + url)
   }
+}
+
+/**
+ * 收藏相关接口
+ */
+export const favoriteApi = {
+  /**
+   * 收藏/取消收藏
+   * @param {Object} data { postId }
+   */
+  toggle: (data) => request.post('/api/favorites/toggle', data),
+
+  /**
+   * 获取我的收藏列表
+   * @param {Object} params { page, size }
+   */
+  list: (params) => request.get('/api/favorites', params)
 }

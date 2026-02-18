@@ -31,7 +31,13 @@
             </view>
           </view>
         </view>
-        <button class="follow-btn">关注</button>
+        <button 
+          class="follow-btn" 
+          :class="{ 'following': isFollowing }"
+          @click="toggleFollow"
+        >
+          {{ isFollowing ? '已关注' : '关注' }}
+        </button>
       </view>
 
       <scroll-view scroll-y class="content-scroll">
@@ -73,8 +79,8 @@
         <view class="comments-section">
           <view class="comments-header">
             <text class="comments-title">评论 ({{ post.commentCount || comments.length }})</text>
-            <view class="sort-btn">
-              <text>最新</text>
+            <view class="sort-btn" @click="toggleSort">
+              <text>{{ sortType === 'newest' ? '最新' : '最热' }}</text>
               <text class="material-icons" style="font-size: 14px;">expand_more</text>
             </view>
           </view>
@@ -112,23 +118,47 @@
       <text style="color: #fff;">加载帖子失败。</text>
     </view>
 
-    <!-- Bottom Action Bar -->
+    <!-- Unified Bottom Bar -->
     <view class="bottom-bar" v-if="post">
-      <view class="action-btn" @click="handleLike">
-        <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
-          {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
-        </text>
-        <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
-          {{ post.likes || 0 }}
-        </text>
-      </view>
-      <view class="action-btn">
-        <text class="material-icons">chat_bubble_outline</text>
-        <text class="action-text">{{ post.commentCount || comments.length }}</text>
-      </view>
-      <view class="action-btn">
-        <text class="material-icons">share</text>
-      </view>
+      <input 
+        class="comment-input" 
+        placeholder="说点什么..." 
+        v-model="commentText"
+        :disabled="submitting"
+        cursor-spacing="20"
+      />
+      
+      <button 
+        v-if="commentText.trim()"
+        class="send-btn" 
+        :disabled="submitting"
+        @click="submitComment"
+      >
+        发送
+      </button>
+      
+      <template v-else>
+        <view class="action-btn" @click="handleLike">
+          <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+            {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
+          </text>
+          <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+            {{ post.likes || 0 }}
+          </text>
+        </view>
+        <view class="action-btn" @click="handleFavorite">
+          <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : '#fff' }">
+            {{ post.isFavorited ? 'star' : 'star_border' }}
+          </text>
+        </view>
+        <view class="action-btn">
+          <text class="material-icons">chat_bubble_outline</text>
+          <text class="action-text">{{ post.commentCount || comments.length }}</text>
+        </view>
+        <view class="action-btn">
+          <text class="material-icons">share</text>
+        </view>
+      </template>
     </view>
   </view>
 </template>
@@ -136,12 +166,16 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { postApi, fileApi } from '@/api';
+import { postApi, fileApi, favoriteApi } from '@/api';
 
 const post = ref(null);
 const comments = ref([]);
 const postId = ref(null);
 const loading = ref(true);
+const sortType = ref('newest'); // newest, hottest
+const isFollowing = ref(false);
+const commentText = ref('');
+const submitting = ref(false);
 
 const categoryText = computed(() => {
   if (!post.value) return '# 足球';
@@ -198,8 +232,19 @@ const loadPostDetail = async (id) => {
         images: processedImages,
         views: data.views || 0,
         likes: data.likes || 0,
-        isLiked: data.isLiked || false
+        isLiked: data.isLiked || false,
+        isFavorited: data.isFavorited || false
       };
+      
+      // Check follow status
+      if (post.value.userId) {
+        try {
+          const res = await postApi.checkFollowStatus(post.value.userId);
+          isFollowing.value = res;
+        } catch (e) {
+          console.error('Failed to check follow status:', e);
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to load post detail:', error);
@@ -210,7 +255,11 @@ const loadPostDetail = async (id) => {
 
 const loadComments = async (id) => {
   try {
-    const data = await postApi.getComments(id, { page: 1, size: 20 });
+    const data = await postApi.getComments(id, { 
+      page: 1, 
+      size: 20,
+      sort: sortType.value 
+    });
     if (data) {
       const records = data.records || [];
       comments.value = records.map(c => ({
@@ -229,6 +278,56 @@ const loadComments = async (id) => {
     }
   } catch (error) {
     console.error('Failed to load comments:', error);
+  }
+};
+
+const toggleFollow = async () => {
+  if (!post.value || !post.value.userId) return;
+  
+  try {
+    if (isFollowing.value) {
+      await postApi.unfollowUser(post.value.userId);
+      isFollowing.value = false;
+      uni.showToast({ title: '已取消关注', icon: 'none' });
+    } else {
+      await postApi.followUser(post.value.userId);
+      isFollowing.value = true;
+      uni.showToast({ title: '已关注', icon: 'success' });
+    }
+  } catch (error) {
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
+
+const toggleSort = () => {
+  sortType.value = sortType.value === 'newest' ? 'hottest' : 'newest';
+  loadComments(postId.value);
+};
+
+const submitComment = async () => {
+  if (!commentText.value.trim()) {
+    return;
+  }
+  
+  submitting.value = true;
+  try {
+    await postApi.createComment({
+      postId: postId.value,
+      content: commentText.value
+    });
+    
+    commentText.value = '';
+    uni.showToast({ title: '评论成功', icon: 'success' });
+    
+    // Reload comments and update count
+    await loadComments(postId.value);
+    if (post.value) {
+      post.value.commentCount = (post.value.commentCount || 0) + 1;
+    }
+  } catch (error) {
+    uni.showToast({ title: '评论失败', icon: 'none' });
+  } finally {
+    submitting.value = false;
   }
 };
 
@@ -252,6 +351,27 @@ const handleLike = async () => {
     }
   } catch (error) {
     console.error('Like failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
+
+const handleFavorite = async () => {
+  if (!post.value) return;
+  try {
+    const res = await favoriteApi.toggle({
+      postId: post.value.id
+    });
+    
+    if (res && res.favorited !== undefined) {
+      post.value.isFavorited = res.favorited;
+      if (res.favorited) {
+        uni.showToast({ title: '已收藏', icon: 'success' });
+      } else {
+        uni.showToast({ title: '已取消收藏', icon: 'none' });
+      }
+    }
+  } catch (error) {
+    console.error('Favorite failed:', error);
     uni.showToast({ title: '操作失败', icon: 'none' });
   }
 };
@@ -374,13 +494,19 @@ onLoad((options) => {
 
 .follow-btn {
   background-color: #f2b90d;
-  color: #fff;
+  color: #000;
   font-size: 12px;
   font-weight: bold;
   padding: 6px 16px;
   border-radius: 9999px;
   margin: 0;
   line-height: 1.5;
+}
+
+.follow-btn.following {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Article */
@@ -660,15 +786,23 @@ onLoad((options) => {
   bottom: 0;
   left: 0;
   right: 0;
+  /* #ifdef H5 */
+  max-width: 500px;
+  left: 50% !important;
+  transform: translateX(-50%);
+  width: 100%;
+  /* #endif */
   height: 60px;
   background-color: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 16px;
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 100;
+  gap: 12px;
 }
 
 .action-btn {
@@ -683,6 +817,35 @@ onLoad((options) => {
   font-size: 14px;
   color: #fff;
   font-weight: 500;
+}
+
+.comment-input {
+  flex: 1;
+  background-color: #2C2C2C;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14px;
+  height: 36px;
+}
+
+.send-btn {
+  background-color: #f2b90d;
+  color: #000;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0 16px;
+  height: 36px;
+  line-height: 36px;
+  border-radius: 18px;
+  margin: 0;
+  min-width: 60px;
+  text-align: center;
+}
+
+.send-btn[disabled] {
+  opacity: 0.5;
+  background-color: #666;
 }
 
 /* Add padding to scroll-view to avoid overlap with bottom bar */

@@ -107,6 +107,10 @@ onLoad((options) => {
   height: 100vh;
   background-color: #1A1811;
   color: #fff;
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  /* #endif */
 }
 
 .status-bar {

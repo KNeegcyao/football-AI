@@ -48,5 +48,12 @@ uni-page-body {
 .uni-tabbar {
   display: none !important;
 }
+
+.h5-header-fix {
+  max-width: 500px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 100% !important;
+}
 /* #endif */
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden">
+  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[500px] mx-auto shadow-2xl">
     <!-- Status Bar Spacer -->
     <view class="h-12 w-full"></view>
 

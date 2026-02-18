@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[480px] mx-auto shadow-2xl">
+  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[500px] mx-auto shadow-2xl">
     <!-- Background Overlay Texture -->
     <image 
       class="absolute inset-0 z-0 opacity-40 w-full h-full object-cover pointer-events-none" 
@@ -235,7 +235,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { authApi } from '@/api'
+import { authApi, userApi } from '@/api'
 import { isMobile } from '@/utils/validate'
 
 const form = ref({
@@ -458,7 +458,14 @@ const handleLogin = async () => {
       const data = await authApi.login(form.value)
       
       uni.setStorageSync('token', data.token)
-      uni.setStorageSync('userInfo', data.userInfo)
+      
+      // 获取用户信息
+      try {
+        const userRes = await userApi.getProfile()
+        uni.setStorageSync('userInfo', userRes)
+      } catch (err) {
+        console.error('获取用户信息失败:', err)
+      }
       
       uni.showToast({ title: '登录成功', icon: 'success' })
       

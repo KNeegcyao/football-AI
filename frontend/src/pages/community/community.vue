@@ -189,13 +189,19 @@ const loadData = async () => {
       // API 返回的数据可能直接是数组，或者是包含 data 字段的对象
       // 根据 CommunityController，getHotCircles 返回 R<List<Map>>
       // 假设 request.js 返回 data 字段
-      hotCircles.value = circlesRes.value;
+      hotCircles.value = circlesRes.value.map(circle => ({
+        ...circle,
+        image: circle.image ? fileApi.getFileUrl(circle.image) : '/static/default-team.png'
+      }));
     } else {
       console.warn('Failed to load hot circles');
     }
 
     if (topicsRes.status === 'fulfilled' && topicsRes.value) {
-      trendTopics.value = topicsRes.value;
+      trendTopics.value = topicsRes.value.map(topic => ({
+        ...topic,
+        avatars: topic.avatars ? topic.avatars.map(avatar => fileApi.getFileUrl(avatar)) : []
+      }));
     } else {
       console.warn('Failed to load trend topics');
     }
@@ -297,6 +303,10 @@ onMounted(() => {
   top: 0;
   z-index: 40;
   backdrop-filter: blur(12px);
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  /* #endif */
 }
 
 .header-content {

@@ -442,6 +442,11 @@ const loadMore = () => {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  /* #endif */
   width: 100%;
   display: flex;
   justify-content: space-between;

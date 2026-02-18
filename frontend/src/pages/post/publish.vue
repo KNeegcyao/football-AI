@@ -418,6 +418,11 @@ const handlePublish = async () => {
   flex-direction: column;
   color: #ffffff;
   font-family: 'Lexend', sans-serif;
+  /* #ifdef H5 */
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* #endif */
 }
 
 .status-bar {
@@ -774,6 +779,11 @@ const handlePublish = async () => {
   left: 0;
   right: 0;
   bottom: 0;
+  /* #ifdef H5 */
+  max-width: 500px;
+  left: 50% !important;
+  transform: translateX(-50%);
+  /* #endif */
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
   display: flex;

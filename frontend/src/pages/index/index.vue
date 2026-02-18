@@ -76,18 +76,22 @@
             <view class="post-info">
               <text class="post-title">{{ post.title }}</text>
               <view class="post-footer">
-                <text class="post-meta">{{ post.category }} · {{ post.time }}</text>
-                <view class="post-stats">
-                  <view class="stat-item">
-                    <u-icon name="thumb-up" color="#f9d406" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.likes }}</text>
-                  </view>
-                  <view class="stat-item">
-                    <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.comments }}</text>
-                  </view>
-                </view>
+            <view class="post-author-info">
+              <image class="post-author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
+              <text class="post-author-name">{{ post.userName }}</text>
+            </view>
+            <view class="post-stats">
+              <text class="post-time">{{ post.time }}</text>
+              <view class="stat-item">
+                <u-icon name="thumb-up" color="#f9d406" size="28rpx"></u-icon>
+                <text class="stat-num">{{ post.likes }}</text>
               </view>
+              <view class="stat-item">
+                <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
+                <text class="stat-num">{{ post.comments }}</text>
+              </view>
+            </view>
+          </view>
             </view>
           </view>
           <!-- AI 摘要 -->
@@ -263,7 +267,9 @@ const loadData = async () => {
           time: formatTime(item.createdAt),
           likes: item.likeCount,
           comments: item.commentCount,
-          isAi: false
+          isAi: false,
+          userName: item.userName || '未知用户',
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '/static/soccer-logo.png'
         }))
       }
     }
@@ -632,15 +638,36 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
 }
 
-.post-meta {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.4);
+.post-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.post-author-avatar {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.1);
+}
+
+.post-author-name {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.post-time {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 15rpx;
 }
 
 .post-stats {
   display: flex;
+  align-items: center;
   gap: 20rpx;
 }
 

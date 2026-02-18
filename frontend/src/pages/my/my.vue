@@ -56,7 +56,7 @@
               <text class="font-medium text-white">我的发布</text>
             </view>
             <view class="flex flex-row items-center text-gray-400">
-              <text class="text-xs mr-2">{{ userInfo.newPosts }} 条新动态</text>
+              <text class="text-xs mr-2">共 {{ userInfo.stats.posts }} 篇</text>
               <text class="material-icons-round text-lg" style="font-size: 18px;">chevron_right</text>
             </view>
           </view>
@@ -337,6 +337,21 @@ const goToEdit = () => {
 
 const goTo = (page) => {
   console.log('Navigate to:', page)
+  
+  if (page === 'collections') {
+    uni.navigateTo({
+      url: '/pages/my/favorites'
+    });
+    return;
+  }
+  
+  if (page === 'posts') {
+    uni.navigateTo({
+      url: '/pages/my/posts'
+    });
+    return;
+  }
+  
   uni.showToast({
     title: '即将跳转: ' + page,
     icon: 'none'
@@ -379,6 +394,15 @@ const confirmLogout = () => {
 </style>
 
 <style lang="scss">
+/* #ifdef H5 */
+.h5-header-fix {
+  max-width: 500px;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+}
+/* #endif */
+
 /* 底部导航占位 */
 .safe-area-bottom {
   height: 160rpx;
