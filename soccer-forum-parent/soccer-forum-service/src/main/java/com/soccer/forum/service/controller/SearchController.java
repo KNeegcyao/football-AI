@@ -6,9 +6,11 @@ import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.model.dto.SearchResultResp;
 import com.soccer.forum.service.model.dto.MatchVO;
+import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.MatchService;
 import com.soccer.forum.service.service.NewsService;
 import com.soccer.forum.service.service.PlayerService;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,7 +52,8 @@ public class SearchController {
     @GetMapping
     public R<SearchResultResp> search(@Parameter(description = "搜索关键词") @RequestParam String keyword,
                                       @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
-                                      @Parameter(description = "每页大小") @RequestParam(defaultValue = "5") Integer size) {
+                                      @Parameter(description = "每页大小") @RequestParam(defaultValue = "5") Integer size,
+                                      @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到全局搜索请求: keyword={}, page={}, size={}", keyword, page, size);
         
         SearchResultResp result = new SearchResultResp();
@@ -59,7 +63,8 @@ public class SearchController {
         postReq.setKeyword(keyword);
         postReq.setPage(page);
         postReq.setSize(size);
-        Page<Post> postPage = postService.getPostPage(postReq);
+        Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
+        Page<PostDetailResp> postPage = postService.getPostPage(postReq, userId);
         result.setPosts(postPage);
         
         // 2. 搜索资讯

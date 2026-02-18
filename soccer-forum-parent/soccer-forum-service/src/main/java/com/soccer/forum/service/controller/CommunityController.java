@@ -5,13 +5,16 @@ import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.domain.entity.Topic;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.model.dto.PostPageReq;
+import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,10 +50,26 @@ public class CommunityController {
      */
     @Operation(summary = "获取圈子帖子列表", description = "获取指定圈子（球队）相关的帖子列表")
     @GetMapping("/circles/{name}/posts")
-    public R<Page<Post>> getCirclePosts(@Parameter(description = "圈子名称") @PathVariable String name, 
-                                       @Validated PostPageReq req) {
-        req.setKeyword(name);
-        return R.ok(postService.getPostPage(req));
+    public R<Page<PostDetailResp>> getCirclePosts(@Parameter(description = "圈子名称") @PathVariable String name, 
+                                       @Validated PostPageReq req,
+                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        // 尝试根据名称查找圈子ID，优先使用精确的 circleId 查询
+        List<Team> teams = teamService.getTeamsByNames(List.of(name));
+        
+        // 如果未找到且名称以"圈"结尾，尝试去除后缀再次查找
+        if (teams.isEmpty() && name.endsWith("圈")) {
+            String cleanName = name.substring(0, name.length() - 1);
+            teams = teamService.getTeamsByNames(List.of(cleanName));
+        }
+        
+        if (!teams.isEmpty()) {
+            req.setCircleId(teams.get(0).getId());
+        } else {
+            // 找不到圈子时，回退到按关键词搜索
+            req.setKeyword(name);
+        }
+        Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
+        return R.ok(postService.getPostPage(req, userId));
     }
 
     /**
@@ -58,10 +77,20 @@ public class CommunityController {
      */
     @Operation(summary = "获取话题帖子列表", description = "获取指定话题相关的帖子列表")
     @GetMapping("/topics/posts")
-    public R<Page<Post>> getTopicPosts(@Parameter(description = "话题标题") @RequestParam String title, 
-                                      @Validated PostPageReq req) {
-        req.setKeyword(title);
-        return R.ok(postService.getPostPage(req));
+    public R<Page<PostDetailResp>> getTopicPosts(@Parameter(description = "话题标题") @RequestParam String title, 
+                                      @Validated PostPageReq req,
+                                      @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        // 尝试根据标题查找话题ID，优先使用精确的 topicId 查询
+        Topic topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
+                .eq(Topic::getTitle, title));
+        
+        if (topic != null) {
+            req.setTopicId(topic.getId());
+        } else {
+            req.setKeyword(title);
+        }
+        Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
+        return R.ok(postService.getPostPage(req, userId));
     }
 
     /**

@@ -5,6 +5,7 @@ import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,9 +72,11 @@ public class PostController {
      */
     @Operation(summary = "获取帖子详情", description = "根据ID获取帖子详情，并增加浏览量")
     @GetMapping("/{id}")
-    public R<Post> get(@Parameter(description = "帖子ID") @PathVariable Long id) {
+    public R<PostDetailResp> get(@Parameter(description = "帖子ID") @PathVariable Long id,
+                                 @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到获取帖子详情请求: id={}", id);
-        Post post = postService.getPostById(id);
+        Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
+        PostDetailResp post = postService.getPostDetail(id, userId);
         return R.ok(post);
     }
 
@@ -88,9 +91,11 @@ public class PostController {
      */
     @Operation(summary = "获取帖子列表", description = "分页获取帖子列表，支持关键词搜索")
     @GetMapping("/list")
-    public R<Page<Post>> list(@Validated PostPageReq req) {
+    public R<Page<PostDetailResp>> list(@Validated PostPageReq req,
+                                        @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到获取帖子列表请求: keyword={}, page={}", req.getKeyword(), req.getPage());
-        Page<Post> postPage = postService.getPostPage(req);
+        Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
+        Page<PostDetailResp> postPage = postService.getPostPage(req, userId);
         return R.ok(postPage);
     }
 

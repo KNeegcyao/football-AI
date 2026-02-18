@@ -92,7 +92,13 @@ export const postApi = {
   /**
    * 发布帖子
    */
-  create: (data) => request.post('/api/posts', data)
+  create: (data) => request.post('/api/posts', data),
+
+  /**
+   * 点赞/取消点赞
+   * @param {Object} data { targetId, targetType } type: 1帖子, 2评论
+   */
+  like: (data) => request.post('/api/likes', data)
 }
 
 /**

@@ -14,8 +14,15 @@ public class PostPageReq {
     @Min(value = 1, message = "每页数量不能小于1")
     @Max(value = 100, message = "每页数量不能超过100")
     private Integer size = 10;
+    
     @Schema(description = "搜索关键词")
     private String keyword;
+    
+    @Schema(description = "圈子ID")
+    private Long circleId;
+    
+    @Schema(description = "话题ID")
+    private Long topicId;
 
     public Integer getPage() { return page; }
     public void setPage(Integer page) { this.page = page; }
@@ -23,4 +30,8 @@ public class PostPageReq {
     public void setSize(Integer size) { this.size = size; }
     public String getKeyword() { return keyword; }
     public void setKeyword(String keyword) { this.keyword = keyword; }
+    public Long getCircleId() { return circleId; }
+    public void setCircleId(Long circleId) { this.circleId = circleId; }
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long topicId) { this.topicId = topicId; }
 }

@@ -7,6 +7,7 @@ import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.model.dto.MatchVO;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 
 import java.io.Serializable;
 
@@ -18,7 +19,7 @@ public class SearchResultResp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "帖子搜索结果")
-    private Page<Post> posts;
+    private Page<PostDetailResp> posts;
     @Schema(description = "资讯搜索结果")
     private Page<News> news;
     @Schema(description = "球队搜索结果")
@@ -28,8 +29,8 @@ public class SearchResultResp implements Serializable {
     @Schema(description = "赛事搜索结果")
     private Page<MatchVO> matches;
 
-    public Page<Post> getPosts() { return posts; }
-    public void setPosts(Page<Post> posts) { this.posts = posts; }
+    public Page<PostDetailResp> getPosts() { return posts; }
+    public void setPosts(Page<PostDetailResp> posts) { this.posts = posts; }
 
     public Page<News> getNews() { return news; }
     public void setNews(Page<News> news) { this.news = news; }

@@ -8,16 +8,30 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
+import com.soccer.forum.domain.entity.Team;
+import com.soccer.forum.domain.entity.Topic;
+import com.soccer.forum.domain.entity.User;
+import com.soccer.forum.service.mapper.TeamMapper;
+import com.soccer.forum.service.mapper.TopicMapper;
+import com.soccer.forum.service.mapper.UserMapper;
+import com.soccer.forum.service.model.dto.PostDetailResp;
+import com.soccer.forum.service.service.LikeService;
 import com.soccer.forum.service.service.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 帖子服务实现类
@@ -34,11 +48,19 @@ public class PostServiceImpl implements PostService {
     private static final Logger log = LoggerFactory.getLogger(PostServiceImpl.class);
 
     private final PostMapper postMapper;
+    private final UserMapper userMapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final LikeService likeService;
+    private final TopicMapper topicMapper;
+    private final TeamMapper teamMapper;
 
-    public PostServiceImpl(PostMapper postMapper, RedisTemplate<String, Object> redisTemplate) {
+    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper) {
         this.postMapper = postMapper;
+        this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
+        this.likeService = likeService;
+        this.topicMapper = topicMapper;
+        this.teamMapper = teamMapper;
     }
 
     /**
@@ -135,16 +157,70 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
+     * 根据 ID 获取帖子详情（包含用户信息）
+     *
+     * @param id 帖子 ID
+     * @param userId 当前用户ID (可选)
+     * @return 帖子详情对象
+     */
+    @Override
+    public PostDetailResp getPostDetail(Long id, Long userId) {
+        Post post = getPostById(id);
+        
+        // 获取用户信息
+        User user = userMapper.selectById(post.getUserId());
+        String nickname = "未知用户";
+        String avatar = "";
+        
+        if (user != null) {
+            nickname = user.getNickname();
+            avatar = user.getAvatar();
+        }
+        
+        PostDetailResp resp = PostDetailResp.fromPost(post, nickname, avatar);
+        
+        // 设置话题名称
+        if (post.getTopicId() != null) {
+            Topic topic = topicMapper.selectById(post.getTopicId());
+            if (topic != null) {
+                resp.setTopicName(topic.getTitle());
+            }
+        }
+        
+        // 设置圈子名称
+        if (post.getCircleId() != null) {
+            Team team = teamMapper.selectById(post.getCircleId());
+            if (team != null) {
+                resp.setCircleName(team.getName());
+            }
+        }
+        
+        // 设置点赞状态
+        if (userId != null) {
+            resp.setIsLiked(likeService.isLiked(id, 1, userId));
+        } else {
+            resp.setIsLiked(false);
+        }
+        
+        // 获取最近点赞用户
+        resp.setRecentLikes(likeService.getPostLikers(id, 3));
+
+        return resp;
+    }
+
+    /**
      * 分页查询帖子列表实现
      * <p>
      * 仅查询状态正常的帖子，支持按标题模糊搜索，按创建时间倒序排列。
+     * 并填充用户信息和点赞状态。
      * </p>
      *
      * @param req 分页及查询参数
+     * @param currentUserId 当前登录用户ID（可为null）
      * @return 帖子分页对象
      */
     @Override
-    public Page<Post> getPostPage(PostPageReq req) {
+    public Page<PostDetailResp> getPostPage(PostPageReq req, Long currentUserId) {
         log.debug("分页查询帖子: 页码={}, 大小={}", req.getPage(), req.getSize());
         Page<Post> page = new Page<>(req.getPage(), req.getSize());
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
@@ -152,12 +228,81 @@ public class PostServiceImpl implements PostService {
         // Only show normal status posts
         wrapper.eq(Post::getStatus, 1);
         
+        if (req.getCircleId() != null) {
+            wrapper.eq(Post::getCircleId, req.getCircleId());
+        }
+        
+        if (req.getTopicId() != null) {
+            wrapper.eq(Post::getTopicId, req.getTopicId());
+        }
+        
         if (StringUtils.hasText(req.getKeyword())) {
             wrapper.like(Post::getTitle, req.getKeyword());
         }
         
         wrapper.orderByDesc(Post::getCreatedAt);
-        return postMapper.selectPage(page, wrapper);
+        postMapper.selectPage(page, wrapper);
+
+        // Map to PostDetailResp
+        Page<PostDetailResp> respPage = new Page<>();
+        BeanUtils.copyProperties(page, respPage, "records");
+
+        if (page.getRecords().isEmpty()) {
+            return respPage;
+        }
+
+        // Fetch User Info
+        Set<Long> userIds = page.getRecords().stream().map(Post::getUserId).collect(Collectors.toSet());
+        Map<Long, User> userMap = userIds.isEmpty() ? java.util.Collections.emptyMap() : userMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        
+        // Fetch Topics
+        Set<Long> topicIds = page.getRecords().stream()
+            .map(Post::getTopicId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        Map<Long, Topic> topicMap = topicIds.isEmpty() ? java.util.Collections.emptyMap() : 
+            topicMapper.selectBatchIds(topicIds).stream()
+                .collect(Collectors.toMap(Topic::getId, Function.identity()));
+                
+        // Fetch Teams (Circles)
+        Set<Long> circleIds = page.getRecords().stream()
+            .map(Post::getCircleId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        Map<Long, Team> teamMap = circleIds.isEmpty() ? java.util.Collections.emptyMap() : 
+            teamMapper.selectBatchIds(circleIds).stream()
+                .collect(Collectors.toMap(Team::getId, Function.identity()));
+
+        // Map records
+        List<PostDetailResp> resps = page.getRecords().stream().map(post -> {
+            User user = userMap.get(post.getUserId());
+            String nickname = (user != null) ? user.getNickname() : "未知用户";
+            String avatar = (user != null) ? user.getAvatar() : "";
+            
+            PostDetailResp resp = PostDetailResp.fromPost(post, nickname, avatar);
+            
+            // Set Topic Name
+            if (post.getTopicId() != null && topicMap.containsKey(post.getTopicId())) {
+                resp.setTopicName(topicMap.get(post.getTopicId()).getTitle());
+            }
+            
+            // Set Circle Name
+            if (post.getCircleId() != null && teamMap.containsKey(post.getCircleId())) {
+                resp.setCircleName(teamMap.get(post.getCircleId()).getName());
+            }
+            
+            // Set Like Status
+            if (currentUserId != null) {
+                resp.setIsLiked(likeService.isLiked(post.getId(), 1, currentUserId));
+            } else {
+                resp.setIsLiked(false);
+            }
+            return resp;
+        }).collect(Collectors.toList());
+
+        respPage.setRecords(resps);
+        return respPage;
     }
 
     /**

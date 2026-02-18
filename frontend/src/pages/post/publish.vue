@@ -17,10 +17,10 @@
       <!-- User Info -->
       <view class="user-info">
         <view class="avatar-container">
-          <image class="avatar-img" src="/static/default-team.png" mode="aspectFill"></image>
+          <image class="avatar-img" :src="userInfo.avatar || '/static/default-team.png'" mode="aspectFill"></image>
         </view>
         <view class="user-meta">
-          <text class="user-name">足球战术家</text>
+          <text class="user-name">{{ userInfo.nickname || '用户' }}</text>
           <text class="user-badge">PitchPulse Pro</text>
         </view>
       </view>
@@ -67,13 +67,22 @@
       </view>
 
       <!-- Circle Selection Preview -->
-      <view class="circle-preview" v-if="circleName">
+      <view class="circle-preview" v-if="circleName" @click="handleSelectCircle">
         <text class="section-label">已选圈子</text>
         <view class="circle-badge">
           <view class="circle-icon">
             <image src="/static/soccer-logo.png" mode="aspectFit" class="badge-img"></image>
           </view>
           <text class="circle-name">{{ circleName }}</text>
+          <text class="material-icons arrow-right">chevron_right</text>
+        </view>
+      </view>
+      
+      <!-- Topic Preview -->
+      <view class="circle-preview" v-if="selectedTopic" @click="handleSelectTopic">
+        <text class="section-label">已选话题</text>
+        <view class="circle-badge">
+          <text class="circle-name">#{{ selectedTopic.title }}</text>
           <text class="material-icons arrow-right">chevron_right</text>
         </view>
       </view>
@@ -91,14 +100,14 @@
             <text class="tool-label">@提到人</text>
           </view>
           <!-- Hashtag Button -->
-          <view class="tool-btn">
+          <view class="tool-btn" @click="handleSelectTopic">
             <view class="icon-circle">
               <text class="material-icons tool-icon">tag</text>
             </view>
             <text class="tool-label">#话题</text>
           </view>
           <!-- Select Circle Button -->
-          <view class="tool-btn">
+          <view class="tool-btn" @click="handleSelectCircle">
             <view class="icon-circle">
               <text class="material-icons tool-icon">explore</text>
             </view>
@@ -116,23 +125,42 @@
       <!-- Quick Access Tags -->
       <scroll-view scroll-x class="quick-tags" :show-scrollbar="false">
         <view class="tag-list">
-          <text class="tag-item">#双红会</text>
-          <text class="tag-item">#滕哈赫</text>
-          <text class="tag-item">#战术复盘</text>
-          <text class="tag-item">#欧冠决赛</text>
+          <text class="tag-item" v-for="tag in quickTags" :key="tag" @click="appendTag(tag)">{{ tag }}</text>
         </view>
       </scroll-view>
       
       <!-- Safe Area -->
       <view class="safe-area"></view>
     </view>
+
+    <!-- Topic Selector Popup -->
+    <view class="popup-mask" v-if="showTopicSelector" @click="showTopicSelector = false">
+      <view class="popup-content" @click.stop>
+        <view class="popup-header">
+          <text class="popup-title">选择话题</text>
+          <text class="material-icons close-btn" @click="showTopicSelector = false">close</text>
+        </view>
+        <scroll-view scroll-y class="popup-list">
+          <view 
+            class="topic-item" 
+            v-for="(topic, index) in topics" 
+            :key="index"
+            @click="selectTopic(topic)"
+          >
+            <text class="topic-hash">#</text>
+            <text class="topic-title">{{ topic.title }}</text>
+            <text class="topic-hot">{{ topic.stats || (topic.viewCount || 0) + ' 热度' }}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import { postApi } from '@/api';
+import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { postApi, communityApi, userApi, fileApi } from '@/api';
 
 const API_BASE_URL = 'http://localhost:8080';
 
@@ -145,20 +173,63 @@ const images = ref([]);
 const submitting = ref(false);
 const circleId = ref(null);
 const circleName = ref('');
+const topicId = ref(null);
+const userInfo = ref({});
+const showTopicSelector = ref(false);
+const topics = ref([]);
+const selectedTopic = ref(null);
+const quickTags = ref(['#双红会', '#滕哈赫', '#战术复盘', '#欧冠决赛']);
+
+const loadUserProfile = async () => {
+  try {
+    const profileRes = await userApi.getProfile();
+    if (profileRes) {
+      userInfo.value = {
+        ...userInfo.value,
+        nickname: profileRes.nickname || profileRes.username,
+        avatar: profileRes.avatar ? fileApi.getFileUrl(profileRes.avatar) : '/static/default-team.png'
+      };
+    }
+  } catch (e) {
+    console.error('Failed to load user profile:', e);
+  }
+};
 
 onLoad((options) => {
+  const storedUserInfo = uni.getStorageSync('userInfo');
+  if (storedUserInfo) {
+    userInfo.value = storedUserInfo;
+    // Ensure avatar URL is complete if it exists in storage
+    if (userInfo.value.avatar && !userInfo.value.avatar.startsWith('http') && !userInfo.value.avatar.startsWith('/static')) {
+      userInfo.value.avatar = fileApi.getFileUrl(userInfo.value.avatar);
+    }
+  }
+  
+  // Fetch latest profile to ensure data consistency
+  loadUserProfile();
+
   if (options.circleId) {
     circleId.value = options.circleId;
   }
   if (options.circleName) {
     circleName.value = decodeURIComponent(options.circleName);
   }
+
+  // Listen for circle selection
+  uni.$on('selectCircle', (circle) => {
+    circleId.value = circle.id;
+    circleName.value = circle.name;
+  });
+});
+
+onUnload(() => {
+  uni.$off('selectCircle');
 });
 
 const contentLength = computed(() => form.value.content.length);
 
 const isValid = computed(() => {
-  return form.value.content.trim().length > 0;
+  return form.value.content.trim().length >= 5;
 });
 
 const goBack = () => {
@@ -178,8 +249,53 @@ const removeImage = (index) => {
   images.value.splice(index, 1);
 };
 
+const handleSelectCircle = () => {
+  uni.navigateTo({
+    url: '/pages/community/circle-list?mode=select'
+  });
+};
+
+const handleSelectTopic = async () => {
+  if (topics.value.length === 0) {
+    try {
+      uni.showLoading({ title: '加载话题...' });
+      const res = await communityApi.getTrendTopics();
+      // Assuming res is the list directly or res.data
+      // Based on request.js, it returns data directly if code===200
+      topics.value = Array.isArray(res) ? res : (res.records || []);
+      uni.hideLoading();
+    } catch (e) {
+      uni.hideLoading();
+      console.error(e);
+      uni.showToast({ title: '获取话题失败', icon: 'none' });
+      return;
+    }
+  }
+  showTopicSelector.value = true;
+};
+
+const selectTopic = (topic) => {
+  selectedTopic.value = topic;
+  topicId.value = topic.id;
+  const topicTag = `#${topic.title}#`;
+  if (!form.value.content.includes(topicTag)) {
+    form.value.content += (form.value.content ? ' ' : '') + topicTag + ' ';
+  }
+  showTopicSelector.value = false;
+};
+
+const appendTag = (tag) => {
+  if (!form.value.content.includes(tag)) {
+    form.value.content += (form.value.content ? ' ' : '') + tag + ' ';
+  }
+};
+
 const handlePublish = async () => {
-  if (!isValid.value || submitting.value) return;
+  if (!isValid.value) {
+    uni.showToast({ title: '内容至少需要5个字符', icon: 'none' });
+    return;
+  }
+  if (submitting.value) return;
 
   try {
     submitting.value = true;
@@ -199,7 +315,7 @@ const handlePublish = async () => {
             filePath: filePath,
             name: 'file',
             header: {
-              'Authorization': uni.getStorageSync('token') // 假设Token存在本地
+              'Authorization': `Bearer ${uni.getStorageSync('token')}` // 添加 Bearer 前缀
             },
             success: (uploadRes) => {
               if (uploadRes.statusCode === 200) {
@@ -248,7 +364,8 @@ const handlePublish = async () => {
       title: form.value.title || form.value.content.slice(0, 20),
       content: form.value.content,
       images: JSON.stringify(uploadedImages),
-      circleId: circleId.value
+      circleId: circleId.value,
+      topicId: topicId.value
     };
 
     const res = await postApi.create(postData);
@@ -649,5 +766,79 @@ const handlePublish = async () => {
 .safe-area {
   height: 20px;
   background-color: #1e1e1e;
+}
+
+.popup-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.popup-content {
+  background-color: #1e1e1e;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.popup-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.close-btn {
+  font-size: 24px;
+  color: #64748b;
+}
+
+.popup-list {
+  max-height: 400px;
+  padding: 10px 0;
+}
+
+.topic-item {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  
+  &:active {
+    background-color: #2a2a2a;
+  }
+}
+
+.topic-hash {
+  color: #db143c;
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.topic-title {
+  flex: 1;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.topic-hot {
+  font-size: 12px;
+  color: #64748b;
 }
 </style>

@@ -5,6 +5,8 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
 
+import com.soccer.forum.service.model.dto.PostDetailResp;
+
 /**
  * 帖子服务接口
  * <p>
@@ -34,12 +36,21 @@ public interface PostService {
     Post getPostById(Long id);
 
     /**
+     * 获取帖子详情
+     * @param id 帖子ID
+     * @param userId 当前用户ID (可选)
+     * @return 帖子详情
+     */
+    PostDetailResp getPostDetail(Long id, Long userId);
+
+    /**
      * 分页查询帖子列表
      *
-     * @param req 分页查询参数（页码、大小、关键词）
-     * @return 帖子分页对象
+     * @param req 分页及查询参数
+     * @param currentUserId 当前登录用户ID（可为null）
+     * @return 帖子分页列表（包含用户信息和点赞状态）
      */
-    Page<Post> getPostPage(PostPageReq req);
+    Page<PostDetailResp> getPostPage(PostPageReq req, Long currentUserId);
 
     /**
      * 更新帖子

@@ -6,6 +6,7 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.service.impl.PostServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ class PostServiceTest {
         when(postMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(new Page<Post>());
 
-        Page<Post> result = postService.getPostPage(pageReq);
+        Page<PostDetailResp> result = postService.getPostPage(pageReq, null);
 
         assertNotNull(result);
         verify(postMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
@@ -159,7 +160,7 @@ class PostServiceTest {
         Exception exception = assertThrows(RuntimeException.class, 
             () -> postService.deletePost(postId, otherUserId));
             
-        assertEquals("权限不足: 只能删除自己的帖子", exception.getMessage());
+        assertEquals("权限不足", exception.getMessage());
         verify(postMapper, never()).updateById(any(Post.class));
     }
 
@@ -170,6 +171,6 @@ class PostServiceTest {
         Exception exception = assertThrows(RuntimeException.class, 
             () -> postService.deletePost(postId, userId));
 
-        assertEquals("未找到帖子", exception.getMessage());
+        assertEquals("帖子不存在", exception.getMessage());
     }
 }

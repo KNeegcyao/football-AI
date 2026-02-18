@@ -129,12 +129,14 @@
           <image v-if="post.image" class="post-main-img" :src="post.image" mode="aspectFill"></image>
           
           <view class="post-footer">
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">favorite</text>
-              <text>{{ post.likes }}</text>
+            <view class="interaction-item" @click.stop="handleLike(post)">
+              <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
+                {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+              </text>
+              <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes }}</text>
             </view>
             <view class="interaction-item">
-              <text class="material-icons footer-icon">chat_bubble</text>
+              <text class="material-icons footer-icon">chat_bubble_outline</text>
               <text>{{ post.comments }}</text>
             </view>
             <view class="interaction-item">
@@ -162,7 +164,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { communityApi } from '@/api/index';
+import { communityApi, fileApi, postApi } from '@/api/index';
 
 const circleId = ref(null);
 const circleName = ref('');
@@ -303,32 +305,41 @@ const loadPosts = async () => {
     
     if (pageData && pageData.records) {
       const newPosts = pageData.records.map(post => {
-        // Parse images if it's a JSON string
+        // Mock user info since backend doesn't provide it yet
+        // Update: Now backend provides it
         let postImages = [];
         try {
           if (post.images) {
-            postImages = JSON.parse(post.images);
+            // Check if it's already an array (sometimes API returns object/array directly)
+            if (Array.isArray(post.images)) {
+                postImages = post.images;
+            } else if (typeof post.images === 'string') {
+                if (post.images.startsWith('[')) {
+                    postImages = JSON.parse(post.images);
+                } else {
+                    postImages = [post.images];
+                }
+            }
           }
         } catch (e) {
           console.error('Error parsing post images:', e);
         }
-        
-        // Mock user info since backend doesn't provide it yet
+
         return {
           id: post.id,
           content: post.content,
-          // Use first image if available
-          image: postImages.length > 0 ? postImages[0] : '', 
+          image: postImages.length > 0 ? fileApi.getFileUrl(postImages[0]) : '', 
           likes: post.likes || 0,
+          isLiked: post.isLiked || false,
           comments: post.commentCount || 0,
-          shares: 0, // Not in API
-          userName: `用户${post.userId}`, // Placeholder
-          userAvatar: '/static/default-avatar.png', // Placeholder
+          shares: 0, 
+          userName: post.userName || '未知用户', 
+          userAvatar: post.userAvatar ? fileApi.getFileUrl(post.userAvatar) : '/static/default-avatar.png', 
           time: new Date(post.createdAt).toLocaleDateString()
         };
       });
       
-      if (newPosts.length < 10) {
+      if (pageData.records.length < 10) {
         noMore.value = true;
       }
       
@@ -344,6 +355,29 @@ const loadPosts = async () => {
     uni.showToast({ title: '加载帖子失败', icon: 'none' });
   } finally {
     loading.value = false;
+  }
+};
+
+const handleLike = async (post) => {
+  try {
+    const res = await postApi.like({
+      targetId: post.id,
+      targetType: 1
+    });
+    
+    if (res && res.liked !== undefined) {
+      post.isLiked = res.liked;
+      if (res.liked) {
+        post.likes++;
+        uni.showToast({ title: '已点赞', icon: 'none' });
+      } else {
+        post.likes--;
+        uni.showToast({ title: '已取消', icon: 'none' });
+      }
+    }
+  } catch (error) {
+    console.error('Like failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
   }
 };
 

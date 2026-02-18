@@ -40,6 +40,7 @@ const page = ref(1);
 const size = ref(20);
 const loading = ref(false);
 const noMore = ref(false);
+const mode = ref('normal'); // normal | select
 
 const loadCircles = async () => {
   if (loading.value || noMore.value) return;
@@ -77,6 +78,11 @@ const goBack = () => {
 };
 
 const navigateToCircle = (circle) => {
+  if (mode.value === 'select') {
+    uni.$emit('selectCircle', circle);
+    uni.navigateBack();
+    return;
+  }
   uni.navigateTo({
     url: `/pages/community/circle-detail?id=${circle.id}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`
   });
@@ -86,7 +92,10 @@ const loadMore = () => {
   loadCircles();
 };
 
-onLoad(() => {
+onLoad((options) => {
+  if (options.mode) {
+    mode.value = options.mode;
+  }
   loadCircles();
 });
 </script>

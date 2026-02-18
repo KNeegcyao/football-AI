@@ -6,14 +6,21 @@ import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Like;
 import com.soccer.forum.domain.entity.Post;
+import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.service.mapper.CommentMapper;
 import com.soccer.forum.service.mapper.LikeMapper;
 import com.soccer.forum.service.mapper.PostMapper;
+import com.soccer.forum.service.mapper.UserMapper;
+import com.soccer.forum.service.model.dto.UserSimpleResp;
 import com.soccer.forum.service.service.LikeService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class LikeServiceImpl implements LikeService {
@@ -22,20 +29,22 @@ public class LikeServiceImpl implements LikeService {
     private final LikeMapper likeMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
+    private final UserMapper userMapper;
     private final com.soccer.forum.service.service.NotificationService notificationService;
 
     public LikeServiceImpl(RedisTemplate<String, Object> redisTemplate, LikeMapper likeMapper, 
-                           PostMapper postMapper, CommentMapper commentMapper,
+                           PostMapper postMapper, CommentMapper commentMapper, UserMapper userMapper,
                            com.soccer.forum.service.service.NotificationService notificationService) {
         this.redisTemplate = redisTemplate;
         this.likeMapper = likeMapper;
         this.postMapper = postMapper;
         this.commentMapper = commentMapper;
+        this.userMapper = userMapper;
         this.notificationService = notificationService;
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public boolean toggleLike(Long targetId, Integer targetType, Long userId) {
         String typeStr = (targetType == 1) ? "post" : "comment";
         String userSetKey = "like:" + typeStr + ":" + targetId + ":users";
@@ -120,5 +129,53 @@ public class LikeServiceImpl implements LikeService {
             
             return true;
         }
+    }
+
+    @Override
+    public boolean isLiked(Long targetId, Integer targetType, Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        String typeStr = (targetType == 1) ? "post" : "comment";
+        String userSetKey = "like:" + typeStr + ":" + targetId + ":users";
+        
+        // 优先查 Redis
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(userSetKey))) {
+            return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(userSetKey, userId));
+        }
+        
+        // Redis 未命中查数据库
+        LambdaQueryWrapper<Like> query = new LambdaQueryWrapper<>();
+        query.eq(Like::getTargetId, targetId)
+             .eq(Like::getTargetType, targetType)
+             .eq(Like::getUserId, userId);
+        boolean exists = likeMapper.exists(query);
+        
+        // 回填 Redis (仅当 key 存在时添加，避免缓存击穿问题，或者这里可以不回填，等待 toggle 时处理)
+        // 简单处理：如果查到了，说明有点赞
+        return exists;
+    }
+
+    @Override
+    public List<UserSimpleResp> getPostLikers(Long postId, int limit) {
+        // Query database for latest likes
+        LambdaQueryWrapper<Like> query = new LambdaQueryWrapper<>();
+        query.eq(Like::getTargetId, postId)
+             .eq(Like::getTargetType, 1) // 1 for post
+             .orderByDesc(Like::getCreatedAt)
+             .last("LIMIT " + limit);
+        
+        List<Like> likes = likeMapper.selectList(query);
+        if (likes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> userIds = likes.stream().map(Like::getUserId).collect(Collectors.toList());
+        List<User> users = userMapper.selectBatchIds(userIds);
+        
+        // Map to DTO
+        return users.stream()
+                .map(u -> new UserSimpleResp(u.getId(), u.getNickname(), u.getAvatar()))
+                .collect(Collectors.toList());
     }
 }

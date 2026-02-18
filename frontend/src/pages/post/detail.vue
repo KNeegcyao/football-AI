@@ -27,18 +27,18 @@
                 <text class="author-name">{{ post.userName }}</text>
                 <text class="material-icons verified-icon">verified</text>
               </view>
-              <text class="author-role">Community Member</text>
+              <text class="author-role">社区成员</text>
             </view>
           </view>
         </view>
-        <button class="follow-btn">Follow</button>
+        <button class="follow-btn">关注</button>
       </view>
 
       <scroll-view scroll-y class="content-scroll">
         <!-- Article Content -->
         <view class="article">
           <view class="article-meta">
-            <text class="tag"># Football</text>
+            <text class="tag">{{ categoryText }}</text>
             <text class="time">{{ formatTime(post.createdAt) }}</text>
           </view>
           
@@ -57,14 +57,14 @@
 
           <!-- Stats -->
           <view class="interaction-stats">
-            <view class="avatar-stack">
-              <image class="stack-avatar" :src="post.userAvatar"></image>
+            <view class="avatar-stack" v-if="post.recentLikes && post.recentLikes.length > 0">
+              <image v-for="(liker, index) in post.recentLikes" :key="index" class="stack-avatar" :src="liker.avatar" mode="aspectFill"></image>
               <view class="stack-count" style="background-color: #f2b90d; color: #000;">
                 <text class="material-icons" style="font-size: 12px;">thumb_up</text>
               </view>
             </view>
             <view class="view-stats">
-              <text class="stat-highlight">{{ post.views || 0 }}</text> Views • <text class="stat-highlight">{{ post.likes || 0 }}</text> Likes
+              <text class="stat-highlight">{{ post.views || 0 }}</text> 浏览 • <text class="stat-highlight">{{ post.likes || 0 }}</text> 点赞
             </view>
           </view>
         </view>
@@ -72,9 +72,9 @@
         <!-- Comments -->
         <view class="comments-section">
           <view class="comments-header">
-            <text class="comments-title">Comments ({{ post.commentCount || comments.length }})</text>
+            <text class="comments-title">评论 ({{ post.commentCount || comments.length }})</text>
             <view class="sort-btn">
-              <text>Newest</text>
+              <text>最新</text>
               <text class="material-icons" style="font-size: 14px;">expand_more</text>
             </view>
           </view>
@@ -95,13 +95,13 @@
                     <text class="material-icons" style="font-size: 14px;">favorite_border</text>
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
-                  <text class="reply-btn">Reply</text>
+                  <text class="reply-btn">回复</text>
                 </view>
               </view>
             </view>
             
             <view v-if="comments.length === 0" style="text-align: center; padding: 20px; color: #666;">
-              <text>No comments yet.</text>
+              <text>暂无评论。</text>
             </view>
           </view>
         </view>
@@ -109,20 +109,46 @@
     </template>
     
     <view v-else class="error-state">
-      <text style="color: #fff;">Failed to load post.</text>
+      <text style="color: #fff;">加载帖子失败。</text>
+    </view>
+
+    <!-- Bottom Action Bar -->
+    <view class="bottom-bar" v-if="post">
+      <view class="action-btn" @click="handleLike">
+        <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+          {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
+        </text>
+        <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+          {{ post.likes || 0 }}
+        </text>
+      </view>
+      <view class="action-btn">
+        <text class="material-icons">chat_bubble_outline</text>
+        <text class="action-text">{{ post.commentCount || comments.length }}</text>
+      </view>
+      <view class="action-btn">
+        <text class="material-icons">share</text>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { postApi } from '@/api';
+import { postApi, fileApi } from '@/api';
 
 const post = ref(null);
 const comments = ref([]);
 const postId = ref(null);
 const loading = ref(true);
+
+const categoryText = computed(() => {
+  if (!post.value) return '# 足球';
+  if (post.value.topicName) return `# ${post.value.topicName}`;
+  if (post.value.circleName) return `# ${post.value.circleName}`;
+  return post.value.category || '# 足球';
+});
 
 const goBack = () => {
   uni.navigateBack();
@@ -143,22 +169,6 @@ const formatTime = (timeStr) => {
   }
 };
 
-const getRandomAvatar = () => {
-  const avatars = [
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Zack',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Bella',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo'
-  ];
-  return avatars[Math.floor(Math.random() * avatars.length)];
-};
-
-const getRandomName = () => {
-  const names = ['Fan_007', 'SoccerLover', 'GoalMachine', 'MidfieldMaestro', 'Keeper1'];
-  return names[Math.floor(Math.random() * names.length)];
-};
-
 const loadPostDetail = async (id) => {
   try {
     loading.value = true;
@@ -167,22 +177,28 @@ const loadPostDetail = async (id) => {
       // Parse images if needed
       let images = [];
       if (data.images) {
-        images = typeof data.images === 'string' ? JSON.parse(data.images) : data.images;
-      } else {
-        // Mock images if none provided for better UI experience
-        // images = [
-        //   'https://lh3.googleusercontent.com/aida-public/AB6AXuBU26CqlmforlJF_IccguOr0tQXy2qXyVmdIap6Ehv3s6rOzM4dHZSGoLbe0mmGuNNdCRxDVbxlFoUIEN9HlXBhLoc6Mo4bqmJmksZ6OzW6IujCTR1VsSlM0WK6ULUP38Vina2mJ2O9iX8qVmRUS29GBge_eEYo9EkAebRy2OAmkOIjk7sCxuW623dXScmOyl0DAvF-6Zww-6I7NBjM646ekQMDBGI2Ps0u2Ph9ARHXuV9WAxHif7lwGjrZhhOiUJM6PMbWIQiPQVs5',
-        //   'https://lh3.googleusercontent.com/aida-public/AB6AXuAfVhxd9UX1WqDsvs1HwgDbCGu5M41hjWe7UHY8sbkULMVCMop-K-w-4Zc2huAXOGR6xX6X_sqpiDFNUtXOeyJV2LouCPdS9yIN0nca_quoKCKb32nx6VC__ZbhOL0qaMhysMl0CcHPUbjDuRUnBDA-ogoiKu_hXdCe5FIHiTTp1vN5DFuNeetIEVSYCNGddknExGB7EesozGS7JZ46Bu9o39GgzKIYOdOZ4LrW7dXwlaYscBWDxCHXR7SczLUt0e9auhGBgKLnHjrW'
-        // ];
+        try {
+            images = typeof data.images === 'string' ? JSON.parse(data.images) : data.images;
+        } catch (e) {
+            console.error('Failed to parse images JSON:', e);
+            images = [];
+        }
       }
+      
+      // Process image URLs
+      const processedImages = images.map(img => fileApi.getFileUrl(img));
+      
+      // Process avatar URL
+      const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/avatar/default.png';
 
       post.value = {
         ...data,
-        userName: data.userName || getRandomName(),
-        userAvatar: data.userAvatar || getRandomAvatar(),
-        images: images,
-        views: data.views || Math.floor(Math.random() * 10000) + 1000,
-        likes: data.likes || Math.floor(Math.random() * 500)
+        userName: data.userName || 'Unknown User',
+        userAvatar: avatarUrl,
+        images: processedImages,
+        views: data.views || 0,
+        likes: data.likes || 0,
+        isLiked: data.isLiked || false
       };
     }
   } catch (error) {
@@ -199,13 +215,44 @@ const loadComments = async (id) => {
       const records = data.records || [];
       comments.value = records.map(c => ({
         ...c,
-        userName: c.userName || getRandomName(),
-        userAvatar: c.userAvatar || getRandomAvatar(),
-        likes: Math.floor(Math.random() * 50)
+        userName: c.nickname || 'Unknown User',
+        userAvatar: c.avatar ? fileApi.getFileUrl(c.avatar) : '/static/avatar/default.png',
+        likes: c.likes || 0,
+        // Map replies recursively if needed, but for now flat list or simple structure
+        replies: (c.replies || []).map(r => ({
+            ...r,
+            userName: r.nickname || 'Unknown User',
+            userAvatar: r.avatar ? fileApi.getFileUrl(r.avatar) : '/static/avatar/default.png',
+            likes: r.likes || 0
+        }))
       }));
     }
   } catch (error) {
     console.error('Failed to load comments:', error);
+  }
+};
+
+const handleLike = async () => {
+  if (!post.value) return;
+  try {
+    const res = await postApi.like({
+      targetId: post.value.id,
+      targetType: 1 // 1 for post
+    });
+    
+    if (res && res.liked !== undefined) {
+      post.value.isLiked = res.liked;
+      if (res.liked) {
+        post.value.likes++;
+        uni.showToast({ title: '已点赞', icon: 'none' });
+      } else {
+        post.value.likes--;
+        uni.showToast({ title: '已取消', icon: 'none' });
+      }
+    }
+  } catch (error) {
+    console.error('Like failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
   }
 };
 
@@ -606,5 +653,40 @@ onLoad((options) => {
   margin-top: 16px;
   border-left: 2px solid #1e293b;
   padding-left: 16px;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+}
+
+.action-text {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Add padding to scroll-view to avoid overlap with bottom bar */
+.content-scroll {
+  height: calc(100vh - 80px - 60px); /* Adjust based on header and bottom bar */
 }
 </style>
