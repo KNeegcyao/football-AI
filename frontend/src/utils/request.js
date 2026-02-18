@@ -27,6 +27,17 @@ const request = (options = {}) => {
         // 打印原始响应，方便调试
         console.log('API Response:', res)
         
+        // 处理 HTTP 状态码为 401 的情况 (Spring Security 默认行为)
+        if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          uni.showToast({ title: '登录已过期', icon: 'none' })
+          setTimeout(() => {
+            uni.navigateTo({ url: '/pages/login/login' })
+          }, 1500)
+          reject(new Error('未登录或登录已过期'))
+          return
+        }
+
         if (!res.data) {
           reject(new Error('服务器未返回数据'))
           return
@@ -36,8 +47,12 @@ const request = (options = {}) => {
         if (code === 200) {
           resolve(data)
         } else if (code === 401) {
-          // Token 过期或未登录
+          // 业务逻辑返回的 401
+          uni.removeStorageSync('token')
           uni.showToast({ title: '登录已过期', icon: 'none' })
+          setTimeout(() => {
+            uni.navigateTo({ url: '/pages/login/login' })
+          }, 1500)
           reject(new Error(msg || '未登录'))
         } else {
           uni.showToast({ title: msg || '请求失败', icon: 'none' })

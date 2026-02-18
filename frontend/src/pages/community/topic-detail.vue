@@ -74,7 +74,7 @@
 
     <!-- Discussion Feed -->
     <view class="feed-list">
-      <!-- Post Card 1 -->
+      <!-- Post Card 1 (Static Featured) -->
       <view class="post-card">
         <view class="post-header">
           <view class="user-info">
@@ -115,7 +115,7 @@
         </view>
       </view>
 
-      <!-- Post Card 2 (AI Analysis) -->
+      <!-- Post Card 2 (AI Analysis - Static) -->
       <view class="post-card ai-card">
         <view class="ai-bg-icon">
           <u-icon name="info-circle" color="rgba(255,255,255,0.1)" size="60"></u-icon>
@@ -144,37 +144,53 @@
         </view>
       </view>
 
-      <!-- Post Card 3 -->
-      <view class="post-card">
+      <!-- Real User Post Cards -->
+      <view class="post-card" v-for="(post, index) in postList" :key="post.id || index">
         <view class="post-header">
           <view class="user-info">
             <view class="avatar-wrapper">
-              <image class="avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW-tRnOKF1UnPpHhxy2flLtbiO8R0HTwS4FeLc56nZBxXLJNcsc-Bo2LkZVB_ap4G03ZX_jHWsmLN9BDVzvD6I2xxi8-_89Aefzqj3EMb6PWRvo-ysi4ExowK2wTcCG-yqpJbTMq8USzEu0eUos6rPE6UGMrR75P1oyqtX6hu6YbCafpnwyZCaXMH-d2hIxz29kk9n1KYH6glR56zVQ3EvZoFaoDtwsKzMcIQzwWPpWUXDlAepvgvskvu4DnCQ-v-1rzD0_2h6BGEr" mode="aspectFill"></image>
+              <image class="avatar" :src="post.userAvatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW-tRnOKF1UnPpHhxy2flLtbiO8R0HTwS4FeLc56nZBxXLJNcsc-Bo2LkZVB_ap4G03ZX_jHWsmLN9BDVzvD6I2xxi8-_89Aefzqj3EMb6PWRvo-ysi4ExowK2wTcCG-yqpJbTMq8USzEu0eUos6rPE6UGMrR75P1oyqtX6hu6YbCafpnwyZCaXMH-d2hIxz29kk9n1KYH6glR56zVQ3EvZoFaoDtwsKzMcIQzwWPpWUXDlAepvgvskvu4DnCQ-v-1rzD0_2h6BGEr'" mode="aspectFill"></image>
             </view>
             <view class="user-meta">
               <view class="name-row">
-                <text class="username">Li_Lili_Baller</text>
+                <text class="username">{{ post.userName || '球迷用户' }}</text>
               </view>
-              <text class="time">5小时前 · 深圳</text>
+              <text class="time">{{ formatTime(post.createTime) }}</text>
             </view>
           </view>
           <u-icon name="more-dot-fill" color="rgba(255,255,255,0.4)" size="20"></u-icon>
         </view>
-        <text class="post-content">
-          大家觉得今天梅西踢了多少分钟？感觉身体状态维持得真好啊。希望下次有机会能看到他们去南方踢一场！ 🇦🇷⚽️
-        </text>
+        <text class="post-content">{{ post.content }}</text>
+        
+        <!-- Post Images -->
+        <view class="media-container" v-if="post.images && post.images.length > 0">
+          <image 
+            class="post-image" 
+            v-for="(img, i) in post.images" 
+            :key="i" 
+            :src="img" 
+            mode="aspectFill"
+            @click.stop="previewImage(post.images, i)"
+          ></image>
+        </view>
+        
         <view class="post-actions">
           <view class="action-group">
             <view class="action-btn">
               <u-icon name="heart" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">342</text>
+              <text class="count">{{ post.likeCount || 0 }}</text>
             </view>
             <view class="action-btn">
               <u-icon name="chat" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">15</text>
+              <text class="count">{{ post.commentCount || 0 }}</text>
             </view>
           </view>
         </view>
+      </view>
+
+      <!-- Empty State -->
+      <view v-if="postList.length === 0" class="empty-state">
+        <text>暂无更多话题讨论</text>
       </view>
     </view>
 
@@ -189,9 +205,14 @@
 </template>
 
 <script setup>
-import { ref, onLoad } from '@dcloudio/uni-app';
+import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import { communityApi } from '@/api';
 
 const topicTitle = ref('梅西中国行');
+const topicInfo = ref({});
+const loading = ref(false);
+const postList = ref([]);
 
 const goBack = () => {
   uni.navigateBack();
@@ -200,8 +221,86 @@ const goBack = () => {
 onLoad((options) => {
   if (options.title) {
     topicTitle.value = decodeURIComponent(options.title).replace(/^#|#$/g, '');
+    loadPosts(topicTitle.value);
   }
 });
+
+const loadTopicDetail = async (id) => {
+  try {
+    const data = await communityApi.getTopicDetail(id)
+    if (data) {
+      topicInfo.value = {
+        ...data,
+        description: data.description || '这里是话题导语，引导大家参与讨论...',
+        viewCount: data.viewCount || Math.floor(Math.random() * 10000),
+        discussCount: data.discussCount || Math.floor(Math.random() * 1000)
+      }
+    }
+  } catch (error) {
+    console.error('获取话题详情失败:', error)
+    uni.showToast({
+      title: '加载失败',
+      icon: 'none'
+    })
+  }
+}
+
+const loadPosts = async (id) => {
+  try {
+    loading.value = true
+    const data = await communityApi.getTopicPosts(id, { page: 1, size: 10 })
+    if (data) {
+      const records = data.records || []
+      postList.value = records.map(post => ({
+        ...post,
+        userName: post.userName || '用户' + Math.floor(Math.random() * 1000),
+        userAvatar: post.userAvatar || `/static/avatar/${Math.floor(Math.random() * 4) + 1}.png`,
+        images: post.images ? (typeof post.images === 'string' ? JSON.parse(post.images) : post.images) : [],
+        likeCount: post.likes || Math.floor(Math.random() * 100),
+        commentCount: post.commentCount || Math.floor(Math.random() * 20),
+        shareCount: Math.floor(Math.random() * 10),
+        createTime: post.createTime || '刚刚'
+      }))
+    }
+  } catch (error) {
+    console.error('获取帖子列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const getRandomAvatar = () => {
+  const avatars = [
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuBrRbCMQ9jttw9cIS5KvBEH7v21rrGegUNbE_x3qMLLvCDd206ZrgoV8t35q1ze3OwpjV-cPZXyCIm1TqRCFeUOqs4mCXUC8F-oTUefRjWEwQdBJh86UE363VP2GDt0LgnG9bc3NJ1lyO-GADQ-onflDElLt02WLLahKrxTJxmrFSuuOf6LG7R6XHaLY60uxTjZFYPkVB-E_FheufCuakN_sq3efmkaIRAfs5J0NBc-sUlCQbnc9UeZwKWUiPMKa0rhKyOrgOk6HnXc',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuAz587xyU9hdDY5pWPzvhmpbGa8y3P16Qjy-98NjD1s3dwVMidPBhA4O7vGD1z7cvy0V2InSSjLs1ej2k9hjIdC7Ead4njJCVCAqzH0sqDBt9Z9p52AN6THPv46e86A9NwDGMXpBnQ5G5ZxUwABbItjr0v7Lfh7X02oU0Y4ZYShG2GX57DuGIuPTnh9mAq4C4tfmnUKD0qa8dGnJpgq52cxfrZoRLSEIX0gyZGUH6OGvXbIUR68pyf7LOJPepWObEFlylehjyj3NK06',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuAW-tRnOKF1UnPpHhxy2flLtbiO8R0HTwS4FeLc56nZBxXLJNcsc-Bo2LkZVB_ap4G03ZX_jHWsmLN9BDVzvD6I2xxi8-_89Aefzqj3EMb6PWRvo-ysi4ExowK2wTcCG-yqpJbTMq8USzEu0eUos6rPE6UGMrR75P1oyqtX6hu6YbCafpnwyZCaXMH-d2hIxz29kk9n1KYH6glR56zVQ3EvZoFaoDtwsKzMcIQzwWPpWUXDlAepvgvskvu4DnCQ-v-1rzD0_2h6BGEr'
+  ];
+  return avatars[Math.floor(Math.random() * avatars.length)];
+};
+
+const getRandomName = () => {
+  const names = ['伯纳乌之王', '梅西死忠', 'C罗粉丝', '曼联红魔', '阿森纳枪手', '利物浦KOP', '拜仁慕尼黑', '尤文蒂尼'];
+  return names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random() * 1000);
+};
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return '';
+  const date = new Date(timeStr);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  return date.toLocaleDateString();
+};
+
+const previewImage = (images, current) => {
+  uni.previewImage({
+    urls: images,
+    current: current
+  });
+};
 </script>
 
 <style lang="scss" scoped>

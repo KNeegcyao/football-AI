@@ -47,7 +47,27 @@ export const communityApi = {
   /**
    * 获取趋势话题
    */
-  getTrendTopics: () => request.get('/api/community/topics/trending')
+  getTrendTopics: () => request.get('/api/community/topics/trending'),
+
+  /**
+   * 获取圈子详情
+   */
+  getCircleDetail: (id) => request.get(`/api/teams/${id}`),
+
+  /**
+   * 获取话题详情
+   */
+  getTopicDetail: (id) => request.get(`/api/community/topics/${id}`),
+
+  /**
+   * 获取圈子帖子列表
+   */
+  getCirclePosts: (name, params) => request.get(`/api/community/circles/${encodeURIComponent(name)}/posts`, params),
+
+  /**
+   * 获取话题帖子列表
+   */
+  getTopicPosts: (title, params) => request.get('/api/community/topics/posts', { title, ...params })
 }
 
 /**

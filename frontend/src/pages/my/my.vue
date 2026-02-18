@@ -251,10 +251,13 @@ const loadUserProfile = async () => {
     }
   } catch (e) {
     console.error('加载用户信息失败:', e)
-    uni.showToast({
-      title: '加载用户信息失败',
-      icon: 'none'
-    })
+    // 如果是未登录导致的错误，request.js 已经处理了提示和跳转，这里不再重复提示
+    if (e.message !== '未登录或登录已过期' && e.message !== '未登录') {
+      uni.showToast({
+        title: '加载用户信息失败',
+        icon: 'none'
+      })
+    }
   }
 }
 

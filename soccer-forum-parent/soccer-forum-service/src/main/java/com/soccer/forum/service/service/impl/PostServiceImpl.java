@@ -58,6 +58,9 @@ public class PostServiceImpl implements PostService {
         Post post = new Post();
         post.setTitle(req.getTitle());
         post.setContent(req.getContent());
+        post.setImages(req.getImages());
+        post.setCircleId(req.getCircleId());
+        post.setTopicId(req.getTopicId());
         post.setUserId(userId);
         post.setViews(0);
         post.setLikes(0);

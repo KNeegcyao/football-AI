@@ -16,10 +16,28 @@ public class PostCreateReq {
     @Size(min = 5, message = "内容不能少于5个字符")
     private String content;
 
+    @Schema(description = "图片列表(JSON)")
+    private String images;
+
+    @Schema(description = "关联圈子ID")
+    private Long circleId;
+
+    @Schema(description = "关联话题ID")
+    private Long topicId;
+
     @Schema(description = "标题", requiredMode = Schema.RequiredMode.REQUIRED)
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     @Schema(description = "内容", requiredMode = Schema.RequiredMode.REQUIRED)
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
+
+    public Long getCircleId() { return circleId; }
+    public void setCircleId(Long circleId) { this.circleId = circleId; }
+
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long topicId) { this.topicId = topicId; }
 }

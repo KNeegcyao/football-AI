@@ -36,6 +36,15 @@ public class Post implements Serializable {
     @Schema(description = "状态 (1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
 
+    @Schema(description = "图片列表(JSON)")
+    private String images;
+
+    @Schema(description = "关联圈子ID")
+    private Long circleId;
+
+    @Schema(description = "关联话题ID")
+    private Long topicId;
+
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -68,6 +77,15 @@ public class Post implements Serializable {
 
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
+
+    public Long getCircleId() { return circleId; }
+    public void setCircleId(Long circleId) { this.circleId = circleId; }
+
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long topicId) { this.topicId = topicId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

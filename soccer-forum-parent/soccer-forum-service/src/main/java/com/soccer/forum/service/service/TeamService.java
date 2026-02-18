@@ -41,6 +41,32 @@ public interface TeamService {
     Page<Team> listTeams(Integer page, Integer size, String keyword);
 
     /**
+     * 分页查询球队列表（支持热门筛选）
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @param keyword 搜索关键词
+     * @param isHot 是否热门
+     * @return 球队分页对象
+     */
+    Page<Team> listTeams(Integer page, Integer size, String keyword, Boolean isHot);
+
+    /**
+     * 获取热门球队列表
+     *
+     * @return 热门球队列表
+     */
+    java.util.List<Team> listHotTeams();
+
+    /**
+     * 获取推荐球队列表（首页显示）
+     *
+     * @return 推荐球队列表
+     */
+    java.util.List<Team> listRecommendTeams();
+
+
+    /**
      * 根据名称列表获取球队
      *
      * @param names 球队名称列表

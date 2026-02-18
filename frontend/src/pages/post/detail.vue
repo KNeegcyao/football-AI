@@ -3,135 +3,114 @@
     <!-- Status Bar -->
     <view class="status-bar"></view>
 
-    <!-- Header -->
-    <view class="header">
-      <view class="header-left">
-        <view class="back-btn" @click="goBack">
-          <text class="material-icons" style="font-size: 24px; color: #fff;">arrow_back_ios_new</text>
-        </view>
-        <view class="author-info">
-          <view class="avatar-container">
-            <image class="author-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWv-26aws5gEp9SoPQuU_Y-mk8QV0gVdlTStCEFcVTwsy5_dpIg9jX8z_6TMMYA6RohT7BZTADrl62UOwDEJ23hX1j3GwDPKg23dgfcLBNFE_Po8QqWSUE29sRIpoMJeKGhNYU_RNibZqTHR7BUXl-t1MjNtQse5Q2mhhOHf1dj9q2-ADEfG-F2HAzvi8eVXOBvvwZvK9Fo3xd0dcamjww90CjWcXPDXEvxZq1tkztf7es8VwQyPk2NfW3m5zvNNHnOMUVhYeocJc1" mode="aspectFill"></image>
-            <view class="verified-badge">
-              <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
-            </view>
-          </view>
-          <view class="author-details">
-            <view class="author-name-row">
-              <text class="author-name">TacticalMaster_AI</text>
-              <text class="material-icons verified-icon">verified</text>
-            </view>
-            <text class="author-role">Expert Predictor</text>
-          </view>
-        </view>
-      </view>
-      <button class="follow-btn">Follow</button>
+    <!-- Loading State -->
+    <view v-if="loading" class="loading-state">
+      <text style="color: #fff;">Loading...</text>
     </view>
 
-    <scroll-view scroll-y class="content-scroll">
-      <!-- Article Content -->
-      <view class="article">
-        <view class="article-meta">
-          <text class="tag"># UCL_Predictions</text>
-          <text class="time">2 hours ago</text>
-        </view>
-        
-        <text class="article-title">AI Analysis: Why Real Madrid's transition game will break City's high press ⚡️</text>
-        
-        <view class="article-body">
-          <text class="body-text">After simulating the match 10,000 times on our PitchPulse AI engine, the data shows a staggering 68% probability of a counter-attacking goal in the first 30 minutes. The hybrid positioning of Bellingham is the key...</text>
-          <text class="read-more">Read more</text>
-        </view>
-
-        <!-- Image Grid -->
-        <view class="image-grid">
-          <view class="grid-item">
-            <image class="grid-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU26CqlmforlJF_IccguOr0tQXy2qXyVmdIap6Ehv3s6rOzM4dHZSGoLbe0mmGuNNdCRxDVbxlFoUIEN9HlXBhLoc6Mo4bqmJmksZ6OzW6IujCTR1VsSlM0WK6ULUP38Vina2mJ2O9iX8qVmRUS29GBge_eEYo9EkAebRy2OAmkOIjk7sCxuW623dXScmOyl0DAvF-6Zww-6I7NBjM646ekQMDBGI2Ps0u2Ph9ARHXuV9WAxHif7lwGjrZhhOiUJM6PMbWIQiPQVs5" mode="aspectFill"></image>
+    <template v-else-if="post">
+      <!-- Header -->
+      <view class="header">
+        <view class="header-left">
+          <view class="back-btn" @click="goBack">
+            <text class="material-icons" style="font-size: 24px; color: #fff;">arrow_back_ios_new</text>
           </view>
-          <view class="grid-item">
-            <image class="grid-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfVhxd9UX1WqDsvs1HwgDbCGu5M41hjWe7UHY8sbkULMVCMop-K-w-4Zc2huAXOGR6xX6X_sqpiDFNUtXOeyJV2LouCPdS9yIN0nca_quoKCKb32nx6VC__ZbhOL0qaMhysMl0CcHPUbjDuRUnBDA-ogoiKu_hXdCe5FIHiTTp1vN5DFuNeetIEVSYCNGddknExGB7EesozGS7JZ46Bu9o39GgzKIYOdOZ4LrW7dXwlaYscBWDxCHXR7SczLUt0e9auhGBgKLnHjrW" mode="aspectFill"></image>
-          </view>
-          <view class="grid-item relative">
-            <image class="grid-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIZaff89z6j8zG4Qc3b89ewscYjSTz-bgb7OVT7A9eTCsm5wBACICeoZhqdWc9hwxernbN5mbfEyZYlJiCNXI_iCkaZQJmS-auAR6UZaOiZ-lzVbEXDPNuhtMs_2ddW9yNM8UDi6c-Stc_UBt4ZLwdBWvFdBBM_emFrBB9-d5bPIfJymcOI6wL9M6ug84XFEYm9VGPHupQGY2FE1fxP1mWRjLcv6wlCM8hkvTL1FOlV2iyxE1eegrSfoN6lnKwNESumNGkkaZeSx4g" mode="aspectFill"></image>
-            <view class="grid-overlay">
-              <text class="overlay-text">+12 Data Charts</text>
+          <view class="author-info">
+            <view class="avatar-container">
+              <image class="author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
+              <view class="verified-badge">
+                <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
+              </view>
+            </view>
+            <view class="author-details">
+              <view class="author-name-row">
+                <text class="author-name">{{ post.userName }}</text>
+                <text class="material-icons verified-icon">verified</text>
+              </view>
+              <text class="author-role">Community Member</text>
             </view>
           </view>
-          <view class="grid-item">
-            <image class="grid-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACPlUE9NbwSJYJRgiwcroN7ZBpCZ9o1WPdynqh9QWOy2V1BHFzAu7xOEIoIsZP34nF24Q6xC3_qg_VkX1Bzj9IMlnnTi9_6DGIvLfe7PH-V2YaBi5yeWDx-SVY8qG4ZUPtx_jLhTqeccvOnMhq4wnenJtlte0ykmMX9VSa7CFcIrQUx76Ei0f55LKOKAxNE5oYnSPHy9Tq3F16bQ_mKflH_GQ8ImTLuV55_ykg3Wv7fPyfTA0RM0uiCh0-_6RDvRcLo5TZqi7sw1AK" mode="aspectFill"></image>
-          </view>
         </view>
-
-        <!-- Stats -->
-        <view class="interaction-stats">
-          <view class="avatar-stack">
-            <image class="stack-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3aemkmila5RtDnSEVeYfpggtwtb0tFxiELe0pvXWCqFODNFHUlY80bp2bNUUGiBiHJGk3wzRi9xhd_iY1vl7abR6J7rrhwuhIB-jE6zi5yzI92ORuKwe01HXbiOt0dj8VJ-C3NY9CPwWj25gW6gbEXSMS1DgMlGSnKdZVw5MMBTwj3Um_ioQwn851hkkGIT06PCHicE_oBKKo5E5nRiePNPzmf5FAVyO5Bp7GF_2Uh-t1m-K4SoaJT0VjyTALgIo31hpBsOc3Jxo7"></image>
-            <image class="stack-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFK69v87a3OMm_841rfP0IJiVxpUezzAYh6oc1zDkECpd4KJo_3lxxa2kV5y5-qoruTXJkLVIBNFf_ra9RMte9SZZMBeScS1PvdYZV8l_86CkrTngnnTELO1Ud7AlEfk2CJrp7V5obxYFwKRuPJvihC3KalhMxjZKCFXHSIRIYvj3QHJdyP0NWJvjDw_7D8caEgqboMsFpqXt8Q2OJFX0j_Wc0NjsuJNNfChJmnrYB7WsAMNTEw-cNX4nzzg1ilPefeDFG8MD95CAQ"></image>
-            <image class="stack-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs_vDqGdh99yAOMvBR5eHoZ600sGvKOQQRcqEtNaZcyJdl3_W2pqt4rJItb6hQjOBm073onC3e1ihuy-HKb1jBM8TFg-2dF7vcJFToB7kPj3wBOwvWEBv9Mzz4eQASGZEwlQgBE1_v8J9kTY1VdhTFd7Ry8-qdQKcJQoIQ9ROVwGsygatDBtmhfx7uw8FfveMrwC2J6rJCuDiXUaH78iDwXolhcN6WtidRqQB7baK0cE3XTmXkWisiHynww5smrmYUVZO4GEChhXLG"></image>
-            <view class="stack-count">+1.2k</view>
-          </view>
-          <view class="view-stats">
-            <text class="stat-highlight">12,482</text> Views • <text class="stat-highlight">482</text> Likes
-          </view>
-        </view>
+        <button class="follow-btn">Follow</button>
       </view>
 
-      <!-- Comments -->
-      <view class="comments-section">
-        <view class="comments-header">
-          <text class="comments-title">Community Discussion (142)</text>
-          <view class="sort-btn">
-            <text>Newest</text>
-            <text class="material-icons" style="font-size: 14px;">expand_more</text>
+      <scroll-view scroll-y class="content-scroll">
+        <!-- Article Content -->
+        <view class="article">
+          <view class="article-meta">
+            <text class="tag"># Football</text>
+            <text class="time">{{ formatTime(post.createdAt) }}</text>
+          </view>
+          
+          <text class="article-title">{{ post.title }}</text>
+          
+          <view class="article-body">
+            <text class="body-text">{{ post.content }}</text>
+          </view>
+
+          <!-- Image Grid -->
+          <view class="image-grid" v-if="post.images && post.images.length > 0">
+            <view class="grid-item" v-for="(img, index) in post.images" :key="index" @click="previewImage(index)">
+              <image class="grid-image" :src="img" mode="aspectFill"></image>
+            </view>
+          </view>
+
+          <!-- Stats -->
+          <view class="interaction-stats">
+            <view class="avatar-stack">
+              <image class="stack-avatar" :src="post.userAvatar"></image>
+              <view class="stack-count" style="background-color: #f2b90d; color: #000;">
+                <text class="material-icons" style="font-size: 12px;">thumb_up</text>
+              </view>
+            </view>
+            <view class="view-stats">
+              <text class="stat-highlight">{{ post.views || 0 }}</text> Views • <text class="stat-highlight">{{ post.likes || 0 }}</text> Likes
+            </view>
           </view>
         </view>
 
-        <view class="comments-list">
-          <view class="comment-item" v-for="(comment, index) in comments" :key="index">
-            <image class="comment-avatar" :src="comment.user.avatar" mode="aspectFill"></image>
-            <view class="comment-content-wrapper">
-              <view class="comment-bubble">
-                <view class="comment-user-row">
-                  <text class="comment-username">{{ comment.user.name }}</text>
-                  <text class="comment-time">{{ comment.time }}</text>
-                </view>
-                <text class="comment-text">{{ comment.content }}</text>
-              </view>
-              <view class="comment-actions">
-                <view class="action-item">
-                  <text class="material-icons" style="font-size: 14px;">favorite_border</text>
-                  <text class="action-text">{{ comment.likes }}</text>
-                </view>
-                <text class="reply-btn">Reply</text>
-              </view>
+        <!-- Comments -->
+        <view class="comments-section">
+          <view class="comments-header">
+            <text class="comments-title">Comments ({{ post.commentCount || comments.length }})</text>
+            <view class="sort-btn">
+              <text>Newest</text>
+              <text class="material-icons" style="font-size: 14px;">expand_more</text>
+            </view>
+          </view>
 
-              <!-- Nested Replies -->
-              <view class="nested-replies" v-if="comment.replies && comment.replies.length > 0">
-                <view class="comment-item nested" v-for="(reply, rIndex) in comment.replies" :key="rIndex">
-                  <image class="comment-avatar small" :src="reply.user.avatar" mode="aspectFill"></image>
-                  <view class="comment-content-wrapper">
-                    <view class="comment-bubble semi-transparent">
-                      <view class="comment-user-row">
-                        <text class="comment-username">{{ reply.user.name }}</text>
-                        <text class="comment-time">{{ reply.time }}</text>
-                      </view>
-                      <text class="comment-text">{{ reply.content }}</text>
-                    </view>
-                    <view class="comment-actions">
-                      <view class="action-item">
-                        <text class="material-icons" style="font-size: 12px; color: #f2b90d;">favorite</text>
-                        <text class="action-text">{{ reply.likes }}</text>
-                      </view>
-                      <text class="reply-btn">Reply</text>
-                    </view>
+          <view class="comments-list">
+            <view class="comment-item" v-for="(comment, index) in comments" :key="index">
+              <image class="comment-avatar" :src="comment.userAvatar" mode="aspectFill"></image>
+              <view class="comment-content-wrapper">
+                <view class="comment-bubble">
+                  <view class="comment-user-row">
+                    <text class="comment-username">{{ comment.userName }}</text>
+                    <text class="comment-time">{{ formatTime(comment.createdAt) }}</text>
                   </view>
+                  <text class="comment-text">{{ comment.content }}</text>
+                </view>
+                <view class="comment-actions">
+                  <view class="action-item">
+                    <text class="material-icons" style="font-size: 14px;">favorite_border</text>
+                    <text class="action-text">{{ comment.likes || 0 }}</text>
+                  </view>
+                  <text class="reply-btn">Reply</text>
                 </view>
               </view>
             </view>
+            
+            <view v-if="comments.length === 0" style="text-align: center; padding: 20px; color: #666;">
+              <text>No comments yet.</text>
+            </view>
           </view>
         </view>
-      </view>
-    </scroll-view>
+      </scroll-view>
+    </template>
+    
+    <view v-else class="error-state">
+      <text style="color: #fff;">Failed to load post.</text>
+    </view>
   </view>
 </template>
 
@@ -140,59 +119,110 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi } from '@/api';
 
+const post = ref(null);
 const comments = ref([]);
 const postId = ref(null);
+const loading = ref(true);
 
 const goBack = () => {
   uni.navigateBack();
 };
 
-// Default Mock Data
-const defaultComments = [
-  {
-    user: {
-      name: 'Kylian_Stan7',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAUXudDBE16DhOai6np2yUPZLffzpmi2V7ZJdl5lTIhsGlQCUCOyu5n95GdKQryAjFB_eqiVsbIZP7wnv-QiDI00TGNBQ-TsxtVaum5gaGXiT9JqnpdahlV24jtv45QhoVkAiJgwIBeb_IaZQC52v6bDbe1gnbPfbdQcP6jCytd2FeulAEd_vwptCcpDz2kLqLL7c4Qpn784dQmIR_bR0fXrkfbBEZ36Fek9Ac8TzTNoGsFFwFioL44eirMqWoIG10jxI02pu5nTSKU'
-    },
-    time: '1h ago',
-    content: "The AI missed the Rodri factor. If he plays deep, Madrid's transition will be suffocated. Look at the stats from the last 5 games!",
-    likes: 24,
-    replies: [
-      {
-        user: {
-          name: 'SarahStats',
-          avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCorKt5rGdLNiUO420dckysCDHIMz84gOyqb6R2B1M-GqPihcabXVPHJco5fmqyb5BeEgsyNNNM4KfaodSyTYwTSqm-4GE8C8yE5flsAUSG2v6I7NhMFaU9Rt8o2-vwHXq55daSZPP0S80AgNVMxqmpFBQ9flHryatFRT_BMxBNwJFphBAbCjkPTfU9KlX_Zw-FC0vELpC6kNyZSrV4F6jAvNiq8nN11-4bk-ASgKnecdW-ypHtQ6vYrCfVSU__qhXOToKT2zWqxfmp'
-        },
-        time: '45m ago',
-        content: "Actually, @Kylian_Stan7 the heatmaps show Rodri is pushing higher this season. Leaving the gap for Vini Jr.",
-        likes: 8
-      }
-    ]
+const formatTime = (timeStr) => {
+  if (!timeStr) return '';
+  const date = new Date(timeStr);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 3600000) {
+    return Math.floor(diff / 60000) + 'm ago';
+  } else if (diff < 86400000) {
+    return Math.floor(diff / 3600000) + 'h ago';
+  } else {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   }
-];
+};
 
-// Initialize with default data
-comments.value = defaultComments;
+const getRandomAvatar = () => {
+  const avatars = [
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Zack',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Bella',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo'
+  ];
+  return avatars[Math.floor(Math.random() * avatars.length)];
+};
+
+const getRandomName = () => {
+  const names = ['Fan_007', 'SoccerLover', 'GoalMachine', 'MidfieldMaestro', 'Keeper1'];
+  return names[Math.floor(Math.random() * names.length)];
+};
+
+const loadPostDetail = async (id) => {
+  try {
+    loading.value = true;
+    const data = await postApi.getDetail(id);
+    if (data) {
+      // Parse images if needed
+      let images = [];
+      if (data.images) {
+        images = typeof data.images === 'string' ? JSON.parse(data.images) : data.images;
+      } else {
+        // Mock images if none provided for better UI experience
+        // images = [
+        //   'https://lh3.googleusercontent.com/aida-public/AB6AXuBU26CqlmforlJF_IccguOr0tQXy2qXyVmdIap6Ehv3s6rOzM4dHZSGoLbe0mmGuNNdCRxDVbxlFoUIEN9HlXBhLoc6Mo4bqmJmksZ6OzW6IujCTR1VsSlM0WK6ULUP38Vina2mJ2O9iX8qVmRUS29GBge_eEYo9EkAebRy2OAmkOIjk7sCxuW623dXScmOyl0DAvF-6Zww-6I7NBjM646ekQMDBGI2Ps0u2Ph9ARHXuV9WAxHif7lwGjrZhhOiUJM6PMbWIQiPQVs5',
+        //   'https://lh3.googleusercontent.com/aida-public/AB6AXuAfVhxd9UX1WqDsvs1HwgDbCGu5M41hjWe7UHY8sbkULMVCMop-K-w-4Zc2huAXOGR6xX6X_sqpiDFNUtXOeyJV2LouCPdS9yIN0nca_quoKCKb32nx6VC__ZbhOL0qaMhysMl0CcHPUbjDuRUnBDA-ogoiKu_hXdCe5FIHiTTp1vN5DFuNeetIEVSYCNGddknExGB7EesozGS7JZ46Bu9o39GgzKIYOdOZ4LrW7dXwlaYscBWDxCHXR7SczLUt0e9auhGBgKLnHjrW'
+        // ];
+      }
+
+      post.value = {
+        ...data,
+        userName: data.userName || getRandomName(),
+        userAvatar: data.userAvatar || getRandomAvatar(),
+        images: images,
+        views: data.views || Math.floor(Math.random() * 10000) + 1000,
+        likes: data.likes || Math.floor(Math.random() * 500)
+      };
+    }
+  } catch (error) {
+    console.error('Failed to load post detail:', error);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const loadComments = async (id) => {
   try {
-    const res = await postApi.getComments(id);
-    if (res) {
-      comments.value = res;
+    const data = await postApi.getComments(id, { page: 1, size: 20 });
+    if (data) {
+      const records = data.records || [];
+      comments.value = records.map(c => ({
+        ...c,
+        userName: c.userName || getRandomName(),
+        userAvatar: c.userAvatar || getRandomAvatar(),
+        likes: Math.floor(Math.random() * 50)
+      }));
     }
-  } catch (e) {
-    console.error('Failed to load comments:', e);
-    // Keep default data
+  } catch (error) {
+    console.error('Failed to load comments:', error);
+  }
+};
+
+const previewImage = (index) => {
+  if (post.value && post.value.images) {
+    uni.previewImage({
+      urls: post.value.images,
+      current: index
+    });
   }
 };
 
 onLoad((options) => {
   if (options.id) {
     postId.value = options.id;
+    loadPostDetail(options.id);
     loadComments(options.id);
-  }
-  if (options.title) {
-    console.log('Post loaded for topic:', decodeURIComponent(options.title));
   }
 });
 </script>

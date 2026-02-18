@@ -45,6 +45,18 @@ public class Team {
     @Schema(description = "英文名称")
     private String englishName;
 
+    @TableField(value = "stadium_bg_url")
+    @Schema(description = "球场背景图URL")
+    private String stadiumBgUrl;
+
+    @TableField(value = "is_hot")
+    @Schema(description = "是否热门")
+    private Boolean isHot;
+
+    @TableField(value = "is_recommend")
+    @Schema(description = "是否推荐")
+    private Boolean isRecommend;
+
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -83,6 +95,12 @@ public class Team {
     public void setGoalsAgainst(Integer goalsAgainst) { this.goalsAgainst = goalsAgainst; }
     public String getEnglishName() { return englishName; }
     public void setEnglishName(String englishName) { this.englishName = englishName; }
+    public String getStadiumBgUrl() { return stadiumBgUrl; }
+    public void setStadiumBgUrl(String stadiumBgUrl) { this.stadiumBgUrl = stadiumBgUrl; }
+    public Boolean getIsHot() { return isHot; }
+    public void setIsHot(Boolean isHot) { this.isHot = isHot; }
+    public Boolean getIsRecommend() { return isRecommend; }
+    public void setIsRecommend(Boolean isRecommend) { this.isRecommend = isRecommend; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

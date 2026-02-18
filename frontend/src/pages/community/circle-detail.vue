@@ -1,259 +1,477 @@
 <template>
   <view class="container">
-    <!-- Header Navigation -->
-    <view class="nav-bar glass-effect">
+    <!-- Custom Navbar -->
+    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <view class="icon-btn">
-          <u-icon name="arrow-left" color="#fff" size="40rpx"></u-icon>
+        <view class="nav-btn-glass">
+          <text class="material-icons back-icon">arrow_back</text>
         </view>
       </view>
-      <text class="nav-title" :class="{ 'show': showTitle }">{{ circleName }}</text>
+      <view class="nav-center">
+        <text class="nav-title" :style="{ opacity: scrollTop > 100 ? 1 : 0 }">{{ circleName }}圈</text>
+      </view>
       <view class="nav-right">
-        <view class="icon-btn">
-          <u-icon name="search" color="#fff" size="40rpx"></u-icon>
+        <view class="nav-btn-glass">
+          <text class="material-icons nav-icon">search</text>
         </view>
-        <view class="icon-btn">
-          <u-icon name="more-dot-fill" color="#fff" size="40rpx"></u-icon>
+        <view class="nav-btn-glass">
+          <text class="material-icons nav-icon">more_horiz</text>
         </view>
       </view>
     </view>
 
-    <!-- Hero Section -->
-    <view class="hero-section">
-      <image class="hero-bg" :src="heroImage" mode="aspectFill"></image>
-      <view class="hero-gradient"></view>
-    </view>
+    <scroll-view scroll-y class="content-scroll" @scroll="onScroll" @scrolltolower="loadMore">
+      <!-- Hero Section -->
+      <view class="hero-section">
+        <image class="hero-bg" :src="heroImage" mode="aspectFill" @error="onHeroError"></image>
+        <view class="hero-gradient"></view>
+      </view>
 
-    <!-- Circle Info -->
-    <view class="circle-info">
-      <view class="info-header">
-        <view class="circle-logo-wrapper">
-          <image class="circle-logo" :src="circleLogo" mode="aspectFit"></image>
+      <!-- Circle Info -->
+      <view class="circle-info-section">
+        <view class="info-header">
+          <view class="logo-container">
+            <image 
+              class="circle-logo" 
+              :src="circleImage || '/static/default-team.png'" 
+              mode="aspectFill"
+              @error="onImageError"
+            ></image>
+          </view>
+          <button class="join-btn">加入</button>
         </view>
-        <button class="join-btn" hover-class="btn-hover">
-          <text>加入</text>
-        </button>
-      </view>
-      <view class="info-content">
-        <text class="circle-name">{{ circleName }}</text>
-        <view class="circle-stats">
-          <text class="stat-highlight">{{ memberCount }}</text> 成员 • 
-          <text class="stat-highlight">{{ onlineCount }}</text> 在线
+        
+        <view class="info-content">
+          <text class="circle-name">{{ circleName }}圈</text>
+          <view class="circle-stats">
+            <text class="stat-highlight">1.2M</text> <text class="stat-label">成员</text>
+            <text class="stat-divider">•</text>
+            <text class="stat-highlight">5,240</text> <text class="stat-label">在线</text>
+          </view>
+          <text class="circle-desc">{{ circleDesc }}</text>
         </view>
-        <text class="circle-desc">
-          这里是美凌格的集结地！分享皇马最新动态、转会传闻及比赛讨论。Hala Madrid!
-        </text>
       </view>
-    </view>
 
-    <!-- Tabs -->
-    <view class="tabs-container glass-effect">
-      <view class="tab-item active">
-        <text class="tab-text">讨论</text>
-        <view class="tab-indicator"></view>
+      <!-- Tabs -->
+      <view class="tabs-container" :class="{ 'sticky-tabs': isSticky }">
+        <view class="tab-item" :class="{ active: currentTab === 0 }" @click="currentTab = 0">
+          <text class="tab-text">讨论</text>
+          <view class="tab-indicator" v-if="currentTab === 0"></view>
+        </view>
+        <view class="tab-item" :class="{ active: currentTab === 1 }" @click="currentTab = 1">
+          <text class="tab-text">赛程</text>
+          <view class="tab-indicator" v-if="currentTab === 1"></view>
+        </view>
+        <view class="tab-item" :class="{ active: currentTab === 2 }" @click="currentTab = 2">
+          <text class="tab-text">球员</text>
+          <view class="tab-indicator" v-if="currentTab === 2"></view>
+        </view>
+        <view class="tab-item" :class="{ active: currentTab === 3 }" @click="currentTab = 3">
+          <text class="tab-text">相册</text>
+          <view class="tab-indicator" v-if="currentTab === 3"></view>
+        </view>
       </view>
-      <view class="tab-item">
-        <text class="tab-text">赛程</text>
-      </view>
-      <view class="tab-item">
-        <text class="tab-text">球员</text>
-      </view>
-      <view class="tab-item">
-        <text class="tab-text">相册</text>
-      </view>
-    </view>
 
-    <!-- Feed Section -->
-    <view class="feed-section">
-      <!-- AI Post Card -->
-      <view class="post-card ai-card">
-        <view class="card-header">
-          <view class="user-info">
-            <view class="avatar-box ai-avatar">
-              <u-icon name="android-fill" color="#f2b90d" size="32rpx"></u-icon>
-            </view>
-            <view class="user-meta">
-              <view class="name-row">
-                <text class="username">PitchPulse AI</text>
-                <view class="ai-badge">AI 分析</view>
+      <!-- Content Area -->
+      <view class="content-area">
+        
+        <!-- AI Analysis Card -->
+        <view class="ai-card" v-if="currentTab === 0">
+          <view class="ai-header">
+            <view class="ai-badge">
+              <view class="ai-icon-bg">
+                <text class="material-icons ai-icon">smart_toy</text>
+              </view>
+              <view class="ai-title-group">
+                <text class="ai-name">PitchPulse AI</text>
+                <view class="ai-tag">AI 分析</view>
               </view>
             </view>
+            <text class="post-time">刚刚</text>
           </view>
-          <text class="time-ago">刚刚</text>
+          
+          <text class="post-title">【战术分析】欧冠四分之一决赛首回合展望</text>
+          <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
+          
+          <view class="ai-images-grid">
+            <image class="ai-img-half" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEO7GwNM9dg0djapjxAuWJ1nFgCkIfgn1ufmunk1_nRl99l7EJRbCDg8VJBLGpfu3ZavpB755dqbeIOIGHL9TtiuioRiy2RoCmkE3ye5vX8wVkD-mAkaGxMdmc9Eqjxxdp_aVcGkwsXdI9EibI2xjUhLZ0TenrzdAa_l8Ho45auGaVTAQ0rYe3QY-Pt1dZb2wzbJd5k9oVtgDVj8NqTgXcvnhHwtdVY1zLIv5hwwvnCMwiyym6KpTVw_65I303HK2El2EXnJBnQTRi" mode="aspectFill"></image>
+            <image class="ai-img-half" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcs8hChqz6NtBT9EYHf8647M6hV4uLY6o4kBnPm96pX40o20WDok-X2gQzILgbL2b6_-wxHTPGlgyDDNiyFR6lacvKhmuxDfmS5S6aAXobnrkCRpfNKhia6-gIvYSgVLk1EeqzHI6DzV2tHCM7NSynNcn20ss2VLEkN7nZ8wP3Qi8UZq9qUEfPCWQbrNlWfkVKhjM4mng3J1zZ8hDvDzHzoYtaHU2dasMsjswycEPgGHwYQPQZTCvNJ8P7XL5jOYaMvKYCvkL7KhW5" mode="aspectFill"></image>
+          </view>
+          
+          <view class="post-footer">
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">favorite</text>
+              <text>1.2k</text>
+            </view>
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">chat_bubble</text>
+              <text>248</text>
+            </view>
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">share</text>
+              <text>56</text>
+            </view>
+          </view>
         </view>
-        <text class="post-title">【战术分析】欧冠四分之一决赛首回合展望</text>
-        <text class="post-content">
-          基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...
-        </text>
-        <view class="media-grid">
-          <image class="media-item" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEO7GwNM9dg0djapjxAuWJ1nFgCkIfgn1ufmunk1_nRl99l7EJRbCDg8VJBLGpfu3ZavpB755dqbeIOIGHL9TtiuioRiy2RoCmkE3ye5vX8wVkD-mAkaGxMdmc9Eqjxxdp_aVcGkwsXdI9EibI2xjUhLZ0TenrzdAa_l8Ho45auGaVTAQ0rYe3QY-Pt1dZb2wzbJd5k9oVtgDVj8NqTgXcvnhHwtdVY1zLIv5hwwvnCMwiyym6KpTVw_65I303HK2El2EXnJBnQTRi" mode="aspectFill"></image>
-          <image class="media-item" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcs8hChqz6NtBT9EYHf8647M6hV4uLY6o4kBnPm96pX40o20WDok-X2gQzILgbL2b6_-wxHTPGlgyDDNiyFR6lacvKhmuxDfmS5S6aAXobnrkCRpfNKhia6-gIvYSgVLk1EeqzHI6DzV2tHCM7NSynNcn20ss2VLEkN7nZ8wP3Qi8UZq9qUEfPCWQbrNlWfkVKhjM4mng3J1zZ8hDvDzHzoYtaHU2dasMsjswycEPgGHwYQPQZTCvNJ8P7XL5jOYaMvKYCvkL7KhW5" mode="aspectFill"></image>
+
+        <!-- User Posts -->
+        <view class="post-card" v-for="(post, index) in posts" :key="post.id" @click="navigateToPost(post)">
+          <view class="post-header">
+            <view class="user-info">
+              <image class="user-avatar" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
+              <text class="user-name">{{ post.userName }}</text>
+            </view>
+            <text class="post-time">{{ post.time }}</text>
+          </view>
+          
+          <text class="post-content-text">{{ post.content }}</text>
+          
+          <image v-if="post.image" class="post-main-img" :src="post.image" mode="aspectFill"></image>
+          
+          <view class="post-footer">
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">favorite</text>
+              <text>{{ post.likes }}</text>
+            </view>
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">chat_bubble</text>
+              <text>{{ post.comments }}</text>
+            </view>
+            <view class="interaction-item">
+              <text class="material-icons footer-icon">share</text>
+              <text>{{ post.shares }}</text>
+            </view>
+          </view>
         </view>
-        <view class="card-footer">
-          <view class="action-item">
-            <u-icon name="heart" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>1.2k</text>
-          </view>
-          <view class="action-item">
-            <u-icon name="chat" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>248</text>
-          </view>
-          <view class="action-item">
-            <u-icon name="share" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>56</text>
-          </view>
+
+        <!-- Load More / No More -->
+        <view class="loading-status">
+          <text v-if="loading">加载中...</text>
+          <text v-else-if="noMore">没有更多了</text>
         </view>
       </view>
+    </scroll-view>
 
-      <!-- Regular User Post Card -->
-      <view class="post-card">
-        <view class="card-header">
-          <view class="user-info">
-            <image class="avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrRbCMQ9jttw9cIS5KvBEH7v21rrGegUNbE_x3qMLLvCDd206ZrgoV8t35q1ze3OwpjV-cPZXyCIm1TqRCFeUOqs4mCXUC8F-oTUefRjWEwQdBJh86UE363VP2GDt0LgnG9bc3NJ1lyO-GADQ-onflDElLt02WLLahKrxTJxmrFSuuOf6LG7R6XHaLY60uxTjZFYPkVB-E_FheufCuakN_sq3efmkaIRAfs5J0NBc-sUlCQbnc9UeZwKWUiPMKa0rhKyOrgOk6HnXc" mode="aspectFill"></image>
-            <text class="username">伯纳乌之王7</text>
-          </view>
-          <text class="time-ago">15分钟前</text>
-        </view>
-        <text class="post-content">
-          今天在商店买到了本赛季的第三套球衣，实物比照片好看多了！大家觉得呢？黑色金边真的太高级了。
-        </text>
-        <image class="post-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjDt9a7gdu8exaUUYLxHjBEO2BmO8SiYwMqMmpzFOw5WR7FmspEOb1PY7gOp73aj8HK3bePbFIfiZY7qNAhQZLrYGVOTnt_DN3EcskzbHMr8qT8QZuLFiTf1PQe86u6WOLnC7vdLvrKF4xQ1vz9l0rdPA_vRuGDlOo4GaHHV9074qLZeCpYWkDz-k0vWNDzi84bAnbHiKLrVDVTBM9hJi71NaAtRaeS6p6hDZZ5k6ViRzmNO6Gjotd_f1oj6wFhNUtArHUO94rfBMt" mode="aspectFill"></image>
-        <view class="card-footer">
-          <view class="action-item">
-            <u-icon name="heart" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>856</text>
-          </view>
-          <view class="action-item">
-            <u-icon name="chat" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>142</text>
-          </view>
-          <view class="action-item">
-            <u-icon name="share" size="32rpx" color="#9CA3AF"></u-icon>
-            <text>12</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- Floating Action Button -->
-    <view class="fab-btn">
-      <u-icon name="plus" color="#12110a" size="48rpx" bold></u-icon>
+    <!-- FAB -->
+    <view class="fab-btn" @click="handlePostClick">
+      <text class="material-icons fab-icon">add</text>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, onMounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import { communityApi } from '@/api/index';
 
-const circleName = ref('皇家马德里圈')
-const memberCount = ref('1.2M')
-const onlineCount = ref('5,240')
-const circleLogo = ref('https://lh3.googleusercontent.com/aida-public/AB6AXuCaoNlkv2lbC_VubJnaBL9_IipqSj4VkXuFBISB3-gEaDczfN_8LogYz8DjHAZy3bzsQeoONCiVfvdB3SZwQfLVwOWHrfuMeJXrw02gpPivr-MnUCmaVCtxcLR-jSVfw_UgKHAWgwM4J_XsgtEcb3hZIjoST-NAUvLf74uEaHSVW5aGW6FoLppd4PpU0CWEmP6d9cwrjmqhI1Fktcrp8o-XHQNvtFWLTV5EXW_qBUQOpEqTizbxiVzWRTGMvu-ONfzF91Suxg9Ouur-')
-const heroImage = ref('https://lh3.googleusercontent.com/aida-public/AB6AXuA8zpB1RsXacFHlnYl0ZHCNNrtr-7jQEcqiIxTf8sy9UGQq683lkXLnLA8tzeDNaXMTiTQRpUxzrOG_kLzBH55SuVH2El0CzU-ZWfIr8TwzC7uOd5Phd2zDX0v2_n-Tw2m0uCXPBxn83P_tfVqZuYrJ7jYAPEJ5rXP3cnwuo75sgeOk6BKrCbjdYKSdE_OC27eT5vx8_hNb8OqyZO7P8JlRgoGIr-9YVRifNfUMtHJID7b5o824ClfOK99y6TGEY6_AGcV0eVsErgXm')
-const showTitle = ref(false)
+const circleId = ref(null);
+const circleName = ref('');
+const circleImage = ref('');
+const circleMembers = ref('1.2M'); // Placeholder
+const circleDesc = ref('');
+const heroImage = ref('');
+const currentTab = ref(0);
+const posts = ref([]);
+const loading = ref(false);
+const noMore = ref(false);
+const page = ref(1);
+const statusBarHeight = ref(20);
+const scrollTop = ref(0);
+const isSticky = ref(false);
+
+const teamData = {
+    '利物浦': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/anfield/anfield50.jpg',
+      desc: '你永远不会独行！安菲尔德的呐喊。YNWA!'
+    },
+    '阿森纳': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/emirates_stadium/emirates_stadium18.jpg',
+      desc: '兵工厂的枪声！COYG!'
+    },
+    '切尔西': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/stamford_bridge/stamford_bridge23.jpg',
+      desc: '蓝军出击！斯坦福桥的荣耀。KTBFFH!'
+    },
+    '拜仁慕尼黑': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/ger/allianz_arena/allianz_arena132.jpg',
+      desc: 'Mia San Mia！南部之星的荣耀。分享拜仁最新战况。'
+    },
+    '尤文图斯': {
+      hero: 'https://stadiumdb.com/pictures/stadiums/ita/juventus_stadium/juventus_stadium19.jpg',
+      desc: '斑马军团！Fino Alla Fine!'
+    },
+    'AC米兰': {
+      hero: 'https://stadiumdb.com/pictures/stadiums/ita/san_siro/san_siro58.jpg',
+      desc: '红黑军团！Forza Milan!'
+    },
+    '国际米兰': {
+      hero: 'https://stadiumdb.com/pictures/stadiums/ita/san_siro/san_siro58.jpg',
+      desc: '蓝黑军团！Pazza Inter!'
+    },
+    '巴黎圣日耳曼': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/fra/parc_des_princes/parc_des_princes23.jpg',
+      desc: '这里是巴黎！Ici c\'est Paris!'
+    },
+    '多特蒙德': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/ger/westfalenstadion/westfalenstadion61.jpg',
+      desc: '黄黑色的海洋！Echte Liebe!'
+    },
+    '那不勒斯': {
+      hero: 'https://sp-static-images.s3.amazonaws.com/venue_images/seriea/stadio-diego-armando-maradona/1200x630_auto/stadio-diego-armando-maradona.jpg',
+      desc: '那不勒斯的骄傲！Forza Napoli!'
+    },
+    '勒沃库森': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/ger/bayarena/bayarena01.jpg',
+      desc: '药厂！Bayer 04 Leverkusen!'
+    },
+    '马德里竞技': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/esp/wanda_metropolitano/wanda_metropolitano12.jpg',
+      desc: '床单军团！Aúpa Atleti!'
+    },
+    '热刺': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/tottenham_hotspur_stadium/tottenham_hotspur_stadium01.jpg',
+      desc: 'To Dare Is To Do! COYS!'
+    }
+};
 
 onLoad((options) => {
+  if (options.id) {
+    circleId.value = options.id;
+  }
   if (options.name) {
-    circleName.value = decodeURIComponent(options.name)
+    circleName.value = decodeURIComponent(options.name);
   }
   if (options.image) {
-    circleLogo.value = decodeURIComponent(options.image)
+    circleImage.value = decodeURIComponent(options.image);
   }
-  if (options.members) {
-    memberCount.value = decodeURIComponent(options.members)
-  }
-})
+  
+  // Get system info for status bar
+  const systemInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = systemInfo.statusBarHeight || 20;
 
-const goBack = () => {
-  uni.navigateBack()
-}
+  fetchCircleDetail();
+  loadPosts();
+});
+
+const fetchCircleDetail = async () => {
+  if (!circleId.value) return;
+  
+  try {
+    const team = await communityApi.getCircleDetail(circleId.value);
+    if (team) {
+      circleName.value = team.name;
+      circleImage.value = team.logoUrl;
+      // Use description or fallback
+      circleDesc.value = team.description || team.englishName || '暂无简介'; 
+      // Use stadiumBgUrl or fallback
+      heroImage.value = team.stadiumBgUrl || team.logoUrl;
+      
+      // If no description, maybe use teamData fallback if name matches
+      if (!team.description && teamData[team.name]) {
+        circleDesc.value = teamData[team.name].desc;
+      }
+      if (!team.stadiumBgUrl && teamData[team.name]) {
+        heroImage.value = teamData[team.name].hero;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch circle detail:', error);
+    // Fallback to teamData if API fails or if we just want to ensure we have data
+    if (circleName.value && teamData[circleName.value]) {
+        const team = teamData[circleName.value];
+        heroImage.value = team.hero;
+        circleDesc.value = team.desc;
+    } else {
+        // Ultimate fallback
+        heroImage.value = '/static/teams/real_madrid.jpg';
+        if (!circleDesc.value) {
+            circleDesc.value = `这里是${circleName.value}的集结地！分享${circleName.value}最新动态、转会传闻及比赛讨论。`;
+        }
+    }
+  }
+};
+
+const loadPosts = async () => {
+  if (loading.value || noMore.value) return;
+  
+  loading.value = true;
+  try {
+    const pageData = await communityApi.getCirclePosts(circleName.value, {
+      page: page.value,
+      size: 10
+    });
+    
+    if (pageData && pageData.records) {
+      const newPosts = pageData.records.map(post => {
+        // Parse images if it's a JSON string
+        let postImages = [];
+        try {
+          if (post.images) {
+            postImages = JSON.parse(post.images);
+          }
+        } catch (e) {
+          console.error('Error parsing post images:', e);
+        }
+        
+        // Mock user info since backend doesn't provide it yet
+        return {
+          id: post.id,
+          content: post.content,
+          // Use first image if available
+          image: postImages.length > 0 ? postImages[0] : '', 
+          likes: post.likes || 0,
+          comments: post.commentCount || 0,
+          shares: 0, // Not in API
+          userName: `用户${post.userId}`, // Placeholder
+          userAvatar: '/static/default-avatar.png', // Placeholder
+          time: new Date(post.createdAt).toLocaleDateString()
+        };
+      });
+      
+      if (newPosts.length < 10) {
+        noMore.value = true;
+      }
+      
+      if (page.value === 1) {
+        posts.value = newPosts;
+      } else {
+        posts.value = [...posts.value, ...newPosts];
+      }
+      page.value++;
+    }
+  } catch (error) {
+    console.error('Failed to load posts:', error);
+    uni.showToast({ title: '加载帖子失败', icon: 'none' });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const onScroll = (e) => {
+  scrollTop.value = e.detail.scrollTop;
+  isSticky.value = e.detail.scrollTop > 200;
+};
+
+const onHeroError = (e) => {
+  console.error('Hero Image Load Failed:', e);
+  // Fallback to local image
+  heroImage.value = '/static/teams/real_madrid.jpg';
+};
+
+const onImageError = (e) => {
+  console.error('Logo Image Load Failed:', e);
+  // Fallback to local default logo
+  circleImage.value = '/static/default-team.png';
+};
+
+const goBack = () => uni.navigateBack();
+
+const handlePostClick = () => {
+  uni.navigateTo({
+    url: `/pages/post/publish?circleId=${circleId.value}&circleName=${encodeURIComponent(circleName.value)}`
+  });
+};
+
+const navigateToPost = (post) => {
+  uni.navigateTo({
+    url: `/pages/post/detail?id=${post.id}`
+  });
+};
+
+const loadMore = () => {
+  loadPosts();
+};
 </script>
 
-<style lang="scss" scoped>
-$primary: #f2b90d;
-$bg-dark: #12110a;
-$surface-dark: #1c1a11;
-$border-dark: #2d2a1d;
-$text-gray: #9CA3AF;
-
-.container {
-  min-height: 100vh;
-  background-color: #f8f8f5;
-  /* #ifdef H5 */
-  background-color: $bg-dark;
-  /* #endif */
+<style>
+/* Color Palette */
+:root {
+  --primary: #f2b90d;
+  --background-light: #f8f8f5;
+  --background-dark: #12110a;
+  --surface-dark: #1c1a11;
+  --border-dark: #2d2a1d;
+  --text-gray: #9ca3af;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: $bg-dark;
-  }
-}
-/* Force dark mode style for this specific design */
 .container {
-  background-color: $bg-dark;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #12110a; /* background-dark */
   color: #fff;
+  position: relative;
 }
 
-.glass-effect {
-  background: rgba(28, 26, 17, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1rpx solid rgba($border-dark, 0.5);
-}
-
-.nav-bar {
+/* Navbar */
+.navbar {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  z-index: 50;
+  width: 100%;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 20rpx 32rpx;
-  /* Adapt to safe area */
-  padding-top: calc(20rpx + env(safe-area-inset-top));
-  height: calc(88rpx + env(safe-area-inset-top));
+  align-items: center;
+  padding: 10px 16px;
   box-sizing: border-box;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  margin: 0 auto;
-  /* #endif */
+  z-index: 1000;
+  background: rgba(28, 26, 17, 0.8); /* glass-effect */
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(45, 42, 29, 0.5); /* border-dark/50 */
 }
 
 .nav-left, .nav-right {
   display: flex;
-  gap: 16rpx;
+  align-items: center;
 }
 
-.icon-btn {
-  width: 80rpx;
-  height: 80rpx;
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav-title {
-  font-size: 32rpx;
+  font-size: 16px;
   font-weight: bold;
-  opacity: 0;
+  color: #fff;
   transition: opacity 0.3s;
-  
-  &.show {
-    opacity: 1;
-  }
+  white-space: nowrap;
 }
 
+.nav-btn-glass {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.nav-left .nav-btn-glass {
+  margin-left: 0;
+}
+
+.back-icon, .nav-icon {
+  color: #fff;
+  font-size: 20px;
+}
+
+.content-scroll {
+  flex: 1;
+  height: 100%;
+}
+
+/* Hero Section */
 .hero-section {
   position: relative;
+  height: 240px; /* Reduced height slightly */
   width: 100%;
-  height: 500rpx;
   overflow: hidden;
 }
 
@@ -264,271 +482,334 @@ $text-gray: #9CA3AF;
 
 .hero-gradient {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, $bg-dark, rgba($bg-dark, 0.2), transparent);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(18,17,10,0.6) 60%, #12110a 100%);
 }
 
-.circle-info {
+/* Circle Info Section */
+.circle-info-section {
   position: relative;
-  margin-top: -96rpx;
-  padding: 0 32rpx 32rpx;
+  margin-top: -32px; /* Adjusted overlap */
+  padding: 0 20px 20px 20px;
+  z-index: 10;
 }
 
 .info-header {
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 32rpx;
+  align-items: flex-end;
+  margin-bottom: 12px;
 }
 
-.circle-logo-wrapper {
-  width: 192rpx;
-  height: 192rpx;
-  border-radius: 24rpx;
-  background-color: $surface-dark;
-  border: 8rpx solid $bg-dark;
-  padding: 16rpx;
-  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.3);
+.logo-container {
+  width: 88px; /* Slightly smaller */
+  height: 88px;
+  border-radius: 16px;
+  background-color: #1c1a11;
+  border: 4px solid #12110a;
+  padding: 4px; /* Less padding */
+  box-sizing: border-box;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .circle-logo {
   width: 100%;
   height: 100%;
+  border-radius: 4px;
 }
 
 .join-btn {
-  margin: 0 0 8rpx 0;
-  height: 88rpx;
-  padding: 0 64rpx;
-  background-color: $primary;
-  color: $bg-dark;
-  border-radius: 24rpx;
-  font-size: 28rpx;
+  background-color: #f2b90d; /* primary */
+  color: #12110a; /* background-dark */
+  font-size: 14px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 20rpx rgba($primary, 0.2);
-  
-  &.btn-hover {
-    transform: scale(0.98);
-  }
+  padding: 0 32px;
+  height: 44px;
+  line-height: 44px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 6px -1px rgba(242, 185, 13, 0.2);
+  transition: transform 0.1s;
+  margin-left: auto;
+  margin-right: 0;
 }
 
-.info-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
+        .join-btn:active {
+          transform: scale(0.95);
+        }
 
-.circle-name {
-  font-size: 48rpx;
+        .circle-name {
+  font-size: 24px;
   font-weight: bold;
   color: #fff;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .circle-stats {
-  font-size: 28rpx;
-  color: $text-gray;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .stat-highlight {
   color: #fff;
   font-weight: 500;
+  margin-right: 4px;
+}
+
+.stat-label {
+  color: #9ca3af; /* text-gray-400 */
+}
+
+.stat-divider {
+  margin: 0 8px;
+  color: #9ca3af;
 }
 
 .circle-desc {
-  margin-top: 16rpx;
-  font-size: 28rpx;
-  color: #d1d5db;
-  line-height: 1.6;
+  font-size: 14px;
+  color: #d1d5db; /* text-gray-300 */
+  line-height: 1.625;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
+/* Tabs */
 .tabs-container {
-  position: sticky;
-  top: calc(88rpx + env(safe-area-inset-top));
-  z-index: 40;
   display: flex;
-  padding: 0 32rpx;
-  margin-bottom: 16rpx;
+  border-bottom: 1px solid #2d2a1d; /* border-dark */
+  background: rgba(28, 26, 17, 0.8);
+  backdrop-filter: blur(12px);
+  padding: 0 16px;
+  position: sticky;
+  top: 0; /* sticky top-[64px] equivalent */
+  z-index: 40;
 }
 
 .tab-item {
   flex: 1;
-  height: 88rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 16px 0;
   position: relative;
-  
-  &.active {
-    .tab-text {
-      color: $primary;
-      font-weight: bold;
-    }
-    
-    .tab-indicator {
-      position: absolute;
-      bottom: 0;
-      width: 64rpx;
-      height: 4rpx;
-      background-color: $primary;
-      border-radius: 4rpx;
-    }
-  }
 }
 
 .tab-text {
-  font-size: 28rpx;
-  color: $text-gray;
+  font-size: 14px;
+  font-weight: bold;
+  color: #9ca3af;
 }
 
-.feed-section {
-  padding: 32rpx;
-  padding-bottom: 200rpx; /* Space for FAB and bottom safe area */
-  display: flex;
-  flex-direction: column;
-  gap: 32rpx;
+.tab-item.active .tab-text {
+  color: #f2b90d; /* primary */
 }
 
-.post-card {
-  background-color: $surface-dark;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  border: 1rpx solid $border-dark;
-  
-  &.ai-card {
-    border-color: rgba($primary, 0.2);
-    box-shadow: 0 0 16rpx rgba($primary, 0.1);
-  }
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  width: 32px;
+  height: 2px;
+  background-color: #f2b90d;
 }
 
-.card-header {
+/* Content Area */
+.content-area {
+  padding: 16px;
+  padding-bottom: 96px; /* space for bottom nav/fab */
+  background-color: #12110a;
+}
+
+/* Cards Common */
+.ai-card, .post-card {
+  background-color: #1c1a11; /* surface-dark */
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* AI Card */
+.ai-card {
+  border: 1px solid rgba(242, 185, 13, 0.2);
+  box-shadow: 0 0 8px rgba(242, 185, 13, 0.3); /* ai-glow */
+}
+
+.ai-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 12px;
+}
+
+.ai-badge {
+  display: flex;
+  align-items: center;
+}
+
+.ai-icon-bg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(242, 185, 13, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.ai-icon {
+  font-size: 14px;
+  color: #f2b90d;
+}
+
+.ai-title-group {
+  display: flex;
+  align-items: center;
+}
+
+.ai-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  margin-right: 8px;
+}
+
+.ai-tag {
+  font-size: 10px;
+  color: #f2b90d;
+  background-color: rgba(242, 185, 13, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(242, 185, 13, 0.3);
+}
+
+.post-time {
+  font-size: 12px;
+  color: #6b7280; /* text-gray-500 */
+}
+
+.post-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.post-content, .post-content-text {
+  font-size: 14px;
+  color: #d1d5db;
+  line-height: 1.625;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.ai-images-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ai-img-half {
+  width: 100%;
+  height: 128px;
+  border-radius: 8px;
+  background-color: #2d2a1d;
+}
+
+/* User Post Card */
+.post-card {
+  border: 1px solid #2d2a1d;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 16rpx;
 }
 
-.avatar-box, .avatar {
-  width: 64rpx;
-  height: 64rpx;
+.user-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  margin-right: 8px;
 }
 
-.ai-avatar {
-  background-color: rgba($primary, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.username {
-  font-size: 28rpx;
+.user-name {
+  font-size: 14px;
   font-weight: bold;
   color: #fff;
 }
 
-.ai-badge {
-  font-size: 20rpx;
-  background-color: rgba($primary, 0.2);
-  color: $primary;
-  padding: 4rpx 12rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid rgba($primary, 0.3);
-}
-
-.time-ago {
-  font-size: 24rpx;
-  color: $text-gray;
-}
-
-.post-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 16rpx;
-  display: block;
-}
-
-.post-content {
-  font-size: 28rpx;
-  color: #d1d5db;
-  line-height: 1.6;
-  margin-bottom: 24rpx;
-  display: block;
-}
-
-.media-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-}
-
-.media-item {
+.post-main-img {
   width: 100%;
-  height: 200rpx;
-  border-radius: 16rpx;
-  background-color: #333;
+  height: 192px; /* h-48 */
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background-color: #2d2a1d;
 }
 
-.post-image {
-  width: 100%;
-  height: 384rpx;
-  border-radius: 16rpx;
-  margin-bottom: 24rpx;
-}
-
-.card-footer {
-  display: flex;
-  gap: 48rpx;
-}
-
-.action-item {
+.post-footer {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  
-  text {
-    font-size: 24rpx;
-    color: $text-gray;
-  }
+  gap: 24px;
 }
 
+.interaction-item {
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.footer-icon {
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+
+
+/* Floating Action Button */
 .fab-btn {
-  position: fixed;
-  bottom: 96rpx;
-  right: 32rpx;
-  width: 112rpx;
-  height: 112rpx;
-  background-color: $primary;
+  position: absolute;
+  bottom: 40px; /* Adjusted position */
+  right: 20px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
+  background-color: #f2b90d;
   display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba($primary, 0.3);
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(242, 185, 13, 0.4);
   z-index: 50;
-  
-  /* #ifdef H5 */
-  /* Ensure it stays within max-width container visually if needed, but fixed usually relates to viewport */
-  /* For H5 demo, we might want to constrain it, but fixed right: 32rpx works fine usually */
-  /* #endif */
+}
+
+.fab-icon {
+  font-size: 24px;
+  color: #12110a;
+  font-weight: bold;
+}
+
+.loading-status {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  font-size: 12px;
 }
 </style>

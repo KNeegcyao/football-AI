@@ -2,15 +2,18 @@ package com.soccer.forum.service.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.domain.entity.Topic;
+import com.soccer.forum.service.model.dto.PostPageReq;
+import com.soccer.forum.service.service.PostService;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,10 +34,34 @@ public class CommunityController {
 
     private final TeamService teamService;
     private final TopicService topicService;
+    private final PostService postService;
 
-    public CommunityController(TeamService teamService, TopicService topicService) {
+    public CommunityController(TeamService teamService, TopicService topicService, PostService postService) {
         this.teamService = teamService;
         this.topicService = topicService;
+        this.postService = postService;
+    }
+
+    /**
+     * 获取圈子帖子列表
+     */
+    @Operation(summary = "获取圈子帖子列表", description = "获取指定圈子（球队）相关的帖子列表")
+    @GetMapping("/circles/{name}/posts")
+    public R<Page<Post>> getCirclePosts(@Parameter(description = "圈子名称") @PathVariable String name, 
+                                       @Validated PostPageReq req) {
+        req.setKeyword(name);
+        return R.ok(postService.getPostPage(req));
+    }
+
+    /**
+     * 获取话题帖子列表
+     */
+    @Operation(summary = "获取话题帖子列表", description = "获取指定话题相关的帖子列表")
+    @GetMapping("/topics/posts")
+    public R<Page<Post>> getTopicPosts(@Parameter(description = "话题标题") @RequestParam String title, 
+                                      @Validated PostPageReq req) {
+        req.setKeyword(title);
+        return R.ok(postService.getPostPage(req));
     }
 
     /**
@@ -43,34 +70,53 @@ public class CommunityController {
     @Operation(summary = "获取热门圈子", description = "获取社区首页的热门圈子列表")
     @GetMapping("/circles/hot")
     public R<List<Map<String, Object>>> getHotCircles() {
-        // 从数据库获取特定球队数据作为圈子
-        List<String> hotTeamNames = List.of(
-            "皇家马德里", "巴塞罗那", "曼城", "阿森纳", 
-            "利物浦", "拜仁慕尼黑", "曼联", "尤文图斯"
-        );
-        List<Team> teams = teamService.getTeamsByNames(hotTeamNames);
+        // 获取所有标记为推荐的球队（Top 5）
+        List<Team> teams = teamService.listRecommendTeams();
         
-        // 使用 Map 去重，Key 为球队名称
-        Map<String, Team> teamMap = teams.stream()
-            .collect(Collectors.toMap(Team::getName, team -> team, (existing, replacement) -> existing));
-
-        // 按照 hotTeamNames 的顺序构建结果列表，确保顺序和去重
-        List<Map<String, Object>> circles = new ArrayList<>();
-        for (String name : hotTeamNames) {
-            Team team = teamMap.get(name);
-            if (team != null) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("name", team.getName());
-                // 模拟成员数，基于ID生成一个确定的数字，例如 ID*1000 + 50000
-                long memberCount = 50000 + (team.getId() * 1234) % 900000;
-                String memberStr = String.format("%.1f万", memberCount / 10000.0);
-                map.put("members", memberStr);
-                map.put("image", team.getLogoUrl());
-                circles.add(map);
-            }
-        }
+        List<Map<String, Object>> circles = teams.stream().map(team -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", team.getId());
+            map.put("name", team.getName());
+            // 模拟成员数，基于ID生成一个确定的数字，例如 ID*1000 + 50000
+            long memberCount = 50000 + (team.getId() * 1234) % 900000;
+            String memberStr = String.format("%.1f万", memberCount / 10000.0);
+            map.put("members", memberStr);
+            map.put("image", team.getLogoUrl());
+            return map;
+        }).collect(Collectors.toList());
 
         return R.ok(circles);
+    }
+
+    /**
+     * 分页获取所有圈子
+     */
+    @Operation(summary = "获取所有圈子", description = "分页获取所有圈子列表，支持热门筛选")
+    @GetMapping("/circles")
+    public R<Map<String, Object>> getCircles(@RequestParam(defaultValue = "1") Integer page,
+                                           @RequestParam(defaultValue = "20") Integer size,
+                                           @RequestParam(required = false) Boolean isHot) {
+        Page<Team> teamPage = teamService.listTeams(page, size, null, isHot);
+        List<Team> teams = teamPage.getRecords();
+        
+        List<Map<String, Object>> circles = teams.stream().map(team -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", team.getId());
+            map.put("name", team.getName());
+            long memberCount = 50000 + (team.getId() * 1234) % 900000;
+            String memberStr = String.format("%.1f万", memberCount / 10000.0);
+            map.put("members", memberStr);
+            map.put("image", team.getLogoUrl());
+            return map;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", circles);
+        result.put("total", teamPage.getTotal());
+        result.put("current", teamPage.getCurrent());
+        result.put("pages", teamPage.getPages());
+        
+        return R.ok(result);
     }
 
     /**
@@ -79,9 +125,14 @@ public class CommunityController {
     @Operation(summary = "获取趋势话题", description = "获取社区首页的趋势话题列表")
     @GetMapping("/topics/trending")
     public R<List<Map<String, Object>>> getTrendTopics() {
-        List<Topic> hotTopics = topicService.getHotTopics(5);
+        // 获取前10个热门话题
+        List<Topic> hotTopics = topicService.list(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
+                .orderByDesc(Topic::getViewCount)
+                .last("LIMIT 10")
+        );
+        
         List<Map<String, Object>> result = new ArrayList<>();
-
         // 默认头像列表
         List<String> defaultAvatars = List.of(
             "https://lh3.googleusercontent.com/aida-public/AB6AXuATdmAqFDBHDLFSrvkOdXszRsl-foBm99iFZSMA9k6U27dxMDGrqDj5wePvJLzco3U5kAjEOwI-fQDTlajpB7soBEt7a_4Z6opAeidctON_JZHOJjeh0tsXauMNDRva4qkpcopzq7n21O_VhPzgk9iWKQLpZ85_jn19oxUVXc-sZIv_RLuyqhh96Bu8CJYZMSb-OoIXK2P56I8ezO94Yyp45f9kTA-5CfGIz-_RQ6bHqh9NjO_aRu04vFk8nRdjoaV_oPVhj81ZaQeH",
@@ -92,6 +143,7 @@ public class CommunityController {
         for (int i = 0; i < hotTopics.size(); i++) {
             Topic topic = hotTopics.get(i);
             Map<String, Object> map = new HashMap<>();
+            map.put("id", topic.getId());
             map.put("title", topic.getTitle());
             
             // 格式化统计数据
@@ -99,7 +151,7 @@ public class CommunityController {
             if (topic.getPostCount() >= 10000) {
                 stats = String.format("每小时 %.2f万 帖子", topic.getPostCount() / 10000.0);
             } else {
-                stats = String.format("每小时 %.1fk 帖子", topic.getPostCount() / 1000.0);
+                stats = String.format("每小时 %d 帖子", topic.getPostCount());
             }
             map.put("stats", stats);
             

@@ -1,34 +1,34 @@
 <template>
-  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden">
+  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[480px] mx-auto shadow-2xl">
     <!-- Background Overlay Texture -->
     <image 
-      class="fixed inset-0 z-0 opacity-30 w-full h-full object-cover pointer-events-none" 
-      style="object-position: right bottom;"
+      class="absolute inset-0 z-0 opacity-40 w-full h-full object-cover pointer-events-none" 
+      style="object-position: 85% bottom;"
       src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1000" 
       mode="aspectFill"
     ></image>
 
-    <view class="flex-1 flex flex-col items-center justify-center px-8 py-12 z-10 w-full max-w-md mx-auto">
+    <view class="flex-1 flex flex-col items-center justify-center px-6 py-8 z-10 w-full mx-auto">
       <!-- Header Section: Logo & Branding -->
-      <view class="w-full text-center mb-12">
-        <view class="inline-flex items-center justify-center w-20 h-20 bg-[#f20d33]/10 rounded-xl mb-4 border border-[#f20d33]/20">
-          <text class="material-icons text-[#f20d33] text-5xl" style="font-size: 48px;">sports_soccer</text>
+      <view class="w-full text-center mb-8">
+        <view class="inline-flex items-center justify-center w-16 h-16 bg-[#f20d33]/10 rounded-xl mb-4 border border-[#f20d33]/20">
+          <text class="material-icons text-[#f20d33] text-4xl" style="font-size: 36px;">sports_soccer</text>
         </view>
         <view class="flex flex-col items-center">
-          <text class="text-4xl font-extrabold tracking-tighter text-[#d4af37] gold-glow italic mb-2">PITCHPULSE</text>
-          <text class="text-xs uppercase tracking-[0.3em] text-[#f20d33]/80 font-semibold">AI Football Community</text>
+          <text class="text-3xl font-extrabold tracking-tighter text-[#d4af37] gold-glow italic mb-2">PITCHPULSE</text>
+          <text class="text-[10px] uppercase tracking-[0.3em] text-[#f20d33]/80 font-semibold">AI Football Community</text>
         </view>
       </view>
 
       <!-- Login Form Section -->
-      <view class="w-full space-y-6">
+      <view class="w-full space-y-5">
         <view class="space-y-4">
           <!-- Username/Email Field -->
-          <view class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37]">
-            <text class="material-icons text-slate-500 mr-3" style="font-size: 20px; color: #64748b;">person</text>
+          <view class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 transition-all duration-300 focus-within:border-[#d4af37]">
+            <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">person</text>
             <input 
               v-model="form.username"
-              class="flex-1 bg-transparent text-white text-base h-full placeholder-slate-500"
+              class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
               placeholder="手机号 / 邮箱" 
               placeholder-class="text-slate-500"
               type="text"
@@ -36,28 +36,28 @@
           </view>
 
           <!-- Password Field (Visible when not in Code Login mode) -->
-          <view v-if="!isCodeLogin" class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-12 mt-4 transition-all duration-300 focus-within:border-[#d4af37]">
-            <text class="material-icons text-slate-500 mr-3" style="font-size: 20px; color: #64748b;">lock</text>
+          <view v-if="!isCodeLogin" class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 mt-4 transition-all duration-300 focus-within:border-[#d4af37]">
+            <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">lock</text>
             <input 
               v-model="form.password"
-              class="flex-1 bg-transparent text-white text-base h-full placeholder-slate-500"
+              class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
               placeholder="密码" 
               placeholder-class="text-slate-500"
               :password="!showPassword"
               type="text"
             />
             <view class="ml-2 flex items-center h-full" @click="togglePasswordVisibility">
-              <text class="material-icons text-slate-500" style="font-size: 20px; color: #64748b;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
+              <text class="material-icons text-slate-500" style="font-size: 18px; color: #64748b;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
             </view>
           </view>
 
           <!-- Code Field (Visible when in Code Login mode) -->
           <view v-else class="flex gap-2 mt-4">
-            <view class="flex-1 bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37]">
-              <text class="material-icons text-slate-500 mr-3" style="font-size: 20px; color: #64748b;">security</text>
+            <view class="flex-1 bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 transition-all duration-300 focus-within:border-[#d4af37]">
+              <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">security</text>
               <input 
                 v-model="codeLoginForm.code"
-                class="flex-1 bg-transparent text-white text-base h-full placeholder-slate-500"
+                class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
                 placeholder="验证码" 
                 placeholder-class="text-slate-500"
                 type="number"
@@ -65,7 +65,7 @@
               />
             </view>
             <button 
-              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-3 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[100px] h-12"
+              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-3 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[90px] h-11"
               @click="handleSendLoginCode"
               :disabled="loginCountdown > 0"
             >
@@ -75,7 +75,7 @@
         </view>
 
         <!-- Forgot Password & Register Navigation -->
-        <view class="flex flex-row justify-between items-center text-sm px-1 w-full mt-4">
+        <view class="flex flex-row justify-between items-center text-xs px-1 w-full mt-3">
           <text v-if="!isCodeLogin" class="text-slate-400 hover:text-[#f20d33] transition-colors cursor-pointer" @click="showForgotModal = true">忘记密码?</text>
           <text v-else class="text-slate-400 hover:text-[#f20d33] transition-colors cursor-pointer" @click="isCodeLogin = false">使用密码登录</text>
           <text class="text-[#d4af37] font-medium cursor-pointer" @click="goToRegister">立即注册</text>
@@ -83,17 +83,17 @@
 
         <!-- Main Login Button -->
         <button 
-          class="w-full bg-[#f20d33] hover:bg-[#f20d33]/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#f20d33]/20 transition-all flex flex-row items-center justify-center space-x-2 mt-8 border-none"
+          class="w-full bg-[#f20d33] hover:bg-[#f20d33]/90 text-white font-bold py-3 rounded-xl shadow-lg shadow-[#f20d33]/20 transition-all flex flex-row items-center justify-center space-x-2 mt-6 border-none"
           @click="handleLogin"
           :loading="loading"
         >
-          <text class="mr-2">{{ isCodeLogin ? '登录 / 注册' : '进入球场' }}</text>
-          <text class="material-icons text-lg" style="font-size: 18px;">login</text>
+          <text class="mr-2 text-sm">{{ isCodeLogin ? '登录 / 注册' : '进入球场' }}</text>
+          <text class="material-icons text-base" style="font-size: 16px;">login</text>
         </button>
       </view>
 
       <!-- Social Login & Agreement Footer -->
-      <view class="w-full mt-16 space-y-8 flex flex-col items-center">
+      <view class="w-full mt-12 space-y-6 flex flex-col items-center">
         <view class="relative w-full flex items-center justify-center">
           <view class="absolute inset-0 flex items-center">
             <view class="w-full border-t border-[#f20d33]/10"></view>

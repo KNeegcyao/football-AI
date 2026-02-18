@@ -88,16 +88,51 @@ public class TeamServiceImpl implements TeamService {
      */
     @Override
     public Page<Team> listTeams(Integer page, Integer size, String keyword) {
-        log.debug("分页查询球队: 页码={}, 大小={}, 关键词={}", page, size, keyword);
+        return listTeams(page, size, keyword, null);
+    }
+
+    @Override
+    public Page<Team> listTeams(Integer page, Integer size, String keyword, Boolean isHot) {
+        log.debug("分页查询球队: 页码={}, 大小={}, 关键词={}, 热门={}", page, size, keyword, isHot);
         Page<Team> teamPage = new Page<>(page, size);
         LambdaQueryWrapper<Team> query = new LambdaQueryWrapper<>();
+        
         if (StringUtils.hasText(keyword)) {
-            query.like(Team::getName, keyword)
-                 .or()
-                 .like(Team::getLeague, keyword);
+            query.and(q -> q.like(Team::getName, keyword)
+                          .or()
+                          .like(Team::getLeague, keyword));
         }
+        
+        if (isHot != null && isHot) {
+            query.eq(Team::getIsHot, true);
+        }
+        
         return teamMapper.selectPage(teamPage, query);
     }
+
+    /**
+     * 获取热门球队列表
+     *
+     * @return 热门球队列表
+     */
+    @Override
+    public java.util.List<Team> listHotTeams() {
+        return teamMapper.selectList(new LambdaQueryWrapper<Team>()
+                .eq(Team::getIsHot, true)
+                .orderByDesc(Team::getTotalMatches));
+    }
+
+    /**
+     * 获取推荐球队列表（首页显示）
+     *
+     * @return 推荐球队列表
+     */
+    @Override
+    public java.util.List<Team> listRecommendTeams() {
+        return teamMapper.selectList(new LambdaQueryWrapper<Team>()
+                .eq(Team::getIsRecommend, true));
+    }
+
 
     @Override
     public java.util.List<Team> getTeamsByNames(java.util.List<String> names) {

@@ -18,7 +18,7 @@ const scrollProgress = ref(0)
 
 onLoad((options) => {
   if (options.id) {
-    newsId.ref = options.id
+    newsId.value = options.id
     fetchNewsDetail(options.id)
   }
 })
