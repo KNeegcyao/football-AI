@@ -3,6 +3,8 @@ package com.soccer.forum.service.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Post;
 
+import com.soccer.forum.service.model.dto.PostDetailResp;
+
 public interface FavoriteService {
     /**
      * 收藏/取消收藏
@@ -15,5 +17,5 @@ public interface FavoriteService {
     /**
      * 获取用户收藏列表
      */
-    Page<Post> getMyFavorites(Integer page, Integer size, Long userId);
+    Page<PostDetailResp> getMyFavorites(Integer page, Integer size, Long userId);
 }

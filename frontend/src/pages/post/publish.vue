@@ -214,6 +214,21 @@ onLoad((options) => {
   if (options.circleName) {
     circleName.value = decodeURIComponent(options.circleName);
   }
+  if (options.topicId) {
+    topicId.value = options.topicId;
+  }
+  if (options.topic) {
+    const topicTitle = decodeURIComponent(options.topic);
+    const topicTag = `#${topicTitle}#`;
+    if (!form.value.content.includes(topicTag)) {
+      form.value.content += (form.value.content ? ' ' : '') + topicTag + ' ';
+    }
+    // 既然是从话题详情页过来的，我们也可以模拟选中状态
+    selectedTopic.value = { 
+      id: topicId.value,
+      title: topicTitle 
+    };
+  }
 
   // Listen for circle selection
   uni.$on('selectCircle', (circle) => {
@@ -240,7 +255,18 @@ const chooseImage = () => {
   uni.chooseImage({
     count: 9 - images.value.length,
     success: (res) => {
-      images.value = [...images.value, ...res.tempFilePaths];
+      // 校验文件大小
+      const validFiles = res.tempFiles.filter(file => {
+        if (file.size > 10 * 1024 * 1024) {
+          uni.showToast({ title: '单张图片大小不能超过10MB', icon: 'none' });
+          return false;
+        }
+        return true;
+      });
+      
+      if (validFiles.length > 0) {
+        images.value = [...images.value, ...validFiles.map(f => f.path)];
+      }
     }
   });
 };
@@ -363,7 +389,7 @@ const handlePublish = async () => {
     const postData = {
       title: form.value.title || form.value.content.slice(0, 20),
       content: form.value.content,
-      images: JSON.stringify(uploadedImages),
+      images: uploadedImages,
       circleId: circleId.value,
       topicId: topicId.value
     };

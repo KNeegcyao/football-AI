@@ -25,6 +25,9 @@ public class PostDetailResp extends Post {
     @Schema(description = "是否已点赞")
     private Boolean isLiked;
 
+    @Schema(description = "是否已收藏")
+    private Boolean isFavorited;
+
     @Schema(description = "最近点赞用户")
     private java.util.List<UserSimpleResp> recentLikes;
 
@@ -58,6 +61,14 @@ public class PostDetailResp extends Post {
 
     public void setIsLiked(Boolean isLiked) {
         this.isLiked = isLiked;
+    }
+
+    public Boolean getIsFavorited() {
+        return isFavorited;
+    }
+
+    public void setIsFavorited(Boolean isFavorited) {
+        this.isFavorited = isFavorited;
     }
 
     public java.util.List<UserSimpleResp> getRecentLikes() {

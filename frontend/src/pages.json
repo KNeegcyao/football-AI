@@ -48,6 +48,13 @@
       }
     },
     {
+      "path": "pages/community/notification",
+      "style": {
+        "navigationBarTitleText": "消息通知",
+        "navigationStyle": "default"
+      }
+    },
+    {
       "path": "pages/post/detail",
       "style": {
         "navigationBarTitleText": "帖子详情",
@@ -79,6 +86,20 @@
       "path": "pages/my/my",
       "style": {
         "navigationBarTitleText": "个人中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/my/posts",
+      "style": {
+        "navigationBarTitleText": "我的发布",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/my/favorites",
+      "style": {
+        "navigationBarTitleText": "我的收藏",
         "navigationStyle": "custom"
       }
     },

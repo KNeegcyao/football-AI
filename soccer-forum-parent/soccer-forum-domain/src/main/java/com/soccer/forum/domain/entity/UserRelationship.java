@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@TableName("user_relationships")
+@TableName("user_relationship")
 @Schema(description = "用户关注关系实体")
 public class UserRelationship implements Serializable {
     private static final long serialVersionUID = 1L;

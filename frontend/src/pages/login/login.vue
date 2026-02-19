@@ -434,7 +434,7 @@ const handleLogin = async () => {
       })
       
       uni.setStorageSync('token', data.token)
-      uni.setStorageSync('userInfo', data.userInfo)
+      uni.setStorageSync('userInfo', JSON.stringify(data.userInfo))
       
       uni.showToast({ title: '登录成功', icon: 'success' })
       
@@ -462,7 +462,7 @@ const handleLogin = async () => {
       // 获取用户信息
       try {
         const userRes = await userApi.getProfile()
-        uni.setStorageSync('userInfo', userRes)
+        uni.setStorageSync('userInfo', JSON.stringify(userRes))
       } catch (err) {
         console.error('获取用户信息失败:', err)
       }

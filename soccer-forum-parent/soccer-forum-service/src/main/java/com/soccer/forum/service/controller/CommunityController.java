@@ -73,6 +73,22 @@ public class CommunityController {
     }
 
     /**
+     * 获取话题详情
+     */
+    @Operation(summary = "获取话题详情", description = "获取话题的详细信息")
+    @GetMapping("/topics/{id}")
+    public R<Topic> getTopicDetail(@Parameter(description = "话题ID") @PathVariable Long id) {
+        Topic topic = topicService.getById(id);
+        if (topic != null) {
+            if (topic.getDescription() == null || topic.getDescription().trim().isEmpty()) {
+                String title = topic.getTitle().replace("#", "");
+                topic.setDescription("关于“" + title + "”的最新讨论，点击参与互动！");
+            }
+        }
+        return R.ok(topic);
+    }
+
+    /**
      * 获取话题帖子列表
      */
     @Operation(summary = "获取话题帖子列表", description = "获取指定话题相关的帖子列表")
@@ -83,6 +99,18 @@ public class CommunityController {
         // 尝试根据标题查找话题ID，优先使用精确的 topicId 查询
         Topic topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
                 .eq(Topic::getTitle, title));
+        
+        // 如果没找到，尝试加上 # 前缀查找
+        if (topic == null && !title.startsWith("#")) {
+            topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
+                    .eq(Topic::getTitle, "#" + title));
+        }
+        
+        // 如果还没找到，尝试加上 # 前缀和后缀查找
+        if (topic == null && !title.startsWith("#")) {
+            topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
+                    .eq(Topic::getTitle, "#" + title + "#"));
+        }
         
         if (topic != null) {
             req.setTopicId(topic.getId());
@@ -164,9 +192,9 @@ public class CommunityController {
         List<Map<String, Object>> result = new ArrayList<>();
         // 默认头像列表
         List<String> defaultAvatars = List.of(
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuATdmAqFDBHDLFSrvkOdXszRsl-foBm99iFZSMA9k6U27dxMDGrqDj5wePvJLzco3U5kAjEOwI-fQDTlajpB7soBEt7a_4Z6opAeidctON_JZHOJjeh0tsXauMNDRva4qkpcopzq7n21O_VhPzgk9iWKQLpZ85_jn19oxUVXc-sZIv_RLuyqhh96Bu8CJYZMSb-OoIXK2P56I8ezO94Yyp45f9kTA-5CfGIz-_RQ6bHqh9NjO_aRu04vFk8nRdjoaV_oPVhj81ZaQeH",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuBOdkyV91FluVNjl50vbosguFH1qM1oPIBS-OMN7hr8Vj8JdAUFctKMtJl_kp8yd107Ryg5-dSmtu6RBCtjuFgLdngUnL2W7TvkrcFEPQn6Tnu8mB6R6cdicAPwUWwzYqRmIwkIDfjZ9X0R2WbVYqoaN7hXRr7h81wUHIj1P75-GtWWQ1EYG4mdU6isbKdWxmGlB8lLpfmFaCX8bKvfYhZgjaDsppxWt8ei5e2H4eYcqGGbjEQIHWItSc3Ic6SIePIalo9FsNsViQ6R",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuB5RVAFby5yx4vJooY_hLKHj39lXJr7XaPyb2gxNTedCulZD3WGJR3Wf4gx3f5bLJadkMUN7djSieqTOC29ZpAAYyJjE7IFHAE_phuCzp52J5O3HRxe0TI4CCiOgT0iR2TDligRPLCJcSLROCyYpPkN2ZPsDk8NBMBp16Oayk1sgpgv4uCG44uy0c0llRWJt_DnK0vxAreEwoaWPwemdUVUnQ0qrNF6wUst9EyaTlrgUc9v41Bl6ZMU3Eh4z3FGTj98TOWBiDD7e7jP"
+            "/static/soccer-logo.png",
+            "/static/default-team.png",
+            "/static/teams/generic_stadium.jpg"
         );
 
         for (int i = 0; i < hotTopics.size(); i++) {

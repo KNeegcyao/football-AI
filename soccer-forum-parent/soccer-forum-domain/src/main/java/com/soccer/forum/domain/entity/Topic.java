@@ -17,6 +17,9 @@ public class Topic {
     @Schema(description = "话题标题")
     private String title;
 
+    @Schema(description = "话题描述")
+    private String description;
+
     @Schema(description = "浏览量")
     private Integer viewCount;
 
@@ -36,6 +39,8 @@ public class Topic {
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public Integer getViewCount() { return viewCount; }
     public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
     public Integer getPostCount() { return postCount; }

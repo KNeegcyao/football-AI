@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
+import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.Post;
+import com.soccer.forum.service.mapper.FavoriteMapper;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.model.dto.PostCreateReq;
 import com.soccer.forum.service.model.dto.PostPageReq;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,14 +56,16 @@ public class PostServiceImpl implements PostService {
     private final LikeService likeService;
     private final TopicMapper topicMapper;
     private final TeamMapper teamMapper;
+    private final FavoriteMapper favoriteMapper;
 
-    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper) {
+    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper) {
         this.postMapper = postMapper;
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.likeService = likeService;
         this.topicMapper = topicMapper;
         this.teamMapper = teamMapper;
+        this.favoriteMapper = favoriteMapper;
     }
 
     /**
@@ -110,45 +115,13 @@ public class PostServiceImpl implements PostService {
     public Post getPostById(Long id) {
         log.debug("获取帖子详情: id={}", id);
         
-        // 1. 查缓存
-        String cacheKey = "post:detail:" + id;
-        Object cachedPost = redisTemplate.opsForValue().get(cacheKey);
-        if (cachedPost instanceof Post) {
-            log.debug("帖子详情命中缓存: id={}", id);
-            Post post = (Post) cachedPost;
-            
-            // 异步增加浏览量 (Redis)
-            String viewKey = "post:views:" + id;
-            redisTemplate.opsForValue().increment(viewKey);
-            
-            // 简单处理：返回时合并实时浏览量
-            // 注意：这里没有从Redis读最新的view count覆盖缓存里的，
-            // 而是为了性能直接返回缓存。浏览量更新逻辑在下面。
-            return post;
-        }
-
-        // 2. 查数据库
+        // 1. 直接查数据库 (No Redis)
         Post post = postMapper.selectById(id);
+        
         if (post != null) {
-            // 3. 写缓存 (TTL 10分钟)
-            redisTemplate.opsForValue().set(cacheKey, post, 10, TimeUnit.MINUTES);
-            
-            // 使用 Redis 增加浏览量
-            String viewKey = "post:views:" + id;
-            Long views = redisTemplate.opsForValue().increment(viewKey);
-            
-            // 每 10 次访问同步一次数据库，减轻数据库压力
-            if (views != null && views % 10 == 0) {
-                post.setViews(post.getViews() + 10);
-                postMapper.updateById(post);
-                log.debug("同步帖子浏览量到数据库: id={}, views={}", id, post.getViews());
-                
-                // 更新数据库后，更新缓存
-                redisTemplate.opsForValue().set(cacheKey, post, 10, TimeUnit.MINUTES);
-            } else {
-                // 仅在内存对象中增加，用于返回给前端展示实时数据
-                post.setViews(post.getViews() + (views == null ? 0 : views.intValue() % 10));
-            }
+            // 简单增加浏览量，直接写库
+            post.setViews(post.getViews() + 1);
+            postMapper.updateById(post);
         } else {
             log.warn("获取帖子失败, 帖子不存在: id={}", id);
             throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
@@ -198,8 +171,12 @@ public class PostServiceImpl implements PostService {
         // 设置点赞状态
         if (userId != null) {
             resp.setIsLiked(likeService.isLiked(id, 1, userId));
+            resp.setIsFavorited(favoriteMapper.selectCount(new LambdaQueryWrapper<Favorite>()
+                    .eq(Favorite::getPostId, id)
+                    .eq(Favorite::getUserId, userId)) > 0);
         } else {
             resp.setIsLiked(false);
+            resp.setIsFavorited(false);
         }
         
         // 获取最近点赞用户
@@ -234,6 +211,10 @@ public class PostServiceImpl implements PostService {
         
         if (req.getTopicId() != null) {
             wrapper.eq(Post::getTopicId, req.getTopicId());
+        }
+        
+        if (req.getUserId() != null) {
+            wrapper.eq(Post::getUserId, req.getUserId());
         }
         
         if (StringUtils.hasText(req.getKeyword())) {
@@ -274,6 +255,19 @@ public class PostServiceImpl implements PostService {
             teamMapper.selectBatchIds(circleIds).stream()
                 .collect(Collectors.toMap(Team::getId, Function.identity()));
 
+        // Fetch Favorites
+        Set<Long> favoritedPostIds = new HashSet<>();
+        if (currentUserId != null) {
+            List<Long> postIds = page.getRecords().stream().map(Post::getId).collect(Collectors.toList());
+            if (!postIds.isEmpty()) {
+                favoritedPostIds = favoriteMapper.selectList(new LambdaQueryWrapper<Favorite>()
+                        .in(Favorite::getPostId, postIds)
+                        .eq(Favorite::getUserId, currentUserId))
+                        .stream().map(Favorite::getPostId).collect(Collectors.toSet());
+            }
+        }
+        final Set<Long> finalFavoritedPostIds = favoritedPostIds;
+
         // Map records
         List<PostDetailResp> resps = page.getRecords().stream().map(post -> {
             User user = userMap.get(post.getUserId());
@@ -295,8 +289,10 @@ public class PostServiceImpl implements PostService {
             // Set Like Status
             if (currentUserId != null) {
                 resp.setIsLiked(likeService.isLiked(post.getId(), 1, currentUserId));
+                resp.setIsFavorited(finalFavoritedPostIds.contains(post.getId()));
             } else {
                 resp.setIsLiked(false);
+                resp.setIsFavorited(false);
             }
             return resp;
         }).collect(Collectors.toList());

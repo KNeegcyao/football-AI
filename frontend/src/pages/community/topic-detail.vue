@@ -4,7 +4,7 @@
     <view class="header-image-container">
       <image 
         class="header-image" 
-        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwsjDBXPF_ZBUL_MNJrjMqbuEppi7q-YRE5SIrTWkDszyCYpHhZnTo4BIH-Rm0bNhS8QEf4Tj52HstK0eLc6Pew4yjFKFmrCf275HGSCQTWOnLQ1ovhjAr1cusTYseYC3GUoQFm857MTCN0YbH6NGP4KMvWwjKCAV4rTuvE7rznuVX5iiQMrYTXWpVN4IHLgloD594kIBxJRZ5euXJWnOKdCWbxsnL2XWmFLUK_YRJHO4VqwOfsZ2rXV0HQie-d_FKkjbuodaH-zWe" 
+        src="/static/teams/generic_stadium.jpg" 
         mode="aspectFill"
       ></image>
       <view class="header-overlay"></view>
@@ -42,11 +42,11 @@
       <view class="stats-row">
         <view class="stat-card">
           <text class="stat-label">讨论</text>
-          <text class="stat-value">1.2w</text>
+          <text class="stat-value">{{ formatCount(topicInfo.postCount || 0) }}</text>
         </view>
         <view class="stat-card">
           <text class="stat-label">阅读</text>
-          <text class="stat-value">450w</text>
+          <text class="stat-value">{{ formatCount(topicInfo.viewCount || 0) }}</text>
         </view>
         <view class="stat-card">
           <text class="stat-label">预测</text>
@@ -54,9 +54,9 @@
         </view>
       </view>
 
-      <view class="description-box">
+      <view class="description-box" v-if="topicInfo.description">
         <text class="description-text">
-          梅西率领阿根廷国家队开启2024中国行，在北京与摩洛哥队进行友谊赛。这是球王职业生涯第八次来到中国，全城球迷共迎盛事。
+          {{ topicInfo.description }}
         </text>
         <view class="expand-btn">
           <text>查看完整背景</text>
@@ -79,7 +79,7 @@
         <view class="post-header">
           <view class="user-info">
             <view class="avatar-wrapper">
-              <image class="avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz587xyU9hdDY5pWPzvhmpbGa8y3P16Qjy-98NjD1s3dwVMidPBhA4O7vGD1z7cvy0V2InSSjLs1ej2k9hjIdC7Ead4njJCVCAqzH0sqDBt9Z9p52AN6THPv46e86A9NwDGMXpBnQ5G5ZxUwABbItjr0v7Lfh7X02oU0Y4ZYShG2GX57DuGIuPTnh9mAq4C4tfmnUKD0qa8dGnJpgq52cxfrZoRLSEIX0gyZGUH6OGvXbIUR68pyf7LOJPepWObEFlylehjyj3NK06" mode="aspectFill"></image>
+              <image class="avatar" src="/static/soccer-logo.png" mode="aspectFill"></image>
             </view>
             <view class="user-meta">
               <view class="name-row">
@@ -95,7 +95,7 @@
           梅西的首秀太震撼了！全场齐声高呼名号的那一刻，我甚至觉得这就是工体的巅峰时刻。阿根廷的中场控制力依然是顶级。 <text class="hashtag">#梅西中国行#</text>
         </text>
         <view class="media-container">
-          <image class="post-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPbX5Nw38MvcbPLK4SryvZ9GOrEGCfo4CaLg9j-oiJiBN3gIhp6kTbitTcuxB1_mk-E5GiYD799QTLvzHlQVd30AmhRJApes4YrDv1x6nl8Bp-7bMw7NA88Kma8Wk-nNNpXi9G7Ci7PPtGd1AzhJcjgKbs-HPmC4dc4bBBW32jUakQ0SY-iLwZ5gChwY5ZappipQJ0ovRQG8mNvetrUoXbqPowrpUXs444lNACOYNTHIkcAmuqhvOl1VJ4chMVmC4HUsavdjx8iX7T" mode="aspectFill"></image>
+          <image class="post-image" src="/static/teams/generic_stadium.jpg" mode="aspectFill"></image>
         </view>
         <view class="post-actions">
           <view class="action-group">
@@ -149,7 +149,7 @@
         <view class="post-header">
           <view class="user-info">
             <view class="avatar-wrapper">
-              <image class="avatar" :src="post.userAvatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW-tRnOKF1UnPpHhxy2flLtbiO8R0HTwS4FeLc56nZBxXLJNcsc-Bo2LkZVB_ap4G03ZX_jHWsmLN9BDVzvD6I2xxi8-_89Aefzqj3EMb6PWRvo-ysi4ExowK2wTcCG-yqpJbTMq8USzEu0eUos6rPE6UGMrR75P1oyqtX6hu6YbCafpnwyZCaXMH-d2hIxz29kk9n1KYH6glR56zVQ3EvZoFaoDtwsKzMcIQzwWPpWUXDlAepvgvskvu4DnCQ-v-1rzD0_2h6BGEr'" mode="aspectFill"></image>
+              <image class="avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
             </view>
             <view class="user-meta">
               <view class="name-row">
@@ -196,7 +196,7 @@
 
     <!-- Floating Action Button -->
     <view class="fab-container">
-      <button class="fab-btn">
+      <button class="fab-btn" @click="handleParticipate">
         <u-icon name="plus" color="#fff" size="20"></u-icon>
         <text class="fab-text">参与讨论</text>
       </button>
@@ -206,21 +206,57 @@
 
 <script setup>
 import { ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { communityApi, fileApi } from '@/api';
 
 const topicTitle = ref('梅西中国行');
+const topicId = ref(null);
 const topicInfo = ref({});
 const loading = ref(false);
 const postList = ref([]);
+
+const isNavigating = ref(false);
+
+const formatCount = (num) => {
+  if (!num) return '0';
+  if (num > 10000) {
+    return (num / 10000).toFixed(1) + 'w';
+  }
+  return num;
+};
+
+const handleParticipate = () => {
+  if (isNavigating.value) return;
+  isNavigating.value = true;
+  
+  // 携带话题信息跳转到发布页
+  uni.navigateTo({
+    url: `/pages/post/publish?topic=${encodeURIComponent(topicTitle.value)}&topicId=${topicId.value || ''}`,
+    complete: () => {
+      setTimeout(() => {
+        isNavigating.value = false;
+      }, 500);
+    }
+  });
+};
 
 const goBack = () => {
   uni.navigateBack();
 };
 
 onLoad((options) => {
+  if (options.id) {
+    topicId.value = options.id;
+    loadTopicDetail(options.id);
+  }
   if (options.title) {
     topicTitle.value = decodeURIComponent(options.title).replace(/^#|#$/g, '');
+  }
+  // onShow 会处理初次加载，这里不需要重复调用
+});
+
+onShow(() => {
+  if (topicTitle.value) {
     loadPosts(topicTitle.value);
   }
 });
@@ -231,9 +267,9 @@ const loadTopicDetail = async (id) => {
     if (data) {
       topicInfo.value = {
         ...data,
-        description: data.description || '这里是话题导语，引导大家参与讨论...',
-        viewCount: data.viewCount || Math.floor(Math.random() * 10000),
-        discussCount: data.discussCount || Math.floor(Math.random() * 1000)
+        description: data.description || '暂无话题介绍',
+        viewCount: data.viewCount || 0,
+        postCount: data.postCount || 0
       }
     }
   } catch (error) {
@@ -251,6 +287,19 @@ const loadPosts = async (id) => {
     const data = await communityApi.getTopicPosts(id, { page: 1, size: 10 })
     if (data) {
       const records = data.records || []
+      
+      // 如果没有 topicId，尝试从返回的帖子中获取
+      if (!topicId.value && records.length > 0) {
+        const firstPostWithTopic = records.find(p => p.topicId);
+        if (firstPostWithTopic) {
+          topicId.value = firstPostWithTopic.topicId;
+          // 如果还没有详情，尝试加载详情
+          if (!topicInfo.value || !topicInfo.value.description) {
+            loadTopicDetail(topicId.value);
+          }
+        }
+      }
+
       postList.value = records.map(post => {
         let postImages = [];
         try {
@@ -285,9 +334,9 @@ const loadPosts = async (id) => {
 
 const getRandomAvatar = () => {
   const avatars = [
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuBrRbCMQ9jttw9cIS5KvBEH7v21rrGegUNbE_x3qMLLvCDd206ZrgoV8t35q1ze3OwpjV-cPZXyCIm1TqRCFeUOqs4mCXUC8F-oTUefRjWEwQdBJh86UE363VP2GDt0LgnG9bc3NJ1lyO-GADQ-onflDElLt02WLLahKrxTJxmrFSuuOf6LG7R6XHaLY60uxTjZFYPkVB-E_FheufCuakN_sq3efmkaIRAfs5J0NBc-sUlCQbnc9UeZwKWUiPMKa0rhKyOrgOk6HnXc',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAz587xyU9hdDY5pWPzvhmpbGa8y3P16Qjy-98NjD1s3dwVMidPBhA4O7vGD1z7cvy0V2InSSjLs1ej2k9hjIdC7Ead4njJCVCAqzH0sqDBt9Z9p52AN6THPv46e86A9NwDGMXpBnQ5G5ZxUwABbItjr0v7Lfh7X02oU0Y4ZYShG2GX57DuGIuPTnh9mAq4C4tfmnUKD0qa8dGnJpgq52cxfrZoRLSEIX0gyZGUH6OGvXbIUR68pyf7LOJPepWObEFlylehjyj3NK06',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAW-tRnOKF1UnPpHhxy2flLtbiO8R0HTwS4FeLc56nZBxXLJNcsc-Bo2LkZVB_ap4G03ZX_jHWsmLN9BDVzvD6I2xxi8-_89Aefzqj3EMb6PWRvo-ysi4ExowK2wTcCG-yqpJbTMq8USzEu0eUos6rPE6UGMrR75P1oyqtX6hu6YbCafpnwyZCaXMH-d2hIxz29kk9n1KYH6glR56zVQ3EvZoFaoDtwsKzMcIQzwWPpWUXDlAepvgvskvu4DnCQ-v-1rzD0_2h6BGEr'
+    '/static/soccer-logo.png',
+    '/static/teams/generic_stadium.jpg',
+    '/static/default-team.png'
   ];
   return avatars[Math.floor(Math.random() * avatars.length)];
 };

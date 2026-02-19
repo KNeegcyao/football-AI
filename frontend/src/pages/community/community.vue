@@ -10,8 +10,9 @@
           <text class="subtitle">PULSE DISCOVERY</text>
           <text class="title">社区发现</text>
         </view>
-        <view class="notification-btn">
+        <view class="notification-btn" @click="navigateToNotification">
           <text class="material-icons" style="font-size: 20px; color: #f2b90d;">notifications_none</text>
+          <view class="red-dot" v-if="unreadCount > 0"></view>
         </view>
       </view>
       
@@ -59,7 +60,7 @@
         <view class="trends-list">
           <view class="trend-item glass-panel" v-for="(topic, index) in trendTopics" :key="index" @click="navigateToPost(topic)">
             <view class="trend-bg-icon">
-              <text class="material-icons" style="font-size: 60px; color: #f2b90d; opacity: 0.1;">tag</text>
+              <text class="material-icons" style="font-size: 48px; color: #f2b90d; opacity: 0.1;">tag</text>
             </view>
             <view class="trend-content">
               <text class="trend-title">{{ topic.title }}</text>
@@ -105,10 +106,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { communityApi } from '@/api';
+import { ref, onMounted, getCurrentInstance } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
+import { communityApi, fileApi } from '@/api';
 
 const scrollHeight = ref(800); // Should be calculated based on window height
+
+const unreadCount = ref(0);
+const { proxy } = getCurrentInstance();
 
 const currentTab = ref(2); // 社区是第3个，索引为2
 const tabs = [
@@ -136,11 +141,28 @@ const handleTabClick = (index) => {
 
 
 
+const isNavigating = ref(false);
+
+const navigateToNotification = () => {
+  uni.navigateTo({
+    url: '/pages/community/notification'
+  });
+};
+
 const navigateToCircle = (circle) => {
+  if (isNavigating.value) return;
+  isNavigating.value = true;
+  
   console.log('Navigate to circle:', circle);
   uni.navigateTo({
     url: `/pages/community/circle-detail?id=${circle.id || ''}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`,
+    complete: () => {
+      setTimeout(() => {
+        isNavigating.value = false;
+      }, 500);
+    },
     fail: () => {
+      isNavigating.value = false;
       uni.showToast({
         title: '圈子详情页加载失败',
         icon: 'none'
@@ -150,10 +172,19 @@ const navigateToCircle = (circle) => {
 };
 
 const navigateToPost = (topic) => {
+  if (isNavigating.value) return;
+  isNavigating.value = true;
+
   console.log('Navigate to topic:', topic);
   uni.navigateTo({
     url: `/pages/community/topic-detail?id=${topic.id || 0}&title=${encodeURIComponent(topic.title)}`,
+    complete: () => {
+      setTimeout(() => {
+        isNavigating.value = false;
+      }, 500);
+    },
     fail: () => {
+      isNavigating.value = false;
       uni.showToast({
         title: '话题详情页加载失败',
         icon: 'none'
@@ -176,6 +207,24 @@ const navigateToCircleList = () => {
 
 const hotCircles = ref([]);
 const trendTopics = ref([]);
+
+const getUnreadCount = async () => {
+  try {
+    const res = await proxy.$request({
+      url: '/api/notifications/unread-count',
+      method: 'GET'
+    });
+    if (res.code === 200) {
+      unreadCount.value = res.data;
+    }
+  } catch (e) {
+    console.error('获取未读消息数失败', e);
+  }
+};
+
+onShow(() => {
+  getUnreadCount();
+});
 
 const loadData = async () => {
   try {
@@ -341,6 +390,17 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(242, 185, 13, 0.3);
+  position: relative;
+}
+
+.red-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background-color: #f20d33;
+  border-radius: 50%;
 }
 
 .search-bar {
@@ -366,7 +426,7 @@ onMounted(() => {
 
 /* Sections */
 .section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .section-header {
@@ -374,7 +434,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .section-title {
@@ -474,7 +534,7 @@ onMounted(() => {
   background: rgba(42, 10, 10, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(242, 185, 13, 0.1);
-  padding: 20px;
+  padding: 16px;
   border-radius: 12px;
   border-left: 4px solid #f2b90d;
   display: flex;
@@ -488,7 +548,7 @@ onMounted(() => {
   position: absolute;
   top: 0;
   right: 0;
-  padding: 16px;
+  padding: 12px;
   z-index: 0;
 }
 
@@ -513,12 +573,12 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 1px;
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .trend-avatars {
   display: flex;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .avatar-group {
@@ -555,7 +615,7 @@ onMounted(() => {
 .trend-meta {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 8px;
   align-items: center;
 }
 

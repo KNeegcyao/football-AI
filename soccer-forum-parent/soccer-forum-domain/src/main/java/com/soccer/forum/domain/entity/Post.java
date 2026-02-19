@@ -1,12 +1,14 @@
 package com.soccer.forum.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@TableName("posts")
+@TableName(value = "posts", autoResultMap = true)
 @Schema(description = "帖子实体")
 public class Post implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -36,8 +38,9 @@ public class Post implements Serializable {
     @Schema(description = "状态 (1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
 
-    @Schema(description = "图片列表(JSON)")
-    private String images;
+    @Schema(description = "图片列表")
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> images;
 
     @Schema(description = "关联圈子ID")
     private Long circleId;
@@ -78,8 +81,8 @@ public class Post implements Serializable {
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
 
-    public String getImages() { return images; }
-    public void setImages(String images) { this.images = images; }
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
 
     public Long getCircleId() { return circleId; }
     public void setCircleId(Long circleId) { this.circleId = circleId; }

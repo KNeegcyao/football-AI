@@ -245,7 +245,7 @@ const loadUserProfile = async () => {
     if (statsRes) {
       userInfo.value.stats = {
         posts: statsRes.postCount || 0,
-        likes: statsRes.likeCount || 0,
+        likes: statsRes.likeReceivedCount || 0,
         collections: statsRes.favoriteCount || 0
       }
     }

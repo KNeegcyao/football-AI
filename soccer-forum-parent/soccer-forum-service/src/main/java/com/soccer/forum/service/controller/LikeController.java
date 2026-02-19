@@ -48,7 +48,7 @@ public class LikeController {
      * @return 操作结果 (liked: true表示已点赞, false表示取消点赞)
      */
     @Operation(summary = "切换点赞状态", description = "对帖子或评论进行点赞或取消点赞")
-    @PostMapping
+    @PostMapping("/toggle")
     public R<Map<String, Boolean>> toggle(@Parameter(description = "点赞信息") @Validated @RequestBody LikeReq req,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到点赞切换请求: 用户ID={}, 目标ID={}, 类型={}", 

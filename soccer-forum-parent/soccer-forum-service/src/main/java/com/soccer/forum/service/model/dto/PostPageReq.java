@@ -24,6 +24,9 @@ public class PostPageReq {
     @Schema(description = "话题ID")
     private Long topicId;
 
+    @Schema(description = "用户ID")
+    private Long userId;
+
     public Integer getPage() { return page; }
     public void setPage(Integer page) { this.page = page; }
     public Integer getSize() { return size; }
@@ -34,4 +37,6 @@ public class PostPageReq {
     public void setCircleId(Long circleId) { this.circleId = circleId; }
     public Long getTopicId() { return topicId; }
     public void setTopicId(Long topicId) { this.topicId = topicId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

@@ -181,13 +181,13 @@ const heroPost = ref({
   id: 1,
   title: '正在加载最新资讯...',
   category: '足球',
-  image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_e4YK349efMWAzc6iiczsM5tSzTnAKKVMkYWXuj_EZTKUOgmCBpnnu9Nbnv6E_FPf3uOXeVMAZeYmf3_CFGfrFh2zP8C9IllzF46IRUKxa5PkZCETfbd_SN_sf9OYPfbrjmRnDvFxK5Zh72kjxUmQdfZmWyAQPUswEsB_JPZ7Lg8vKjR7v9NW95_dy2rxLJT3_kqmFCXRt_rhPduU4AnhbTzNaY_CEkRqdE9LXCnbCiDBBS46kbHrjJNLAf_GrFim5hEkkJELnzex'
+  image: '/static/teams/generic_stadium.jpg'
 })
 
 const recommendPosts = ref([])
 
 const getFullImageUrl = (url) => {
-  if (!url) return 'https://lh3.googleusercontent.com/aida-public/AB6AXuB0ptLMlSVayrxqg7fSU6QDrJuEJuUNPhe-FL1oaNUhm5hTHeodIRF-8F-Rhnt-zmJoOquOmsQNkJZBxgkbYOOFqHH1PmXnGA1CbyV6PA9hrFDxkLutFdYm13dkV64EU91kS5OhqpWiTd-1LJLAhJEGACSHdpuxggaRg43262dPjrfJeJh2pEQjQD49zmdB7sz_ar6feJpTa1Fd9ZDHSaAUKmXEic6DkqfyodMJkt3egV4exRVQQbB_9cITUjEiy5btIR-1DrGQbFS1'
+  if (!url) return '/static/teams/generic_stadium.jpg'
   if (url.startsWith('http')) return url
   // 拼接后端根地址，强制使用 8080
   const BASE_URL = 'http://localhost:8080'
@@ -251,7 +251,7 @@ const loadData = async () => {
       heroPost.value = {
         id: 0,
         title: '暂无相关资讯',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_e4YK349efMWAzc6iiczsM5tSzTnAKKVMkYWXuj_EZTKUOgmCBpnnu9Nbnv6E_FPf3uOXeVMAZeYmf3_CFGfrFh2zP8C9IllzF46IRUKxa5PkZCETfbd_SN_sf9OYPfbrjmRnDvFxK5Zh72kjxUmQdfZmWyAQPUswEsB_JPZ7Lg8vKjR7v9NW95_dy2rxLJT3_kqmFCXRt_rhPduU4AnhbTzNaY_CEkRqdE9LXCnbCiDBBS46kbHrjJNLAf_GrFim5hEkkJELnzex'
+        image: '/static/teams/generic_stadium.jpg'
       }
     }
 
@@ -262,7 +262,7 @@ const loadData = async () => {
         recommendPosts.value = postRes.records.map(item => ({
           id: item.id,
           title: item.title,
-          image: item.images ? getFullImageUrl(JSON.parse(item.images)[0]) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuA3a1YaN0N9eGVEJt27x1pvl9bmA_s1bXVgR5SdN9DFsrcqh6uzFlCKQvzphdGraw6VAXJOL5xegk1zZJscCAfDzZfGT4Fejcexhqu_xRMaGLwAyC_dwx8QT7G51wSlpvwCfM0s_1gUg5P-ukoYTMarx8NlDRmwAi91_C2xGc72pSqbXHKu8-PoTd87oU497A_XdyMvzv_I_h0RJiCgkPZHjNdFRYVe0WX4_DdpS88_1KhVnI26khp2KS9dOKUy089md8x3oQERrucF',
+          image: item.images ? getFullImageUrl(JSON.parse(item.images)[0]) : '/static/teams/generic_stadium.jpg',
           category: '社区',
           time: formatTime(item.createdAt),
           likes: item.likeCount,
@@ -288,10 +288,23 @@ onMounted(() => {
   loadData()
 })
 
+const isNavigating = ref(false)
+
 const goToDetail = (id) => {
   if (!id) return
+  if (isNavigating.value) return
+  isNavigating.value = true
+  
   uni.navigateTo({
-    url: `/pages/news/detail?id=${id}`
+    url: `/pages/news/detail?id=${id}`,
+    complete: () => {
+      setTimeout(() => {
+        isNavigating.value = false
+      }, 500)
+    },
+    fail: () => {
+      isNavigating.value = false
+    }
   })
 }
 

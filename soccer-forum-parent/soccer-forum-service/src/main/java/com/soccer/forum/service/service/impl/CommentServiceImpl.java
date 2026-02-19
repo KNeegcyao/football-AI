@@ -25,8 +25,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
 @Service
-public class CommentServiceImpl implements CommentService {
+public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     private final CommentMapper commentMapper;
     private final UserMapper userMapper;
@@ -84,8 +86,8 @@ public class CommentServiceImpl implements CommentService {
         postMapper.updateById(post);
         
         // 清除帖子详情缓存
-        String cacheKey = "post:detail:" + req.getPostId();
-        redisTemplate.delete(cacheKey);
+        // String cacheKey = "post:detail:" + req.getPostId();
+        // redisTemplate.delete(cacheKey);
     }
 
     @Override

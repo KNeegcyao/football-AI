@@ -7,11 +7,18 @@ import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.UserRelationship;
 import com.soccer.forum.service.mapper.UserRelationshipMapper;
 import com.soccer.forum.service.service.UserRelationshipService;
+import com.soccer.forum.service.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMapper, UserRelationship> implements UserRelationshipService {
+
+    private final NotificationService notificationService;
+
+    public UserRelationshipServiceImpl(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -29,6 +36,9 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
         relationship.setFollowerId(followerId);
         relationship.setFollowingId(followingId);
         this.save(relationship);
+        
+        // 发送关注通知 (使用类型 5:系统通知/关注通知)
+        notificationService.sendNotification(followingId, followerId, 5, 0L, "关注了你");
     }
 
     @Override

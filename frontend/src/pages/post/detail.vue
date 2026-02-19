@@ -40,7 +40,7 @@
         </button>
       </view>
 
-      <scroll-view scroll-y class="content-scroll">
+      <scroll-view scroll-y class="content-scroll" :scroll-into-view="scrollTarget" :scroll-with-animation="true">
         <!-- Article Content -->
         <view class="article">
           <view class="article-meta">
@@ -86,7 +86,7 @@
           </view>
 
           <view class="comments-list">
-            <view class="comment-item" v-for="(comment, index) in comments" :key="index">
+            <view class="comment-item" v-for="(comment, index) in comments" :key="index" :id="'comment-' + comment.id" :class="{ 'highlight': comment.id == targetId }">
               <image class="comment-avatar" :src="comment.userAvatar" mode="aspectFill"></image>
               <view class="comment-content-wrapper">
                 <view class="comment-bubble">
@@ -164,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi, favoriteApi } from '@/api';
 
@@ -176,6 +176,8 @@ const sortType = ref('newest'); // newest, hottest
 const isFollowing = ref(false);
 const commentText = ref('');
 const submitting = ref(false);
+const scrollTarget = ref('');
+const targetId = ref(null);
 
 const categoryText = computed(() => {
   if (!post.value) return '# 足球';
@@ -185,7 +187,15 @@ const categoryText = computed(() => {
 });
 
 const goBack = () => {
-  uni.navigateBack();
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    // 如果没有上一页（如分享卡片进入或发布跳转导致栈替换），回到社区首页
+    uni.switchTab({
+      url: '/pages/community/community'
+    });
+  }
 };
 
 const formatTime = (timeStr) => {
@@ -275,6 +285,15 @@ const loadComments = async (id) => {
             likes: r.likes || 0
         }))
       }));
+
+      // 如果有目标评论ID，尝试滚动到该位置
+      if (targetId.value) {
+        nextTick(() => {
+          scrollTarget.value = 'comment-' + targetId.value;
+          // 清除 targetId 以避免重复触发（如果需要）
+          // targetId.value = null; 
+        });
+      }
     }
   } catch (error) {
     console.error('Failed to load comments:', error);
@@ -388,6 +407,9 @@ const previewImage = (index) => {
 onLoad((options) => {
   if (options.id) {
     postId.value = options.id;
+    if (options.targetId) {
+        targetId.value = options.targetId;
+    }
     loadPostDetail(options.id);
     loadComments(options.id);
   }
@@ -851,5 +873,12 @@ onLoad((options) => {
 /* Add padding to scroll-view to avoid overlap with bottom bar */
 .content-scroll {
   height: calc(100vh - 80px - 60px); /* Adjust based on header and bottom bar */
+}
+
+.highlight {
+  background-color: rgba(242, 185, 13, 0.15);
+  border: 1px solid rgba(242, 185, 13, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 </style>

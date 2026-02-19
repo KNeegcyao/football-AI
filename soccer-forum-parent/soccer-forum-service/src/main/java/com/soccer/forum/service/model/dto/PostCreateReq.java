@@ -4,6 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Schema(description = "帖子创建请求")
 public class PostCreateReq {
     @Schema(description = "标题", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -16,8 +19,8 @@ public class PostCreateReq {
     @Size(min = 5, message = "内容不能少于5个字符")
     private String content;
 
-    @Schema(description = "图片列表(JSON)")
-    private String images;
+    @Schema(description = "图片列表")
+    private List<String> images;
 
     @Schema(description = "关联圈子ID")
     private Long circleId;
@@ -32,8 +35,8 @@ public class PostCreateReq {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    public String getImages() { return images; }
-    public void setImages(String images) { this.images = images; }
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
 
     public Long getCircleId() { return circleId; }
     public void setCircleId(Long circleId) { this.circleId = circleId; }

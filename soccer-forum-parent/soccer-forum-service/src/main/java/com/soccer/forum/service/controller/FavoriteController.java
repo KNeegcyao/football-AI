@@ -6,6 +6,7 @@ import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.model.dto.FavoriteReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.FavoriteService;
+import com.soccer.forum.service.model.dto.PostDetailResp;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,18 +48,24 @@ public class FavoriteController {
      * @return 操作结果 (favorited: true表示已收藏, false表示取消收藏)
      */
     @Operation(summary = "切换收藏状态", description = "用户收藏或取消收藏帖子")
-    @PostMapping
+    @PostMapping("/toggle")
     public R<Map<String, Boolean>> toggle(@Parameter(description = "收藏信息") @Validated @RequestBody FavoriteReq req,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("收到收藏切换请求: 用户ID={}, 帖子ID={}", loginUser.getUser().getId(), req.getPostId());
         
-        boolean favorited = favoriteService.toggleFavorite(req.getPostId(), loginUser.getUser().getId());
-        
-        String msg = favorited ? "收藏成功" : "取消收藏成功";
-        log.info("{} : 用户ID={}, 帖子ID={}", msg, loginUser.getUser().getId(), req.getPostId());
-        
-        return R.ok(Map.of("favorited", favorited), msg);
+        try {
+            boolean favorited = favoriteService.toggleFavorite(req.getPostId(), loginUser.getUser().getId());
+            
+            String msg = favorited ? "收藏成功" : "取消收藏成功";
+            log.info("{} : 用户ID={}, 帖子ID={}", msg, loginUser.getUser().getId(), req.getPostId());
+            
+            return R.ok(Map.of("favorited", favorited), msg);
+        } catch (Exception e) {
+            log.error("收藏操作失败: postId=" + req.getPostId() + ", userId=" + loginUser.getUser().getId(), e);
+            throw e;
+        }
     }
+
 
     /**
      * 查询个人收藏列表接口
@@ -70,11 +77,11 @@ public class FavoriteController {
      */
     @Operation(summary = "获取我的收藏", description = "分页查询当前用户的收藏帖子列表")
     @GetMapping
-    public R<Page<Post>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+    public R<Page<PostDetailResp>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
                               @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
                               @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("查询收藏列表: 用户ID={}, page={}, size={}", loginUser.getUser().getId(), page, size);
-        Page<Post> result = favoriteService.getMyFavorites(page, size, loginUser.getUser().getId());
+        Page<PostDetailResp> result = favoriteService.getMyFavorites(page, size, loginUser.getUser().getId());
         return R.ok(result);
     }
 }

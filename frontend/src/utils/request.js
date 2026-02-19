@@ -68,10 +68,11 @@ const request = (options = {}) => {
   })
 }
 
-// 导出常用的请求方法
-export default {
-  get: (url, data, header) => request({ url, method: 'GET', data, header }),
-  post: (url, data, header) => request({ url, method: 'POST', data, header }),
-  put: (url, data, header) => request({ url, method: 'PUT', data, header }),
-  delete: (url, data, header) => request({ url, method: 'DELETE', data, header })
-}
+// 挂载常用的请求方法
+request.get = (url, data, header) => request({ url, method: 'GET', data, header })
+request.post = (url, data, header) => request({ url, method: 'POST', data, header })
+request.put = (url, data, header) => request({ url, method: 'PUT', data, header })
+request.delete = (url, data, header) => request({ url, method: 'DELETE', data, header })
+
+export default request
+

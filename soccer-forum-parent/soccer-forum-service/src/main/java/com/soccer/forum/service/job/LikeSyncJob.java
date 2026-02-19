@@ -38,7 +38,7 @@ public class LikeSyncJob {
      * 同步帖子点赞数
      * 每 5 分钟执行一次
      */
-    @Scheduled(fixedRate = 300000)
+    //@Scheduled(fixedRate = 300000)
     public void syncPostLikes() {
         try {
             log.info("开始同步帖子点赞数据...");
@@ -85,7 +85,7 @@ public class LikeSyncJob {
      * 同步评论点赞数
      * 每 5 分钟执行一次
      */
-    @Scheduled(fixedRate = 300000)
+    //@Scheduled(fixedRate = 300000)
     public void syncCommentLikes() {
         try {
             log.info("开始同步评论点赞数据...");

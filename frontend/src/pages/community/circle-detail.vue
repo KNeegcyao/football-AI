@@ -94,8 +94,8 @@
           <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
           
           <view class="ai-images-grid">
-            <image class="ai-img-half" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEO7GwNM9dg0djapjxAuWJ1nFgCkIfgn1ufmunk1_nRl99l7EJRbCDg8VJBLGpfu3ZavpB755dqbeIOIGHL9TtiuioRiy2RoCmkE3ye5vX8wVkD-mAkaGxMdmc9Eqjxxdp_aVcGkwsXdI9EibI2xjUhLZ0TenrzdAa_l8Ho45auGaVTAQ0rYe3QY-Pt1dZb2wzbJd5k9oVtgDVj8NqTgXcvnhHwtdVY1zLIv5hwwvnCMwiyym6KpTVw_65I303HK2El2EXnJBnQTRi" mode="aspectFill"></image>
-            <image class="ai-img-half" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcs8hChqz6NtBT9EYHf8647M6hV4uLY6o4kBnPm96pX40o20WDok-X2gQzILgbL2b6_-wxHTPGlgyDDNiyFR6lacvKhmuxDfmS5S6aAXobnrkCRpfNKhia6-gIvYSgVLk1EeqzHI6DzV2tHCM7NSynNcn20ss2VLEkN7nZ8wP3Qi8UZq9qUEfPCWQbrNlWfkVKhjM4mng3J1zZ8hDvDzHzoYtaHU2dasMsjswycEPgGHwYQPQZTCvNJ8P7XL5jOYaMvKYCvkL7KhW5" mode="aspectFill"></image>
+            <image class="ai-img-half" src="/static/teams/man_city.jpg" mode="aspectFill"></image>
+            <image class="ai-img-half" src="/static/teams/real_madrid.jpg" mode="aspectFill"></image>
           </view>
           
           <view class="post-footer">
@@ -398,7 +398,17 @@ const onImageError = (e) => {
   circleImage.value = '/static/default-team.png';
 };
 
-const goBack = () => uni.navigateBack();
+const goBack = () => {
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack();
+  } else {
+    // 兜底逻辑：如果没有上一页，跳转到首页
+    uni.switchTab({
+      url: '/pages/index/index'
+    });
+  }
+};
 
 const handlePostClick = () => {
   uni.navigateTo({
@@ -406,9 +416,22 @@ const handlePostClick = () => {
   });
 };
 
+const isNavigating = ref(false);
+
 const navigateToPost = (post) => {
+  if (isNavigating.value) return;
+  isNavigating.value = true;
+  
   uni.navigateTo({
-    url: `/pages/post/detail?id=${post.id}`
+    url: `/pages/post/detail?id=${post.id}`,
+    complete: () => {
+      setTimeout(() => {
+        isNavigating.value = false;
+      }, 500);
+    },
+    fail: () => {
+      isNavigating.value = false;
+    }
   });
 };
 
@@ -453,10 +476,17 @@ const loadMore = () => {
   align-items: center;
   padding: 10px 16px;
   box-sizing: border-box;
-  z-index: 1000;
+  z-index: 9999 !important; /* Force top layer */
+  pointer-events: auto;
   background: rgba(28, 26, 17, 0.8); /* glass-effect */
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(45, 42, 29, 0.5); /* border-dark/50 */
+}
+
+.nav-left {
+  position: relative;
+  z-index: 10000;
+  cursor: pointer;
 }
 
 .nav-left, .nav-right {
