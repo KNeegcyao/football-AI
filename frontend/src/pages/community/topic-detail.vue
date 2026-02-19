@@ -4,7 +4,7 @@
     <view class="header-image-container">
       <image 
         class="header-image" 
-        src="/static/teams/generic_stadium.jpg" 
+        :src="topicInfo.image || topicInfo.cover || 'https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/image-20260219223955621.png'" 
         mode="aspectFill"
       ></image>
       <view class="header-overlay"></view>
@@ -145,7 +145,7 @@
       </view>
 
       <!-- Real User Post Cards -->
-      <view class="post-card" v-for="(post, index) in postList" :key="post.id || index">
+      <view class="post-card" v-for="(post, index) in postList" :key="post.id || index" @click="navigateToPost(post)">
         <view class="post-header">
           <view class="user-info">
             <view class="avatar-wrapper">
@@ -238,6 +238,14 @@ const handleParticipate = () => {
       }, 500);
     }
   });
+};
+
+const navigateToPost = (post) => {
+  if (post && post.id) {
+    uni.navigateTo({
+      url: `/pages/post/detail?id=${post.id}`
+    });
+  }
 };
 
 const goBack = () => {

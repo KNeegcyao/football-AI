@@ -88,7 +88,10 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi } from '@/api'
-import { isEmail } from '@/utils/validate'
+
+const isEmail = (email) => {
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+}
 
 const form = ref({
   nickname: '',

@@ -12,7 +12,9 @@
         </view>
         <view class="notification-btn" @click="navigateToNotification">
           <text class="material-icons" style="font-size: 20px; color: #f2b90d;">notifications_none</text>
-          <view class="red-dot" v-if="unreadCount > 0"></view>
+          <view class="notification-badge" v-if="unreadCount > 0">
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </view>
         </view>
       </view>
       
@@ -108,7 +110,7 @@
 <script setup>
 import { ref, onMounted, getCurrentInstance } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { communityApi, fileApi } from '@/api';
+import { communityApi, fileApi, notificationApi } from '@/api';
 
 const scrollHeight = ref(800); // Should be calculated based on window height
 
@@ -153,7 +155,6 @@ const navigateToCircle = (circle) => {
   if (isNavigating.value) return;
   isNavigating.value = true;
   
-  console.log('Navigate to circle:', circle);
   uni.navigateTo({
     url: `/pages/community/circle-detail?id=${circle.id || ''}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`,
     complete: () => {
@@ -175,7 +176,6 @@ const navigateToPost = (topic) => {
   if (isNavigating.value) return;
   isNavigating.value = true;
 
-  console.log('Navigate to topic:', topic);
   uni.navigateTo({
     url: `/pages/community/topic-detail?id=${topic.id || 0}&title=${encodeURIComponent(topic.title)}`,
     complete: () => {
@@ -208,22 +208,19 @@ const navigateToCircleList = () => {
 const hotCircles = ref([]);
 const trendTopics = ref([]);
 
-const getUnreadCount = async () => {
+const loadUnreadCount = async () => {
   try {
-    const res = await proxy.$request({
-      url: '/api/notifications/unread-count',
-      method: 'GET'
-    });
+    const res = await notificationApi.getUnreadCount();
     if (res.code === 200) {
       unreadCount.value = res.data;
     }
   } catch (e) {
-    console.error('获取未读消息数失败', e);
+    console.error('Failed to load unread count:', e);
   }
 };
 
 onShow(() => {
-  getUnreadCount();
+  loadUnreadCount();
 });
 
 const loadData = async () => {
@@ -401,6 +398,22 @@ onMounted(() => {
   height: 8px;
   background-color: #f20d33;
   border-radius: 50%;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff3b30;
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 12px;
+  border: 1px solid #fff;
+  z-index: 10;
 }
 
 .search-bar {

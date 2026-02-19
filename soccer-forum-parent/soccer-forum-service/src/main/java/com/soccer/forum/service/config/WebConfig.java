@@ -30,6 +30,10 @@ public class WebConfig implements WebMvcConfigurer {
         
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(resourceLocation);
+                
+        // 映射 static 目录
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/");
     }
 
     @Override

@@ -69,7 +69,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 comment.setReplyToUserId(parent.getUserId());
                 
                 // 发送回复评论通知
-                notificationService.sendNotification(parent.getUserId(), userId, 4, req.getPostId(), req.getContent());
+                notificationService.sendNotification(parent.getUserId(), userId, 4, parent.getId(), req.getContent());
             } else {
                 comment.setParentId(0L);
             }

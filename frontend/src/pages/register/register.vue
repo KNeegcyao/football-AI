@@ -159,7 +159,14 @@
 <script setup>
 import { ref } from 'vue'
 import { authApi } from '@/api'
-import { isMobile, isEmail } from '@/utils/validate'
+
+const isMobile = (phone) => {
+  return /^1[3-9]\d{9}$/.test(phone)
+}
+
+const isEmail = (email) => {
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+}
 
 const form = ref({
   nickname: '',

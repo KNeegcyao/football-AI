@@ -42,9 +42,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public long getUnreadCount(Long userId) {
-        return notificationMapper.selectCount(new LambdaQueryWrapper<Notification>()
+        Long count = notificationMapper.selectCount(new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getUserId, userId)
                 .eq(Notification::getIsRead, 0));
+        return count != null ? count : 0L;
     }
 
     @Override

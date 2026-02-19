@@ -219,3 +219,28 @@ export const favoriteApi = {
    */
   list: (params) => request.get('/api/favorites', params)
 }
+
+/**
+ * 通知相关接口
+ */
+export const notificationApi = {
+  /**
+   * 获取未读消息数
+   */
+  getUnreadCount: () => request.get('/api/notifications/unread-count'),
+
+  /**
+   * 获取通知列表
+   */
+  getList: (params) => request.get('/api/notifications', params),
+
+  /**
+   * 标记已读
+   */
+  read: (id) => request.put(`/api/notifications/${id}/read`),
+
+  /**
+   * 全部已读
+   */
+  readAll: () => request.put('/api/notifications/read-all')
+}

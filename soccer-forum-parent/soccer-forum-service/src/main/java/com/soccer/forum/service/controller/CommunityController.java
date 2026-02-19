@@ -98,18 +98,18 @@ public class CommunityController {
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         // 尝试根据标题查找话题ID，优先使用精确的 topicId 查询
         Topic topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
-                .eq(Topic::getTitle, title));
+                .eq(Topic::getTitle, title), false);
         
         // 如果没找到，尝试加上 # 前缀查找
         if (topic == null && !title.startsWith("#")) {
             topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
-                    .eq(Topic::getTitle, "#" + title));
+                    .eq(Topic::getTitle, "#" + title), false);
         }
         
         // 如果还没找到，尝试加上 # 前缀和后缀查找
         if (topic == null && !title.startsWith("#")) {
             topic = topicService.getOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
-                    .eq(Topic::getTitle, "#" + title + "#"));
+                    .eq(Topic::getTitle, "#" + title + "#"), false);
         }
         
         if (topic != null) {

@@ -236,7 +236,10 @@
 <script setup>
 import { ref } from 'vue'
 import { authApi, userApi } from '@/api'
-import { isMobile } from '@/utils/validate'
+
+const isMobile = (phone) => {
+  return /^1[3-9]\d{9}$/.test(phone)
+}
 
 const form = ref({
   username: '',

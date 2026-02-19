@@ -202,9 +202,17 @@ export default {
     },
     
     async markAllRead() {
-        // TODO: 调用后端全部已读接口
-        uni.showToast({ title: '全部已读', icon: 'success' });
-        this.list.forEach(item => item.isRead = 1);
+        try {
+            await this.$request({
+                url: '/api/notifications/read-all',
+                method: 'PUT'
+            });
+            this.list.forEach(item => item.isRead = 1);
+            uni.showToast({ title: '全部已读', icon: 'success' });
+        } catch (e) {
+            console.error(e);
+            uni.showToast({ title: '操作失败', icon: 'none' });
+        }
     },
 
     async handleNotificationClick(item) {
