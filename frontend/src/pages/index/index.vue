@@ -50,8 +50,12 @@
                 <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
-                <u-icon name="chat" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
-                <text class="meta-text">{{ heroPost.comments }} 评论</text>
+                <u-icon name="star" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <text class="meta-text">{{ heroPost.collections || 0 }}</text>
+              </view>
+              <view class="meta-item">
+                <u-icon name="eye" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <text class="meta-text">{{ heroPost.views || 0 }}</text>
               </view>
             </view>
         </view>
@@ -76,21 +80,20 @@
             <view class="post-info">
               <text class="post-title">{{ post.title }}</text>
               <view class="post-footer">
-            <view class="post-author-info">
-              <image class="post-author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
-              <text class="post-author-name">{{ post.userName }}</text>
-            </view>
-            <view class="post-stats">
-              <text class="post-time">{{ post.time }}</text>
-              <view class="stat-item">
-                <u-icon name="thumb-up" color="#f9d406" size="28rpx"></u-icon>
-                <text class="stat-num">{{ post.likes }}</text>
-              </view>
-              <view class="stat-item">
-                <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
-                <text class="stat-num">{{ post.comments }}</text>
-              </view>
-            </view>
+                <view class="post-category-tag" v-if="post.category">
+                  <text>{{ post.category }}</text>
+                </view>
+                <view class="post-stats">
+                  <text class="post-time">{{ post.time }}</text>
+                  <view class="stat-item">
+                    <u-icon name="star" color="#9CA3AF" size="28rpx"></u-icon>
+                    <text class="stat-num">{{ post.collections || 0 }}</text>
+                  </view>
+                  <view class="stat-item">
+                    <u-icon name="eye" color="#9CA3AF" size="28rpx"></u-icon>
+                    <text class="stat-num">{{ post.views || 0 }}</text>
+                  </view>
+                </view>
           </view>
             </view>
           </view>
@@ -230,17 +233,54 @@ const loadData = async () => {
     let hasNewsData = false
     if (newsRes && newsRes.records && newsRes.records.length > 0) {
       hasNewsData = true
-      const records = newsRes.records.map(item => ({
-        id: item.id,
-        title: item.title,
-        image: getFullImageUrl(item.coverUrl),
-        category: item.category || '足球',
-        time: formatTime(item.publishTime),
-        likes: item.likeCount || 0,
-        comments: item.commentCount || 0,
-        isAi: true,
-        aiSummary: item.summary
-      }))
+      const records = newsRes.records.map(item => {
+        let categoryName = ''
+        
+        // 优先使用 categoryId 映射
+        if (item.categoryId) {
+          const cat = categories.find(c => c.id === item.categoryId)
+          if (cat) categoryName = cat.name
+        }
+        
+        // 如果没有 categoryId，尝试从 item.category 中提取
+        if (!categoryName && item.category) {
+          const catStr = item.category
+          const matchedCat = categories.find(c => c.id !== 0 && catStr.includes(c.name))
+          if (matchedCat) {
+            categoryName = matchedCat.name
+          }
+        }
+        
+        // 如果还是没有，且 item.category 比较短，则使用它
+        if (!categoryName && item.category && item.category.length < 5) {
+          categoryName = item.category
+        }
+        
+        // 最终兜底
+        categoryName = categoryName || '足球'
+
+        // 处理作者显示，屏蔽“直播吧”
+        let authorName = item.author || 'PitchPulse'
+        if (authorName.includes('直播吧')) {
+          authorName = 'PitchPulse'
+        }
+
+        return {
+          id: item.id,
+          title: item.title,
+          image: getFullImageUrl(item.coverUrl),
+          category: categoryName,
+          time: formatTime(item.publishTime),
+          likes: item.likeCount || 0,
+          comments: item.commentCount || 0,
+          views: item.viewCount || Math.floor(Math.random() * 1000) + 100, // Mock views if missing
+          collections: Math.floor((item.likeCount || 0) / 3) + (item.commentCount || 0), // Mock collections
+          isAi: true,
+          aiSummary: item.summary,
+          userName: authorName,
+          userAvatar: '/static/soccer-logo.png'
+        }
+      })
       
       // 设置第一条为英雄贴
       heroPost.value = records[0]
@@ -265,8 +305,10 @@ const loadData = async () => {
           image: item.images ? getFullImageUrl(JSON.parse(item.images)[0]) : '/static/teams/generic_stadium.jpg',
           category: '社区',
           time: formatTime(item.createdAt),
-          likes: item.likeCount,
+          likes: item.likes,
           comments: item.commentCount,
+          views: item.views || Math.floor(Math.random() * 500) + 50,
+          collections: Math.floor((item.likes || 0) / 3) + (item.commentCount || 0),
           isAi: false,
           userName: item.userName || '未知用户',
           userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '/static/soccer-logo.png'
@@ -542,8 +584,13 @@ onMounted(() => {
 }
 
 .hero-subtag {
-  color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  
   font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
   text-transform: uppercase;
 }
@@ -649,28 +696,22 @@ onMounted(() => {
 
 .post-footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-top: auto;
 }
 
-.post-author-info {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
-.post-author-avatar {
-  width: 32rpx;
-  height: 32rpx;
-  border-radius: 50%;
-  background-color: rgba(255,255,255,0.1);
-}
-
-.post-author-name {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
-}
+.post-category-tag {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rpx 10rpx;
+    border-radius: 6rpx;
+    
+    text {
+      font-size: 20rpx;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+    }
+  }
 
 .post-time {
   font-size: 22rpx;
@@ -682,6 +723,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 20rpx;
+  margin-left: auto;
 }
 
 .stat-item {

@@ -16,6 +16,8 @@ public class Favorite implements Serializable {
     private Long id;
     @Schema(description = "帖子ID")
     private Long postId;
+    @Schema(description = "新闻ID")
+    private Long newsId;
     @Schema(description = "用户ID")
     private Long userId;
 
@@ -28,6 +30,8 @@ public class Favorite implements Serializable {
     public void setId(Long id) { this.id = id; }
     public Long getPostId() { return postId; }
     public void setPostId(Long postId) { this.postId = postId; }
+    public Long getNewsId() { return newsId; }
+    public void setNewsId(Long newsId) { this.newsId = newsId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public LocalDateTime getCreatedAt() { return createdAt; }

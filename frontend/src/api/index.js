@@ -209,15 +209,27 @@ export const fileApi = {
 export const favoriteApi = {
   /**
    * 收藏/取消收藏
-   * @param {Object} data { postId }
+   * @param {Object} data { postId, newsId }
    */
   toggle: (data) => request.post('/api/favorites/toggle', data),
 
   /**
-   * 获取我的收藏列表
+   * 获取我的收藏帖子列表
    * @param {Object} params { page, size }
    */
-  list: (params) => request.get('/api/favorites', params)
+  list: (params) => request.get('/api/favorites', params),
+
+  /**
+   * 获取我的收藏新闻列表
+   * @param {Object} params { page, size }
+   */
+  listNews: (params) => request.get('/api/favorites/news', params),
+
+  /**
+   * 检查收藏状态
+   * @param {Object} params { postId, newsId }
+   */
+  check: (params) => request.get('/api/favorites/check', params)
 }
 
 /**

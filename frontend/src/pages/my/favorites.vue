@@ -9,9 +9,15 @@
       <view class="nav-right"></view>
     </view>
 
+    <!-- Tabs -->
+    <view class="tabs-container">
+      <u-tabs :list="tabList" :current="currentTab" @click="handleTabClick" lineColor="#f9d406" activeStyle="color: #f9d406; font-weight: bold;" inactiveStyle="color: #999;" itemStyle="height: 88rpx; padding: 0 30rpx;"></u-tabs>
+    </view>
+
     <!-- Content Area -->
     <scroll-view scroll-y class="content-scroll" @scrolltolower="loadMore">
-      <view class="post-list" v-if="posts.length > 0">
+      <!-- Post List -->
+      <view class="post-list" v-if="currentTab === 0 && posts.length > 0">
         <view v-for="(post, index) in posts" :key="index" class="post-item" @click="goToDetail(post.id)">
           <view class="post-main">
             <view class="post-img-box" v-if="post.image">
@@ -41,15 +47,34 @@
         </view>
         <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
       </view>
+
+      <!-- News List -->
+      <view class="news-list" v-if="currentTab === 1 && newsList.length > 0">
+        <view v-for="(news, index) in newsList" :key="index" class="news-item" @click="goToNewsDetail(news.id)">
+          <view class="news-content">
+            <view class="news-info">
+              <text class="news-title">{{ news.title }}</text>
+              <view class="news-meta">
+                <text class="news-tag" v-if="news.category">{{ news.category }}</text>
+                <text class="news-time">{{ formatTime(news.createTime) }}</text>
+              </view>
+            </view>
+            <view class="news-img-box" v-if="news.coverUrl">
+              <image class="news-img" :src="news.coverUrl" mode="aspectFill"></image>
+            </view>
+          </view>
+        </view>
+        <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
+      </view>
       
       <!-- Empty State -->
-      <view class="empty-state" v-else-if="!loading">
+      <view class="empty-state" v-else-if="!loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0))">
         <u-icon name="star" color="#666" size="60"></u-icon>
         <text class="empty-text">暂无收藏</text>
       </view>
       
       <!-- Loading State -->
-      <view class="loading-state" v-if="loading && posts.length === 0">
+      <view class="loading-state" v-if="loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0))">
         <u-loading-icon mode="circle" color="#f9d406"></u-loading-icon>
       </view>
     </scroll-view>
@@ -61,7 +86,26 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { favoriteApi, fileApi } from '@/api';
 
+const currentTab = ref(0);
+const tabList = [
+  { name: '帖子' },
+  { name: '新闻' }
+];
+
+const getCategoryName = (categoryId) => {
+  const maps = {
+    1: '中超',
+    2: '英超',
+    3: '德甲',
+    4: '意甲',
+    5: '欧战',
+    6: '西甲'
+  }
+  return maps[categoryId] || '足球'
+}
+
 const posts = ref([]);
+const newsList = ref([]);
 const loading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
@@ -69,26 +113,40 @@ const hasMore = ref(true);
 const loadStatus = ref('loadmore');
 
 onLoad(() => {
-  loadFavorites();
+  loadData();
 });
 
-const loadFavorites = async () => {
+const handleTabClick = (item) => {
+  if (currentTab.value === item.index) return;
+  currentTab.value = item.index;
+  resetData();
+  loadData();
+};
+
+const resetData = () => {
+  page.value = 1;
+  posts.value = [];
+  newsList.value = [];
+  hasMore.value = true;
+  loadStatus.value = 'loadmore';
+};
+
+const loadData = async () => {
   if (loading.value || !hasMore.value) return;
   
   loading.value = true;
   loadStatus.value = 'loading';
   
   try {
-    const res = await favoriteApi.list({
-      page: page.value,
-      size: pageSize.value
-    });
-    
-    if (res && res.records) {
-      const newPosts = res.records.map(item => {
-        // The backend returns PostPageResp objects in the records list
-        // We need to map them to our display format
-        return {
+    let res;
+    if (currentTab.value === 0) {
+      res = await favoriteApi.list({
+        page: page.value,
+        size: pageSize.value
+      });
+      
+      if (res && res.records) {
+        const newPosts = res.records.map(item => ({
           id: item.id,
           title: item.title,
           content: item.content,
@@ -97,38 +155,62 @@ const loadFavorites = async () => {
           userName: item.userName,
           createTime: item.createTime,
           likes: item.likes,
-          commentCount: item.commentCount,
-          views: item.views
-        };
+          commentCount: item.commentCount
+        }));
+        
+        if (page.value === 1) {
+          posts.value = newPosts;
+        } else {
+          posts.value = [...posts.value, ...newPosts];
+        }
+        
+        hasMore.value = newPosts.length === pageSize.value;
+      } else {
+        hasMore.value = false;
+      }
+    } else {
+      res = await favoriteApi.listNews({
+        page: page.value,
+        size: pageSize.value
       });
       
-      if (page.value === 1) {
-        posts.value = newPosts;
+      if (res && res.records) {
+        const newNews = res.records.map(item => ({
+          id: item.id,
+          title: item.title,
+          coverUrl: item.coverUrl ? fileApi.getFileUrl(item.coverUrl) : '',
+          category: getCategoryName(item.categoryId),
+          createTime: item.createTime || item.publishTime
+        }));
+        
+        if (page.value === 1) {
+          newsList.value = newNews;
+        } else {
+          newsList.value = [...newsList.value, ...newNews];
+        }
+        
+        hasMore.value = newNews.length === pageSize.value;
       } else {
-        posts.value = [...posts.value, ...newPosts];
+        hasMore.value = false;
       }
-      
-      hasMore.value = newPosts.length === pageSize.value;
-      loadStatus.value = hasMore.value ? 'loadmore' : 'nomore';
-      page.value++;
-    } else {
-      hasMore.value = false;
-      loadStatus.value = 'nomore';
     }
-  } catch (error) {
-    console.error('Failed to load favorites:', error);
-    uni.showToast({
-      title: '加载失败',
-      icon: 'none'
-    });
-    loadStatus.value = 'nomore';
+    
+    loadStatus.value = hasMore.value ? 'loadmore' : 'nomore';
+    if (hasMore.value) {
+      page.value++;
+    }
+  } catch (e) {
+    console.error(e);
+    loadStatus.value = 'loadmore';
   } finally {
     loading.value = false;
   }
 };
 
 const loadMore = () => {
-  loadFavorites();
+  if (hasMore.value && !loading.value) {
+    loadData();
+  }
 };
 
 const goBack = () => {
@@ -141,28 +223,35 @@ const goToDetail = (id) => {
   });
 };
 
+const goToNewsDetail = (id) => {
+  uni.navigateTo({
+    url: `/pages/news/detail?id=${id}`
+  });
+};
+
 const formatTime = (time) => {
   if (!time) return '';
   const date = new Date(time);
   const now = new Date();
   const diff = now - date;
   
+  // Within 1 hour
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes}分钟前`;
+  }
+  
   // Within 24 hours
-  if (diff < 24 * 60 * 60 * 1000) {
-    if (diff < 60 * 60 * 1000) {
-      const minutes = Math.floor(diff / (60 * 1000));
-      return `${minutes > 0 ? minutes : 1}分钟前`;
-    }
-    const hours = Math.floor(diff / (60 * 60 * 1000));
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
     return `${hours}小时前`;
   }
   
-  // Within current year
-  if (date.getFullYear() === now.getFullYear()) {
-    return `${date.getMonth() + 1}月${date.getDate()}日`;
-  }
-  
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  // Format as YYYY-MM-DD
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 </script>
 
@@ -189,6 +278,11 @@ const formatTime = (time) => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.tabs-container {
+  background-color: #1A1811;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .nav-title {
   color: #fff;
   font-size: 16px;
@@ -206,7 +300,7 @@ const formatTime = (time) => {
   height: 0;
 }
 
-.post-list {
+.post-list, .news-list {
   padding: 16px;
 }
 
@@ -216,6 +310,72 @@ const formatTime = (time) => {
   margin-bottom: 16px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.news-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.news-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.news-tag {
+  color: #f9d406;
+  font-size: 10px;
+  background-color: rgba(249, 212, 6, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.news-time {
+  color: #666;
+  font-size: 11px;
+}
+
+.news-img-box {
+  width: 100px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.news-img {
+  width: 100%;
+  height: 100%;
+  background-color: #2C2C2C;
 }
 
 .post-main {

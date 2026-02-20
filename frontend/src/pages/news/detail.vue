@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
-import { newsApi } from '@/api/index'
+import { newsApi, favoriteApi } from '@/api/index'
 
 const newsId = ref(null)
 const news = ref({
@@ -15,13 +15,82 @@ const news = ref({
 })
 
 const scrollProgress = ref(0)
+const isFavorited = ref(false)
+const fontSizeLevel = ref(0)
+const isEyeProtection = ref(false)
+const fontClasses = ['text-base', 'text-lg', 'text-xl']
 
 onLoad((options) => {
   if (options.id) {
     newsId.value = options.id
     fetchNewsDetail(options.id)
+    checkFavoriteStatus(options.id)
   }
 })
+
+const checkFavoriteStatus = async (id) => {
+  try {
+    const res = await favoriteApi.check({ newsId: id })
+    if (res !== undefined) {
+      isFavorited.value = res
+    }
+  } catch (error) {
+    console.error('Check favorite status failed:', error)
+  }
+}
+
+const toggleFavorite = async () => {
+  try {
+    const res = await favoriteApi.toggle({ newsId: newsId.value })
+    if (res && res.favorited !== undefined) {
+      isFavorited.value = res.favorited
+      uni.showToast({ title: res.favorited ? '已收藏' : '已取消收藏', icon: 'success' })
+    }
+  } catch (error) {
+    console.error('Toggle favorite failed:', error)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
+}
+
+const toggleFontSize = () => {
+  fontSizeLevel.value = (fontSizeLevel.value + 1) % fontClasses.length
+  const sizes = ['标准', '大', '超大']
+  uni.showToast({ title: `字号：${sizes[fontSizeLevel.value]}`, icon: 'none' })
+}
+
+const toggleEyeProtection = () => {
+  isEyeProtection.value = !isEyeProtection.value
+  uni.showToast({ title: isEyeProtection.value ? '已开启护眼模式' : '已关闭护眼模式', icon: 'none' })
+}
+
+const handleShare = () => {
+  // #ifdef H5
+  uni.setClipboardData({
+    data: window.location.href,
+    success: () => {
+      uni.showToast({ title: '链接已复制', icon: 'success' })
+    }
+  })
+  // #endif
+  // #ifndef H5
+  uni.share({
+    provider: "weixin",
+    scene: "WXSceneSession",
+    type: 0,
+    href: "http://localhost:8080/#/pages/news/detail?id=" + newsId.value,
+    title: news.value.title,
+    summary: news.value.content.substring(0, 50),
+    imageUrl: news.value.coverUrl,
+    success: function (res) {
+        console.log("success:" + JSON.stringify(res));
+    },
+    fail: function (err) {
+        console.log("fail:" + JSON.stringify(err));
+    }
+  });
+  // #endif
+}
+
 
 const fetchNewsDetail = async (id) => {
   try {
@@ -95,9 +164,9 @@ const getFullImageUrl = (url) => {
 </script>
 
 <template>
-  <view class="news-detail-container bg-[#1a1811] font-display text-gray-200 min-h-screen">
+  <view :class="['news-detail-container font-display min-h-screen transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6] text-gray-800' : 'bg-[#1a1811] text-gray-200']">
     <!-- Header / Navigation -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5 h5-header-fix">
+    <header :class="['fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b h5-header-fix transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/80 border-black/5' : 'bg-[#1a1811]/80 border-white/5']">
       <view class="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
           <text class="material-icons">chevron_left</text>
@@ -106,7 +175,7 @@ const getFullImageUrl = (url) => {
           <view class="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
             <text class="text-white font-bold text-xs">P</text>
           </view>
-          <text class="font-bold text-white tracking-tight">PITCHPULSE</text>
+          <text :class="['font-bold tracking-tight transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">PITCHPULSE</text>
         </view>
         <view class="w-10"></view> <!-- Spacer for balance -->
       </view>
@@ -124,61 +193,68 @@ const getFullImageUrl = (url) => {
           <text class="text-xs font-semibold uppercase tracking-wider text-primary py-1 px-2 bg-primary/10 rounded">
             {{ getCategoryName(news.categoryId) }}
           </text>
-          <text class="text-xs text-gray-500 dark:text-gray-400">{{ formatTime(news.publishTime) }}</text>
+          <text :class="['text-xs transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-400']">{{ formatTime(news.publishTime) }}</text>
         </view>
-        <h1 class="text-3xl md:text-4xl font-bold leading-tight text-white mb-6">
+        <h1 :class="['text-3xl md:text-4xl font-bold leading-tight mb-6 transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">
           {{ news.title }}
         </h1>
-        <view class="flex items-center justify-between border-y border-white/5 py-4">
+        <view :class="['flex items-center justify-between border-y py-4 transition-colors', isEyeProtection ? 'border-black/5' : 'border-white/5']">
           <view class="flex items-center gap-3">
             <view class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
               <text class="material-icons text-primary text-sm">edit</text>
             </view>
             <view>
-              <text class="text-sm font-semibold text-white block">{{ news.author }}</text>
-              <text class="text-xs text-gray-500 block">{{ news.authorSub }}</text>
+              <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">{{ news.author }}</text>
+              <text :class="['text-xs block transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-500']">{{ news.authorSub }}</text>
             </view>
-          </view>
-          <view class="flex gap-4">
-            <text class="material-icons text-gray-400 text-xl cursor-pointer hover:text-white transition-colors">share</text>
-            <text class="material-icons text-gray-400 text-xl cursor-pointer hover:text-white transition-colors">bookmark_border</text>
           </view>
         </view>
       </view>
 
       <!-- Article Body -->
-      <article class="article-content prose prose-invert max-w-none text-gray-300">
+      <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-gray-300', fontClasses[fontSizeLevel]]">
         <rich-text :nodes="news.content"></rich-text>
       </article>
 
       <!-- End of Article Decorator -->
       <view class="mt-20 flex flex-col items-center">
-        <view class="w-12 h-px bg-white/20 mb-6"></view>
+        <view :class="['w-12 h-px mb-6 transition-colors', isEyeProtection ? 'bg-black/10' : 'bg-white/20']"></view>
         <view class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mb-2">
           <text class="text-primary font-bold text-sm tracking-tighter">PP</text>
         </view>
-        <text class="text-xs text-gray-600 tracking-widest uppercase">END OF ARTICLE</text>
+        <text :class="['text-xs tracking-widest uppercase transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-600']">END OF ARTICLE</text>
       </view>
     </main>
 
     <!-- Bottom Action Bar (Floating) -->
-    <view class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 bg-[#1a1811]/90 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl flex items-center justify-around px-6 z-50">
-      <view class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-primary transition-colors cursor-pointer">
-        <text class="material-icons text-xl">favorite_border</text>
-        <text class="text-[10px] font-medium">收藏</text>
+    <view :class="['fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 backdrop-blur-xl rounded-full border shadow-2xl flex items-center justify-around px-6 z-50 transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/90 border-black/10 shadow-gray-200/50' : 'bg-[#1a1811]/90 border-white/10']">
+      
+      <!-- Favorite -->
+      <view @click="toggleFavorite" class="flex flex-col items-center gap-0.5 transition-colors cursor-pointer" :class="isFavorited ? 'text-red-500' : (isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary')">
+        <text class="material-icons text-xl">{{ isFavorited ? 'favorite' : 'favorite_border' }}</text>
+        <text class="text-[10px] font-medium">{{ isFavorited ? '已收藏' : '收藏' }}</text>
       </view>
-      <view class="w-px h-6 bg-white/10"></view>
-      <view class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-primary transition-colors cursor-pointer">
+
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+
+      <!-- Font Size -->
+      <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary']">
         <text class="material-icons text-xl">text_fields</text>
         <text class="text-[10px] font-medium">字号</text>
       </view>
-      <view class="w-px h-6 bg-white/10"></view>
-      <view class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-primary transition-colors cursor-pointer">
-        <text class="material-icons text-xl">nightlight_round</text>
-        <text class="text-[10px] font-medium">护眼</text>
+
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+
+      <!-- Eye Protection -->
+      <view @click="toggleEyeProtection" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-primary' : 'text-gray-400 hover:text-primary']">
+        <text class="material-icons text-xl">{{ isEyeProtection ? 'brightness_7' : 'nightlight_round' }}</text>
+        <text class="text-[10px] font-medium">{{ isEyeProtection ? '日间' : '护眼' }}</text>
       </view>
-      <view class="w-px h-6 bg-white/10"></view>
-      <view class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-primary transition-colors cursor-pointer">
+
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+
+      <!-- Share -->
+      <view @click="handleShare" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary']">
         <text class="material-icons text-xl">share</text>
         <text class="text-[10px] font-medium">转发</text>
       </view>
