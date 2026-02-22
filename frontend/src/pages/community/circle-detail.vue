@@ -38,7 +38,9 @@
               @error="onImageError"
             ></image>
           </view>
-          <button class="join-btn">加入</button>
+          <button class="join-btn" :class="{ 'joined': isJoined }" @click="handleJoin">
+            {{ isJoined ? '已加入' : '加入' }}
+          </button>
         </view>
         
         <view class="info-content">
@@ -53,104 +55,152 @@
       </view>
 
       <!-- Tabs -->
-      <view class="tabs-container" :class="{ 'sticky-tabs': isSticky }">
-        <view class="tab-item" :class="{ active: currentTab === 0 }" @click="currentTab = 0">
+      <view class="tabs-container" :class="{ 'sticky-tabs': isSticky }" :style="{ top: (statusBarHeight + 60) + 'px' }">
+        <view class="tab-item" :class="{ active: currentTab === 0 }" @click="handleTabChange(0)">
           <text class="tab-text">讨论</text>
           <view class="tab-indicator" v-if="currentTab === 0"></view>
         </view>
-        <view class="tab-item" :class="{ active: currentTab === 1 }" @click="currentTab = 1">
+        <view class="tab-item" :class="{ active: currentTab === 1 }" @click="handleTabChange(1)">
           <text class="tab-text">赛程</text>
           <view class="tab-indicator" v-if="currentTab === 1"></view>
         </view>
-        <view class="tab-item" :class="{ active: currentTab === 2 }" @click="currentTab = 2">
+        <view class="tab-item" :class="{ active: currentTab === 2 }" @click="handleTabChange(2)">
           <text class="tab-text">球员</text>
           <view class="tab-indicator" v-if="currentTab === 2"></view>
-        </view>
-        <view class="tab-item" :class="{ active: currentTab === 3 }" @click="currentTab = 3">
-          <text class="tab-text">相册</text>
-          <view class="tab-indicator" v-if="currentTab === 3"></view>
         </view>
       </view>
 
       <!-- Content Area -->
       <view class="content-area">
         
-        <!-- AI Analysis Card -->
-        <view class="ai-card" v-if="currentTab === 0">
-          <view class="ai-header">
-            <view class="ai-badge">
-              <view class="ai-icon-bg">
-                <text class="material-icons ai-icon">smart_toy</text>
+        <!-- Tab 0: Posts -->
+        <view v-if="currentTab === 0">
+          <!-- AI Analysis Card -->
+          <view class="ai-card">
+            <view class="ai-header">
+              <view class="ai-badge">
+                <view class="ai-icon-bg">
+                  <text class="material-icons ai-icon">smart_toy</text>
+                </view>
+                <view class="ai-title-group">
+                  <text class="ai-name">PitchPulse AI</text>
+                  <view class="ai-tag">AI 分析</view>
+                </view>
               </view>
-              <view class="ai-title-group">
-                <text class="ai-name">PitchPulse AI</text>
-                <view class="ai-tag">AI 分析</view>
+              <text class="post-time">刚刚</text>
+            </view>
+            
+            <text class="post-title">【战术分析】欧冠四分之一决赛首回合展望</text>
+            <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
+            
+            <view class="ai-images-grid">
+              <image class="ai-img-half" src="/static/teams/man_city.jpg" mode="aspectFill"></image>
+              <image class="ai-img-half" src="/static/teams/real_madrid.jpg" mode="aspectFill"></image>
+            </view>
+            
+            <view class="post-footer">
+              <view class="interaction-item">
+                <text class="material-icons footer-icon">favorite</text>
+                <text>1.2k</text>
+              </view>
+              <view class="interaction-item">
+                <text class="material-icons footer-icon">chat_bubble</text>
+                <text>248</text>
+              </view>
+              <view class="interaction-item">
+                <text class="material-icons footer-icon">share</text>
+                <text>56</text>
               </view>
             </view>
-            <text class="post-time">刚刚</text>
           </view>
-          
-          <text class="post-title">【战术分析】欧冠四分之一决赛首回合展望</text>
-          <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
-          
-          <view class="ai-images-grid">
-            <image class="ai-img-half" src="/static/teams/man_city.jpg" mode="aspectFill"></image>
-            <image class="ai-img-half" src="/static/teams/real_madrid.jpg" mode="aspectFill"></image>
+
+          <!-- User Posts -->
+          <view class="post-card" v-for="(post, index) in posts" :key="post.id" @click="navigateToPost(post)">
+            <view class="post-header">
+              <view class="user-info">
+                <image class="user-avatar" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
+                <text class="user-name">{{ post.userName }}</text>
+              </view>
+              <text class="post-time">{{ post.time }}</text>
+            </view>
+            
+            <text class="post-content-text">{{ post.content }}</text>
+            
+            <image v-if="post.image" class="post-main-img" :src="post.image" mode="aspectFill"></image>
+            
+            <view class="post-footer">
+              <view class="interaction-item" @click.stop="handleLike(post)">
+                <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
+                  {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+                </text>
+                <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes }}</text>
+              </view>
+              <view class="interaction-item">
+                <text class="material-icons footer-icon">chat_bubble_outline</text>
+                <text>{{ post.comments }}</text>
+              </view>
+              <view class="interaction-item">
+                <text class="material-icons footer-icon">share</text>
+                <text>{{ post.shares }}</text>
+              </view>
+            </view>
           </view>
-          
-          <view class="post-footer">
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">favorite</text>
-              <text>1.2k</text>
+
+          <!-- Load More / No More -->
+          <view class="loading-status">
+            <text v-if="loading">加载中...</text>
+            <text v-else-if="noMore">没有更多了</text>
+          </view>
+        </view>
+
+        <!-- Tab 1: Schedule -->
+        <view v-if="currentTab === 1" class="schedule-list">
+          <view v-if="matches.length === 0" class="empty-state">
+            <text>暂无赛程信息</text>
+          </view>
+          <view class="match-card" v-for="match in matches" :key="match.id">
+            <view class="match-date" v-if="match.matchTime">
+              <text class="material-icons date-icon">event</text>
+              {{ formatMatchDate(match.matchTime) }}
             </view>
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">chat_bubble</text>
-              <text>248</text>
+            <view class="match-teams">
+              <view class="team-info home">
+                <text class="team-name">{{ match.homeTeam?.name || '主队' }}</text>
+                <image class="team-logo-sm" :src="match.homeTeam?.logoUrl || '/static/default-team.png'" mode="aspectFit"></image>
+              </view>
+              <view class="match-score">
+                <text class="score-text" v-if="match.status > 0">{{ match.homeScore }} - {{ match.awayScore }}</text>
+                <text class="vs-text" v-else>VS</text>
+              </view>
+              <view class="team-info away">
+                <image class="team-logo-sm" :src="match.awayTeam?.logoUrl || '/static/default-team.png'" mode="aspectFit"></image>
+                <text class="team-name">{{ match.awayTeam?.name || '客队' }}</text>
+              </view>
             </view>
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">share</text>
-              <text>56</text>
+            <view class="match-status">{{ match.status === 2 ? '已结束' : (match.status === 1 ? '进行中' : '未开始') }}</view>
+          </view>
+        </view>
+
+        <!-- Tab 2: Players -->
+        <view v-if="currentTab === 2" class="player-list">
+          <view v-if="players.length === 0" class="empty-state">
+            <text>暂无球员信息</text>
+          </view>
+          <view class="player-card" v-for="player in players" :key="player.id" @click="navigateToPlayer(player)">
+            <image class="player-avatar" :src="player.photoUrl || '/static/default-avatar.png'" mode="aspectFill"></image>
+            <view class="player-info">
+              <view class="player-name-row">
+                <text class="player-number">{{ player.number || player.jerseyNumber }}</text>
+                <text class="player-name">{{ player.displayName || player.name }}</text>
+                <view v-if="formatStatus(player.status)" :class="['status-badge', getStatusClass(player.status)]">
+                  {{ formatStatus(player.status) }}
+                </view>
+              </view>
+              <text class="player-position">{{ player.detailedPos || player.position }}</text>
             </view>
           </view>
         </view>
 
-        <!-- User Posts -->
-        <view class="post-card" v-for="(post, index) in posts" :key="post.id" @click="navigateToPost(post)">
-          <view class="post-header">
-            <view class="user-info">
-              <image class="user-avatar" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
-              <text class="user-name">{{ post.userName }}</text>
-            </view>
-            <text class="post-time">{{ post.time }}</text>
-          </view>
-          
-          <text class="post-content-text">{{ post.content }}</text>
-          
-          <image v-if="post.image" class="post-main-img" :src="post.image" mode="aspectFill"></image>
-          
-          <view class="post-footer">
-            <view class="interaction-item" @click.stop="handleLike(post)">
-              <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
-                {{ post.isLiked ? 'favorite' : 'favorite_border' }}
-              </text>
-              <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes }}</text>
-            </view>
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">chat_bubble_outline</text>
-              <text>{{ post.comments }}</text>
-            </view>
-            <view class="interaction-item">
-              <text class="material-icons footer-icon">share</text>
-              <text>{{ post.shares }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- Load More / No More -->
-        <view class="loading-status">
-          <text v-if="loading">加载中...</text>
-          <text v-else-if="noMore">没有更多了</text>
-        </view>
       </view>
     </scroll-view>
 
@@ -164,7 +214,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { communityApi, fileApi, postApi } from '@/api/index';
+import { communityApi, fileApi, postApi, matchApi, playerApi } from '@/api/index';
 
 const circleId = ref(null);
 const circleName = ref('');
@@ -174,12 +224,99 @@ const circleDesc = ref('');
 const heroImage = ref('');
 const currentTab = ref(0);
 const posts = ref([]);
+const matches = ref([]);
+const players = ref([]);
+const matchesLoaded = ref(false);
+const playersLoaded = ref(false);
 const loading = ref(false);
 const noMore = ref(false);
 const page = ref(1);
 const statusBarHeight = ref(20);
 const scrollTop = ref(0);
 const isSticky = ref(false);
+const isJoined = ref(false);
+
+const loadMatches = async () => {
+  if (matchesLoaded.value || !circleId.value) return;
+  try {
+    const res = await matchApi.getByTeam(circleId.value);
+    matches.value = res;
+    matchesLoaded.value = true;
+  } catch (e) {
+    console.error('Load matches failed:', e);
+  }
+};
+
+const loadPlayers = async () => {
+  if (playersLoaded.value || !circleId.value) return;
+  try {
+    const res = await playerApi.listByTeamSportApi(circleId.value);
+    if (res && res.response) {
+      players.value = res.response.map(item => ({
+        id: item.player.id,
+        name: item.player.name, // Short name
+        displayName: item.player.shortName || item.player.name,
+        position: item.statistics?.[0]?.games?.position || '未知',
+        detailedPos: item.statistics?.[0]?.games?.position || '未知',
+        photoUrl: `https://images.fotmob.com/image_resources/playerimages/${item.player.id}.png`,
+        jerseyNumber: item.player.jerseyNumber || item.statistics?.[0]?.games?.number || '-',
+        status: 'active' // Default status
+      }));
+    }
+    playersLoaded.value = true;
+  } catch (e) {
+    console.error('Load players failed:', e);
+  }
+};
+
+const navigateToPlayer = (player) => {
+  uni.navigateTo({
+    url: `/pages/player-detail/player-detail?id=${player.id}`
+  });
+};
+
+const handleTabChange = (index) => {
+    currentTab.value = index;
+    if (index === 1) {
+        loadMatches();
+    } else if (index === 2) {
+        loadPlayers();
+    }
+}
+
+const loadMore = () => {
+    if (currentTab.value === 0) {
+        loadPosts();
+    }
+}
+
+const checkJoinStatus = async () => {
+  if (!circleId.value) return;
+  try {
+    const res = await communityApi.checkJoinStatus(circleId.value);
+    isJoined.value = res;
+  } catch (e) {
+    console.error('Check join status failed:', e);
+  }
+};
+
+const handleJoin = async () => {
+  if (!circleId.value) return;
+  try {
+    if (isJoined.value) {
+      await communityApi.leaveCircle(circleId.value);
+      uni.showToast({ title: '已退出圈子', icon: 'none' });
+      isJoined.value = false;
+    } else {
+      await communityApi.joinCircle(circleId.value);
+      uni.showToast({ title: '加入成功', icon: 'success' });
+      isJoined.value = true;
+    }
+  } catch (e) {
+    console.error('Toggle join failed:', e);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
 
 const teamData = {
     '利物浦': {
@@ -239,6 +376,7 @@ const teamData = {
 onLoad((options) => {
   if (options.id) {
     circleId.value = options.id;
+    checkJoinStatus();
   }
   if (options.name) {
     circleName.value = decodeURIComponent(options.name);
@@ -416,6 +554,46 @@ const handlePostClick = () => {
   });
 };
 
+const formatStatus = (status) => {
+  if (!status || status === 'active') return '';
+  const map = {
+    'injured': '伤缺',
+    'suspended': '停赛',
+    'loan': '租借',
+    'doubtful': '存疑'
+  };
+  return map[status.toLowerCase()] || status;
+};
+
+const getStatusClass = (status) => {
+    if (!status) return '';
+    return `status-${status.toLowerCase()}`;
+}
+
+const formatMatchDate = (timeStr) => {
+  if (!timeStr) return '';
+  try {
+    // Handle iOS date parsing
+    let safeTimeStr = timeStr;
+    if (typeof timeStr === 'string' && timeStr.includes('-') && !timeStr.includes('T')) {
+      safeTimeStr = timeStr.replace(/-/g, '/');
+    }
+    
+    const date = new Date(safeTimeStr);
+    if (isNaN(date.getTime())) return timeStr;
+    
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const weekDay = weekDays[date.getDay()];
+    return `${month}月${day}日 ${hour}:${minute} ${weekDay}`;
+  } catch (e) {
+    return timeStr;
+  }
+};
+
 const isNavigating = ref(false);
 
 const navigateToPost = (post) => {
@@ -435,9 +613,7 @@ const navigateToPost = (post) => {
   });
 };
 
-const loadMore = () => {
-  loadPosts();
-};
+
 </script>
 
 <style>
@@ -606,7 +782,14 @@ const loadMore = () => {
   margin-right: 0;
 }
 
-        .join-btn:active {
+.join-btn.joined {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.join-btn:active {
           transform: scale(0.95);
         }
 
@@ -658,8 +841,8 @@ const loadMore = () => {
   backdrop-filter: blur(12px);
   padding: 0 16px;
   position: sticky;
-  top: 0; /* sticky top-[64px] equivalent */
-  z-index: 40;
+  /* top: 0; handled by inline style */
+  z-index: 90;
 }
 
 .tab-item {
@@ -880,5 +1063,180 @@ const loadMore = () => {
   color: #666;
   padding: 20px;
   font-size: 12px;
+}
+/* Match Card */
+.match-card {
+  background-color: #1c1a11;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #2d2a1d;
+}
+
+.match-date {
+  font-size: 13px;
+  color: #f2b90d;
+  margin-bottom: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  background-color: rgba(242, 185, 13, 0.1);
+  padding: 4px 12px;
+  border-radius: 100px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.date-icon {
+  font-size: 14px;
+  margin-right: 4px;
+  color: #f2b90d;
+}
+
+.match-teams {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%;
+}
+
+.team-logo-sm {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.team-name {
+  font-size: 14px;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.match-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+}
+
+.score-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.vs-text {
+  font-size: 20px;
+  font-weight: bold;
+  color: #6b7280;
+}
+
+.match-status {
+  text-align: center;
+  font-size: 12px;
+  color: #f2b90d;
+  background-color: rgba(242, 185, 13, 0.1);
+  padding: 4px 12px;
+  border-radius: 100px;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+/* Player Card */
+.player-list, .schedule-list {
+    padding-bottom: 20px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  background-color: #1c1a11;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #2d2a1d;
+}
+
+.player-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 12px;
+  background-color: #2d2a1d;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.player-number {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f2b90d;
+  margin-right: 8px;
+  font-family: 'DIN Alternate', sans-serif;
+}
+
+.player-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.status-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  color: #fff;
+  background-color: #999;
+}
+
+.status-injured {
+  background-color: #ff4d4f;
+}
+
+.status-suspended {
+  background-color: #faad14;
+}
+
+.status-doubtful {
+  background-color: #faad14;
+}
+
+.status-loan {
+  background-color: #1890ff;
+}
+
+.player-position {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.empty-state {
+  padding: 40px 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
 }
 </style>

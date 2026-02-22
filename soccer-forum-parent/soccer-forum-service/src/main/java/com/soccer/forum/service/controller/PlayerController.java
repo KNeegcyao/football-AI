@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.service.service.PlayerService;
+import com.soccer.forum.service.service.PlayerSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,9 +31,96 @@ public class PlayerController {
     private static final Logger log = LoggerFactory.getLogger(PlayerController.class);
 
     private final PlayerService playerService;
+    private final PlayerSyncService playerSyncService;
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, PlayerSyncService playerSyncService) {
         this.playerService = playerService;
+        this.playerSyncService = playerSyncService;
+    }
+
+    /**
+     * 同步球队球员数据接口
+     */
+    @Operation(summary = "同步所有豪门球队 (Football-Data.org)", description = "从 Football-Data.org 同步 15 支豪门球队的数据")
+    @PostMapping("/sync/football-data")
+    public R<String> syncAllFootballDataTeams() {
+        log.info("收到 Football-Data.org 全量同步请求");
+        try {
+            String result = playerSyncService.syncAllTeamsFromFootballData();
+            return R.ok(result);
+        } catch (Exception e) {
+            log.error("同步请求处理失败", e);
+            return R.fail("同步失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 同步联赛射手榜数据
+     */
+    @Operation(summary = "同步联赛射手榜", description = "从 Football-Data.org 同步主要联赛的射手榜数据")
+    @PostMapping("/sync-scorers")
+    public R<String> syncLeagueScorers() {
+        log.info("收到射手榜同步请求");
+        String result = playerSyncService.syncLeagueScorers();
+        return R.ok(result);
+    }
+
+    /**
+     * 同步球队球员数据接口
+     */
+    @Operation(summary = "同步球队球员", description = "从第三方API同步球队的球员数据")
+    @PostMapping("/sync/{teamId}")
+    public R<String> syncTeamPlayers(@Parameter(description = "本地球队ID") @PathVariable Long teamId,
+                                   @Parameter(description = "API球队ID") @RequestParam Integer apiTeamId,
+                                   @Parameter(description = "赛季年份") @RequestParam(defaultValue = "2025") Integer season) {
+        log.info("收到同步球队球员请求: teamId={}, apiTeamId={}, season={}", teamId, apiTeamId, season);
+        String result = playerSyncService.syncTeamPlayers(teamId, apiTeamId, season);
+        return R.ok(result);
+    }
+
+    /**
+     * 测试 SportAPI 接口 (获取原始JSON)
+     */
+    @Operation(summary = "测试 SportAPI (JSON)", description = "获取 SportAPI 的原始球员数据")
+    @GetMapping("/sync-sportapi/{playerId}")
+    public R<com.fasterxml.jackson.databind.JsonNode> testSportApi(@Parameter(description = "API球员ID") @PathVariable Integer playerId) {
+        log.info("收到 SportAPI 测试请求: playerId={}", playerId);
+        return R.ok(playerSyncService.getPlayerFromSportApi(playerId));
+    }
+
+    /**
+     * 执行 SportAPI 球员同步
+     */
+    @Operation(summary = "同步 SportAPI 球员", description = "从 SportAPI 同步单个球员数据到数据库")
+    @PostMapping("/sync-sportapi/{playerId}")
+    public R<String> syncSportApiPlayer(@Parameter(description = "API球员ID") @PathVariable Integer playerId) {
+        log.info("收到 SportAPI 同步请求: playerId={}", playerId);
+        return R.ok(playerSyncService.syncPlayerFromSportApi(playerId));
+    }
+
+    /**
+     * 获取 SportAPI 球队球员列表 (实时)
+     */
+    @Operation(summary = "获取 SportAPI 球队球员", description = "从 SportAPI 获取指定球队的球员列表")
+    @GetMapping("/team/{teamId}/sportapi")
+    public R<com.fasterxml.jackson.databind.JsonNode> getTeamPlayersFromSportApi(@Parameter(description = "本地球队ID") @PathVariable Long teamId) {
+        log.info("收到 SportAPI 球队球员请求: teamId={}", teamId);
+        return R.ok(playerSyncService.getTeamPlayersFromSportApi(teamId));
+    }
+
+    /**
+     * 获取 SportAPI 球员详情 (实时)
+     */
+    @Operation(summary = "获取 SportAPI 球员详情", description = "从 SportAPI 获取指定球员的详细信息")
+    @GetMapping("/sportapi/{id}")
+    public R<com.fasterxml.jackson.databind.JsonNode> getSportApiPlayerDetail(@Parameter(description = "SportAPI球员ID") @PathVariable Long id) {
+        log.info("收到 SportAPI 球员详情请求: id={}", id);
+        // 优先从本地查询
+        com.fasterxml.jackson.databind.JsonNode localData = playerSyncService.getPlayerDetailJson(id);
+        if (localData != null) {
+            return R.ok(localData);
+        }
+        return R.ok(playerSyncService.getPlayerFromSportApi(id.intValue()));
     }
 
     /**

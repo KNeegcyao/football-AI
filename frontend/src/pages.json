@@ -123,6 +123,13 @@
         "navigationBarTitleText": "注册",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/player-detail/player-detail",
+      "style": {
+        "navigationBarTitleText": "球员详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

@@ -67,7 +67,22 @@ export const communityApi = {
   /**
    * 获取话题帖子列表
    */
-  getTopicPosts: (title, params) => request.get('/api/community/topics/posts', { title, ...params })
+  getTopicPosts: (title, params) => request.get('/api/community/topics/posts', { title, ...params }),
+
+  /**
+   * 加入圈子
+   */
+  joinCircle: (id) => request.post(`/api/teams/${id}/follow`),
+
+  /**
+   * 退出圈子
+   */
+  leaveCircle: (id) => request.post(`/api/teams/${id}/unfollow`),
+
+  /**
+   * 检查圈子加入状态
+   */
+  checkJoinStatus: (id) => request.get(`/api/teams/${id}/isFollowing`)
 }
 
 /**
@@ -161,7 +176,44 @@ export const matchApi = {
   /**
    * 分页获取赛事列表
    */
-  getList: (params) => request.get('/api/matches/list', params)
+  getList: (params) => request.get('/api/matches/list', params),
+
+  /**
+   * 获取指定球队的赛事
+   */
+  getByTeam: (teamId) => request.get(`/api/matches/team/${teamId}`)
+}
+
+/**
+ * 球员相关接口
+ */
+export const playerApi = {
+  /**
+   * 获取指定球队的球员列表
+   */
+  listByTeam: (teamId) => request.get(`/api/players/team/${teamId}`),
+
+  /**
+   * 获取指定球队的球员列表 (SportAPI)
+   */
+  listByTeamSportApi: (teamId) => request.get(`/api/players/team/${teamId}/sportapi`),
+
+  /**
+   * 获取球员详情 (SportAPI)
+   */
+  getSportApiDetail: (id) => request.get(`/api/players/sportapi/${id}`),
+
+  create: (data) => request.post('/api/players', data),
+
+  /**
+   * 分页获取球员列表
+   */
+  getList: (params) => request.get('/api/players/list', params),
+
+  /**
+   * 获取球员详情
+   */
+  getDetail: (id) => request.get(`/api/players/${id}`)
 }
 
 /**
@@ -256,3 +308,4 @@ export const notificationApi = {
    */
   readAll: () => request.put('/api/notifications/read-all')
 }
+

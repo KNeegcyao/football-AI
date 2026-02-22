@@ -19,16 +19,41 @@ public class Player {
     @Schema(description = "球员ID")
     private Long id;
 
-    @Schema(description = "姓名")
+    @Schema(description = "第三方API的唯一ID")
+    private Integer apiId;
+
+    @Schema(description = "数据来源标识")
+    private String sourceFrom;
+
+    @Schema(description = "英文原名")
     private String name;
+
+    @Schema(description = "中文显示名称")
+    private String displayName;
+
+    @Schema(description = "名字")
+    private String firstname;
+
+    @Schema(description = "姓氏")
+    private String lastname;
+
+    @Schema(description = "URL别名")
+    private String slug;
+
     @Schema(description = "照片URL")
     private String photoUrl;
     @Schema(description = "出生日期")
     private LocalDate birthDate;
+    @Schema(description = "出生地")
+    private String birthPlace;
     @Schema(description = "国籍")
     private String nationality;
     @Schema(description = "场上位置")
     private String position;
+
+    @Schema(description = "详细位置")
+    private String detailedPos;
+
     @Schema(description = "身高 (cm)")
     private Integer height;
     @Schema(description = "体重 (kg)")
@@ -41,6 +66,10 @@ public class Player {
     private Integer jerseyNumber;
     @Schema(description = "市场价值")
     private BigDecimal marketValue;
+
+    @Schema(description = "状态 (active, injured, suspended)")
+    private String status;
+
     @Schema(description = "合同到期日")
     private LocalDate contractUntil;
     @Schema(description = "出场次数")
@@ -53,6 +82,9 @@ public class Player {
     private Integer yellowCards;
     @Schema(description = "红牌数")
     private Integer redCards;
+
+    @Schema(description = "赛季平均评分")
+    private BigDecimal rating;
 
     @TableField(typeHandler = JacksonTypeHandler.class)
     @Schema(description = "职业生涯历史 (JSON)")
@@ -69,21 +101,52 @@ public class Player {
     @Schema(description = "球员ID")
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    @Schema(description = "姓名")
+    
+    @Schema(description = "第三方API的唯一ID")
+    public Integer getApiId() { return apiId; }
+    public void setApiId(Integer apiId) { this.apiId = apiId; }
+
+    @Schema(description = "数据来源标识")
+    public String getSourceFrom() { return sourceFrom; }
+    public void setSourceFrom(String sourceFrom) { this.sourceFrom = sourceFrom; }
+
+    @Schema(description = "英文原名")
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    @Schema(description = "中文显示名称")
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getFirstname() { return firstname; }
+    public void setFirstname(String firstname) { this.firstname = firstname; }
+
+    public String getLastname() { return lastname; }
+    public void setLastname(String lastname) { this.lastname = lastname; }
+
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
+
     @Schema(description = "照片URL")
     public String getPhotoUrl() { return photoUrl; }
     public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     @Schema(description = "出生日期")
     public LocalDate getBirthDate() { return birthDate; }
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+    @Schema(description = "出生地")
+    public String getBirthPlace() { return birthPlace; }
+    public void setBirthPlace(String birthPlace) { this.birthPlace = birthPlace; }
     @Schema(description = "国籍")
     public String getNationality() { return nationality; }
     public void setNationality(String nationality) { this.nationality = nationality; }
     @Schema(description = "场上位置")
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
+
+    @Schema(description = "详细位置")
+    public String getDetailedPos() { return detailedPos; }
+    public void setDetailedPos(String detailedPos) { this.detailedPos = detailedPos; }
+
     @Schema(description = "身高 (cm)")
     public Integer getHeight() { return height; }
     public void setHeight(Integer height) { this.height = height; }
@@ -102,6 +165,11 @@ public class Player {
     @Schema(description = "市场价值")
     public BigDecimal getMarketValue() { return marketValue; }
     public void setMarketValue(BigDecimal marketValue) { this.marketValue = marketValue; }
+
+    @Schema(description = "状态 (active, injured, suspended)")
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     @Schema(description = "合同到期日")
     public LocalDate getContractUntil() { return contractUntil; }
     public void setContractUntil(LocalDate contractUntil) { this.contractUntil = contractUntil; }
@@ -120,6 +188,11 @@ public class Player {
     @Schema(description = "红牌数")
     public Integer getRedCards() { return redCards; }
     public void setRedCards(Integer redCards) { this.redCards = redCards; }
+
+    @Schema(description = "赛季平均评分")
+    public BigDecimal getRating() { return rating; }
+    public void setRating(BigDecimal rating) { this.rating = rating; }
+
     @Schema(description = "职业生涯历史 (JSON)")
     public Map<String, Object> getCareerHistory() { return careerHistory; }
     public void setCareerHistory(Map<String, Object> careerHistory) { this.careerHistory = careerHistory; }

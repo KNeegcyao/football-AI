@@ -56,6 +56,23 @@ public class DatabaseMigrationConfig implements CommandLineRunner {
                 log.info("Successfully added uk_news_user constraint.");
             }
             
+            // Check if team_follows table exists
+            String checkTableSql = "SELECT count(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'team_follows'";
+            Integer tableCount = jdbcTemplate.queryForObject(checkTableSql, Integer.class);
+            
+            if (tableCount != null && tableCount == 0) {
+                log.info("Creating team_follows table...");
+                String createTableSql = "CREATE TABLE team_follows (" +
+                        "id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID', " +
+                        "user_id BIGINT NOT NULL COMMENT '用户ID', " +
+                        "team_id BIGINT NOT NULL COMMENT '球队ID', " +
+                        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', " +
+                        "UNIQUE KEY uk_user_team (user_id, team_id) " +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户关注球队表'";
+                jdbcTemplate.execute(createTableSql);
+                log.info("Successfully created team_follows table.");
+            }
+            
         } catch (Exception e) {
             log.error("Database migration failed: {}", e.getMessage());
         }

@@ -17,6 +17,10 @@ public class Team {
 
     @Schema(description = "名称")
     private String name;
+
+    @Schema(description = "SportAPI 球队ID")
+    private Long apiId;
+
     @Schema(description = "Logo URL")
     private String logoUrl;
     @Schema(description = "成立年份")
@@ -67,6 +71,8 @@ public class Team {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getApiId() { return apiId; }
+    public void setApiId(Long apiId) { this.apiId = apiId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getLogoUrl() { return logoUrl; }

@@ -73,6 +73,17 @@ public class MatchController {
     }
 
     /**
+     * 查询球队赛事列表接口
+     */
+    @Operation(summary = "查询球队赛事", description = "获取指定球队的所有比赛列表")
+    @GetMapping("/team/{teamId}")
+    public R<List<MatchVO>> listByTeam(@Parameter(description = "球队ID") @PathVariable Long teamId) {
+        log.info("收到查询球队赛事请求: teamId={}", teamId);
+        List<MatchVO> matches = matchService.getMatchesByTeam(teamId);
+        return R.ok(matches);
+    }
+
+    /**
      * 分页查询赛事列表接口
      */
     @Operation(summary = "查询赛事列表", description = "分页获取赛事日程，支持按状态筛选")

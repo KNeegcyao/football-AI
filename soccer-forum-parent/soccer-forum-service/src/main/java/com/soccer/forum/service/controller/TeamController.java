@@ -3,12 +3,15 @@ package com.soccer.forum.service.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.domain.entity.Team;
+import com.soccer.forum.service.security.model.LoginUser;
+import com.soccer.forum.service.service.TeamFollowService;
 import com.soccer.forum.service.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,9 +31,49 @@ public class TeamController {
     private static final Logger log = LoggerFactory.getLogger(TeamController.class);
 
     private final TeamService teamService;
+    private final TeamFollowService teamFollowService;
 
-    public TeamController(TeamService teamService) {
+    public TeamController(TeamService teamService, TeamFollowService teamFollowService) {
         this.teamService = teamService;
+        this.teamFollowService = teamFollowService;
+    }
+
+    /**
+     * 关注球队
+     */
+    @Operation(summary = "关注球队", description = "关注指定球队")
+    @PostMapping("/{id}/follow")
+    public R<Void> follow(@Parameter(description = "球队ID") @PathVariable Long id,
+                         @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        log.info("用户 {} 关注球队 {}", loginUser.getUser().getId(), id);
+        teamFollowService.follow(loginUser.getUser().getId(), id);
+        return R.ok(null, "关注成功");
+    }
+
+    /**
+     * 取消关注球队
+     */
+    @Operation(summary = "取消关注球队", description = "取消关注指定球队")
+    @PostMapping("/{id}/unfollow")
+    public R<Void> unfollow(@Parameter(description = "球队ID") @PathVariable Long id,
+                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        log.info("用户 {} 取消关注球队 {}", loginUser.getUser().getId(), id);
+        teamFollowService.unfollow(loginUser.getUser().getId(), id);
+        return R.ok(null, "取消关注成功");
+    }
+
+    /**
+     * 检查是否关注
+     */
+    @Operation(summary = "检查是否关注", description = "检查当前用户是否关注了指定球队")
+    @GetMapping("/{id}/isFollowing")
+    public R<Boolean> isFollowing(@Parameter(description = "球队ID") @PathVariable Long id,
+                                 @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        if (loginUser == null) {
+            return R.ok(false);
+        }
+        boolean isFollowing = teamFollowService.isFollowing(loginUser.getUser().getId(), id);
+        return R.ok(isFollowing);
     }
 
     /**

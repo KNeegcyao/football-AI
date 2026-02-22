@@ -150,6 +150,28 @@ public class MatchServiceImpl implements MatchService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 根据球队ID查询赛事
+     *
+     * @param teamId 球队ID
+     * @return 球队赛事列表
+     */
+    @Override
+    public List<MatchVO> getMatchesByTeam(Long teamId) {
+        log.debug("查询球队赛事: teamId={}", teamId);
+        LambdaQueryWrapper<Match> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Match::getHomeTeamId, teamId)
+                    .or()
+                    .eq(Match::getAwayTeamId, teamId)
+                    .orderByAsc(Match::getMatchTime);
+        
+        List<Match> matches = matchMapper.selectList(queryWrapper);
+        
+        return matches.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+    }
+
     private MatchVO convertToVO(Match match) {
         MatchVO vo = new MatchVO();
         BeanUtils.copyProperties(match, vo);

@@ -54,6 +54,14 @@ public interface MatchService {
     List<MatchVO> getMatchesByDate(LocalDate date);
 
     /**
+     * 根据球队ID查询赛事
+     *
+     * @param teamId 球队ID
+     * @return 球队赛事列表
+     */
+    List<MatchVO> getMatchesByTeam(Long teamId);
+
+    /**
      * 更新赛事信息
      *
      * @param id 赛事 ID
