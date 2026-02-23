@@ -302,6 +302,10 @@ const formatTime = (timeStr) => {
 
 const getFullImageUrl = (url) => {
   if (!url) return ''
+  // Handle frontend static assets (except team logos which are on backend)
+  if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) {
+      return url
+  }
   if (url.startsWith('http')) return url
   return `http://localhost:8080${url}`
 }

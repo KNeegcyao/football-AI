@@ -19,6 +19,7 @@ import com.soccer.forum.service.mapper.UserMapper;
 import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.service.LikeService;
 import com.soccer.forum.service.service.PostService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  */
 @Service
-public class PostServiceImpl implements PostService {
+public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
     private static final Logger log = LoggerFactory.getLogger(PostServiceImpl.class);
 
@@ -218,7 +219,22 @@ public class PostServiceImpl implements PostService {
         }
         
         if (StringUtils.hasText(req.getKeyword())) {
-            wrapper.like(Post::getTitle, req.getKeyword());
+            String keyword = req.getKeyword();
+            List<Long> matchedUserIds = userMapper.selectList(new LambdaQueryWrapper<User>()
+                    .like(User::getNickname, keyword))
+                    .stream()
+                    .map(User::getId)
+                    .collect(Collectors.toList());
+
+            wrapper.and(w -> {
+                w.like(Post::getTitle, keyword)
+                 .or()
+                 .like(Post::getContent, keyword);
+                
+                if (!matchedUserIds.isEmpty()) {
+                    w.or().in(Post::getUserId, matchedUserIds);
+                }
+            });
         }
         
         wrapper.orderByDesc(Post::getCreatedAt);

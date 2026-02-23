@@ -57,7 +57,7 @@
             <view class="teams-score">
               <view class="team">
                 <view class="team-logo">
-                  <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
+                  <image :src="fileApi.getFileUrl(match.homeTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
                 </view>
                 <text class="team-name">{{ match.homeTeam?.name }}</text>
               </view>
@@ -68,9 +68,9 @@
                 </view>
               </view>
               <view class="team">
-                <view class="team-logo">
-                  <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
-                </view>
+                <view class="mini-logo">
+                <image :src="fileApi.getFileUrl(match.awayTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
+              </view>
                 <text class="team-name">{{ match.awayTeam?.name }}</text>
               </view>
             </view>
@@ -109,7 +109,7 @@
             <text class="vs-text">VS</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
+                <image :src="fileApi.getFileUrl(match.awayTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
               <text class="mini-name">{{ match.awayTeam?.name }}</text>
             </view>
@@ -140,7 +140,7 @@
             <text class="vs-dash">-</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
+                <image :src="fileApi.getFileUrl(match.awayTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
               <view class="team-info reverse">
                 <text class="mini-name">{{ match.awayTeam?.name }}</text>
@@ -324,8 +324,8 @@ const getFullImageUrl = (url) => {
       url.includes('wikimedia.org')) {
     return url
   }
-  // 本地静态资源
-  if (url.startsWith('/static/')) return url
+  // 本地静态资源 (排除球队logo)
+  if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) return url
   // 后端资源
   return 'http://localhost:8080' + url
 }

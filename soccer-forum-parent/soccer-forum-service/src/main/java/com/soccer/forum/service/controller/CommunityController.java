@@ -11,12 +11,15 @@ import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
+import com.soccer.forum.domain.entity.User;
+import com.soccer.forum.service.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,14 +38,19 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/community")
 public class CommunityController {
 
+    @Value("${file.access-path:http://localhost:8080/uploads/}")
+    private String accessPath;
+
     private final TeamService teamService;
     private final TopicService topicService;
     private final PostService postService;
+    private final UserService userService;
 
-    public CommunityController(TeamService teamService, TopicService topicService, PostService postService) {
+    public CommunityController(TeamService teamService, TopicService topicService, PostService postService, UserService userService) {
         this.teamService = teamService;
         this.topicService = topicService;
         this.postService = postService;
+        this.userService = userService;
     }
 
     /**
@@ -190,12 +198,6 @@ public class CommunityController {
         );
         
         List<Map<String, Object>> result = new ArrayList<>();
-        // 默认头像列表
-        List<String> defaultAvatars = List.of(
-            "/static/soccer-logo.png",
-            "/static/default-team.png",
-            "/static/teams/generic_stadium.jpg"
-        );
 
         for (int i = 0; i < hotTopics.size(); i++) {
             Topic topic = hotTopics.get(i);
@@ -212,16 +214,56 @@ public class CommunityController {
             }
             map.put("stats", stats);
             
-            // 模拟不同的展示样式
-            if (i % 2 == 0) {
+            // 获取真实头像数据
+            List<String> realAvatars = new ArrayList<>();
+            List<Post> recentPosts = postService.list(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Post>()
+                    .eq(Post::getTopicId, topic.getId())
+                    .orderByDesc(Post::getCreatedAt)
+                    .last("LIMIT 10")
+            );
+            
+            if (!recentPosts.isEmpty()) {
+                List<Long> userIds = recentPosts.stream()
+                    .map(Post::getUserId)
+                    .distinct()
+                    .limit(5)
+                    .collect(Collectors.toList());
+                
+                if (!userIds.isEmpty()) {
+                    List<User> users = userService.listByIds(userIds);
+                    Map<Long, String> avatarMap = users.stream()
+                        .collect(Collectors.toMap(User::getId, u -> {
+                            String av = u.getAvatar();
+                            if (av != null && !av.isEmpty()) {
+                                if (av.startsWith("http://localhost:8080/")) {
+                                    return av.replace("http://localhost:8080", "");
+                                }
+                                if (av.startsWith("http")) return av;
+                                return "/uploads/" + av;
+                            }
+                            return "/static/default-team.png";
+                        }, (k1, k2) -> k1));
+                        
+                    for (Long uid : userIds) {
+                        if (avatarMap.containsKey(uid)) {
+                            realAvatars.add(avatarMap.get(uid));
+                        }
+                    }
+                }
+            }
+
+            if (!realAvatars.isEmpty()) {
                 map.put("action", "加入");
-                map.put("avatars", defaultAvatars);
-                map.put("extraCount", 50 + (topic.getViewCount() % 100));
+                map.put("avatars", realAvatars);
+                long extra = Math.max(0, topic.getPostCount() - realAvatars.size());
+                map.put("extraCount", extra > 0 ? extra : null);
             } else {
                 map.put("action", "探索");
                 map.put("tags", List.of("热门"));
                 map.put("time", "刚刚活跃");
             }
+            
             result.add(map);
         }
         

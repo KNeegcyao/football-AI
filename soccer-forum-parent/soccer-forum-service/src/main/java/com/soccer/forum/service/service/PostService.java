@@ -7,6 +7,8 @@ import com.soccer.forum.service.model.dto.PostPageReq;
 
 import com.soccer.forum.service.model.dto.PostDetailResp;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+
 /**
  * 帖子服务接口
  * <p>
@@ -16,7 +18,7 @@ import com.soccer.forum.service.model.dto.PostDetailResp;
  * @author Soccer Forum Dev Team
  * @version 1.0
  */
-public interface PostService {
+public interface PostService extends IService<Post> {
 
     /**
      * 创建帖子

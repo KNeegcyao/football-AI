@@ -41,6 +41,13 @@
       }
     },
     {
+      "path": "pages/community/circle-search",
+      "style": {
+        "navigationBarTitleText": "搜索帖子",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/community/topic-detail",
       "style": {
         "navigationBarTitleText": "话题详情",

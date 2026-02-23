@@ -4,6 +4,7 @@
  */
 
 const BASE_URL = 'http://localhost:8080' // 后端服务地址
+export { BASE_URL }
 
 const request = (options = {}) => {
   // 补全 URL

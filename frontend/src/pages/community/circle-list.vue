@@ -12,7 +12,7 @@
     <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
       <view class="circle-list">
         <view class="circle-item" v-for="(circle, index) in circles" :key="index" @click="navigateToCircle(circle)">
-          <image class="circle-avatar" :src="circle.image" mode="aspectFill"></image>
+          <image class="circle-avatar" :src="fileApi.getFileUrl(circle.image)" mode="aspectFill"></image>
           <view class="circle-info">
             <text class="circle-name">{{ circle.name }}</text>
             <text class="circle-members">{{ circle.members }} 成员</text>
@@ -34,6 +34,7 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import request from '@/utils/request';
+import { fileApi } from '@/api/index';
 
 const circles = ref([]);
 const page = ref(1);

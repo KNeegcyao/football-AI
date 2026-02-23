@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import request, { BASE_URL } from '@/utils/request'
 
 /**
  * 认证相关接口
@@ -251,7 +251,7 @@ export const fileApi = {
   getFileUrl: (url) => {
     if (!url) return ''
     if (url.startsWith('http')) return url
-    return 'http://localhost:8080' + (url.startsWith('/') ? url : '/' + url)
+    return BASE_URL + (url.startsWith('/') ? url : '/' + url)
   }
 }
 

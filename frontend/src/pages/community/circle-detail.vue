@@ -11,12 +11,10 @@
         <text class="nav-title" :style="{ opacity: scrollTop > 100 ? 1 : 0 }">{{ circleName }}圈</text>
       </view>
       <view class="nav-right">
-        <view class="nav-btn-glass">
+        <view class="nav-btn-glass" @click="navigateToSearch">
           <text class="material-icons nav-icon">search</text>
         </view>
-        <view class="nav-btn-glass">
-          <text class="material-icons nav-icon">more_horiz</text>
-        </view>
+
       </view>
     </view>
 
@@ -117,16 +115,60 @@
           <!-- User Posts -->
           <view class="post-card" v-for="(post, index) in posts" :key="post.id" @click="navigateToPost(post)">
             <view class="post-header">
-              <view class="user-info">
-                <image class="user-avatar" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
-                <text class="user-name">{{ post.userName }}</text>
+              <view class="user-info-rich">
+                <view class="avatar-container">
+                  <image class="user-avatar-rich" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
+                  <view class="verified-badge">
+                    <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
+                  </view>
+                </view>
+                <view class="author-details">
+                  <view class="author-name-row">
+                    <text class="author-name">{{ post.userName }}</text>
+                    <text class="material-icons verified-icon">verified</text>
+                  </view>
+                  <view class="author-meta-row">
+                    <text class="author-role">社区成员</text>
+                    <text class="meta-divider">·</text>
+                    <text class="post-time-rich">{{ post.time }}</text>
+                  </view>
+                </view>
               </view>
-              <text class="post-time">{{ post.time }}</text>
+              
+              <button 
+                class="follow-btn" 
+                :class="{ 'following': post.isFollowing }"
+                @click.stop="handleFollow(post)"
+              >
+                {{ post.isFollowing ? '已关注' : '关注' }}
+              </button>
             </view>
             
+            <text class="post-title" v-if="post.title && post.title !== post.content">{{ post.title }}</text>
             <text class="post-content-text">{{ post.content }}</text>
             
-            <image v-if="post.image" class="post-main-img" :src="post.image" mode="aspectFill"></image>
+            <image 
+              v-if="post.images && post.images.length === 1" 
+              class="post-main-img" 
+              :src="post.images[0]" 
+              mode="aspectFill"
+              @click.stop="previewImage(post.images, 0)"
+            ></image>
+            
+            <view 
+              v-else-if="post.images && post.images.length > 1" 
+              class="post-images-grid"
+              :class="{ 'grid-2': post.images.length === 2 || post.images.length === 4 }"
+            >
+              <image 
+                v-for="(img, idx) in post.images" 
+                :key="idx" 
+                class="post-grid-img" 
+                :src="img" 
+                mode="aspectFill"
+                @click.stop="previewImage(post.images, idx)"
+              ></image>
+            </view>
             
             <view class="post-footer">
               <view class="interaction-item" @click.stop="handleLike(post)">
@@ -205,7 +247,7 @@
     </scroll-view>
 
     <!-- FAB -->
-    <view class="fab-btn" @click="handlePostClick">
+    <view class="fab-btn" v-if="currentTab === 0" @click="handlePostClick">
       <text class="material-icons fab-icon">add</text>
     </view>
   </view>
@@ -240,7 +282,15 @@ const loadMatches = async () => {
   if (matchesLoaded.value || !circleId.value) return;
   try {
     const res = await matchApi.getByTeam(circleId.value);
-    matches.value = res;
+    matches.value = res.map(match => {
+      if (match.homeTeam && match.homeTeam.logoUrl) {
+        match.homeTeam.logoUrl = fileApi.getFileUrl(match.homeTeam.logoUrl);
+      }
+      if (match.awayTeam && match.awayTeam.logoUrl) {
+        match.awayTeam.logoUrl = fileApi.getFileUrl(match.awayTeam.logoUrl);
+      }
+      return match;
+    });
     matchesLoaded.value = true;
   } catch (e) {
     console.error('Load matches failed:', e);
@@ -272,6 +322,12 @@ const loadPlayers = async () => {
 const navigateToPlayer = (player) => {
   uni.navigateTo({
     url: `/pages/player-detail/player-detail?id=${player.id}`
+  });
+};
+
+const navigateToSearch = () => {
+  uni.navigateTo({
+    url: `/pages/community/circle-search?circleId=${circleId.value}&circleName=${encodeURIComponent(circleName.value)}`
   });
 };
 
@@ -382,7 +438,7 @@ onLoad((options) => {
     circleName.value = decodeURIComponent(options.name);
   }
   if (options.image) {
-    circleImage.value = decodeURIComponent(options.image);
+    circleImage.value = fileApi.getFileUrl(decodeURIComponent(options.image));
   }
   
   // Get system info for status bar
@@ -400,11 +456,11 @@ const fetchCircleDetail = async () => {
     const team = await communityApi.getCircleDetail(circleId.value);
     if (team) {
       circleName.value = team.name;
-      circleImage.value = team.logoUrl;
+      circleImage.value = fileApi.getFileUrl(team.logoUrl);
       // Use description or fallback
       circleDesc.value = team.description || team.englishName || '暂无简介'; 
       // Use stadiumBgUrl or fallback
-      heroImage.value = team.stadiumBgUrl || team.logoUrl;
+      heroImage.value = fileApi.getFileUrl(team.stadiumBgUrl || team.logoUrl);
       
       // If no description, maybe use teamData fallback if name matches
       if (!team.description && teamData[team.name]) {
@@ -465,10 +521,14 @@ const loadPosts = async () => {
 
         return {
           id: post.id,
+          userId: post.userId,
+          title: post.title,
           content: post.content,
           image: postImages.length > 0 ? fileApi.getFileUrl(postImages[0]) : '', 
+          images: postImages.length > 0 ? postImages.map(img => fileApi.getFileUrl(img)) : [],
           likes: post.likes || 0,
           isLiked: post.isLiked || false,
+          isFollowing: false, // Default to false as list API might not return it
           comments: post.commentCount || 0,
           shares: 0, 
           userName: post.userName || '未知用户', 
@@ -493,6 +553,25 @@ const loadPosts = async () => {
     uni.showToast({ title: '加载帖子失败', icon: 'none' });
   } finally {
     loading.value = false;
+  }
+};
+
+const handleFollow = async (post) => {
+  if (!post.userId) return;
+  
+  try {
+    if (post.isFollowing) {
+      await postApi.unfollowUser(post.userId);
+      post.isFollowing = false;
+      uni.showToast({ title: '已取消关注', icon: 'none' });
+    } else {
+      await postApi.followUser(post.userId);
+      post.isFollowing = true;
+      uni.showToast({ title: '已关注', icon: 'success' });
+    }
+  } catch (error) {
+    console.error('Follow failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
   }
 };
 
@@ -609,6 +688,17 @@ const navigateToPost = (post) => {
     },
     fail: () => {
       isNavigating.value = false;
+    }
+  });
+};
+
+const previewImage = (urls, current) => {
+  if (!urls || urls.length === 0) return;
+  uni.previewImage({
+    urls: urls,
+    current: current || 0,
+    fail: (err) => {
+        console.error('Preview image failed', err);
     }
   });
 };
@@ -1038,8 +1128,8 @@ const navigateToPost = (post) => {
 
 /* Floating Action Button */
 .fab-btn {
-  position: absolute;
-  bottom: 40px; /* Adjusted position */
+  position: fixed;
+  bottom: calc(40px + env(safe-area-inset-bottom)); /* Adjusted position with safe area */
   right: 20px;
   width: 56px;
   height: 56px;
@@ -1049,13 +1139,37 @@ const navigateToPost = (post) => {
   justify-content: center;
   align-items: center;
   box-shadow: 0 4px 10px rgba(242, 185, 13, 0.4);
-  z-index: 50;
+  z-index: 999;
+  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
+.fab-btn:active {
+  transform: scale(0.95);
+}
 .fab-icon {
   font-size: 24px;
   color: #12110a;
   font-weight: bold;
+}
+
+/* Post Images Grid */
+.post-images-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.post-grid-img {
+  width: calc(33.33% - 3px);
+  height: 220rpx;
+  border-radius: 4px;
+  background-color: #2d2a1d;
+}
+
+.post-images-grid.grid-2 .post-grid-img {
+  width: calc(50% - 2px);
+  height: 330rpx;
 }
 
 .loading-status {
@@ -1238,5 +1352,101 @@ const navigateToPost = (post) => {
   text-align: center;
   color: #6b7280;
   font-size: 14px;
+}
+
+/* Rich User Header */
+.user-info-rich {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.avatar-container {
+  position: relative;
+}
+
+.user-avatar-rich {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 185, 13, 0.2);
+}
+
+.verified-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background-color: #f2b90d;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #1c1a11; /* Match card background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.author-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.verified-icon {
+  color: #f2b90d;
+  font-size: 14px;
+}
+
+.author-meta-row {
+  display: flex;
+  align-items: center;
+}
+
+.author-role {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-divider {
+  margin: 0 4px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.post-time-rich {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.follow-btn {
+  background-color: #f2b90d;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0 12px;
+  height: 24px;
+  line-height: 24px;
+  border-radius: 9999px;
+  margin: 0;
+}
+
+.follow-btn.following {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>

@@ -54,8 +54,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers("/api/players/sync/**", "/api/players/sync-sportapi/**", "/api/players/sync-scorers").permitAll()
+                // Explicitly allow list endpoints to ensure access
+                .requestMatchers("/api/news/list", "/api/players/list", "/api/teams/list").permitAll()
+                // Allow public GET access to resources
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/news/**", "/api/posts/**", "/api/matches/**", "/api/teams/**", "/api/players/**", "/api/search/**", "/api/community/**", "/uploads/**", "/static/**").permitAll()
+                // Allow creating news (as per previous config)
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/news").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/news/**", "/api/posts/**", "/api/matches/**", "/api/teams/**", "/api/players/**", "/api/search/**", "/api/community/**", "/uploads/**").permitAll()
                 .requestMatchers("/doc.html", "/favicon.ico", "/webjars/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .anyRequest().authenticated()

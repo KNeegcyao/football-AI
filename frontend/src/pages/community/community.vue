@@ -70,7 +70,7 @@
               
               <view class="trend-avatars" v-if="topic.avatars">
                 <view class="avatar-group">
-                  <image v-for="(avatar, i) in topic.avatars" :key="i" :src="avatar" class="mini-avatar" mode="aspectFill"></image>
+                  <image v-for="(avatar, i) in topic.avatars" :key="i" :src="getAvatarUrl(avatar)" class="mini-avatar" mode="aspectFill"></image>
                   <view class="mini-avatar-count" v-if="topic.extraCount">
                     <text class="count-text">+{{ topic.extraCount }}</text>
                   </view>
@@ -111,6 +111,7 @@
 import { ref, onMounted, getCurrentInstance } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { communityApi, fileApi, notificationApi } from '@/api';
+import { BASE_URL } from '@/utils/request.js';
 
 const scrollHeight = ref(800); // Should be calculated based on window height
 
@@ -203,6 +204,14 @@ const navigateToCircleList = () => {
       });
     }
   });
+};
+
+// 获取头像 URL
+const getAvatarUrl = (url) => {
+  if (!url) return '/static/default-team.png';
+  if (url.startsWith('http') || url.startsWith('https')) return url;
+  if (url.startsWith('/static/')) return url;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 const hotCircles = ref([]);

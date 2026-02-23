@@ -430,6 +430,36 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         Player player = playerMapper.selectOne(new LambdaQueryWrapper<Player>()
                 .eq(Player::getApiId, apiId));
 
+        // 尝试通过名字和球队匹配 (解决 API-Football 和 Football-Data ID 不一致导致的重复问题)
+        if (player == null) {
+            player = playerMapper.selectOne(new LambdaQueryWrapper<Player>()
+                    .eq(Player::getName, name)
+                    .eq(Player::getCurrentTeamId, teamId)
+                    .last("LIMIT 1"));
+        }
+
+        // 尝试通过名字匹配 (不限球队，处理转会情况)
+        if (player == null) {
+            player = playerMapper.selectOne(new LambdaQueryWrapper<Player>()
+                    .eq(Player::getName, name)
+                    .last("LIMIT 1"));
+        }
+
+        // 尝试通过背号匹配 (针对名字拼写不一致的情况，如 API-Football vs Football-Data)
+        if (player == null && stats != null) {
+             JsonNode games = stats.get("games");
+             if (games != null && games.hasNonNull("number")) {
+                 int number = games.get("number").asInt();
+                 // 仅当背号 > 0 时尝试匹配
+                 if (number > 0) {
+                     player = playerMapper.selectOne(new LambdaQueryWrapper<Player>()
+                            .eq(Player::getCurrentTeamId, teamId)
+                            .eq(Player::getJerseyNumber, number)
+                            .last("LIMIT 1"));
+                 }
+             }
+        }
+
         boolean isNew = false;
         if (player == null) {
             player = new Player();
@@ -460,8 +490,10 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         if (stats != null) {
             JsonNode games = stats.get("games");
             if (games != null) {
-                player.setPosition(games.get("position").asText());
-                player.setDetailedPos(games.get("position").asText()); // API-Football position is usually short like "Midfielder"
+                String pos = games.get("position").asText();
+                String translatedPos = translatePosition(pos);
+                player.setPosition(translatedPos);
+                player.setDetailedPos(translatedPos); // API-Football position is usually short like "Midfielder"
                 player.setRating(games.hasNonNull("rating") ? new BigDecimal(games.get("rating").asText()) : BigDecimal.ZERO);
                 player.setAppearances(games.hasNonNull("appearences") ? games.get("appearences").asInt() : 0);
                 if (games.hasNonNull("number")) {
@@ -482,8 +514,18 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         }
 
         if (isNew) {
+            // 新增球员必须有身价
+            if (player.getMarketValue() == null) {
+                // API-Football 通常不带身价，如果通过名字没匹配到现有记录(通常是 Football-Data 创建的)，
+                // 那么这个球员可能是边缘球员，或者 Football-Data 还没同步。
+                // 根据要求，没身价的不保存。
+                log.warn("跳过无身价的新球员 (API-Football): {} (ID: {})", name, apiId);
+                return;
+            }
             playerMapper.insert(player);
         } else {
+            // 更新时，不覆盖 apiId (因为可能是 Football-Data 的 ID)
+            // 也不强制检查身价 (假设现有记录已经合法，或者由 Football-Data 负责身价)
             playerMapper.updateById(player);
         }
     }
@@ -603,8 +645,10 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
                 ObjectNode teamObj = mapper.createObjectNode();
                 teamObj.put("name", team.getName());
                 teamObj.put("id", team.getApiId());
+                teamObj.put("logo", team.getLogoUrl());
                 stat.set("team", teamObj);
                 playerObj.put("teamName", team.getName()); // Extra field for convenience
+                playerObj.put("teamLogo", team.getLogoUrl());
             }
         }
         
@@ -909,6 +953,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
             ObjectNode teamObj = mapper.createObjectNode();
             teamObj.put("name", team.getName());
             teamObj.put("id", team.getApiId());
+            teamObj.put("logo", team.getLogoUrl());
             stat.set("team", teamObj);
             
             statsArray.add(stat);
