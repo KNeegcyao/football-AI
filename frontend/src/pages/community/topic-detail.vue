@@ -95,7 +95,7 @@
           梅西的首秀太震撼了！全场齐声高呼名号的那一刻，我甚至觉得这就是工体的巅峰时刻。阿根廷的中场控制力依然是顶级。 <text class="hashtag">#梅西中国行#</text>
         </text>
         <view class="media-container">
-          <image class="post-image" src="/static/teams/generic_stadium.jpg" mode="aspectFill"></image>
+          <image class="post-image" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg" mode="aspectFill"></image>
         </view>
         <view class="post-actions">
           <view class="action-group">

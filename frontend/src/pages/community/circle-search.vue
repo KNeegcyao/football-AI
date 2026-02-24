@@ -13,6 +13,7 @@
           class="search-input" 
           type="text" 
           :placeholder="`搜索${circleName}圈内的帖子`" 
+          placeholder-style="color: rgba(255, 255, 255, 0.2)"
           v-model="keyword"
           confirm-type="search"
           @confirm="handleSearch"
@@ -277,25 +278,39 @@ $text-white: #ffffff;
 
 .search-box {
   flex: 1;
-  height: 36px;
-  background-color: rgba(255,255,255,0.08);
-  border-radius: 18px;
+  height: 38px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 16px;
   margin-right: 12px;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within, .search-box:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(242, 185, 13, 0.5);
+  box-shadow: 0 0 10px rgba(242, 185, 13, 0.1);
 }
 
 .search-icon {
-  color: $text-gray;
+  color: rgba(156, 163, 175, 0.4);
   font-size: 18px;
   margin-right: 8px;
+  transition: color 0.3s ease;
+}
+
+.search-box:focus-within .search-icon {
+  color: rgba(242, 185, 13, 0.8);
 }
 
 .search-input {
   flex: 1;
   font-size: 14px;
   color: #fff;
+  outline: none;
 }
 
 .clear-btn {
@@ -429,5 +444,15 @@ $text-white: #ffffff;
   color: #666;
   padding: 20px;
   font-size: 12px;
+}
+/* 解决 H5 下原生 input 聚焦时的蓝色边框 */
+::v-deep .uni-input-input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+::v-deep input {
+  outline: none !important;
+  box-shadow: none !important;
 }
 </style>

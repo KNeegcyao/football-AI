@@ -9,14 +9,15 @@
         
         <!-- 搜索框容器 -->
         <view
-          class="flex-1 relative flex items-center h-10 bg-white/5 border rounded-full px-3 transition-all duration-300"
-          :class="[isFocus ? 'border-white/20 bg-white/10' : 'border-white/10']"
+          class="flex-1 relative flex items-center h-10 bg-white/5 border rounded-full px-4 transition-all duration-300"
+          :class="[isFocus ? 'border-[#f2b90d]/50 bg-white/10 shadow-[0_0_10px_rgba(242,185,13,0.1)]' : 'border-white/5 hover:border-[#f2b90d]/30']"
         >
-          <text class="material-icons text-gray-500 text-lg mr-2">search</text>
+          <text class="material-icons text-gray-500/40 text-lg mr-2 transition-colors duration-300" :class="{'text-[#f2b90d]/80': isFocus}">search</text>
           <input
             v-model="keyword"
             type="text"
             placeholder="搜索资讯或帖子..."
+            placeholder-style="color: rgba(255, 255, 255, 0.2)"
             class="flex-1 h-full bg-transparent text-sm focus:outline-none border-none"
             style="outline: none; border-color: transparent;"
             @confirm="handleSearch"
@@ -140,6 +141,7 @@
 <script setup>
 import { ref } from 'vue'
 import { searchApi } from '@/api'
+import { BASE_URL } from '@/utils/request'
 
 const keyword = ref('')
 const loading = ref(false)
@@ -307,7 +309,7 @@ const getFullImageUrl = (url) => {
       return url
   }
   if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
+  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 </script>
 
@@ -318,6 +320,16 @@ const getFullImageUrl = (url) => {
   margin: 0 auto;
 }
 /* #endif */
+/* 解决 H5 下原生 input 聚焦时的蓝色边框 */
+::v-deep .uni-input-input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+::v-deep input {
+  outline: none !important;
+  box-shadow: none !important;
+}
 </style>
 
 <style scoped>

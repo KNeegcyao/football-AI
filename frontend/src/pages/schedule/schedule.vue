@@ -3,7 +3,7 @@
     <!-- 状态栏占位 -->
     <view class="status-bar"></view>
 
-    <!-- 导航栏 -->
+    <!-- 顶部导航栏 -->
     <view class="nav-bar">
       <view class="logo-area">
         <view class="logo-icon">
@@ -11,6 +11,7 @@
         </view>
         <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
       </view>
+
       <view class="nav-actions">
         <view class="action-btn" @click="goToSearch">
           <u-icon name="search" color="#fff" size="44rpx"></u-icon>
@@ -182,14 +183,14 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { matchApi, userApi, fileApi } from '@/api/index'
 
-const dates = ref([])
-const activeDateIndex = ref(0)
-const currentYearMonth = ref('')
 const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
-const userAvatar = ref('/static/soccer-logo.png')
-let refreshTimer = null
+  const userAvatar = ref('/static/soccer-logo.png')
+  const dates = ref([])
+  const activeDateIndex = ref(0)
+  const currentYearMonth = ref('')
+  let refreshTimer = null
 
 const handleAvatarError = () => {
   userAvatar.value = '/static/soccer-logo.png'
@@ -442,10 +443,14 @@ onUnmounted(() => {
   min-height: 100vh;
   background-color: #1a1811;
   color: #fff;
-  padding-bottom: 120rpx;
-  background-image: radial-gradient(circle at top right, rgba(74, 4, 4, 0.4) 0%, transparent 70%);
   display: flex;
   flex-direction: column;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  background-image: radial-gradient(circle at top right, rgba(74, 4, 4, 0.4) 0%, transparent 70%);
 }
 
 .status-bar {
@@ -474,16 +479,12 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 40rpx;
-  background-color: rgba(26, 24, 17, 0.8);
+  background-color: rgba($pitch-pulse-bg-dark, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
-  /* #ifdef H5 */
-  max-width: 500px;
-  margin: 0 auto;
-  /* #endif */
 }
 
 .logo-area {

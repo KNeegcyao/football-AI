@@ -233,7 +233,18 @@ export const userApi = {
   /**
    * 更新个人资料
    */
-  updateProfile: (data) => request.put('/api/users/profile', data)
+  updateProfile: (data) => request.put('/api/users/profile', data),
+
+  /**
+   * 修改密码
+   * @param {Object} data { oldPassword, newPassword }
+   */
+  updatePassword: (data) => request.put('/api/users/password', data),
+
+  /**
+   * 注销账号
+   */
+  deleteAccount: () => request.delete('/api/users/account')
 }
 
 /**

@@ -49,6 +49,18 @@ uni-page-body {
   display: none !important;
 }
 
+/* 全局去除所有输入框的蓝色聚焦边框 */
+input, textarea, select, uni-input, uni-textarea {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.uni-input-input, .uni-textarea-textarea {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .h5-header-fix {
   max-width: 500px !important;
   left: 50% !important;

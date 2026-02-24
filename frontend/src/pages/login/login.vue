@@ -2,11 +2,12 @@
   <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[500px] mx-auto shadow-2xl">
     <!-- Background Overlay Texture -->
     <image 
-      class="absolute inset-0 z-0 opacity-40 w-full h-full object-cover pointer-events-none" 
-      style="object-position: 85% bottom;"
-      src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1000" 
+      class="absolute inset-0 z-0 opacity-70 w-full h-full object-cover pointer-events-none" 
+      style="object-position: center;"
+      src="https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/pexels-florian-thomschke-833330274-19436350.jpg" 
       mode="aspectFill"
     ></image>
+    <view class="absolute inset-0 z-0 bg-black/40"></view>
 
     <view class="flex-1 flex flex-col items-center justify-center px-6 py-8 z-10 w-full mx-auto">
       <!-- Header Section: Logo & Branding -->
@@ -16,7 +17,7 @@
         </view>
         <view class="flex flex-col items-center">
           <text class="text-3xl font-extrabold tracking-tighter text-[#d4af37] gold-glow italic mb-2">PITCHPULSE</text>
-          <text class="text-[10px] uppercase tracking-[0.3em] text-[#f20d33]/80 font-semibold">AI Football Community</text>
+          <text class="text-[10px] uppercase tracking-[0.3em] text-white/90 font-semibold drop-shadow-sm">AI Football Community</text>
         </view>
       </view>
 
@@ -24,48 +25,48 @@
       <view class="w-full space-y-5">
         <view class="space-y-4">
           <!-- Username/Email Field -->
-          <view class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 transition-all duration-300 focus-within:border-[#d4af37]">
-            <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">person</text>
+          <view class="w-full bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
+            <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">person</text>
             <input 
               v-model="form.username"
-              class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
+              class="flex-1 bg-transparent text-white text-sm h-full"
               placeholder="手机号 / 邮箱" 
-              placeholder-class="text-slate-500"
+              placeholder-style="color: rgba(148, 163, 184, 0.5);"
               type="text"
             />
           </view>
 
           <!-- Password Field (Visible when not in Code Login mode) -->
-          <view v-if="!isCodeLogin" class="w-full bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 mt-4 transition-all duration-300 focus-within:border-[#d4af37]">
-            <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">lock</text>
+          <view v-if="!isCodeLogin" class="w-full bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 mt-4 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
+            <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">lock</text>
             <input 
               v-model="form.password"
-              class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
+              class="flex-1 bg-transparent text-white text-sm h-full"
               placeholder="密码" 
-              placeholder-class="text-slate-500"
+              placeholder-style="color: rgba(148, 163, 184, 0.5);"
               :password="!showPassword"
               type="text"
             />
             <view class="ml-2 flex items-center h-full" @click="togglePasswordVisibility">
-              <text class="material-icons text-slate-500" style="font-size: 18px; color: #64748b;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
+              <text class="material-icons text-slate-400" style="font-size: 20px;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
             </view>
           </view>
 
           <!-- Code Field (Visible when in Code Login mode) -->
           <view v-else class="flex gap-2 mt-4">
-            <view class="flex-1 bg-[#1a0d0f] border border-[#f20d33]/10 rounded-xl px-4 flex items-center h-11 transition-all duration-300 focus-within:border-[#d4af37]">
-              <text class="material-icons text-slate-500 mr-3" style="font-size: 18px; color: #64748b;">security</text>
+            <view class="flex-1 bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
+              <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">security</text>
               <input 
                 v-model="codeLoginForm.code"
-                class="flex-1 bg-transparent text-white text-sm h-full placeholder-slate-500"
+                class="flex-1 bg-transparent text-white text-sm h-full"
                 placeholder="验证码" 
-                placeholder-class="text-slate-500"
+                placeholder-style="color: rgba(148, 163, 184, 0.5);"
                 type="number"
                 maxlength="6"
               />
             </view>
             <button 
-              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-3 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[90px] h-11"
+              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-4 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[100px] h-12 active:opacity-70"
               @click="handleSendLoginCode"
               :disabled="loginCountdown > 0"
             >
@@ -98,8 +99,8 @@
           <view class="absolute inset-0 flex items-center">
             <view class="w-full border-t border-[#f20d33]/10"></view>
           </view>
-          <view class="relative bg-[#0a0506] px-4">
-            <text class="text-xs uppercase text-slate-500 tracking-widest">其他登录方式</text>
+          <view class="relative bg-transparent px-4">
+            <text class="text-xs uppercase text-slate-400 tracking-widest font-medium">其他登录方式</text>
           </view>
         </view>
         

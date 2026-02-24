@@ -118,6 +118,20 @@
       }
     },
     {
+      "path": "pages/my/settings",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/my/help",
+      "style": {
+        "navigationBarTitleText": "帮助与支持",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录",

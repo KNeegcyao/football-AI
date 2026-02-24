@@ -11,6 +11,7 @@
         </view>
         <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
       </view>
+
       <view class="nav-actions">
         <view class="action-btn" @click="goToSearch">
           <u-icon name="search" color="#fff" size="44rpx"></u-icon>
@@ -125,6 +126,7 @@
 import { ref, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { postApi, newsApi, userApi, fileApi } from '@/api'
+import { BASE_URL } from '@/utils/request'
 
 const userAvatar = ref('/static/soccer-logo.png')
 
@@ -184,18 +186,15 @@ const heroPost = ref({
   id: 1,
   title: '正在加载最新资讯...',
   category: '足球',
-  image: '/static/teams/generic_stadium.jpg'
+  image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg'
 })
 
 const recommendPosts = ref([])
 
 const getFullImageUrl = (url) => {
-  if (!url) return '/static/teams/generic_stadium.jpg'
+  if (!url) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg'
   if (url.startsWith('http')) return url
-  // 拼接后端根地址，强制使用 8080
-  const BASE_URL = 'http://localhost:8080'
-  const fullUrl = BASE_URL + (url.startsWith('/') ? url : '/' + url)
-  return fullUrl
+  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 
 const formatTime = (timeStr) => {
@@ -701,17 +700,26 @@ onMounted(() => {
 }
 
 .post-category-tag {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2rpx 10rpx;
-    border-radius: 6rpx;
+    background: linear-gradient(135deg, $pitch-pulse-primary, darken($pitch-pulse-primary, 10%));
+    padding: 4rpx 16rpx;
+    border-radius: 20rpx;
+    box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     
     text {
       font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 500;
+      color: #000;
+      font-weight: 800;
     }
   }
+
+.empty-box {
+  padding: 100rpx 0;
+  display: flex;
+  justify-content: center;
+}
 
 .post-time {
   font-size: 22rpx;

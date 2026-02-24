@@ -16,6 +16,7 @@ import com.soccer.forum.service.model.dto.UserInfoResp;
 import com.soccer.forum.service.model.dto.UserStatsResp;
 import com.soccer.forum.service.model.dto.UserUpdateReq;
 import com.soccer.forum.service.service.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,11 +31,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final PostMapper postMapper;
     private final LikeMapper likeMapper;
     private final FavoriteMapper favoriteMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(PostMapper postMapper, LikeMapper likeMapper, FavoriteMapper favoriteMapper) {
+    public UserServiceImpl(PostMapper postMapper, LikeMapper likeMapper, FavoriteMapper favoriteMapper, PasswordEncoder passwordEncoder) {
         this.postMapper = postMapper;
         this.likeMapper = likeMapper;
         this.favoriteMapper = favoriteMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -101,5 +104,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         this.updateById(user);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public void updatePassword(Long userId, String oldPassword, String newPassword) {
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new ServiceException(ServiceErrorCode.USER_NOT_FOUND);
+        }
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ServiceException(ServiceErrorCode.USER_PASSWORD_ERROR);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        this.updateById(user);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public void deleteAccount(Long userId) {
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new ServiceException(ServiceErrorCode.USER_NOT_FOUND);
+        }
+
+        // 逻辑删除或物理删除，这里根据业务需求决定。通常建议物理删除或脱敏处理。
+        // 这里演示物理删除
+        this.removeById(userId);
+        
+        // 同时删除关联数据（可选，根据外键约束或业务需求）
+        postMapper.delete(new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId));
+        likeMapper.delete(new LambdaQueryWrapper<Like>().eq(Like::getUserId, userId));
+        favoriteMapper.delete(new LambdaQueryWrapper<Favorite>().eq(Favorite::getUserId, userId));
     }
 }

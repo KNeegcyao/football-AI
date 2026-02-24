@@ -3,32 +3,37 @@
     <!-- Status Bar Placeholder -->
     <view class="status-bar"></view>
 
-    <!-- Header -->
-    <view class="header">
-      <view class="header-content">
-        <view>
-          <text class="subtitle">PULSE DISCOVERY</text>
-          <text class="title">社区发现</text>
+    <!-- Header (Aligned with index.vue) -->
+    <view class="nav-bar">
+      <view class="logo-area">
+        <view class="logo-icon">
+          <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
         </view>
-        <view class="notification-btn" @click="navigateToNotification">
-          <text class="material-icons" style="font-size: 20px; color: #f2b90d;">notifications_none</text>
+        <text class="logo-text">PULSE<text class="primary">DISCOVERY</text></text>
+      </view>
+
+      <view class="nav-actions">
+        <view class="action-btn" @click="navigateToNotification">
+          <u-icon name="bell" color="#fff" size="44rpx"></u-icon>
           <view class="notification-badge" v-if="unreadCount > 0">
             {{ unreadCount > 99 ? '99+' : unreadCount }}
           </view>
         </view>
       </view>
-      
-      <!-- Search Bar -->
-      <view class="search-bar">
-        <text class="material-icons search-icon">search</text>
-        <input class="search-input" placeholder="搜索圈子、话题" placeholder-style="color: rgba(242, 185, 13, 0.3)" />
-      </view>
     </view>
 
     <!-- Main Content -->
-    <scroll-view scroll-y class="main-scroll" :style="{height: scrollHeight + 'px'}">
+    <view class="main-content">
+      <!-- Search Bar (Integrated into main content) -->
+      <view class="search-section">
+        <view class="search-bar">
+          <u-icon name="search" size="40rpx" color="rgba(249, 212, 6, 0.4)" class="search-icon"></u-icon>
+          <input class="search-input" v-model="searchKey" placeholder="搜索圈子、话题" placeholder-style="color: rgba(255, 255, 255, 0.2)" />
+        </view>
+      </view>
+
       <!-- Hot Circles -->
-      <view class="section">
+      <view class="section" v-if="filteredHotCircles.length > 0">
         <view class="section-header">
           <text class="section-title">热门圈子</text>
           <text class="view-all" @click="navigateToCircleList">查看全部</text>
@@ -36,7 +41,7 @@
         
         <scroll-view scroll-x class="circles-scroll" show-scrollbar="false">
           <view class="circles-container">
-            <view class="circle-item" v-for="(circle, index) in hotCircles" :key="index" @click="navigateToCircle(circle)">
+            <view class="circle-item" v-for="(circle, index) in filteredHotCircles" :key="index" @click="navigateToCircle(circle)">
               <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
                 <view class="circle-avatar-inner">
                   <image class="circle-avatar" :src="circle.image" mode="aspectFill"></image>
@@ -50,19 +55,19 @@
       </view>
 
       <!-- Trend Topics -->
-      <view class="section">
+      <view class="section" v-if="filteredTrendTopics.length > 0">
         <view class="section-header">
           <text class="section-title">趋势话题</text>
           <view class="trending-badge">
-            <text class="material-icons" style="font-size: 14px;">trending_up</text>
+            <u-icon name="level" size="32rpx" color="#f9d406"></u-icon>
             <text class="trending-text">正在热议</text>
           </view>
         </view>
 
         <view class="trends-list">
-          <view class="trend-item glass-panel" v-for="(topic, index) in trendTopics" :key="index" @click="navigateToPost(topic)">
+          <view class="trend-item glass-panel" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
             <view class="trend-bg-icon">
-              <text class="material-icons" style="font-size: 48px; color: #f2b90d; opacity: 0.1;">tag</text>
+              <u-icon name="tags" size="96rpx" color="#f9d406" style="opacity: 0.1;"></u-icon>
             </view>
             <view class="trend-content">
               <text class="trend-title">{{ topic.title }}</text>
@@ -89,10 +94,17 @@
           </view>
         </view>
       </view>
+
+      <!-- Empty State -->
+      <view class="empty-state" v-if="searchKey && filteredHotCircles.length === 0 && filteredTrendTopics.length === 0">
+        <u-icon name="search" size="120rpx" color="rgba(249, 212, 6, 0.2)" class="empty-icon"></u-icon>
+        <text class="empty-text">未找到与“{{ searchKey }}”相关的结果</text>
+        <text class="empty-sub">换个关键词试试吧</text>
+      </view>
       
       <!-- Bottom Padding for TabBar -->
       <view class="safe-area-bottom"></view>
-    </scroll-view>
+    </view>
 
 
 
@@ -108,15 +120,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted, getCurrentInstance } from 'vue';
+import { ref, onMounted, getCurrentInstance, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { communityApi, fileApi, notificationApi } from '@/api';
 import { BASE_URL } from '@/utils/request.js';
 
-const scrollHeight = ref(800); // Should be calculated based on window height
-
 const unreadCount = ref(0);
+const searchKey = ref('');
 const { proxy } = getCurrentInstance();
+
+const hotCircles = ref([]);
+const trendTopics = ref([]);
+
+// 过滤后的热门圈子
+const filteredHotCircles = computed(() => {
+  if (!searchKey.value) return hotCircles.value;
+  const key = searchKey.value.toLowerCase();
+  return hotCircles.value.filter(circle => 
+    circle.name.toLowerCase().includes(key)
+  );
+});
+
+// 过滤后的趋势话题
+const filteredTrendTopics = computed(() => {
+  if (!searchKey.value) return trendTopics.value;
+  const key = searchKey.value.toLowerCase();
+  return trendTopics.value.filter(topic => 
+    topic.title.toLowerCase().includes(key)
+  );
+});
 
 const currentTab = ref(2); // 社区是第3个，索引为2
 const tabs = [
@@ -194,6 +226,14 @@ const navigateToPost = (topic) => {
   });
 };
 
+// 获取头像 URL
+const getAvatarUrl = (url) => {
+  if (!url) return '/static/default-team.png';
+  if (url.startsWith('http') || url.startsWith('https')) return url;
+  if (url.startsWith('/static/')) return url;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const navigateToCircleList = () => {
   uni.navigateTo({
     url: '/pages/community/circle-list',
@@ -205,17 +245,6 @@ const navigateToCircleList = () => {
     }
   });
 };
-
-// 获取头像 URL
-const getAvatarUrl = (url) => {
-  if (!url) return '/static/default-team.png';
-  if (url.startsWith('http') || url.startsWith('https')) return url;
-  if (url.startsWith('/static/')) return url;
-  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-};
-
-const hotCircles = ref([]);
-const trendTopics = ref([]);
 
 const loadUnreadCount = async () => {
   try {
@@ -268,31 +297,428 @@ const loadData = async () => {
 
 onMounted(() => {
   loadData();
-  
-  // Calculate scroll height
-  uni.getSystemInfo({
-    success: (res) => {
-      // 减去头部高度、底部导航栏高度等
-      scrollHeight.value = res.windowHeight; 
-    }
-  });
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+/* Colors & Base */
+.container {
+  background-color: $pitch-pulse-bg-dark;
+  min-height: 100vh;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
 
+.status-bar {
+  height: var(--status-bar-height);
+  width: 100%;
+}
 
-/* TabBar Styles aligned with schedule.vue */
-/* 底部导航占位 */
+.nav-bar {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 40rpx;
+  background-color: rgba($pitch-pulse-bg-dark, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+}
+
+.logo-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10rpx;
+  
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.3));
+  }
+}
+
+.logo-text {
+  font-size: 36rpx;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+  color: #fff;
+  .primary {
+    color: $pitch-pulse-primary;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.action-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  background-color: #f20d33;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 20rpx;
+  min-width: 32rpx;
+  text-align: center;
+  line-height: 24rpx;
+  border: 4rpx solid $pitch-pulse-bg-dark;
+  font-weight: 700;
+}
+
+.search-section {
+  padding: 0 40rpx;
+  margin-bottom: 40rpx;
+}
+
+.search-bar {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 30rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba($pitch-pulse-primary, 0.4);
+  box-shadow: 0 0 20rpx rgba($pitch-pulse-primary, 0.1);
+}
+
+.search-icon {
+  margin-right: 20rpx;
+}
+
+.search-input {
+  flex: 1;
+  color: #fff;
+  font-size: 28rpx;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30rpx 0;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 50rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40rpx;
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.view-all {
+  color: $pitch-pulse-primary;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+/* Hot Circles */
+.circles-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.circles-container {
+  display: flex;
+  padding: 10rpx 40rpx;
+}
+
+.circle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 40rpx;
+  transition: all 0.3s ease;
+}
+
+.circle-item:active {
+  transform: scale(0.95);
+}
+
+.circle-avatar-wrapper {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  padding: 6rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16rpx;
+}
+
+.circle-avatar-wrapper.highlight {
+  background: linear-gradient(135deg, $pitch-pulse-primary, #ff8a00);
+  border: none;
+  box-shadow: 0 10rpx 20rpx rgba($pitch-pulse-primary, 0.2);
+}
+
+.circle-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: $pitch-pulse-bg-dark;
+  overflow: hidden;
+  border: 4rpx solid $pitch-pulse-bg-dark;
+}
+
+.circle-avatar {
+  width: 100%;
+  height: 100%;
+}
+
+.circle-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4rpx;
+}
+
+.circle-members {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+/* Trending */
+.trending-badge {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  background-color: rgba($pitch-pulse-primary, 0.1);
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid rgba($pitch-pulse-primary, 0.1);
+}
+
+.trending-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: $pitch-pulse-primary;
+  text-transform: uppercase;
+  letter-spacing: 1rpx;
+}
+
+.trends-list {
+  padding: 0 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.05);
+  padding: 32rpx;
+  border-radius: 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.trend-bg-icon {
+  position: absolute;
+  top: -20rpx;
+  right: -20rpx;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.trend-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.trend-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.trend-stats {
+  font-size: 22rpx;
+  color: $pitch-pulse-primary;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  display: block;
+  margin-bottom: 20rpx;
+  opacity: 0.8;
+}
+
+.trend-avatars {
+  display: flex;
+  margin-bottom: 24rpx;
+}
+
+.avatar-group {
+  display: flex;
+}
+
+.mini-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  border: 4rpx solid #25231c;
+  margin-left: -16rpx;
+}
+
+.mini-avatar:first-child {
+  margin-left: 0;
+}
+
+.mini-avatar-count {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background-color: #35332c;
+  border: 4rpx solid #25231c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -16rpx;
+}
+
+.count-text {
+  font-size: 16rpx;
+  font-weight: 800;
+  color: #fff;
+}
+
+.trend-meta {
+  display: flex;
+  gap: 20rpx;
+  align-items: center;
+}
+
+.meta-tag {
+  background-color: rgba($pitch-pulse-primary, 0.1);
+  color: $pitch-pulse-primary;
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.meta-time {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+.action-btn {
+  position: relative;
+  z-index: 1;
+  font-size: 24rpx;
+  font-weight: 800;
+  padding: 16rpx 32rpx;
+  border-radius: 20rpx;
+  line-height: 1;
+  margin: 0;
+  border: none;
+  min-width: 120rpx;
+}
+
+.btn-join {
+  background-color: $pitch-pulse-primary;
+  color: #1a1811;
+  box-shadow: 0 8rpx 16rpx rgba($pitch-pulse-primary, 0.2);
+}
+
+.btn-explore {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  margin-bottom: 40rpx;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 16rpx;
+}
+
+.empty-sub {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* TabBar Styles */
 .safe-area-bottom {
   height: 160rpx;
 }
 
-/* 1. 修正底部导航栏：确保在居中模式下也能对齐 */
 .tab-bar {
   position: fixed;
   bottom: 0;
-  /* 取消之前的 transform 居中，改用 auto 以适配外层容器 */
   left: 0;
   right: 0;
   margin: 0 auto;
@@ -305,7 +731,7 @@ onMounted(() => {
   height: 120rpx;
   background-color: rgba(26, 24, 17, 0.98);
   backdrop-filter: blur(20px);
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -313,7 +739,6 @@ onMounted(() => {
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 9999;
   box-sizing: border-box;
-  pointer-events: auto;
 }
 
 .tab-item {
@@ -328,355 +753,22 @@ onMounted(() => {
 .tab-text {
   font-size: 20rpx;
   color: rgba(255, 255, 255, 0.4);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .tab-item.active .tab-text {
-  color: #f9d406;
-  font-weight: 700;
+  color: $pitch-pulse-primary;
+  font-weight: 800;
 }
 
-/* Colors */
-.container {
-  background-color: #1a1814;
-  min-height: 100vh;
-  color: #fff;
-  /* #ifndef H5 */
-  overflow-x: hidden;
-  /* #endif */
+/* Utils */
+::v-deep .uni-input-input {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-.status-bar {
-  height: var(--status-bar-height);
-  width: 100%;
+::v-deep input {
+  outline: none !important;
+  box-shadow: none !important;
 }
-
-.header {
-  padding: 10px 24px 24px;
-  background-color: rgba(26, 24, 20, 0.8);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  backdrop-filter: blur(12px);
-  /* #ifdef H5 */
-  max-width: 500px;
-  margin: 0 auto;
-  /* #endif */
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 24px;
-}
-
-.subtitle {
-  color: #f2b90d;
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.title {
-  font-size: 30px;
-  font-weight: bold;
-  color: #fff;
-  display: block;
-}
-
-.notification-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(242, 185, 13, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(242, 185, 13, 0.3);
-  position: relative;
-}
-
-.red-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background-color: #f20d33;
-  border-radius: 50%;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #ff3b30;
-  color: white;
-  font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 10px;
-  min-width: 14px;
-  text-align: center;
-  line-height: 12px;
-  border: 1px solid #fff;
-  z-index: 10;
-}
-
-.search-bar {
-  position: relative;
-  background-color: rgba(42, 10, 10, 0.4);
-  border-radius: 9999px;
-  border: 1px solid rgba(242, 185, 13, 0.2);
-  display: flex;
-  align-items: center;
-  padding: 12px 24px;
-}
-
-.search-icon {
-  color: rgba(242, 185, 13, 0.6);
-  margin-right: 12px;
-}
-
-.search-input {
-  flex: 1;
-  color: #fff;
-  font-size: 14px;
-}
-
-/* Sections */
-.section {
-  margin-bottom: 24px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  margin-bottom: 12px;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.view-all {
-  color: #f2b90d;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Hot Circles */
-.circles-scroll {
-  white-space: nowrap;
-  width: 100%;
-}
-
-.circles-container {
-  display: flex;
-  padding: 0 24px;
-  gap: 20px;
-}
-
-.circle-item {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 20px;
-}
-
-.circle-avatar-wrapper {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  padding: 3px;
-  border: 1px solid rgba(242, 185, 13, 0.2);
-}
-
-.circle-avatar-wrapper.highlight {
-  background: linear-gradient(to top right, #f2b90d, #fde047);
-  box-shadow: 0 10px 15px -3px rgba(242, 185, 13, 0.1);
-  border: none;
-}
-
-.circle-avatar-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: #1a1814;
-  overflow: hidden;
-  border: 2px solid #1a1814;
-}
-
-.circle-avatar {
-  width: 100%;
-  height: 100%;
-}
-
-.circle-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  margin-top: 8px;
-}
-
-.circle-members {
-  font-size: 10px;
-  color: rgba(242, 185, 13, 0.6);
-  font-weight: 500;
-}
-
-/* Trending */
-.trending-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #f2b90d;
-}
-
-.trending-text {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.trends-list {
-  padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.glass-panel {
-  background: rgba(42, 10, 10, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(242, 185, 13, 0.1);
-  padding: 16px;
-  border-radius: 12px;
-  border-left: 4px solid #f2b90d;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.trend-bg-icon {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 12px;
-  z-index: 0;
-}
-
-.trend-content {
-  position: relative;
-  z-index: 10;
-  flex: 1;
-}
-
-.trend-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.trend-stats {
-  font-size: 12px;
-  color: rgba(242, 185, 13, 0.7);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.trend-avatars {
-  display: flex;
-  margin-top: 8px;
-}
-
-.avatar-group {
-  display: flex;
-  margin-left: 10px;
-}
-
-.mini-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid #2a0a0a;
-  margin-left: -8px;
-}
-
-.mini-avatar-count {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: rgba(242, 185, 13, 0.2);
-  border: 2px solid #2a0a0a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: -8px;
-}
-
-.count-text {
-  font-size: 8px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.trend-meta {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-  align-items: center;
-}
-
-.meta-tag {
-  background-color: rgba(242, 185, 13, 0.1);
-  color: #f2b90d;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.meta-time {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 500;
-}
-
-.action-btn {
-  position: relative;
-  z-index: 10;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 8px 16px;
-  border-radius: 8px;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.btn-join {
-  background-color: #f2b90d;
-  color: #1a1814;
-}
-
-.btn-explore {
-  background-color: rgba(242, 185, 13, 0.1);
-  border: 1px solid rgba(242, 185, 13, 0.2);
-  color: #f2b90d;
-}
-
-
 </style>

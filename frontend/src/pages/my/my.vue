@@ -352,6 +352,20 @@ const goTo = (page) => {
     return;
   }
   
+  if (page === 'settings') {
+    uni.navigateTo({
+      url: '/pages/my/settings'
+    });
+    return;
+  }
+  
+  if (page === 'help') {
+    uni.navigateTo({
+      url: '/pages/my/help'
+    });
+    return;
+  }
+  
   uni.showToast({
     title: '即将跳转: ' + page,
     icon: 'none'

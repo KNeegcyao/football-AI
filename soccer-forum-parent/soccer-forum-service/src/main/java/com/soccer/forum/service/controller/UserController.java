@@ -4,6 +4,7 @@ import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.service.model.dto.UserInfoResp;
 import com.soccer.forum.service.model.dto.UserStatsResp;
 import com.soccer.forum.service.model.dto.UserUpdateReq;
+import com.soccer.forum.service.security.model.LoginBody;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * 用户资料管理控制器
@@ -63,5 +66,35 @@ public class UserController {
         log.info("更新用户资料: 用户ID={}", loginUser.getUser().getId());
         userService.updateUserInfo(loginUser.getUser().getId(), req);
         return R.ok(null, "个人资料更新成功");
+    }
+
+    /**
+     * 修改密码
+     */
+    @Operation(summary = "修改密码", description = "修改当前登录用户的密码")
+    @PutMapping("/password")
+    public R<Void> updatePassword(@RequestBody Map<String, String> params,
+                                 @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        String oldPassword = params.get("oldPassword");
+        String newPassword = params.get("newPassword");
+        
+        if (oldPassword == null || newPassword == null) {
+            return R.fail("旧密码和新密码不能为空");
+        }
+        
+        log.info("用户修改密码: 用户ID={}", loginUser.getUser().getId());
+        userService.updatePassword(loginUser.getUser().getId(), oldPassword, newPassword);
+        return R.ok(null, "密码修改成功");
+    }
+
+    /**
+     * 注销账号
+     */
+    @Operation(summary = "注销账号", description = "永久注销当前登录用户的账号")
+    @DeleteMapping("/account")
+    public R<Void> deleteAccount(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        log.info("用户注销账号: 用户ID={}", loginUser.getUser().getId());
+        userService.deleteAccount(loginUser.getUser().getId());
+        return R.ok(null, "账号已成功注销");
     }
 }

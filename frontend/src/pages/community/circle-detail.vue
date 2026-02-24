@@ -92,8 +92,8 @@
             <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
             
             <view class="ai-images-grid">
-              <image class="ai-img-half" src="/static/teams/man_city.jpg" mode="aspectFill"></image>
-              <image class="ai-img-half" src="/static/teams/real_madrid.jpg" mode="aspectFill"></image>
+              <image class="ai-img-half" src="https://resources.premierleague.com/premierleague/badges/t43.png" mode="aspectFill"></image>
+              <image class="ai-img-half" src="https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" mode="aspectFill"></image>
             </view>
             
             <view class="post-footer">
@@ -207,19 +207,21 @@
             </view>
             <view class="match-teams">
               <view class="team-info home">
-                <text class="team-name">{{ match.homeTeam?.name || '主队' }}</text>
                 <image class="team-logo-sm" :src="match.homeTeam?.logoUrl || '/static/default-team.png'" mode="aspectFit"></image>
+                <text class="team-name">{{ match.homeTeam?.name || '主队' }}</text>
               </view>
               <view class="match-score">
                 <text class="score-text" v-if="match.status > 0">{{ match.homeScore }} - {{ match.awayScore }}</text>
                 <text class="vs-text" v-else>VS</text>
+                <view class="match-status-container">
+                  <view class="match-status">{{ match.status === 2 ? '已结束' : (match.status === 1 ? '进行中' : '未开始') }}</view>
+                </view>
               </view>
               <view class="team-info away">
                 <image class="team-logo-sm" :src="match.awayTeam?.logoUrl || '/static/default-team.png'" mode="aspectFit"></image>
                 <text class="team-name">{{ match.awayTeam?.name || '客队' }}</text>
               </view>
             </view>
-            <view class="match-status">{{ match.status === 2 ? '已结束' : (match.status === 1 ? '进行中' : '未开始') }}</view>
           </view>
         </view>
 
@@ -377,55 +379,63 @@ const handleJoin = async () => {
 const teamData = {
     '利物浦': {
       hero: 'http://stadiumdb.com/pictures/stadiums/eng/anfield/anfield50.jpg',
-      desc: '你永远不会独行！安菲尔德的呐喊。YNWA!'
+      desc: '“YNWA，安菲尔德永远不离不弃。”\n红军魂，逆转命。在这里，没有一个灵魂会感到孤独。'
     },
     '阿森纳': {
       hero: 'http://stadiumdb.com/pictures/stadiums/eng/emirates_stadium/emirates_stadium18.jpg',
-      desc: '兵工厂的枪声！COYG!'
+      desc: '“枪手出击，美丽足球的终极朝盛。”\n走过兵工厂的辉煌，历经漫长的蛰伏。北伦敦的红，是青春最热血的底色。'
     },
     '切尔西': {
       hero: 'http://stadiumdb.com/pictures/stadiums/eng/stamford_bridge/stamford_bridge23.jpg',
-      desc: '蓝军出击！斯坦福桥的荣耀。KTBFFH!'
+      desc: '“Keep the Blue Flag Flying High! 铁血蓝军，永不言败。”\n无论是老男孩的奇迹，还是新时代的重组，切尔西的字典里永远没有退缩。'
     },
     '拜仁慕尼黑': {
       hero: 'http://stadiumdb.com/pictures/stadiums/ger/allianz_arena/allianz_arena132.jpg',
-      desc: 'Mia San Mia！南部之星的荣耀。分享拜仁最新战况。'
+      desc: '“Mia San Mia，德甲巨无霸的绝对统治。”\n稳定、严谨、强大。作为南大王，我们的目标只有一个：冠军。'
     },
     '尤文图斯': {
       hero: 'https://stadiumdb.com/pictures/stadiums/ita/juventus_stadium/juventus_stadium19.jpg',
-      desc: '斑马军团！Fino Alla Fine!'
+      desc: '“胜利不是重要，而是唯一的选择。”\n斑马军团，意甲永恒的统治力。不管风雨如何，黑白色的信念永远在巅峰等你。'
     },
     'AC米兰': {
       hero: 'https://stadiumdb.com/pictures/stadiums/ita/san_siro/san_siro58.jpg',
-      desc: '红黑军团！Forza Milan!'
+      desc: '“红黑之心，罗森内里的圣西罗梦。”\n拥有欧冠基因的豪门，优雅与铁血并存。只要红黑旗帜飘扬，我们就永远相信复兴。'
     },
     '国际米兰': {
       hero: 'https://stadiumdb.com/pictures/stadiums/ita/san_siro/san_siro58.jpg',
-      desc: '蓝黑军团！Pazza Inter!'
+      desc: '“疯狂的蓝黑，一生只爱这一个灵魂。”\n既有“小将”萨内蒂的忠诚，也有三冠王的荣光。这里是内拉组里（Nerazzurri）的精神主场，我们从不缺乏血性。'
     },
     '巴黎圣日耳曼': {
       hero: 'http://stadiumdb.com/pictures/stadiums/fra/parc_des_princes/parc_des_princes23.jpg',
-      desc: '这里是巴黎！Ici c\'est Paris!'
+      desc: '“巴黎之光，星光璀璨的法兰西霸主。”\n王子公园球场的喧嚣，全球注视的豪门梦想。'
     },
     '多特蒙德': {
       hero: 'http://stadiumdb.com/pictures/stadiums/ger/westfalenstadion/westfalenstadion61.jpg',
-      desc: '黄黑色的海洋！Echte Liebe!'
+      desc: '“黄黑之墙，世界最狂热的青春风暴。”\n威斯特法伦的咆哮，永远跳动的心脏。这里是足球最纯粹的样子。'
     },
     '那不勒斯': {
       hero: 'https://sp-static-images.s3.amazonaws.com/venue_images/seriea/stadio-diego-armando-maradona/1200x630_auto/stadio-diego-armando-maradona.jpg',
-      desc: '那不勒斯的骄傲！Forza Napoli!'
+      desc: '“马拉多纳的孩子们，南义大利的狂热信仰。”\n这里不只是足球，是那不勒斯人的生命。马拉多纳球场，永远的热泪盈眶。'
     },
     '勒沃库森': {
       hero: 'http://stadiumdb.com/pictures/stadiums/ger/bayarena/bayarena01.jpg',
-      desc: '药厂！Bayer 04 Leverkusen!'
+      desc: '“不败之师，‘药厂’神话的亲历者。”\n撕掉旧标签，书写新篇章。龙哥带队的奇迹，我们一起见证。'
     },
-    '马德里竞技': {
-      hero: 'http://stadiumdb.com/pictures/stadiums/esp/wanda_metropolitano/wanda_metropolitano12.jpg',
-      desc: '床单军团！Aúpa Atleti!'
+    '巴塞罗那': {
+      hero: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1000',
+      desc: '“不仅仅是一家俱乐部。萨迷集合，守护拉玛西亚的荣光。”\n我们深爱这里的传控哲学，也深爱诺坎普的每一寸草坪。红蓝魂，永流传。'
     },
-    '热刺': {
-      hero: 'http://stadiumdb.com/pictures/stadiums/eng/tottenham_hotspur_stadium/tottenham_hotspur_stadium01.jpg',
-      desc: 'To Dare Is To Do! COYS!'
+    '皇家马德里': {
+      hero: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Estadio_Santiago_Bernab%C3%A9u_-_2024.jpg/1200px-Estadio_Santiago_Bernab%C3%A9u_-_2024.jpg',
+      desc: '“Hala Madrid! 银河战舰，欧冠之巅的绝对王者。”\n纯白色的高贵，永恒的争胜欲望。在伯纳乌，我们只谈论传奇。'
+    },
+    '曼联': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/old_trafford/old_trafford01.jpg',
+      desc: '“梦剧场的孩子，红魔精神永不熄灭。”\n弗爵爷的遗产、7号的传承。在这里，我们只聊最纯粹的绝杀与逆转。'
+    },
+    '曼城': {
+      hero: 'http://stadiumdb.com/pictures/stadiums/eng/city_of_manchester_stadium/city_of_manchester_stadium01.jpg',
+      desc: '“蓝月当空，定义现代足球的艺术巅峰。”\n战术的极致，传控的盛宴。曼城球迷见证的，是属于这个时代的蓝色王朝。'
     }
 };
 
@@ -706,7 +716,7 @@ const previewImage = (urls, current) => {
 
 </script>
 
-<style>
+<style scoped>
 /* Color Palette */
 :root {
   --primary: #f2b90d;
@@ -917,10 +927,8 @@ const previewImage = (urls, current) => {
   font-size: 14px;
   color: #d1d5db; /* text-gray-300 */
   line-height: 1.625;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  white-space: pre-wrap;
+  margin-top: 12px;
 }
 
 /* Tabs */
@@ -1244,6 +1252,7 @@ const previewImage = (urls, current) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 40%;
 }
 
@@ -1251,23 +1260,32 @@ const previewImage = (urls, current) => {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
+  line-height: 1;
+  margin-bottom: 8px;
 }
 
 .vs-text {
   font-size: 20px;
   font-weight: bold;
   color: #6b7280;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.match-status-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .match-status {
   text-align: center;
-  font-size: 12px;
+  font-size: 11px;
   color: #f2b90d;
   background-color: rgba(242, 185, 13, 0.1);
-  padding: 4px 12px;
+  padding: 2px 10px;
   border-radius: 100px;
-  display: inline-block;
-  margin: 0 auto;
+  font-weight: 500;
 }
 
 /* Player Card */

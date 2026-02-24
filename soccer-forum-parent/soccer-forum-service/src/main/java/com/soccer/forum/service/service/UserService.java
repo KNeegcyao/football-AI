@@ -31,4 +31,18 @@ public interface UserService extends IService<User> {
      * @param req 更新请求
      */
     void updateUserInfo(Long userId, UserUpdateReq req);
+
+    /**
+     * 修改密码
+     * @param userId 用户ID
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     */
+    void updatePassword(Long userId, String oldPassword, String newPassword);
+
+    /**
+     * 注销账号
+     * @param userId 用户ID
+     */
+    void deleteAccount(Long userId);
 }
