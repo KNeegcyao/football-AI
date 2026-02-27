@@ -77,7 +77,7 @@ const handleShare = () => {
     provider: "weixin",
     scene: "WXSceneSession",
     type: 0,
-    href: "http://localhost:8080/#/pages/news/detail?id=" + newsId.value,
+    href: "http://192.168.5.6:8080/#/pages/news/detail?id=" + newsId.value,
     title: news.value.title,
     summary: news.value.content.substring(0, 50),
     imageUrl: news.value.coverUrl,
@@ -159,7 +159,7 @@ onPageScroll((e) => {
 const getFullImageUrl = (url) => {
   if (!url) return ''
   if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
+  return `http://192.168.5.6:8080${url}`
 }
 </script>
 

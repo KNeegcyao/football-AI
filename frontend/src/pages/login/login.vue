@@ -1,72 +1,74 @@
 <template>
-  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[500px] mx-auto shadow-2xl">
-    <!-- Background Overlay Texture -->
-    <image 
-      class="absolute inset-0 z-0 opacity-70 w-full h-full object-cover pointer-events-none" 
-      style="object-position: center;"
-      src="https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/pexels-florian-thomschke-833330274-19436350.jpg" 
-      mode="aspectFill"
-    ></image>
-    <view class="absolute inset-0 z-0 bg-black/40"></view>
+  <view class="page-container">
+    <!-- Background Layer -->
+    <view class="background-wrapper">
+      <image 
+        class="bg-image" 
+        src="https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/pexels-florian-thomschke-833330274-19436350.jpg" 
+        mode="aspectFill"
+      ></image>
+      <view class="bg-overlay"></view>
+    </view>
 
-    <view class="flex-1 flex flex-col items-center justify-center px-6 py-8 z-10 w-full mx-auto">
+    <!-- Content Layer -->
+    <view class="content-wrapper">
       <!-- Header Section: Logo & Branding -->
-      <view class="w-full text-center mb-8">
-        <view class="inline-flex items-center justify-center w-16 h-16 bg-[#f20d33]/10 rounded-xl mb-4 border border-[#f20d33]/20">
-          <text class="material-icons text-[#f20d33] text-4xl" style="font-size: 36px;">sports_soccer</text>
+      <view class="header-section">
+        <view class="logo-box">
+          <text class="material-icons logo-icon">sports_soccer</text>
         </view>
-        <view class="flex flex-col items-center">
-          <text class="text-3xl font-extrabold tracking-tighter text-[#d4af37] gold-glow italic mb-2">PITCHPULSE</text>
-          <text class="text-[10px] uppercase tracking-[0.3em] text-white/90 font-semibold drop-shadow-sm">AI Football Community</text>
+        <view class="branding-box">
+          <text class="brand-name italic">PITCHPULSE</text>
+          <text class="brand-tagline">AI Football Community</text>
         </view>
       </view>
 
       <!-- Login Form Section -->
-      <view class="w-full space-y-5">
-        <view class="space-y-4">
+      <view class="form-section">
+        <view class="input-group">
           <!-- Username/Email Field -->
-          <view class="w-full bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
-            <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">person</text>
+          <view class="input-item">
+            <text class="material-icons input-icon">person</text>
             <input 
               v-model="form.username"
-              class="flex-1 bg-transparent text-white text-sm h-full"
+              class="input-field"
               placeholder="手机号 / 邮箱" 
-              placeholder-style="color: rgba(148, 163, 184, 0.5);"
+              placeholder-class="input-placeholder"
               type="text"
             />
           </view>
 
-          <!-- Password Field (Visible when not in Code Login mode) -->
-          <view v-if="!isCodeLogin" class="w-full bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 mt-4 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
-            <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">lock</text>
+          <!-- Password Field -->
+          <view v-if="!isCodeLogin" class="input-item mt-4">
+            <text class="material-icons input-icon">lock</text>
             <input 
               v-model="form.password"
-              class="flex-1 bg-transparent text-white text-sm h-full"
+              class="input-field"
               placeholder="密码" 
-              placeholder-style="color: rgba(148, 163, 184, 0.5);"
+              placeholder-class="input-placeholder"
               :password="!showPassword"
               type="text"
             />
-            <view class="ml-2 flex items-center h-full" @click="togglePasswordVisibility">
-              <text class="material-icons text-slate-400" style="font-size: 20px;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
+            <view class="password-toggle" @click="togglePasswordVisibility">
+              <text class="material-icons toggle-icon">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
             </view>
           </view>
 
           <!-- Code Field (Visible when in Code Login mode) -->
-          <view v-else class="flex gap-2 mt-4">
-            <view class="flex-1 bg-[#1a0d0f]/60 backdrop-blur-md border border-[#f20d33]/20 rounded-xl px-4 flex items-center h-12 transition-all duration-300 focus-within:border-[#d4af37] focus-within:bg-[#1a0d0f]/80">
-              <text class="material-icons text-slate-400 mr-3" style="font-size: 20px;">security</text>
+          <view v-else class="code-input-group mt-4">
+            <view class="input-item flex-1">
+              <text class="material-icons input-icon">security</text>
               <input 
                 v-model="codeLoginForm.code"
-                class="flex-1 bg-transparent text-white text-sm h-full"
+                class="input-field"
                 placeholder="验证码" 
-                placeholder-style="color: rgba(148, 163, 184, 0.5);"
+                placeholder-class="input-placeholder"
                 type="number"
                 maxlength="6"
               />
             </view>
             <button 
-              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-4 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[100px] h-12 active:opacity-70"
+              class="send-code-btn"
               @click="handleSendLoginCode"
               :disabled="loginCountdown > 0"
             >
@@ -76,160 +78,102 @@
         </view>
 
         <!-- Forgot Password & Register Navigation -->
-        <view class="flex flex-row justify-between items-center text-xs px-1 w-full mt-3">
-          <text v-if="!isCodeLogin" class="text-slate-400 hover:text-[#f20d33] transition-colors cursor-pointer" @click="showForgotModal = true">忘记密码?</text>
-          <text v-else class="text-slate-400 hover:text-[#f20d33] transition-colors cursor-pointer" @click="isCodeLogin = false">使用密码登录</text>
-          <text class="text-[#d4af37] font-medium cursor-pointer" @click="goToRegister">立即注册</text>
+        <view class="nav-links">
+          <text v-if="!isCodeLogin" class="link-text" @click="showForgotModal = true">忘记密码?</text>
+          <text v-else class="link-text" @click="isCodeLogin = false">使用密码登录</text>
+          <text class="link-text highlight" @click="goToRegister">立即注册</text>
         </view>
 
         <!-- Main Login Button -->
         <button 
-          class="w-full bg-[#f20d33] hover:bg-[#f20d33]/90 text-white font-bold py-3 rounded-xl shadow-lg shadow-[#f20d33]/20 transition-all flex flex-row items-center justify-center space-x-2 mt-6 border-none"
+          class="login-btn"
           @click="handleLogin"
           :loading="loading"
         >
-          <text class="mr-2 text-sm">{{ isCodeLogin ? '登录 / 注册' : '进入球场' }}</text>
-          <text class="material-icons text-base" style="font-size: 16px;">login</text>
+          <text class="btn-text">{{ isCodeLogin ? '登录 / 注册' : '进入球场' }}</text>
+          <text class="material-icons btn-icon">login</text>
         </button>
       </view>
 
       <!-- Social Login & Agreement Footer -->
-      <view class="w-full mt-12 space-y-6 flex flex-col items-center">
-        <view class="relative w-full flex items-center justify-center">
-          <view class="absolute inset-0 flex items-center">
-            <view class="w-full border-t border-[#f20d33]/10"></view>
-          </view>
-          <view class="relative bg-transparent px-4">
-            <text class="text-xs uppercase text-slate-400 tracking-widest font-medium">其他登录方式</text>
-          </view>
+      <view class="footer-section">
+        <view class="divider">
+          <view class="divider-line"></view>
+          <text class="divider-text">其他登录方式</text>
+          <view class="divider-line"></view>
         </view>
         
-        <view class="flex flex-row justify-center space-x-8 gap-8 mt-6">
-          <!-- Code Login Toggle -->
-          <view 
-            v-if="!isCodeLogin"
-            class="w-12 h-12 flex items-center justify-center rounded-full bg-[#1a0d0f] border border-[#f20d33]/10 text-slate-300 hover:text-[#d4af37] hover:border-[#d4af37] transition-all cursor-pointer" 
-            @click="isCodeLogin = true"
-          >
-             <text class="material-icons" style="font-size: 24px; color: #cbd5e1;">sms</text>
+        <view class="social-icons">
+          <!-- Code/Password Toggle -->
+          <view class="social-btn" @click="isCodeLogin = !isCodeLogin">
+             <text class="material-icons">{{ isCodeLogin ? 'password' : 'sms' }}</text>
           </view>
-          <!-- Password Login Toggle -->
-          <view 
-            v-else
-            class="w-12 h-12 flex items-center justify-center rounded-full bg-[#1a0d0f] border border-[#f20d33]/10 text-slate-300 hover:text-[#d4af37] hover:border-[#d4af37] transition-all cursor-pointer" 
-            @click="isCodeLogin = false"
-          >
-             <text class="material-icons" style="font-size: 24px; color: #cbd5e1;">password</text>
-          </view>
-          
           <!-- WeChat -->
-          <view class="w-12 h-12 flex items-center justify-center rounded-full bg-[#1a0d0f] border border-[#f20d33]/10 text-slate-300 hover:text-[#d4af37] hover:border-[#d4af37] transition-all">
-            <!-- Simple SVG replacement with text or icon for now, as inline SVG is tricky in uniapp without plugin -->
-            <text class="material-icons" style="font-size: 24px; color: #cbd5e1;">chat</text>
+          <view class="social-btn">
+            <text class="material-icons">chat</text>
           </view>
           <!-- Apple -->
-          <view class="w-12 h-12 flex items-center justify-center rounded-full bg-[#1a0d0f] border border-[#f20d33]/10 text-slate-300 hover:text-[#d4af37] hover:border-[#d4af37] transition-all">
-            <text class="material-icons" style="font-size: 24px; color: #cbd5e1;">apple</text>
+          <view class="social-btn">
+            <text class="material-icons">apple</text>
           </view>
         </view>
 
-        <view class="flex flex-row items-start space-x-2 px-2 mt-8">
+        <view class="agreement-box">
           <checkbox-group @change="handleAgreementChange">
-            <label class="flex items-center">
-              <checkbox value="agreed" :checked="isAgreed" color="#f20d33" style="transform:scale(0.7)" />
-              <view class="text-xs text-slate-500 leading-tight ml-2">
-                已阅读并同意 <text class="text-slate-300">服务协议</text>、<text class="text-slate-300">隐私政策</text> 以及 <text class="text-slate-300">社区守则</text>
+            <label class="agreement-label">
+              <checkbox value="agreed" :checked="isAgreed" color="#f20d33" />
+              <view class="agreement-text">
+                已阅读并同意 <text class="link-highlight">服务协议</text>、<text class="link-highlight">隐私政策</text> 以及 <text class="link-highlight">社区守则</text>
               </view>
             </label>
           </checkbox-group>
         </view>
       </view>
     </view>
-
+    
     <!-- Footer Decoration -->
-    <view class="w-full h-1 bg-gradient-to-r from-transparent via-[#f20d33] to-transparent opacity-30 absolute bottom-0"></view>
+    <view class="footer-decoration"></view>
 
     <!-- Forgot Password Modal -->
-    <view v-if="showForgotModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <view class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showForgotModal = false"></view>
-      <view class="relative w-full max-w-sm bg-[#1A1811] rounded-2xl border border-[#d4af37]/20 p-6 shadow-2xl shadow-black/50">
-        <text class="text-xl font-bold text-white mb-6 block text-center">重置密码</text>
+    <view v-if="showForgotModal" class="modal-overlay">
+      <view class="modal-backdrop" @click="showForgotModal = false"></view>
+      <view class="modal-content">
+        <text class="modal-title">重置密码</text>
         
-        <view class="space-y-4">
-          <!-- Phone -->
-          <view class="w-full bg-[#0a0506] border border-[#f20d33]/10 rounded-xl px-4 py-3 flex items-center">
-            <input 
-              v-model="forgotForm.phone"
-              class="flex-1 bg-transparent text-white text-sm h-full"
-              placeholder="请输入手机号" 
-              placeholder-class="text-slate-500"
-              type="number"
-              maxlength="11"
-            />
+        <view class="modal-form">
+          <view class="modal-input-item">
+            <input v-model="forgotForm.phone" class="modal-input" placeholder="请输入手机号" placeholder-class="input-placeholder" type="number" maxlength="11" />
           </view>
           
-          <!-- Code -->
-          <view class="flex gap-2">
-            <view class="flex-1 bg-[#0a0506] border border-[#f20d33]/10 rounded-xl px-4 py-3 flex items-center">
-              <input 
-                v-model="forgotForm.code"
-                class="flex-1 bg-transparent text-white text-sm h-full"
-                placeholder="验证码" 
-                placeholder-class="text-slate-500"
-                type="number"
-                maxlength="6"
-              />
+          <view class="modal-code-group">
+            <view class="modal-input-item flex-1">
+              <input v-model="forgotForm.code" class="modal-input" placeholder="验证码" placeholder-class="input-placeholder" type="number" maxlength="6" />
             </view>
-            <button 
-              class="bg-[#f20d33]/10 text-[#f20d33] text-xs px-3 rounded-xl border border-[#f20d33]/20 flex items-center justify-center whitespace-nowrap min-w-[100px]"
-              @click="handleSendCode"
-              :disabled="countdown > 0"
-            >
+            <button class="modal-send-btn" @click="handleSendCode" :disabled="countdown > 0">
               {{ countdown > 0 ? `${countdown}s后重试` : '获取验证码' }}
             </button>
           </view>
           
-          <!-- New Password -->
-          <view class="w-full bg-[#0a0506] border border-[#f20d33]/10 rounded-xl px-4 py-3 flex items-center">
-            <input 
-              v-model="forgotForm.password"
-              class="flex-1 bg-transparent text-white text-sm h-full"
-              placeholder="新密码" 
-              placeholder-class="text-slate-500"
-              password
-            />
+          <view class="modal-input-item">
+            <input v-model="forgotForm.password" class="modal-input" placeholder="新密码" placeholder-class="input-placeholder" password />
           </view>
           
-          <!-- Confirm Password -->
-          <view class="w-full bg-[#0a0506] border border-[#f20d33]/10 rounded-xl px-4 py-3 flex items-center">
-            <input 
-              v-model="forgotForm.confirmPassword"
-              class="flex-1 bg-transparent text-white text-sm h-full"
-              placeholder="确认新密码" 
-              placeholder-class="text-slate-500"
-              password
-            />
+          <view class="modal-input-item">
+            <input v-model="forgotForm.confirmPassword" class="modal-input" placeholder="确认新密码" placeholder-class="input-placeholder" password />
           </view>
         </view>
         
-        <view class="flex gap-3 mt-8">
-          <button class="flex-1 bg-white/5 text-slate-300 text-sm py-3 rounded-xl" @click="showForgotModal = false">
-            取消
-          </button>
-          <button class="flex-1 bg-[#d4af37] text-[#1A1811] text-sm font-bold py-3 rounded-xl shadow-lg shadow-[#d4af37]/20" @click="handleResetPassword">
-            确认重置
-          </button>
+        <view class="modal-footer">
+          <button class="modal-cancel-btn" @click="showForgotModal = false">取消</button>
+          <button class="modal-confirm-btn" @click="handleResetPassword">确认重置</button>
         </view>
       </view>
     </view>
 
-      <!-- Verification Code Popup -->
-    <view 
-      v-if="showCodePopup" 
-      class="fixed top-1/2 left-1/2 z-[60] bg-white/95 text-black px-8 py-6 rounded-2xl shadow-2xl flex flex-col items-center justify-center fade-out-anim"
-    >
-      <text class="text-sm text-gray-500 mb-2">您的验证码是</text>
-      <text class="text-3xl font-bold tracking-widest text-[#f20d33]">{{ currentCode }}</text>
+    <!-- Verification Code Popup -->
+    <view v-if="showCodePopup" class="code-popup">
+      <text class="popup-label">您的验证码是</text>
+      <text class="popup-code">{{ currentCode }}</text>
     </view>
   </view>
 </template>
@@ -400,7 +344,7 @@ const togglePasswordVisibility = () => {
 }
 
 const handleAgreementChange = (e) => {
-  isAgreed.value = e.detail.value.includes('agreed')
+    isAgreed.value = e.detail.value.includes('agreed')
 }
 
 const goToRegister = () => {
@@ -485,8 +429,446 @@ const handleLogin = async () => {
 }
 </script>
 
-<style>
-/* 引入字体图标，如果项目中已有全局引入可省略 */
+<style lang="scss" scoped>
+.page-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #000;
+}
+
+.background-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+
+  .bg-image {
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+  }
+
+  .bg-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 60rpx;
+  width: 100%;
+
+  .logo-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 128rpx;
+    height: 128rpx;
+    background-color: rgba(242, 13, 51, 0.1);
+    border-radius: 24rpx;
+    border: 2rpx solid rgba(242, 13, 51, 0.2);
+    margin-bottom: 32rpx;
+
+    .logo-icon {
+      color: #f20d33;
+      font-size: 72rpx;
+    }
+  }
+
+  .branding-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .brand-name {
+      font-size: 60rpx;
+      font-weight: 800;
+      color: #d4af37;
+      letter-spacing: -2rpx;
+      margin-bottom: 8rpx;
+      text-shadow: 0 0 20rpx rgba(212, 175, 55, 0.3);
+    }
+
+    .brand-tagline {
+      font-size: 20rpx;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+    }
+  }
+}
+
+.form-section {
+  width: 100%;
+
+  .input-group {
+    margin-bottom: 40rpx;
+  }
+
+  .input-item {
+    width: 100%;
+    background-color: rgba(26, 13, 15, 0.6);
+    backdrop-filter: blur(20rpx);
+    border: 2rpx solid rgba(242, 13, 51, 0.2);
+    border-radius: 24rpx;
+    padding: 0 32rpx;
+    display: flex;
+    align-items: center;
+    height: 96rpx;
+    box-sizing: border-box;
+
+    .input-icon {
+      color: #94a3b8;
+      margin-right: 24rpx;
+      font-size: 40rpx;
+    }
+
+    .input-field {
+      flex: 1;
+      height: 100%;
+      color: #fff;
+      font-size: 28rpx;
+    }
+
+    .input-placeholder {
+      color: rgba(148, 163, 184, 0.5);
+    }
+  }
+
+  .code-input-group {
+    display: flex;
+    gap: 16rpx;
+    
+    .send-code-btn {
+      background-color: rgba(242, 13, 51, 0.1);
+      color: #f20d33;
+      font-size: 24rpx;
+      padding: 0 32rpx;
+      border-radius: 24rpx;
+      border: 2rpx solid rgba(242, 13, 51, 0.2);
+      height: 96rpx;
+      line-height: 96rpx;
+      min-width: 200rpx;
+      margin: 0;
+
+      &::after {
+        border: none;
+      }
+
+      &:active {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .password-toggle {
+    padding-left: 16rpx;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    .toggle-icon {
+      color: #94a3b8;
+      font-size: 40rpx;
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8rpx;
+    margin-top: 24rpx;
+
+    .link-text {
+      font-size: 24rpx;
+      color: #94a3b8;
+
+      &.highlight {
+        color: #d4af37;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .login-btn {
+    width: 100%;
+    background-color: #f20d33;
+    color: #fff;
+    font-weight: bold;
+    height: 96rpx;
+    border-radius: 24rpx;
+    margin-top: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10rpx 30rpx rgba(242, 13, 51, 0.2);
+    border: none;
+
+    &::after {
+      border: none;
+    }
+
+    .btn-text {
+      font-size: 28rpx;
+      margin-right: 16rpx;
+    }
+
+    .btn-icon {
+      font-size: 32rpx;
+    }
+  }
+}
+
+.footer-section {
+  width: 100%;
+  margin-top: 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .divider {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32rpx;
+
+    .divider-line {
+      flex: 1;
+      height: 2rpx;
+      background-color: rgba(242, 13, 51, 0.1);
+    }
+
+    .divider-text {
+      font-size: 24rpx;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 4rpx;
+    }
+  }
+
+  .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 64rpx;
+    margin-top: 48rpx;
+
+    .social-btn {
+      width: 96rpx;
+      height: 96rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #1a0d0f;
+      border: 2rpx solid rgba(242, 13, 51, 0.1);
+      color: #cbd5e1;
+
+      .material-icons {
+        font-size: 48rpx;
+      }
+    }
+  }
+
+  .agreement-box {
+    margin-top: 64rpx;
+    padding: 0 16rpx;
+
+    .agreement-label {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .agreement-text {
+      font-size: 24rpx;
+      color: #64748b;
+      margin-left: 16rpx;
+      line-height: 1.4;
+
+      .link-highlight {
+        color: #cbd5e1;
+      }
+    }
+  }
+}
+
+.footer-decoration {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 2rpx;
+  background: linear-gradient(to right, transparent, #f20d33, transparent);
+  opacity: 0.3;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8rpx);
+}
+
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 600rpx;
+  background-color: #1A1811;
+  border-radius: 32rpx;
+  border: 2rpx solid rgba(212, 175, 55, 0.2);
+  padding: 48rpx;
+  box-shadow: 0 40rpx 80rpx rgba(0, 0, 0, 0.5);
+
+  .modal-title {
+    display: block;
+    font-size: 40rpx;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 48rpx;
+  }
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.modal-input-item {
+  background-color: #0a0506;
+  border: 2rpx solid rgba(242, 13, 51, 0.1);
+  border-radius: 24rpx;
+  padding: 0 32rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+
+  .modal-input {
+    flex: 1;
+    height: 100%;
+    color: #fff;
+    font-size: 28rpx;
+  }
+}
+
+.modal-code-group {
+  display: flex;
+  gap: 16rpx;
+
+  .modal-send-btn {
+    background-color: rgba(242, 13, 51, 0.1);
+    color: #f20d33;
+    font-size: 24rpx;
+    border-radius: 24rpx;
+    border: 2rpx solid rgba(242, 13, 51, 0.2);
+    height: 88rpx;
+    line-height: 88rpx;
+    min-width: 200rpx;
+    margin: 0;
+
+    &::after {
+      border: none;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 64rpx;
+
+  button {
+    flex: 1;
+    height: 88rpx;
+    border-radius: 24rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .modal-cancel-btn {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+  }
+
+  .modal-confirm-btn {
+    background-color: #d4af37;
+    color: #1A1811;
+    font-weight: bold;
+    box-shadow: 0 10rpx 30rpx rgba(212, 175, 55, 0.2);
+  }
+}
+
+/* Popup Styles */
+.code-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  background-color: rgba(26, 13, 15, 0.95);
+  backdrop-filter: blur(40rpx);
+  border: 2rpx solid rgba(212, 175, 55, 0.3);
+  padding: 48rpx 64rpx;
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 40rpx 100rpx rgba(0, 0, 0, 0.6);
+
+  .popup-label {
+    font-size: 28rpx;
+    color: #94a3b8;
+    margin-bottom: 16rpx;
+  }
+
+  .popup-code {
+    font-size: 60rpx;
+    font-weight: bold;
+    color: #d4af37;
+    letter-spacing: 8rpx;
+    text-shadow: 0 0 20rpx rgba(212, 175, 55, 0.3);
+  }
+}
 
 .bg-stadium-gradient {
   background: radial-gradient(circle at top, #221013 0%, #0a0506 100%);
@@ -506,4 +888,35 @@ const handleLogin = async () => {
   70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
 }
+
+/* Utils */
+.flex-1 { flex: 1; }
+.mt-4 { margin-top: 32rpx; }
+
+/* 小程序特定的 checkbox 样式覆盖 */
+/* #ifdef MP-WEIXIN */
+checkbox .wx-checkbox-input {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  background-color: transparent;
+  border: 2rpx solid #64748b;
+}
+checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+  background-color: #f20d33;
+  border-color: #f20d33;
+}
+checkbox .wx-checkbox-input.wx-checkbox-input-checked::before {
+  color: #fff;
+  font-size: 24rpx;
+}
+/* #endif */
 </style>
+
+<script>
+export default {
+  methods: {
+    // 如果有非 setup 的逻辑可以在这里定义
+  }
+}
+</script>

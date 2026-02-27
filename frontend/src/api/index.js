@@ -272,7 +272,7 @@ export const fileApi = {
 export const favoriteApi = {
   /**
    * 收藏/取消收藏
-   * @param {Object} data { postId, newsId }
+   * @param {Object} data { postId, newsId, playerId }
    */
   toggle: (data) => request.post('/api/favorites/toggle', data),
 
@@ -289,8 +289,14 @@ export const favoriteApi = {
   listNews: (params) => request.get('/api/favorites/news', params),
 
   /**
+   * 获取我的收藏球员列表
+   * @param {Object} params { page, size }
+   */
+  listPlayers: (params) => request.get('/api/favorites/players', params),
+
+  /**
    * 检查收藏状态
-   * @param {Object} params { postId, newsId }
+   * @param {Object} params { postId, newsId, playerId }
    */
   check: (params) => request.get('/api/favorites/check', params)
 }

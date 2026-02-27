@@ -1,25 +1,54 @@
 <template>
   <view class="container">
     <!-- 自定义导航栏 -->
-    <u-navbar :safeAreaInsetTop="true" :placeholder="true" bgColor="rgba(10, 10, 10, 0.85)" leftIconColor="#fff">
-      <view class="navbar-content" slot="center">
-        <text class="brand-text">PITCHPULSE</text>
-        <text class="title-text">消息通知</text>
-      </view>
-      <view class="navbar-right" slot="right">
-        <view class="read-all-btn" @click="markAllRead">
-          <text>全部已读</text>
+    <view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="navbar-inner">
+        <view class="left" @click="goBack">
+          <u-icon name="arrow-left" color="#fff" size="22"></u-icon>
+        </view>
+        <view class="center">
+          <text class="brand-text">PITCHPULSE</text>
+        </view>
+        <view class="right" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+          <view class="icon-btn" @click="markAllRead" title="全部已读">
+            <u-icon name="order" color="#fff" size="20"></u-icon>
+          </view>
+          <view class="icon-btn" title="设置">
+            <u-icon name="setting" color="#fff" size="20"></u-icon>
+          </view>
         </view>
       </view>
-    </u-navbar>
+    </view>
+
+    <!-- 分类功能区 -->
+    <section class="category-section">
+      <view class="category-item" @click="filterByType('reply')">
+        <view class="icon-wrapper bg-emerald">
+          <u-icon name="chat" color="#10b981" size="28"></u-icon>
+        </view>
+        <text class="label">回复与@</text>
+      </view>
+      <view class="category-item" @click="filterByType('like')">
+        <view class="icon-wrapper bg-rose">
+          <u-icon name="thumb-up" color="#f43f5e" size="28"></u-icon>
+        </view>
+        <text class="label">收到喜欢</text>
+      </view>
+      <view class="category-item" @click="filterByType('follow')">
+        <view class="icon-wrapper bg-sky">
+          <u-icon name="account" color="#0ea5e9" size="28"></u-icon>
+        </view>
+        <text class="label">新增粉丝</text>
+      </view>
+    </section>
 
     <view class="notification-list">
       <view class="notification-item" v-for="(item, index) in list" :key="index" @click="handleNotificationClick(item)">
         <!-- 头像区域 -->
         <view class="avatar-box">
-          <u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="48"></u-avatar>
+          <image :src="item.fromUser.avatar || '/static/default-avatar.png'" class="avatar-img" mode="aspectFill"></image>
           <view class="badge-icon" v-if="getTypeIcon(item.type)">
-            <u-icon :name="getTypeIcon(item.type)" size="12" color="#fff"></u-icon>
+            <u-icon :name="getTypeIcon(item.type)" size="10" color="#fff"></u-icon>
           </view>
         </view>
 
@@ -27,33 +56,31 @@
         <view class="content-box">
           <view class="header-row">
             <view class="user-info">
-              <text class="nickname">{{ item.fromUser.nickname }}</text>
-              <view class="type-tag" :class="getTypeClass(item.type)">
-                <text>{{ getTypeLabel(item.type) }}</text>
+              <text class="nickname" :class="{ 'official': item.fromUser.id === 1 }">{{ item.fromUser.nickname }}</text>
+              <view v-if="item.fromUser.id === 1" class="official-tag">
+                <u-icon name="flash-fill" color="#fff" size="10"></u-icon>
               </view>
             </view>
             <text class="time">{{ formatTime(item.createdAt) }}</text>
           </view>
 
-          <!-- 描述文本 -->
-          <text class="desc-text">
-            {{ getActionDesc(item.type) }}
-            <text v-if="item.postTitle" class="highlight-text">"{{ item.postTitle }}"</text>
-          </text>
+          <!-- 消息正文 -->
+          <view class="message-row">
+            <p class="desc-text">
+              {{ getActionDesc(item.type) }}
+              <text v-if="item.postTitle" class="highlight-text">"{{ item.postTitle }}"</text>
+            </p>
+            <view class="unread-dot" v-if="!item.isRead"></view>
+          </view>
 
           <!-- 引用内容 (评论/回复内容) -->
           <view class="quote-box" v-if="item.content" :class="getQuoteClass(item.type)">
             <text class="quote-text">"{{ item.content }}"</text>
           </view>
         </view>
-
-        <!-- 未读红点 -->
-        <view class="status-box" v-if="!item.isRead">
-          <view class="red-dot"></view>
-        </view>
       </view>
 
-      <u-loadmore :status="loadStatus" @loadmore="loadMore" marginTop="30" />
+      <u-loadmore :status="loadStatus" @loadmore="loadMore" marginTop="30" color="#64748b" />
       <view class="safe-area-bottom"></view>
     </view>
   </view>
@@ -67,11 +94,26 @@ export default {
       page: 1,
       size: 10,
       loadStatus: 'loadmore',
-      isLoading: false
+      isLoading: false,
+      navbarPaddingRight: 16,
+      statusBarHeight: 0,
+      currentType: null // 当前筛选的类型
     };
   },
   onLoad() {
+    const systemInfo = uni.getSystemInfoSync();
+    this.statusBarHeight = systemInfo.statusBarHeight || 0;
+    
     this.loadData(true);
+
+    // #ifdef MP-WEIXIN
+    try {
+      const menuButton = uni.getMenuButtonBoundingClientRect();
+      this.navbarPaddingRight = (systemInfo.screenWidth - menuButton.left) + 8;
+    } catch (e) {
+      this.navbarPaddingRight = 94;
+    }
+    // #endif
   },
   onPullDownRefresh() {
     this.loadData(true);
@@ -173,20 +215,29 @@ export default {
             method: 'GET',
             data: {
                 page: this.page,
-                size: this.size
+                size: this.size,
+                type: this.currentType // 增加类型过滤
             }
         });
         
-        // request.js 已解包 data，直接使用
         const records = res.records || [];
+        
+        // 格式化数据，确保 fromUser 对象存在，并处理头像
+        const formattedRecords = records.map(item => {
+          if (item.fromUser && item.fromUser.avatar) {
+            item.fromUser.avatar = this.$utils.getFullImageUrl(item.fromUser.avatar);
+          }
+          return item;
+        });
+
         if (refresh) {
-            this.list = records;
+            this.list = formattedRecords;
             uni.stopPullDownRefresh();
         } else {
-            this.list = [...this.list, ...records];
+            this.list = [...this.list, ...formattedRecords];
         }
         
-        if (records.length < this.size) {
+        if (formattedRecords.length < this.size) {
             this.loadStatus = 'nomore';
         } else {
             this.loadStatus = 'loadmore';
@@ -215,30 +266,46 @@ export default {
         }
     },
 
-    async handleNotificationClick(item) {
+    // 过滤类型
+    filterByType(type) {
+      const pageMap = {
+        'reply': '/pages/community/reply-detail',
+        'like': '/pages/community/like-detail',
+        'follow': '/pages/community/fan-detail'
+      };
+      if (pageMap[type]) {
+        uni.navigateTo({
+          url: pageMap[type]
+        });
+      }
+    },
+    
+    goBack() {
+      // 如果当前有筛选，点击返回则先清除筛选，否则返回上一页
+      if (this.currentType) {
+        this.currentType = null;
+        this.loadData(true);
+      } else {
+        uni.navigateBack();
+      }
+    },
+    
+    handleNotificationClick(item) {
       // 标记已读
       if (!item.isRead) {
-        try {
-            await this.$request({
-                url: `/api/notifications/${item.id}/read`,
-                method: 'PUT'
-            });
+        this.$request({
+            url: `/api/notifications/${item.id}/read`,
+            method: 'PUT'
+        }).then(() => {
             item.isRead = 1;
-        } catch (e) {
-            console.error(e);
-        }
+        });
       }
 
       // 跳转逻辑
       if (item.type === 5) {
-        // 关注通知 -> 跳转到用户主页
         uni.navigateTo({ url: `/pages/my/profile?id=${item.fromUser.id}` });
       } else if ([1, 2, 3, 4].includes(item.type)) {
-        // 评论/点赞 -> 跳转到帖子详情
         if (item.postId) {
-            // 传递 targetId (评论ID/回复ID) 以便定位
-            // 注意：对于点赞帖子(type=1)，targetId可能是点赞记录ID，详情页无法定位，但也没关系
-            // 对于评论/回复(type=3,4)，targetId是评论ID，可以定位
             const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
             uni.navigateTo({
                 url: `/pages/post/detail?id=${item.postId}${targetParam}`
@@ -255,91 +322,141 @@ export default {
 
 <style lang="scss" scoped>
 // 变量定义
-$bg-color: #0A0A0A;
-$card-bg: #161616;
-$text-primary: #f1f5f9;
-$text-secondary: #cbd5e1;
+$bg-color: #000000;
+$card-bg: #000000;
+$text-primary: #ffffff;
+$text-secondary: #94a3b8;
 $text-muted: #64748b;
-$accent-color: #f2b90d;
-$border-color: rgba(255, 255, 255, 0.05);
+$accent-color: #991B1B; // Deep Crimson
+$gold-color: #D4AF37;
 
 .container {
   min-height: 100vh;
   background-color: $bg-color;
-  padding-bottom: env(safe-area-inset-bottom);
+  color: $text-primary;
 }
 
-.navbar-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-  .brand-text {
-    font-size: 20rpx;
-    color: $accent-color;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 4rpx;
-    margin-bottom: 4rpx;
-  }
-  
-  .title-text {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #fff;
-  }
-}
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
 
-.navbar-right {
-  margin-right: 20rpx;
-  
-  .read-all-btn {
-    padding: 8rpx 20rpx;
-    background-color: rgba($accent-color, 0.1);
-    border-radius: 999px;
-    
-    text {
-      font-size: 24rpx;
-      color: $accent-color;
-      font-weight: 500;
+  .navbar-inner {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32rpx;
+
+    .left, .right {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+      min-width: 100rpx;
+    }
+
+    .center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      
+      .brand-text {
+        font-size: 34rpx;
+        font-weight: 800;
+        color: $accent-color;
+        letter-spacing: 2rpx;
+      }
     }
     
-    &:active {
-      background-color: rgba($accent-color, 0.2);
+    .icon-btn {
+      padding: 10rpx;
+      &:active {
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+/* 分类功能区 */
+.category-section {
+  display: flex;
+  justify-content: space-around;
+  padding: 40rpx 32rpx;
+  background-color: #000;
+
+  .category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16rpx;
+
+    .icon-wrapper {
+      width: 112rpx;
+      height: 112rpx;
+      border-radius: 32rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+
+      &:active {
+        transform: scale(0.9);
+      }
+
+      &.bg-emerald { background-color: rgba(16, 185, 129, 0.15); }
+      &.bg-rose { background-color: rgba(244, 63, 94, 0.15); }
+      &.bg-sky { background-color: rgba(14, 165, 233, 0.15); }
+    }
+
+    .label {
+      font-size: 24rpx;
+      font-weight: 500;
+      color: #94a3b8;
     }
   }
 }
 
 .notification-list {
-  padding: 30rpx;
+  padding: 0 32rpx 40rpx;
   
   .notification-item {
-    background-color: $card-bg;
-    border-radius: 24rpx;
-    padding: 30rpx;
-    margin-bottom: 24rpx;
     display: flex;
-    align-items: flex-start;
-    border: 1px solid $border-color;
-    transition: background-color 0.2s;
+    padding: 32rpx 0;
+    border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
     
     &:active {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: rgba(255, 255, 255, 0.02);
     }
     
     .avatar-box {
       position: relative;
       margin-right: 24rpx;
       flex-shrink: 0;
+
+      .avatar-img {
+        width: 112rpx;
+        height: 112rpx;
+        border-radius: 50%;
+        border: 2rpx solid rgba($accent-color, 0.2);
+        background-color: #1a1a1a;
+      }
       
       .badge-icon {
         position: absolute;
-        bottom: -4rpx;
-        right: -4rpx;
-        background-color: $accent-color;
+        bottom: 0;
+        right: 0;
+        width: 36rpx;
+        height: 36rpx;
+        background-color: $gold-color;
         border-radius: 50%;
-        padding: 4rpx;
-        border: 2rpx solid $card-bg;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4rpx solid #000;
       }
     }
     
@@ -356,81 +473,81 @@ $border-color: rgba(255, 255, 255, 0.05);
         .user-info {
           display: flex;
           align-items: center;
-          gap: 16rpx;
+          gap: 12rpx;
           
           .nickname {
-            font-size: 28rpx;
-            font-weight: bold;
-            color: #fff;
+            font-size: 30rpx;
+            font-weight: 700;
+            color: #f1f5f9;
+            
+            &.official {
+              color: $accent-color;
+            }
           }
           
-          .type-tag {
-            padding: 4rpx 12rpx;
-            border-radius: 8rpx;
-            
-            text {
-              font-size: 20rpx;
-              font-weight: bold;
-              text-transform: uppercase;
-            }
-            
-            &.tag-primary { background-color: rgba($accent-color, 0.1); text { color: $accent-color; } }
-            &.tag-blue { background-color: rgba(59, 130, 246, 0.1); text { color: #60a5fa; } }
-            &.tag-pink { background-color: rgba(236, 72, 153, 0.1); text { color: #f472b6; } }
-            &.tag-green { background-color: rgba(34, 197, 94, 0.1); text { color: #4ade80; } }
+          .official-tag {
+            background-color: $gold-color;
+            padding: 2rpx 6rpx;
+            border-radius: 6rpx;
+            display: flex;
+            align-items: center;
           }
         }
         
         .time {
           font-size: 22rpx;
-          color: $text-muted;
+          color: #64748b;
         }
       }
-      
-      .desc-text {
-        font-size: 26rpx;
-        color: $text-secondary;
+
+      .message-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 16rpx;
-        display: block;
-        
-        .highlight-text {
-          color: rgba($accent-color, 0.9);
-          font-weight: 500;
-          margin-left: 8rpx;
+
+        .desc-text {
+          flex: 1;
+          font-size: 28rpx;
+          color: #94a3b8;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          
+          .highlight-text {
+            color: $accent-color;
+            margin-left: 8rpx;
+          }
+        }
+
+        .unread-dot {
+          width: 12rpx;
+          height: 12rpx;
+          background-color: #f43f5e;
+          border-radius: 50%;
+          margin-left: 16rpx;
+          box-shadow: 0 0 10rpx rgba(244, 63, 94, 0.5);
         }
       }
       
       .quote-box {
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 16rpx;
-        padding: 20rpx;
+        background-color: #111;
+        border-radius: 12rpx;
+        padding: 16rpx 20rpx;
         border-left: 4rpx solid $accent-color;
         
         .quote-text {
-          font-size: 24rpx;
-          color: $text-muted;
+          font-size: 26rpx;
+          color: #64748b;
           line-height: 1.5;
-          // 多行省略
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
         }
         
-        &.border-green { border-left-color: #4ade80; }
-        &.border-blue { border-left-color: #60a5fa; }
-      }
-    }
-    
-    .status-box {
-      margin-left: 20rpx;
-      margin-top: 20rpx;
-      
-      .red-dot {
-        width: 16rpx;
-        height: 16rpx;
-        background-color: #ef4444;
-        border-radius: 50%;
+        &.border-green { border-left-color: #10b981; }
+        &.border-blue { border-left-color: #0ea5e9; }
       }
     }
   }

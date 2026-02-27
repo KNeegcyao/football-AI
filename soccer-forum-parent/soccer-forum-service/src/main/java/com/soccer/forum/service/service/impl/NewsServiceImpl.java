@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
+import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.News;
+import com.soccer.forum.service.mapper.FavoriteMapper;
 import com.soccer.forum.service.mapper.NewsMapper;
 import com.soccer.forum.service.service.NewsService;
 import org.slf4j.Logger;
@@ -30,10 +32,12 @@ public class NewsServiceImpl implements NewsService {
     private static final Logger log = LoggerFactory.getLogger(NewsServiceImpl.class);
 
     private final NewsMapper newsMapper;
+    private final FavoriteMapper favoriteMapper;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
-    public NewsServiceImpl(NewsMapper newsMapper, org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+    public NewsServiceImpl(NewsMapper newsMapper, FavoriteMapper favoriteMapper, org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
         this.newsMapper = newsMapper;
+        this.favoriteMapper = favoriteMapper;
         this.redisTemplate = redisTemplate;
     }
 
@@ -131,7 +135,10 @@ public class NewsServiceImpl implements NewsService {
         }
         
         query.orderByDesc(News::getPublishTime);
-        return newsMapper.selectPage(newsPage, query);
+        Page<News> result = newsMapper.selectPage(newsPage, query);
+        log.info("查询资讯列表完成，记录数: {}", result.getRecords() != null ? result.getRecords().size() : 0);
+        
+        return result;
     }
 
     /**

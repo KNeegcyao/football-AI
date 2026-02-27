@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <!-- Navigation Bar -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
         <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
       </view>
@@ -20,10 +20,6 @@
             <view class="post-info">
               <text class="post-title">{{ post.title }}</text>
               <view class="post-footer">
-                <view class="post-author-info">
-                  <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-                  <text class="post-author-name">{{ post.userName }}</text>
-                </view>
                 <view class="post-stats">
                   <text class="post-time">{{ formatTime(post.createTime) }}</text>
                   <view class="stat-item">
@@ -34,6 +30,10 @@
                     <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
                     <text class="stat-num">{{ post.commentCount || 0 }}</text>
                   </view>
+                </view>
+                <view class="post-author-info">
+                  <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
+                  <text class="post-author-name">{{ post.userName }}</text>
                 </view>
               </view>
             </view>
@@ -62,6 +62,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi } from '@/api';
 
 const posts = ref([]);
+const navbarPaddingRight = ref(0);
 const loading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
@@ -70,6 +71,19 @@ const loadStatus = ref('loadmore');
 const userInfo = ref(null);
 
 onLoad(() => {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   const userInfoStr = uni.getStorageSync('userInfo');
   if (userInfoStr) {
     console.log('Raw userInfo from storage:', userInfoStr);

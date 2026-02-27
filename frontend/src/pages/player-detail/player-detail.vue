@@ -6,16 +6,15 @@
     
     <scroll-view v-else scroll-y class="content-scroll">
       <!-- Header Navigation -->
-      <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
         <view class="nav-btn-glass" @click="goBack">
           <text class="material-icons nav-icon">arrow_back_ios_new</text>
         </view>
         <view class="nav-actions">
-          <view class="nav-btn-glass">
-            <text class="material-icons nav-icon">share</text>
-          </view>
-          <view class="nav-btn-glass">
-            <text class="material-icons nav-icon active">favorite</text>
+          <view class="nav-btn-glass" @click="toggleFavorite">
+            <text class="material-icons nav-icon" :class="{ active: isFavorited }">
+              {{ isFavorited ? 'favorite' : 'favorite_border' }}
+            </text>
           </view>
         </view>
       </view>
@@ -131,23 +130,83 @@
 <script setup>
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { playerApi, fileApi } from '@/api/index';
+import { playerApi, fileApi, favoriteApi } from '@/api/index';
 
 const statusBarHeight = ref(20);
+const navbarPaddingRight = ref(0);
 const loading = ref(true);
 const player = ref({});
+const isFavorited = ref(false);
 
 onLoad(async (options) => {
   const sysInfo = uni.getSystemInfoSync();
   statusBarHeight.value = sysInfo.statusBarHeight || 20;
 
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (sysInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   if (options.id) {
     await loadPlayerDetail(options.id);
+    await checkFavoriteStatus(options.id);
   }
 });
 
 const goBack = () => {
   uni.navigateBack();
+};
+
+const checkFavoriteStatus = async (id) => {
+  try {
+    const res = await favoriteApi.check({ playerId: id });
+    isFavorited.value = res;
+  } catch (e) {
+    console.error('Check favorite status failed:', e);
+  }
+};
+
+const toggleFavorite = async () => {
+  const rawId = player.value.id;
+  if (!rawId) {
+    uni.showToast({ title: '数据加载中', icon: 'none' });
+    return;
+  }
+  
+  const numericId = Number(rawId);
+  if (isNaN(numericId)) {
+    console.error('无效的球员ID:', rawId);
+    uni.showToast({ title: '球员ID无效', icon: 'none' });
+    return;
+  }
+  
+  const payload = { playerId: numericId };
+  console.log('--- 收藏操作开始 ---');
+  console.log('原始 ID:', rawId, '类型:', typeof rawId);
+  console.log('转换后数字 ID:', numericId);
+  console.log('发送 Payload:', JSON.stringify(payload));
+  
+  try {
+    const res = await favoriteApi.toggle(payload);
+    console.log('收到响应:', JSON.stringify(res));
+    if (res && res.favorited !== undefined) {
+      isFavorited.value = res.favorited;
+      uni.showToast({
+        title: isFavorited.value ? '收藏成功，请在“我的收藏”中查看' : '已取消收藏',
+        icon: 'none'
+      });
+    }
+  } catch (e) {
+    console.error('Toggle favorite failed:', e);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
 };
 
 const loadPlayerDetail = async (id) => {

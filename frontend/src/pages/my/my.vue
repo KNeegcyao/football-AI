@@ -1,10 +1,18 @@
 <template>
   <view class="page-container bg-[#1A1811] text-white min-h-screen flex flex-col font-display">
     <!-- Header -->
-    <view class="sticky top-0 z-50 bg-[#1A1811]/95 ios-blur px-4 pt-12 pb-4 flex flex-row items-center justify-between border-b border-white/5">
-      <text class="text-xl font-bold tracking-tight text-white">个人中心</text>
-      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-[#f9d406]" @click="goToEdit">
-        <text class="material-icons-round" style="font-size: 20px;">edit</text>
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+      <view class="logo-area">
+        <view class="logo-icon">
+          <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
+        </view>
+        <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
+      </view>
+
+      <view class="nav-actions">
+        <view class="action-btn" @click="goToEdit">
+          <u-icon name="edit-pen" color="#f9d406" size="44rpx"></u-icon>
+        </view>
       </view>
     </view>
 
@@ -179,6 +187,7 @@ const userInfo = ref({
 })
 
 const showLogoutModal = ref(false)
+const navbarPaddingRight = ref(0)
 
 
 
@@ -197,6 +206,19 @@ onShow(() => {
     return
   }
   loadUserProfile()
+  
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
 })
 
 const handleTabClick = (index) => {
@@ -279,7 +301,7 @@ const uploadAvatar = (filePath) => {
   const token = uni.getStorageSync('token')
   
   uni.uploadFile({
-    url: 'http://localhost:8080/api/files/upload',
+    url: 'http://192.168.5.6:8080/api/files/upload',
     filePath: filePath,
     name: 'file',
     header: {
@@ -408,45 +430,89 @@ const confirmLogout = () => {
 </style>
 
 <style lang="scss">
-/* #ifdef H5 */
-.h5-header-fix {
-  max-width: 500px;
-  margin: 0 auto;
-  left: 0;
-  right: 0;
-}
-/* #endif */
+$pitch-pulse-primary: #f9d406;
+$pitch-pulse-bg-dark: #1A1811;
 
-/* 底部导航占位 */
+.nav-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 100rpx 32rpx 20rpx;
+  background-color: $pitch-pulse-bg-dark;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+}
+
+.logo-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10rpx;
+  
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.3));
+  }
+}
+
+.logo-text {
+  font-size: 36rpx;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+  color: #fff;
+  .primary {
+    color: $pitch-pulse-primary;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.action-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-container {
+  min-height: 100vh;
+  background-color: #1A1811;
+}
+
 .safe-area-bottom {
-  height: 160rpx;
+  height: calc(100rpx + env(safe-area-inset-bottom));
 }
 
-/* 底部导航栏 */
 .tab-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx;
-  background-color: rgba(26, 24, 17, 0.98);
-  backdrop-filter: blur(20px);
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  height: 100rpx;
+  background-color: rgba(26, 24, 17, 0.95);
+  backdrop-filter: blur(10px);
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding-bottom: constant(safe-area-inset-bottom);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.05);
   padding-bottom: env(safe-area-inset-bottom);
-  z-index: 9999;
-  box-sizing: border-box;
-  pointer-events: auto;
+  z-index: 1000;
 }
 
 .tab-item {

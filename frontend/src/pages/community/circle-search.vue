@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <!-- Navbar with Search -->
-    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
         <view class="nav-btn-glass">
           <text class="material-icons back-icon">arrow_back</text>
@@ -102,12 +102,25 @@ const noMore = ref(false);
 const searched = ref(false);
 const page = ref(1);
 const statusBarHeight = ref(20);
+const navbarPaddingRight = ref(0);
 
 onLoad((options) => {
   const sysInfo = uni.getSystemInfoSync();
   statusBarHeight.value = sysInfo.statusBarHeight || 20;
 
-  if (options.circleId) {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (sysInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
+  if (options.id) {
     circleId.value = options.circleId;
   }
   if (options.circleName) {

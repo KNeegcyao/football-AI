@@ -4,7 +4,7 @@
     <view class="status-bar"></view>
 
     <!-- Top Navigation Bar -->
-    <view class="nav-header">
+    <view class="nav-header" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <text class="cancel-btn" @click="goBack">取消</text>
       <text class="page-title">发布帖子</text>
       <view class="publish-btn" :class="{ disabled: !isValid || submitting }" @click="handlePublish">
@@ -162,7 +162,7 @@ import { ref, computed } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { postApi, communityApi, userApi, fileApi } from '@/api';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://192.168.5.6:8080';
 
 const form = ref({
   title: '',
@@ -171,6 +171,7 @@ const form = ref({
 
 const images = ref([]);
 const submitting = ref(false);
+const navbarPaddingRight = ref(16); // 默认 16px
 const circleId = ref(null);
 const circleName = ref('');
 const topicId = ref(null);
@@ -196,6 +197,29 @@ const loadUserProfile = async () => {
 };
 
 onLoad((options) => {
+  if (options.topic) {
+    const topicTitleFromUrl = decodeURIComponent(options.topic).replace(/^#|#$/g, '');
+    selectedTopic.value = { title: topicTitleFromUrl };
+    // 如果带了 topicId，直接赋值
+    if (options.topicId) {
+      topicId.value = options.topicId;
+      selectedTopic.value.id = options.topicId;
+    }
+    
+    // 自动在内容中添加话题标签
+    const topicTag = `#${topicTitleFromUrl}#`;
+    if (!form.value.content.includes(topicTag)) {
+      form.value.content += (form.value.content ? ' ' : '') + topicTag + ' ';
+    }
+  }
+
+  if (options.circleId) {
+    circleId.value = options.circleId;
+  }
+  if (options.circleName) {
+    circleName.value = decodeURIComponent(options.circleName);
+  }
+
   const storedUserInfo = uni.getStorageSync('userInfo');
   if (storedUserInfo) {
     userInfo.value = storedUserInfo;
@@ -229,6 +253,19 @@ onLoad((options) => {
       title: topicTitle 
     };
   }
+
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
 
   // Listen for circle selection
   uni.$on('selectCircle', (circle) => {
@@ -390,9 +427,11 @@ const handlePublish = async () => {
       title: form.value.title || form.value.content.slice(0, 20),
       content: form.value.content,
       images: uploadedImages,
-      circleId: circleId.value,
-      topicId: topicId.value
+      circleId: circleId.value ? Number(circleId.value) : null,
+      topicId: topicId.value ? Number(topicId.value) : null
     };
+
+    console.log('Sending post data:', JSON.stringify(postData));
 
     const res = await postApi.create(postData);
 

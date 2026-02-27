@@ -55,7 +55,8 @@ public class PostController {
     @PostMapping
     public R<Map<String, Long>> create(@Validated @RequestBody PostCreateReq req, 
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
-        log.info("收到发布帖子请求: 用户ID={}, 标题={}", loginUser.getUser().getId(), req.getTitle());
+        log.info("收到发布帖子请求: 用户ID={}, 标题={}, topicId={}, circleId={}", 
+                loginUser.getUser().getId(), req.getTitle(), req.getTopicId(), req.getCircleId());
         Long postId = postService.createPost(req, loginUser.getUser().getId());
         log.info("帖子发布成功: id={}", postId);
         return R.ok(Map.of("id", postId));

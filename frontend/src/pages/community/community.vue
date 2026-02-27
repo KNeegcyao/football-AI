@@ -4,7 +4,7 @@
     <view class="status-bar"></view>
 
     <!-- Header (Aligned with index.vue) -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
           <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
@@ -126,6 +126,7 @@ import { communityApi, fileApi, notificationApi } from '@/api';
 import { BASE_URL } from '@/utils/request.js';
 
 const unreadCount = ref(0);
+const navbarPaddingRight = ref(0);
 const searchKey = ref('');
 const { proxy } = getCurrentInstance();
 
@@ -257,8 +258,13 @@ const loadUnreadCount = async () => {
   }
 };
 
-onShow(() => {
-  loadUnreadCount();
+onShow(async () => {
+  uni.hideTabBar();
+  const token = uni.getStorageSync('token');
+  if (token) {
+    loadUnreadCount();
+  }
+  loadData();
 });
 
 const loadData = async () => {
@@ -296,6 +302,19 @@ const loadData = async () => {
 
 
 onMounted(() => {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   loadData();
 });
 </script>

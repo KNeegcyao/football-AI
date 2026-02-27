@@ -3,7 +3,7 @@
  * 封装 uni.request，支持拦截器、BaseURL 及 Promise 异步处理
  */
 
-const BASE_URL = 'http://localhost:8080' // 后端服务地址
+const BASE_URL = 'http://192.168.5.6:8080' // 模拟器测试使用 192.168.5.6，真机测试改回 192.168.5.6
 export { BASE_URL }
 
 const request = (options = {}) => {
@@ -26,7 +26,9 @@ const request = (options = {}) => {
       ...options,
       success: (res) => {
         // 打印原始响应，方便调试
-        console.log('API Response:', res)
+        console.log('API Response Status:', res.statusCode)
+        console.log('API Response Data Type:', typeof res.data)
+        console.log('API Response Data:', res.data)
         
         // 处理 HTTP 状态码为 401 的情况 (Spring Security 默认行为)
         if (res.statusCode === 401) {
@@ -39,12 +41,25 @@ const request = (options = {}) => {
           return
         }
 
-        if (!res.data) {
-          reject(new Error('服务器未返回数据'))
+        if (res.data === undefined || res.data === null || res.data === '') {
+          console.warn('API Warning: Response data is empty.')
+          reject(new Error('服务器返回了空内容'))
           return
         }
 
-        const { code, msg, data } = res.data
+        let responseData = res.data
+        if (typeof res.data === 'string') {
+          try {
+            // 尝试解析字符串 JSON (部分环境 uni.request 不会自动解析)
+            responseData = JSON.parse(res.data)
+          } catch (e) {
+            console.error('API Error: Failed to parse JSON response.', res.data)
+            reject(new Error('服务器返回数据格式错误'))
+            return
+          }
+        }
+
+        const { code, msg, data } = responseData
         if (code === 200) {
           resolve(data)
         } else if (code === 401) {
@@ -61,7 +76,8 @@ const request = (options = {}) => {
         }
       },
       fail: (err) => {
-        console.error('Request Fail:', err)
+        console.error('Request Fail URL:', options.url)
+        console.error('Request Fail Error:', JSON.stringify(err))
         uni.showToast({ title: '网络连接失败', icon: 'none' })
         reject(err)
       }

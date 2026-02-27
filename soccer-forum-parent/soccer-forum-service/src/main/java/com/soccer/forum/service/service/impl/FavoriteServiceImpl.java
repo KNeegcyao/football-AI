@@ -2,6 +2,7 @@ package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Favorite;
@@ -16,8 +17,11 @@ import com.soccer.forum.service.mapper.NewsMapper;
 import com.soccer.forum.service.mapper.TopicMapper;
 import com.soccer.forum.service.mapper.TeamMapper;
 import com.soccer.forum.service.mapper.UserMapper;
+import com.soccer.forum.service.model.dto.FavoriteToggleResp;
 import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.service.FavoriteService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -31,6 +35,8 @@ import org.springframework.beans.BeanUtils;
 
 @Service
 public class FavoriteServiceImpl implements FavoriteService {
+
+    private static final Logger log = LoggerFactory.getLogger(FavoriteServiceImpl.class);
 
     private final FavoriteMapper favoriteMapper;
     private final PostMapper postMapper;
@@ -50,10 +56,10 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean toggleFavorite(Long postId, Long newsId, Long userId) {
+    public FavoriteToggleResp toggleFavorite(Long postId, Long newsId, Long playerId, Long userId) {
         if (postId != null) {
             Post post = postMapper.selectById(postId);
-            if (post == null) {
+             if (post == null) {
                 throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
             }
             
@@ -64,14 +70,22 @@ public class FavoriteServiceImpl implements FavoriteService {
             Favorite existing = favoriteMapper.selectOne(query);
             if (existing != null) {
                 favoriteMapper.deleteById(existing.getId());
-                return false;
+                // 同步更新帖子的点赞数（此处假设收藏也影响点赞数，或者以后可以区分）
+                int currentLikes = (post.getLikes() == null ? 0 : post.getLikes());
+                post.setLikes(Math.max(0, currentLikes - 1));
+                postMapper.updateById(post);
+                return new FavoriteToggleResp(false, post.getLikes());
             } else {
                 Favorite favorite = new Favorite();
                 favorite.setPostId(postId);
                 favorite.setUserId(userId);
                 favorite.setCreatedAt(LocalDateTime.now());
                 favoriteMapper.insert(favorite);
-                return true;
+                // 同步更新帖子的点赞数
+                int currentLikes = (post.getLikes() == null ? 0 : post.getLikes());
+                post.setLikes(currentLikes + 1);
+                postMapper.updateById(post);
+                return new FavoriteToggleResp(true, post.getLikes());
             }
         } else if (newsId != null) {
             News news = newsMapper.selectById(newsId);
@@ -86,16 +100,78 @@ public class FavoriteServiceImpl implements FavoriteService {
             Favorite existing = favoriteMapper.selectOne(query);
             if (existing != null) {
                 favoriteMapper.deleteById(existing.getId());
-                return false;
+                // 同步更新新闻表的收藏数
+                // 获取最新真实收藏数并更新到 news 表
+                LambdaQueryWrapper<Favorite> countQuery = new LambdaQueryWrapper<>();
+                countQuery.eq(Favorite::getNewsId, newsId);
+                int latestCount = favoriteMapper.selectCount(countQuery).intValue();
+                
+                log.info("取消收藏同步更新计数: 新闻ID={}, 新收藏数={}", newsId, latestCount);
+                
+                // 使用 LambdaUpdateWrapper 局部更新 collect_count，避免全量更新冲突
+                LambdaUpdateWrapper<News> updateWrapper = new LambdaUpdateWrapper<>();
+                updateWrapper.eq(News::getId, newsId)
+                             .set(News::getCollectCount, latestCount);
+                int rows = newsMapper.update(null, updateWrapper);
+                
+                log.info("newsMapper.update (LambdaUpdateWrapper) 返回受影响行数: {}", rows);
+                return new FavoriteToggleResp(false, latestCount);
             } else {
                 Favorite favorite = new Favorite();
                 favorite.setNewsId(newsId);
                 favorite.setUserId(userId);
                 favorite.setCreatedAt(LocalDateTime.now());
                 favoriteMapper.insert(favorite);
-                return true;
+                // 同步更新新闻表的收藏数
+                // 获取最新真实收藏数并更新到 news 表
+                LambdaQueryWrapper<Favorite> countQuery = new LambdaQueryWrapper<>();
+                countQuery.eq(Favorite::getNewsId, newsId);
+                int latestCount = favoriteMapper.selectCount(countQuery).intValue();
+                
+                log.info("添加收藏同步更新计数: 新闻ID={}, 新收藏数={}", newsId, latestCount);
+                
+                // 使用 LambdaUpdateWrapper 局部更新 collect_count
+                LambdaUpdateWrapper<News> updateWrapper = new LambdaUpdateWrapper<>();
+                updateWrapper.eq(News::getId, newsId)
+                             .set(News::getCollectCount, latestCount);
+                int rows = newsMapper.update(null, updateWrapper);
+                
+                log.info("newsMapper.update (LambdaUpdateWrapper) 返回受影响行数: {}", rows);
+                return new FavoriteToggleResp(true, latestCount);
+            }
+        } else if (playerId != null) {
+            // 球员收藏逻辑
+            log.info("执行球员收藏逻辑: playerId={}, userId={}", playerId, userId);
+            LambdaQueryWrapper<Favorite> query = new LambdaQueryWrapper<>();
+            query.eq(Favorite::getPlayerId, playerId)
+                 .eq(Favorite::getUserId, userId);
+            
+            Favorite existing = favoriteMapper.selectOne(query);
+            if (existing != null) {
+                favoriteMapper.deleteById(existing.getId());
+                
+                LambdaQueryWrapper<Favorite> countQuery = new LambdaQueryWrapper<>();
+                countQuery.eq(Favorite::getPlayerId, playerId);
+                int latestCount = favoriteMapper.selectCount(countQuery).intValue();
+                
+                log.info("取消收藏球员成功: 球员ID={}, 最新收藏数={}", playerId, latestCount);
+                return new FavoriteToggleResp(false, latestCount);
+            } else {
+                Favorite favorite = new Favorite();
+                favorite.setPlayerId(playerId);
+                favorite.setUserId(userId);
+                favorite.setCreatedAt(LocalDateTime.now());
+                favoriteMapper.insert(favorite);
+                
+                LambdaQueryWrapper<Favorite> countQuery = new LambdaQueryWrapper<>();
+                countQuery.eq(Favorite::getPlayerId, playerId);
+                int latestCount = favoriteMapper.selectCount(countQuery).intValue();
+                
+                log.info("添加收藏球员成功: 球员ID={}, 最新收藏数={}", playerId, latestCount);
+                return new FavoriteToggleResp(true, latestCount);
             }
         } else {
+            log.warn("收藏切换请求参数不足: userId={}, postId={}, newsId={}, playerId={}", userId, postId, newsId, playerId);
             throw new ServiceException(ServiceErrorCode.PARAM_ERROR);
         }
     }
@@ -217,7 +293,40 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    public boolean isFavorited(Long postId, Long newsId, Long userId) {
+    public Page<Map<String, Object>> getMyFavoritePlayers(Integer pageNum, Integer pageSize, Long userId) {
+        Page<Favorite> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<Favorite> query = new LambdaQueryWrapper<>();
+        query.eq(Favorite::getUserId, userId)
+             .isNotNull(Favorite::getPlayerId)
+             .orderByDesc(Favorite::getCreatedAt);
+        
+        Page<Favorite> favoritePage = favoriteMapper.selectPage(page, query);
+        
+        if (favoritePage.getRecords().isEmpty()) {
+            Page<Map<String, Object>> result = new Page<>(pageNum, pageSize);
+            result.setTotal(favoritePage.getTotal());
+            result.setRecords(Collections.emptyList());
+            return result;
+        }
+
+        // 球员数据目前来自外部 API (SportAPI)，因此收藏列表只返回球员 ID
+        // 前端根据 ID 列表自行加载或展示基础信息
+        List<Map<String, Object>> records = favoritePage.getRecords().stream().map(fav -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("playerId", fav.getPlayerId());
+            map.put("favoriteId", fav.getId());
+            map.put("createTime", fav.getCreatedAt());
+            return map;
+        }).collect(Collectors.toList());
+
+        Page<Map<String, Object>> result = new Page<>(pageNum, pageSize);
+        result.setTotal(favoritePage.getTotal());
+        result.setRecords(records);
+        return result;
+    }
+
+    @Override
+    public boolean isFavorited(Long postId, Long newsId, Long playerId, Long userId) {
         LambdaQueryWrapper<Favorite> query = new LambdaQueryWrapper<>();
         query.eq(Favorite::getUserId, userId);
         
@@ -225,6 +334,8 @@ public class FavoriteServiceImpl implements FavoriteService {
             query.eq(Favorite::getPostId, postId);
         } else if (newsId != null) {
             query.eq(Favorite::getNewsId, newsId);
+        } else if (playerId != null) {
+            query.eq(Favorite::getPlayerId, playerId);
         } else {
             return false;
         }

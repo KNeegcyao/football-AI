@@ -10,15 +10,15 @@
       <view class="header-overlay"></view>
       
       <!-- Top Navigation Bar -->
-      <view class="nav-bar">
+      <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
         <view class="icon-btn" @click="goBack">
           <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
         </view>
         <view class="nav-actions">
-          <view class="icon-btn">
+          <view class="icon-btn" @click="handleSearch">
             <u-icon name="search" color="#fff" size="24"></u-icon>
           </view>
-          <view class="icon-btn">
+          <view class="icon-btn" @click="handleShare">
             <u-icon name="share" color="#fff" size="24"></u-icon>
           </view>
         </view>
@@ -54,22 +54,34 @@
         </view>
       </view>
 
-      <view class="description-box" v-if="topicInfo.description">
-        <text class="description-text">
+      <view class="description-box" v-if="topicInfo.description" @click="toggleExpand">
+        <text class="description-text" :class="{ 'expanded': isExpanded }">
           {{ topicInfo.description }}
         </text>
         <view class="expand-btn">
-          <text>查看完整背景</text>
-          <u-icon name="arrow-down" color="#f20d33" size="12"></u-icon>
+          <text>{{ isExpanded ? '收起背景' : '查看完整背景' }}</text>
+          <u-icon :name="isExpanded ? 'arrow-up' : 'arrow-down'" color="#f20d33" size="12"></u-icon>
         </view>
       </view>
     </view>
 
     <!-- Feed Tabs -->
     <view class="tabs-header sticky-header">
-      <view class="tab-item active">最热</view>
-      <view class="tab-item">最新</view>
-      <view class="tab-item">媒体</view>
+      <view 
+        class="tab-item" 
+        :class="{ active: currentTab === 'hot' }" 
+        @click="switchTab('hot')"
+      >最热</view>
+      <view 
+        class="tab-item" 
+        :class="{ active: currentTab === 'new' }" 
+        @click="switchTab('new')"
+      >最新</view>
+      <view 
+        class="tab-item" 
+        :class="{ active: currentTab === 'media' }" 
+        @click="switchTab('media')"
+      >媒体</view>
     </view>
 
     <!-- Discussion Feed -->
@@ -95,7 +107,7 @@
           梅西的首秀太震撼了！全场齐声高呼名号的那一刻，我甚至觉得这就是工体的巅峰时刻。阿根廷的中场控制力依然是顶级。 <text class="hashtag">#梅西中国行#</text>
         </text>
         <view class="media-container">
-          <image class="post-image" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg" mode="aspectFill"></image>
+          <image class="post-image" src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop" mode="aspectFill"></image>
         </view>
         <view class="post-actions">
           <view class="action-group">
@@ -206,7 +218,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { onLoad, onShow } from '@dcloudio/uni-app';
+import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { communityApi, fileApi } from '@/api';
 
 const topicTitle = ref('梅西中国行');
@@ -214,8 +226,21 @@ const topicId = ref(null);
 const topicInfo = ref({});
 const loading = ref(false);
 const postList = ref([]);
+const navbarPaddingRight = ref(16); // 默认 16px
+const isExpanded = ref(false);
+const currentTab = ref('hot'); // hot, new, media
 
 const isNavigating = ref(false);
+
+const toggleExpand = () => {
+  isExpanded.value = !isExpanded.value;
+};
+
+const switchTab = (tab) => {
+  if (currentTab.value === tab) return;
+  currentTab.value = tab;
+  loadPosts(topicTitle.value);
+};
 
 const formatCount = (num) => {
   if (!num) return '0';
@@ -252,15 +277,83 @@ const goBack = () => {
   uni.navigateBack();
 };
 
+const handleSearch = () => {
+  uni.navigateTo({
+    url: '/pages/search/search'
+  });
+};
+
+const handleShare = () => {
+  // #ifdef MP-WEIXIN
+  // 小程序端唤起分享菜单
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline']
+  });
+  // #endif
+
+  // #ifndef MP-WEIXIN
+  // H5/App端 模拟分享逻辑
+  uni.setClipboardData({
+    data: window.location.href || `话题：#${topicTitle.value}#`,
+    success: () => {
+      uni.showToast({
+        title: '链接已复制到剪贴板',
+        icon: 'success'
+      });
+    }
+  });
+  // #endif
+};
+
 onLoad((options) => {
   if (options.id) {
     topicId.value = options.id;
     loadTopicDetail(options.id);
-  }
-  if (options.title) {
+  } else if (options.title) {
     topicTitle.value = decodeURIComponent(options.title).replace(/^#|#$/g, '');
+    // 如果只有标题没有 ID，先通过标题加载帖子，loadPosts 会尝试从帖子中反向获取 topicId
+    loadPosts(topicTitle.value);
   }
+  
+  topicInfo.value = {
+    image: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop',
+    title: topicTitle.value,
+    postCount: 0,
+    viewCount: 0,
+    description: '加载中...'
+  };
+
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   // onShow 会处理初次加载，这里不需要重复调用
+});
+
+onShareAppMessage(() => {
+  return {
+    title: `#${topicTitle.value}#`,
+    path: `/pages/community/topic-detail?title=${encodeURIComponent(topicTitle.value)}&id=${topicId.value || ''}`,
+    imageUrl: topicInfo.value.image || ''
+  };
+});
+
+onShareTimeline(() => {
+  return {
+    title: `#${topicTitle.value}#`,
+    query: `title=${encodeURIComponent(topicTitle.value)}&id=${topicId.value || ''}`,
+    imageUrl: topicInfo.value.image || ''
+  };
 });
 
 onShow(() => {
@@ -289,20 +382,44 @@ const loadTopicDetail = async (id) => {
   }
 }
 
-const loadPosts = async (id) => {
+const loadPosts = async (title) => {
   try {
     loading.value = true
-    const data = await communityApi.getTopicPosts(id, { page: 1, size: 10 })
-    if (data) {
+    const params = { 
+      page: 1, 
+      size: 20,
+      topic: title 
+    }
+    
+    // Add sorting/filter based on currentTab
+    if (currentTab.value === 'hot') {
+      params.sort = 'likes' // Assume backend supports sorting by likes for 'hot'
+    } else if (currentTab.value === 'new') {
+      params.sort = 'create_time'
+    } else if (currentTab.value === 'media') {
+      params.hasImage = true // Assume backend supports filtering by images
+    }
+
+    const res = await communityApi.getTopicPosts(title, params)
+    if (res) {
+      const data = res.posts || res; // 兼容旧版或新版返回格式
       const records = data.records || []
       
-      // 如果没有 topicId，尝试从返回的帖子中获取
-      if (!topicId.value && records.length > 0) {
+      // 自动获取并设置话题信息
+      if (res.topic) {
+        topicId.value = res.topic.id;
+        topicInfo.value = {
+          ...res.topic,
+          description: res.topic.description || '暂无话题介绍',
+          viewCount: res.topic.viewCount || 0,
+          postCount: res.topic.postCount || 0
+        };
+      } else if (!topicId.value && records.length > 0) {
+        // 后退方案：从帖子列表中找 ID
         const firstPostWithTopic = records.find(p => p.topicId);
         if (firstPostWithTopic) {
           topicId.value = firstPostWithTopic.topicId;
-          // 如果还没有详情，尝试加载详情
-          if (!topicInfo.value || !topicInfo.value.description) {
+          if (!topicInfo.value || !topicInfo.value.description || topicInfo.value.description === '加载中...') {
             loadTopicDetail(topicId.value);
           }
         }
@@ -530,6 +647,15 @@ const previewImage = (images, current) => {
   font-size: 28rpx;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.description-text.expanded {
+  display: block;
+  -webkit-line-clamp: initial;
 }
 
 .expand-btn {

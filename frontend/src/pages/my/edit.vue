@@ -170,7 +170,7 @@ const uploadAvatar = (filePath) => {
   const token = uni.getStorageSync('token')
   
   uni.uploadFile({
-    url: 'http://localhost:8080/api/files/upload',
+    url: 'http://192.168.5.6:8080/api/files/upload',
     filePath: filePath,
     name: 'file',
     header: {

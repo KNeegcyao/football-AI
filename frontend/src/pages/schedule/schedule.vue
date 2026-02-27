@@ -4,7 +4,7 @@
     <view class="status-bar"></view>
 
     <!-- 顶部导航栏 -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
           <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
@@ -187,6 +187,7 @@ const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
   const userAvatar = ref('/static/soccer-logo.png')
+  const navbarPaddingRight = ref(16) // 默认 16px
   const dates = ref([])
   const activeDateIndex = ref(0)
   const currentYearMonth = ref('')
@@ -222,6 +223,7 @@ const goToProfile = () => {
 }
 
 onShow(() => {
+  uni.hideTabBar()
   getUserProfile()
 })
 
@@ -328,7 +330,7 @@ const getFullImageUrl = (url) => {
   // 本地静态资源 (排除球队logo)
   if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) return url
   // 后端资源
-  return 'http://localhost:8080' + url
+  return 'http://192.168.5.6:8080' + url
 }
 
 const handleImageError = (team) => {
@@ -417,6 +419,19 @@ const switchTab = (index) => {
 
 // 页面挂载时修正当前 Tab 索引
 onMounted(() => {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   if (currentPage) {
@@ -430,6 +445,7 @@ onMounted(() => {
   
   initDates()
   fetchMatches()
+  getUserProfile()
   startAutoRefresh()
 })
 

@@ -13,6 +13,7 @@ import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
 import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.service.service.UserService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,11 +84,30 @@ public class CommunityController {
     /**
      * 获取话题详情
      */
-    @Operation(summary = "获取话题详情", description = "获取话题的详细信息")
+    @Operation(summary = "获取话题详情", description = "根据ID获取话题详情，并增加阅读量")
     @GetMapping("/topics/{id}")
     public R<Topic> getTopicDetail(@Parameter(description = "话题ID") @PathVariable Long id) {
         Topic topic = topicService.getById(id);
         if (topic != null) {
+            // 增加阅读量
+            topic.setViewCount((topic.getViewCount() != null ? topic.getViewCount() : 0) + 1);
+            
+            // 实时校准讨论数：统计该话题下的帖子数量
+            Long actualPostCount = postService.count(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getTopicId, id)
+                    .eq(Post::getStatus, 1));
+            
+            // 调试输出
+            System.out.println(">>> [getTopicDetail] 数据库统计结果: " + actualPostCount);
+            System.out.println(">>> [getTopicDetail] 传入的 ID: " + id);
+            
+            topic.setPostCount(actualPostCount.intValue());
+            
+            // 再次打印 topic 对象，确认赋值成功
+            System.out.println(">>> [getTopicDetail] Topic对象赋值后: " + topic.getPostCount());
+            
+            topicService.updateById(topic);
+            
             if (topic.getDescription() == null || topic.getDescription().trim().isEmpty()) {
                 String title = topic.getTitle().replace("#", "");
                 topic.setDescription("关于“" + title + "”的最新讨论，点击参与互动！");
@@ -101,7 +121,7 @@ public class CommunityController {
      */
     @Operation(summary = "获取话题帖子列表", description = "获取指定话题相关的帖子列表")
     @GetMapping("/topics/posts")
-    public R<Page<PostDetailResp>> getTopicPosts(@Parameter(description = "话题标题") @RequestParam String title, 
+    public R<Map<String, Object>> getTopicPosts(@Parameter(description = "话题标题") @RequestParam String title, 
                                       @Validated PostPageReq req,
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         // 尝试根据标题查找话题ID，优先使用精确的 topicId 查询
@@ -126,7 +146,50 @@ public class CommunityController {
             req.setKeyword(title);
         }
         Long userId = (loginUser != null && loginUser.getUser() != null) ? loginUser.getUser().getId() : null;
-        return R.ok(postService.getPostPage(req, userId));
+        Page<PostDetailResp> postPage = postService.getPostPage(req, userId);
+        
+        // 兜底策略：如果通过标题没找到话题，但通过关键字搜到了帖子，从帖子中提取 topicId
+        if (topic == null && postPage.getTotal() > 0) {
+            // 找到第一个有 topicId 的帖子
+            for (PostDetailResp p : postPage.getRecords()) {
+                if (p.getTopicId() != null) {
+                    topic = topicService.getById(p.getTopicId());
+                    if (topic != null) {
+                        System.out.println(">>> [getTopicPosts] 触发兜底策略：通过帖子找到话题 ID=" + topic.getId() + ", 标题=" + topic.getTitle());
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 如果最终找到了话题，进行统计数据校准
+        if (topic != null) {
+            // 增加阅读量 (每次获取帖子列表也算作一次话题访问)
+            topic.setViewCount((topic.getViewCount() != null ? topic.getViewCount() : 0) + 1);
+            
+            // 实时校准该话题的统计数据
+            Long actualPostCount = postService.count(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getTopicId, topic.getId())
+                    .eq(Post::getStatus, 1));
+            
+            // 调试输出
+            System.out.println(">>> [getTopicPosts] 数据库统计结果: " + actualPostCount);
+            System.out.println(">>> [getTopicPosts] 话题当前阅读量: " + topic.getViewCount());
+            
+            if (topic.getPostCount() == null || topic.getPostCount() != actualPostCount.intValue()) {
+                topic.setPostCount(actualPostCount.intValue());
+                System.out.println(">>> [getTopicPosts] 修正讨论数为: " + topic.getPostCount());
+            }
+            topicService.updateById(topic);
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("posts", postPage);
+        if (topic != null) {
+            result.put("topic", topic);
+        }
+        
+        return R.ok(result);
     }
 
     /**
@@ -194,7 +257,7 @@ public class CommunityController {
         List<Topic> hotTopics = topicService.list(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
                 .orderByDesc(Topic::getViewCount)
-                .last("LIMIT 10")
+                .last("LIMIT 5")
         );
         
         List<Map<String, Object>> result = new ArrayList<>();

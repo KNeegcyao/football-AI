@@ -4,7 +4,7 @@
     <view class="status-bar"></view>
 
     <!-- 顶部导航栏 -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
           <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
@@ -129,6 +129,7 @@ import { postApi, newsApi, userApi, fileApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
 
 const userAvatar = ref('/static/soccer-logo.png')
+const navbarPaddingRight = ref(16) // 默认 16px
 
 const handleAvatarError = () => {
   userAvatar.value = '/static/soccer-logo.png'
@@ -160,6 +161,7 @@ const goToProfile = () => {
 }
 
 onShow(() => {
+  uni.hideTabBar()
   getUserProfile()
 })
 
@@ -186,13 +188,13 @@ const heroPost = ref({
   id: 1,
   title: '正在加载最新资讯...',
   category: '足球',
-  image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg'
+  image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1200&auto=format&fit=crop'
 })
 
 const recommendPosts = ref([])
 
 const getFullImageUrl = (url) => {
-  if (!url) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Wembley_Stadium_interior.jpg/1200px-Wembley_Stadium_interior.jpg'
+  if (!url) return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'
   if (url.startsWith('http')) return url
   return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
@@ -229,6 +231,7 @@ const loadData = async () => {
     }
     
     const newsRes = await newsApi.getList(params)
+    console.log('News list API response:', newsRes)
     let hasNewsData = false
     if (newsRes && newsRes.records && newsRes.records.length > 0) {
       hasNewsData = true
@@ -272,8 +275,8 @@ const loadData = async () => {
           time: formatTime(item.publishTime),
           likes: item.likeCount || 0,
           comments: item.commentCount || 0,
-          views: item.viewCount || Math.floor(Math.random() * 1000) + 100, // Mock views if missing
-          collections: Math.floor((item.likeCount || 0) / 3) + (item.commentCount || 0), // Mock collections
+          views: item.viewCount || 0,
+          collections: item.collectCount !== undefined ? item.collectCount : 0,
           isAi: true,
           aiSummary: item.summary,
           userName: authorName,
@@ -322,10 +325,31 @@ const loadData = async () => {
       console.error('Error Message:', e.message)
       console.error('Error Stack:', e.stack)
     }
+    
+    // 加载失败时的 UI 提示
+    heroPost.value = {
+      id: 0,
+      title: '网络连接失败，请检查后端服务是否启动',
+      image: '/static/teams/generic_stadium.jpg'
+    }
   }
 }
 
 onMounted(() => {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
+  getUserProfile()
   loadData()
 })
 

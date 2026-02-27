@@ -58,7 +58,28 @@
       "path": "pages/community/notification",
       "style": {
         "navigationBarTitleText": "消息通知",
-        "navigationStyle": "default"
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/community/reply-detail",
+      "style": {
+        "navigationBarTitleText": "回复与@",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/community/like-detail",
+      "style": {
+        "navigationBarTitleText": "收到喜欢",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/community/fan-detail",
+      "style": {
+        "navigationBarTitleText": "新增粉丝",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -192,5 +213,15 @@
       }
     ]
   },
-  "uniIdRouter": {}
+  "uniIdRouter": {},
+	"condition" : { //模式配置，仅开发期间生效
+		"current": 0, //当前激活的模式(list 的索引项)
+		"list": [
+			{
+				"name": "", //模式名称
+				"path": "", //启动页面，必选
+				"query": "" //启动参数，在页面的onLoad函数里面得到
+			}
+		]
+	}
 }

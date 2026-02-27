@@ -1,145 +1,153 @@
 <template>
-  <view class="search-page bg-[#1a1811] min-h-screen font-display text-gray-200">
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1811]/80 backdrop-blur-md border-b border-white/5 h5-header-fix">
-      <view class="flex items-center gap-3 px-4 h-16 max-w-2xl mx-auto">
-        <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
-          <text class="material-icons text-2xl">chevron_left</text>
-        </button>
-        
-        <!-- 搜索框容器 -->
-        <view
-          class="flex-1 relative flex items-center h-10 bg-white/5 border rounded-full px-4 transition-all duration-300"
-          :class="[isFocus ? 'border-[#f2b90d]/50 bg-white/10 shadow-[0_0_10px_rgba(242,185,13,0.1)]' : 'border-white/5 hover:border-[#f2b90d]/30']"
-        >
-          <text class="material-icons text-gray-500/40 text-lg mr-2 transition-colors duration-300" :class="{'text-[#f2b90d]/80': isFocus}">search</text>
-          <input
-            v-model="keyword"
-            type="text"
-            placeholder="搜索资讯或帖子..."
-            placeholder-style="color: rgba(255, 255, 255, 0.2)"
-            class="flex-1 h-full bg-transparent text-sm focus:outline-none border-none"
-            style="outline: none; border-color: transparent;"
-            @confirm="handleSearch"
-            @focus="isFocus = true"
-            @blur="isFocus = false"
-            :focus="autoFocus"
-          />
-          <text 
-            v-if="keyword" 
-            @click="clearSearch" 
-            class="material-icons text-gray-500 text-lg cursor-pointer hover:text-white ml-2"
-          >close</text>
+  <view class="container">
+    <!-- Navbar with Search -->
+    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
+      <view class="nav-left" @click="goBack">
+        <view class="nav-btn-glass">
+          <u-icon name="arrow-left" color="#fff" size="20"></u-icon>
         </view>
-        
-        <button @click="handleSearch" class="text-primary font-bold text-sm bg-transparent border-none px-2 active:opacity-70 transition-opacity">搜索</button>
       </view>
-    </header>
+      <view class="search-box">
+        <u-icon name="search" color="rgba(156, 163, 175, 0.4)" size="18"></u-icon>
+        <input 
+          class="search-input" 
+          type="text" 
+          placeholder="搜索资讯或帖子..." 
+          placeholder-style="color: rgba(255, 255, 255, 0.2)"
+          v-model="keyword"
+          confirm-type="search"
+          @confirm="handleSearch"
+          :focus="autoFocus"
+        />
+        <view v-if="keyword" class="clear-btn" @click="clearSearch">
+          <u-icon name="close" color="#9ca3af" size="16"></u-icon>
+        </view>
+      </view>
+      <view class="nav-right" @click="handleSearch">
+        <text class="search-btn-text">搜索</text>
+      </view>
+    </view>
 
     <!-- Content -->
-    <main class="pt-20 pb-10 px-4 w-full mx-auto">
-      <!-- Loading State -->
-      <view v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <view class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></view>
-        <text class="text-gray-500 text-sm">正在搜寻精彩内容...</text>
-      </view>
-
-      <!-- Empty State -->
-      <view v-else-if="searched && results.length === 0" class="flex flex-col items-center justify-center py-20">
-        <text class="material-icons text-6xl text-gray-700 mb-4">search_off</text>
-        <text class="text-gray-400">未找到相关内容</text>
-        <text class="text-gray-600 text-xs mt-2">换个关键词试试吧</text>
-      </view>
-
-      <!-- Results List -->
-      <view v-else class="space-y-4">
-        <view 
-        v-for="(item, index) in results" 
-        :key="index" 
-        class="bg-white/5 rounded-xl p-4 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-        @click="goToDetail(item)"
-      >
-        <!-- 赛事卡片 -->
-        <view v-if="item.type === 'match'" class="flex flex-col gap-2">
-           <view class="flex items-center justify-between mb-2">
-              <view class="flex items-center gap-2">
-                <text class="text-[10px] font-bold uppercase tracking-wider text-[#34d399] px-1.5 py-0.5 bg-[#34d399]/10 rounded">
-                  赛事
-                </text>
-                <text class="text-xs text-gray-400">{{ item.competitionName }}</text>
-              </view>
-              <text class="text-xs text-gray-500">{{ formatTime(item.matchTime) }}</text>
-           </view>
-           <view class="flex items-center justify-between px-2 py-2 bg-black/20 rounded-lg">
-              <view class="flex flex-col items-center gap-1 w-1/3">
-                 <image :src="getFullImageUrl(item.homeTeam?.logoUrl)" class="w-10 h-10 rounded-full bg-white/5 p-1" mode="aspectFit" @error="handleImageError(item.homeTeam)"></image>
-                 <text class="text-xs font-bold text-white text-center line-clamp-1">{{ item.homeTeam?.name }}</text>
-              </view>
-              <view class="flex flex-col items-center justify-center w-1/3">
-                 <text class="text-2xl font-bold text-white leading-none mb-1" v-if="item.status > 0">{{ item.homeScore }} - {{ item.awayScore }}</text>
-                 <text class="text-xl font-bold text-[#f9d406]" v-else>VS</text>
-                 <text class="text-[10px] text-gray-400 mt-1 px-2 py-0.5 bg-white/5 rounded-full">
-                  {{ item.status === 1 && item.liveTime ? item.liveTime : getStatusText(item.status) }}
-                </text>
-              </view>
-              <view class="flex flex-col items-center gap-1 w-1/3">
-                 <image :src="getFullImageUrl(item.awayTeam?.logoUrl)" class="w-10 h-10 rounded-full bg-white/5 p-1" mode="aspectFit" @error="handleImageError(item.awayTeam)"></image>
-                 <text class="text-xs font-bold text-white text-center line-clamp-1">{{ item.awayTeam?.name }}</text>
-              </view>
-           </view>
+    <scroll-view scroll-y class="content-scroll">
+      <main class="content-area">
+        <!-- Loading State -->
+        <view v-if="loading" class="loading-state">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">正在搜寻精彩内容...</text>
         </view>
 
-        <!-- 资讯/帖子卡片 -->
-        <view v-else class="flex gap-4">
-          <view class="flex-1 min-w-0">
-            <view class="flex items-center gap-2 mb-2">
-              <text class="text-[10px] font-bold uppercase tracking-wider text-primary px-1.5 py-0.5 bg-primary/10 rounded">
-                {{ item.type === 'news' ? '资讯' : '社区' }}
-              </text>
-              <text class="text-xs text-gray-500">{{ formatTime(item.displayTime) }}</text>
-            </view>
-            <text class="text-base font-bold text-white leading-snug line-clamp-2 mb-2">
-              {{ item.title }}
-            </text>
-            <text class="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
-              {{ item.summary || item.content }}
-            </text>
-            <view class="flex items-center gap-4 text-xs text-gray-500">
-              <text v-if="item.author" class="flex items-center gap-1">
-                <u-icon name="account" size="14"></u-icon>
-                {{ item.author }}
-              </text>
-              <text class="flex items-center gap-1">
-                <u-icon name="eye" size="14"></u-icon>
-                {{ item.views || 0 }}
-              </text>
-              <text v-if="item.comments !== undefined" class="flex items-center gap-1">
-                <u-icon name="chat" size="14"></u-icon>
-                {{ item.comments || 0 }}
-              </text>
-            </view>
-          </view>
-          
+        <!-- Empty State -->
+        <view v-else-if="searched && results.length === 0" class="empty-state">
+          <u-icon name="search" color="#374151" size="60"></u-icon>
+          <text class="empty-text">未找到相关内容</text>
+          <text class="empty-subtext">换个关键词试试吧</text>
+        </view>
+
+        <!-- Results List -->
+        <view v-else class="results-list">
           <view 
-            v-if="item.cover" 
-            class="w-24 h-24 rounded-lg overflow-hidden bg-white/5 flex-shrink-0"
+            v-for="(item, index) in results" 
+            :key="index" 
+            class="result-card"
+            @click="goToDetail(item)"
           >
-            <image 
-              :src="getFullImageUrl(item.cover)" 
-              class="w-full h-full object-cover"
-              mode="aspectFill"
-              @error="item.cover = null"
-            ></image>
+            <!-- 赛事卡片 -->
+            <view v-if="item.type === 'match'" class="match-card">
+               <view class="card-header">
+                  <view class="badge-row">
+                    <text class="badge match-badge">赛事</text>
+                    <text class="competition-name">{{ item.competitionName }}</text>
+                  </view>
+                  <text class="time-text">{{ formatTime(item.matchTime) }}</text>
+               </view>
+               <view class="match-teams">
+                  <view class="team">
+                     <image :src="getFullImageUrl(item.homeTeam?.logoUrl)" class="team-logo" mode="aspectFit" @error="handleImageError(item.homeTeam)"></image>
+                     <text class="team-name">{{ item.homeTeam?.name }}</text>
+                  </view>
+                  <view class="score-area">
+                     <text class="score" v-if="item.status > 0">{{ item.homeScore }} - {{ item.awayScore }}</text>
+                     <text class="vs" v-else>VS</text>
+                     <text class="status-badge">
+                      {{ item.status === 1 && item.liveTime ? item.liveTime : getStatusText(item.status) }}
+                    </text>
+                  </view>
+                  <view class="team">
+                     <image :src="getFullImageUrl(item.awayTeam?.logoUrl)" class="team-logo" mode="aspectFit" @error="handleImageError(item.awayTeam)"></image>
+                     <text class="team-name">{{ item.awayTeam?.name }}</text>
+                  </view>
+               </view>
+            </view>
+
+            <!-- 帖子卡片 (同步圈子搜索样式) -->
+            <view v-else-if="item.type === 'post'" class="post-card-style">
+              <view class="post-header">
+                <view class="user-info">
+                  <image class="user-avatar" :src="getFullImageUrl(item.userAvatar) || '/static/default-avatar.png'" mode="aspectFill"></image>
+                  <text class="user-name">{{ item.author || '社区用户' }}</text>
+                </view>
+                <text class="post-time">{{ formatTime(item.displayTime) }}</text>
+              </view>
+              
+              <view class="post-content">
+                <text class="highlight-title" v-if="item.title">【{{ item.title }}】</text>
+                <text class="post-text">{{ item.summary || item.content }}</text>
+              </view>
+              
+              <image v-if="item.cover" class="post-main-img" :src="getFullImageUrl(item.cover)" mode="aspectFill"></image>
+              
+              <view class="post-footer-stats">
+                <view class="interaction-item">
+                  <u-icon name="heart" size="18" color="#9ca3af"></u-icon>
+                  <text>{{ item.likes || 0 }}</text>
+                </view>
+                <view class="interaction-item">
+                  <u-icon name="chat" size="18" color="#9ca3af"></u-icon>
+                  <text>{{ item.commentCount || 0 }}</text>
+                </view>
+                <view class="interaction-item">
+                  <u-icon name="share-square" size="18" color="#9ca3af"></u-icon>
+                  <text>{{ item.shares || 0 }}</text>
+                </view>
+              </view>
+            </view>
+
+            <!-- 资讯卡片 -->
+            <view v-else class="content-card">
+              <view class="card-main">
+                <view class="card-header">
+                  <text class="badge news-badge">资讯</text>
+                  <text class="time-text">{{ formatTime(item.displayTime) }}</text>
+                </view>
+                <text class="title-text">{{ item.title }}</text>
+                <text class="summary-text">{{ item.summary || item.content }}</text>
+                <view class="card-footer">
+                  <view class="stat-item" v-if="item.author">
+                    <u-icon name="account" size="14" color="#6b7280"></u-icon>
+                    <text>{{ item.author }}</text>
+                  </view>
+                  <view class="stat-item">
+                    <u-icon name="eye" size="14" color="#6b7280"></u-icon>
+                    <text>{{ item.viewCount || item.views || 0 }}</text>
+                  </view>
+                </view>
+              </view>
+              
+              <view v-if="item.cover" class="cover-area">
+                <image :src="getFullImageUrl(item.cover)" class="cover-img" mode="aspectFill" @error="item.cover = null"></image>
+              </view>
+            </view>
           </view>
         </view>
-      </view>
-      </view>
-    </main>
+      </main>
+    </scroll-view>
   </view>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { searchApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
 
@@ -147,8 +155,23 @@ const keyword = ref('')
 const loading = ref(false)
 const searched = ref(false)
 const results = ref([])
-const isFocus = ref(false)
 const autoFocus = ref(true)
+const statusBarHeight = ref(20)
+const navbarPaddingRight = ref(0)
+
+onLoad(() => {
+  const sysInfo = uni.getSystemInfoSync()
+  statusBarHeight.value = sysInfo.statusBarHeight || 20
+
+  // #ifdef MP-WEIXIN
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect()
+    navbarPaddingRight.value = (sysInfo.screenWidth - menuButton.right) + menuButton.width + 8
+  } catch (e) {
+    navbarPaddingRight.value = 94
+  }
+  // #endif
+})
 
 const handleSearch = async () => {
   if (!keyword.value.trim()) {
@@ -190,7 +213,7 @@ const handleSearch = async () => {
     if (newsData && newsData.records) {
       newsData.records.forEach(item => {
         // 提取封面图 (如果没封面，尝试从内容提取第一张图)
-        let cover = item.cover
+        let cover = item.coverUrl || item.cover
         if (!cover && item.content) {
           const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/)
           if (imgMatch) {
@@ -221,11 +244,29 @@ const handleSearch = async () => {
     const postsData = res.posts || res.Posts
     if (postsData && postsData.records) {
       postsData.records.forEach(item => {
+        // 提取封面图 (帖子首图)
+        let postCover = null
+        if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+          postCover = item.images[0]
+        } else if (item.images && typeof item.images === 'string') {
+          try {
+            const parsedImages = JSON.parse(item.images)
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+              postCover = parsedImages[0]
+            }
+          } catch (e) {
+            postCover = item.images
+          }
+        }
+
         combinedResults.push({
           ...item,
           type: 'post',
           displayTime: item.createdAt,
-          author: item.username || '社区用户'
+          author: item.userName || '社区用户',
+          userAvatar: item.userAvatar,
+          cover: postCover,
+          shares: 0
         })
       })
     }
@@ -284,7 +325,7 @@ const goToDetail = (item) => {
   
   const url = item.type === 'news' 
     ? `/pages/news/detail?id=${item.id}`
-    : `/pages/community/detail?id=${item.id}`
+    : `/pages/post/detail?id=${item.id}`
     
   uni.navigateTo({
     url
@@ -313,44 +354,395 @@ const getFullImageUrl = (url) => {
 }
 </script>
 
-<style>
-/* #ifdef H5 */
-.h5-header-fix {
-  max-width: 500px;
-  margin: 0 auto;
-}
-/* #endif */
-/* 解决 H5 下原生 input 聚焦时的蓝色边框 */
-::v-deep .uni-input-input {
-  outline: none !important;
-  box-shadow: none !important;
+<style lang="scss" scoped>
+$bg-dark: #1a1811;
+$surface-dark: #24211a;
+$border-dark: rgba(255, 255, 255, 0.05);
+$primary: #f2b90d;
+$text-gray: #9ca3af;
+$text-white: #ffffff;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: $bg-dark;
+  color: $text-white;
 }
 
-::v-deep input {
-  outline: none !important;
-  box-shadow: none !important;
+/* Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: $surface-dark;
+  border-bottom: 1px solid $border-dark;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-</style>
 
-<style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.nav-left {
+  margin-right: 12px;
+}
+
+.nav-btn-glass {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  height: 38px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin-right: 12px;
+  transition: all 0.3s ease;
+
+  &:focus-within {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba($primary, 0.5);
+    box-shadow: 0 0 10px rgba($primary, 0.1);
+  }
+}
+
+.search-input {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.clear-btn {
+  padding: 4px;
+}
+
+.nav-right {
+  padding: 4px 8px;
+}
+
+.search-btn-text {
+  color: $primary;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Content */
+.content-scroll {
+  flex: 1;
   overflow: hidden;
 }
 
-/* 隐藏 H5 默认 header */
-/* #ifdef H5 */
-uni-page-head {
-  display: none;
+.content-area {
+  padding: 16px;
 }
-/* #endif */
 
-input {
-  /* 确保在所有平台上移除默认样式 */
-  -webkit-appearance: none;
-  outline: none;
-  border: none;
+/* Loading & Empty States */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba($primary, 0.2);
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: $text-gray;
+  font-size: 14px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.empty-text {
+  color: #9ca3af;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+.empty-subtext {
+  color: #4b5563;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Results */
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.result-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.match-badge {
+  color: #34d399;
+  background-color: rgba(52, 211, 153, 0.1);
+}
+
+.news-badge {
+  color: $primary;
+  background-color: rgba($primary, 0.1);
+}
+
+/* Post Card Style (Sync with circle-search) */
+.post-card-style {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.post-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.post-content {
+  margin-bottom: 12px;
+}
+
+.highlight-title {
+  color: $primary;
+  font-weight: bold;
+  font-size: 15px;
+  margin-right: 4px;
+}
+
+.post-text {
+  font-size: 14px;
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+.post-main-img {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.post-footer-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.interaction-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.time-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Match Card */
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 30%;
+}
+
+.team-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.team-name {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+}
+
+.score-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+}
+
+.score {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.vs {
+  font-size: 20px;
+  font-weight: bold;
+  color: $primary;
+}
+
+.status-badge {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+/* Content Card */
+.content-card {
+  display: flex;
+  gap: 16px;
+}
+
+.card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+}
+
+.competition-name {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.summary-text {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.cover-area {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
 }
 </style>

@@ -7,6 +7,7 @@ import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.model.dto.FavoriteReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.FavoriteService;
+import com.soccer.forum.service.model.dto.FavoriteToggleResp;
 import com.soccer.forum.service.model.dto.PostDetailResp;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,20 +49,23 @@ public class FavoriteController {
      * @param loginUser 当前登录用户
      * @return 操作结果 (favorited: true表示已收藏, false表示取消收藏)
      */
-    @Operation(summary = "切换收藏状态", description = "用户收藏或取消收藏帖子/新闻")
+    @Operation(summary = "切换收藏状态", description = "用户收藏或取消收藏帖子/新闻/球员")
     @PostMapping("/toggle")
-    public R<Map<String, Boolean>> toggle(@Parameter(description = "收藏信息") @Validated @RequestBody FavoriteReq req,
+    public R<FavoriteToggleResp> toggle(@Parameter(description = "收藏信息") @RequestBody FavoriteReq req,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         Long userId = loginUser.getUser().getId();
-        log.info("收到收藏切换请求: 用户ID={}, 帖子ID={}, 新闻ID={}", userId, req.getPostId(), req.getNewsId());
+        
+        log.info("收到收藏切换请求: 用户ID={}, postId={}, newsId={}, playerId={}", 
+                userId, req.getPostId(), req.getNewsId(), req.getPlayerId());
         
         try {
-            boolean favorited = favoriteService.toggleFavorite(req.getPostId(), req.getNewsId(), userId);
+            FavoriteToggleResp resp = favoriteService.toggleFavorite(req.getPostId(), req.getNewsId(), req.getPlayerId(), userId);
             
-            String msg = favorited ? "收藏成功" : "取消收藏成功";
-            log.info("{} : 用户ID={}, 帖子ID={}, 新闻ID={}", msg, userId, req.getPostId(), req.getNewsId());
+            String msg = resp.isFavorited() ? "收藏成功" : "取消收藏成功";
+            log.info("{} : 用户ID={}, postId={}, newsId={}, playerId={}, 最新计数={}", 
+                    msg, userId, req.getPostId(), req.getNewsId(), req.getPlayerId(), resp.getLatestCount());
             
-            return R.ok(Map.of("favorited", favorited), msg);
+            return R.ok(resp, msg);
         } catch (Exception e) {
             log.error("收藏操作失败: userId=" + userId, e);
             throw e;
@@ -106,19 +110,39 @@ public class FavoriteController {
     }
 
     /**
-     * 检查是否已收藏
-     * @param postId 帖子ID (可选)
-     * @param newsId 新闻ID (可选)
+     * 查询个人收藏球员列表接口
+     *
+     * @param page      页码 (默认1)
+     * @param size      每页大小 (默认10)
      * @param loginUser 当前登录用户
-     * @return true:已收藏, false:未收藏
+     * @return 收藏的球员列表分页数据
      */
-    @Operation(summary = "检查收藏状态", description = "检查指定帖子或新闻是否已收藏")
+    @Operation(summary = "获取我的收藏球员", description = "分页查询当前用户的收藏球员列表")
+    @GetMapping("/players")
+    public R<Page<Map<String, Object>>> listPlayers(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+                                              @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
+                                              @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        log.info("查询收藏球员列表: 用户ID={}, page={}, size={}", loginUser.getUser().getId(), page, size);
+        Page<Map<String, Object>> result = favoriteService.getMyFavoritePlayers(page, size, loginUser.getUser().getId());
+        return R.ok(result);
+    }
+
+    /**
+     * 检查是否已收藏接口
+     *
+     * @param postId    帖子ID
+     * @param newsId    新闻ID
+     * @param playerId  球员ID
+     * @param loginUser 当前登录用户
+     * @return true表示已收藏，false表示未收藏
+     */
+    @Operation(summary = "检查收藏状态", description = "检查用户是否已收藏特定帖子/新闻/球员")
     @GetMapping("/check")
     public R<Boolean> check(@Parameter(description = "帖子ID") @RequestParam(required = false) Long postId,
                             @Parameter(description = "新闻ID") @RequestParam(required = false) Long newsId,
+                            @Parameter(description = "球员ID") @RequestParam(required = false) Long playerId,
                             @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
-        Long userId = loginUser.getUser().getId();
-        boolean isFavorited = favoriteService.isFavorited(postId, newsId, userId);
-        return R.ok(isFavorited);
+        boolean favorited = favoriteService.isFavorited(postId, newsId, playerId, loginUser.getUser().getId());
+        return R.ok(favorited);
     }
 }

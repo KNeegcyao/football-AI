@@ -15,6 +15,8 @@
           <view class="back-btn" @click="goBack">
             <text class="material-icons" style="font-size: 24px; color: #fff;">arrow_back_ios_new</text>
           </view>
+        </view>
+        <view class="header-center">
           <view class="author-info">
             <view class="avatar-container">
               <image class="author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
@@ -31,13 +33,15 @@
             </view>
           </view>
         </view>
-        <button 
-          class="follow-btn" 
-          :class="{ 'following': isFollowing }"
-          @click="toggleFollow"
-        >
-          {{ isFollowing ? '已关注' : '关注' }}
-        </button>
+        <view class="header-right">
+          <button 
+            class="follow-btn" 
+            :class="{ 'following': isFollowing }"
+            @click="toggleFollow"
+          >
+            {{ isFollowing ? '已关注' : '关注' }}
+          </button>
+        </view>
       </view>
 
       <scroll-view scroll-y class="content-scroll" :scroll-into-view="scrollTarget" :scroll-with-animation="true">
@@ -446,7 +450,19 @@ onLoad((options) => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  width: 40px;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .back-btn {
@@ -458,6 +474,7 @@ onLoad((options) => {
   display: flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
 }
 
 .avatar-container {

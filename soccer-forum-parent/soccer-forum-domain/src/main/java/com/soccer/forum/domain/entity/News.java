@@ -49,6 +49,11 @@ public class News {
     @Schema(description = "评论数")
     private Integer commentCount;
 
+    @Schema(description = "收藏数")
+    @TableField("collect_count")
+    @com.fasterxml.jackson.annotation.JsonProperty("collectCount")
+    private Integer collectCount;
+
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -87,4 +92,7 @@ public class News {
     public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
     public Integer getCommentCount() { return commentCount; }
     public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
+
+    public Integer getCollectCount() { return collectCount; }
+    public void setCollectCount(Integer collectCount) { this.collectCount = collectCount; }
 }

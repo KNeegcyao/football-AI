@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <!-- Custom Navbar -->
-    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
         <view class="nav-btn-glass">
           <text class="material-icons back-icon">arrow_back</text>
@@ -14,7 +14,6 @@
         <view class="nav-btn-glass" @click="navigateToSearch">
           <text class="material-icons nav-icon">search</text>
         </view>
-
       </view>
     </view>
 
@@ -92,8 +91,8 @@
             <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
             
             <view class="ai-images-grid">
-              <image class="ai-img-half" src="https://resources.premierleague.com/premierleague/badges/t43.png" mode="aspectFill"></image>
-              <image class="ai-img-half" src="https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" mode="aspectFill"></image>
+              <image class="ai-img-half" src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
+              <image class="ai-img-half" src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
             </view>
             
             <view class="post-footer">
@@ -276,6 +275,7 @@ const loading = ref(false);
 const noMore = ref(false);
 const page = ref(1);
 const statusBarHeight = ref(20);
+const navbarPaddingRight = ref(16); // 默认 16px
 const scrollTop = ref(0);
 const isSticky = ref(false);
 const isJoined = ref(false);
@@ -426,7 +426,7 @@ const teamData = {
       desc: '“不仅仅是一家俱乐部。萨迷集合，守护拉玛西亚的荣光。”\n我们深爱这里的传控哲学，也深爱诺坎普的每一寸草坪。红蓝魂，永流传。'
     },
     '皇家马德里': {
-      hero: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Estadio_Santiago_Bernab%C3%A9u_-_2024.jpg/1200px-Estadio_Santiago_Bernab%C3%A9u_-_2024.jpg',
+      hero: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop',
       desc: '“Hala Madrid! 银河战舰，欧冠之巅的绝对王者。”\n纯白色的高贵，永恒的争胜欲望。在伯纳乌，我们只谈论传奇。'
     },
     '曼联': {
@@ -454,6 +454,21 @@ onLoad((options) => {
   // Get system info for status bar
   const systemInfo = uni.getSystemInfoSync();
   statusBarHeight.value = systemInfo.statusBarHeight || 20;
+
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+    // 同时也微调导航栏高度，使其与胶囊按钮垂直居中
+    const navBarHeight = (menuButton.top - systemInfo.statusBarHeight) * 2 + menuButton.height;
+    // 如果需要更精确的控制，可以在这里设置整体高度
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
 
   fetchCircleDetail();
   loadPosts();

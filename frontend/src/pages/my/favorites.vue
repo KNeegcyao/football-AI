@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <!-- Navigation Bar -->
-    <view class="nav-bar">
+    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
         <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
       </view>
@@ -26,10 +26,6 @@
             <view class="post-info">
               <text class="post-title">{{ post.title }}</text>
               <view class="post-footer">
-                <view class="post-author-info">
-                  <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-                  <text class="post-author-name">{{ post.userName }}</text>
-                </view>
                 <view class="post-stats">
                   <text class="post-time">{{ formatTime(post.createTime) }}</text>
                   <view class="stat-item">
@@ -40,6 +36,10 @@
                     <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
                     <text class="stat-num">{{ post.commentCount || 0 }}</text>
                   </view>
+                </view>
+                <view class="post-author-info">
+                  <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
+                  <text class="post-author-name">{{ post.userName }}</text>
                 </view>
               </view>
             </view>
@@ -66,15 +66,28 @@
         </view>
         <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
       </view>
+
+      <!-- Player List -->
+      <view class="player-list" v-if="currentTab === 2 && playerList.length > 0">
+        <view v-for="(player, index) in playerList" :key="index" class="player-card" @click="goToPlayerDetail(player.id)">
+          <image class="player-photo" :src="player.photo" mode="aspectFill"></image>
+          <view class="player-info">
+            <text class="player-name">{{ player.name }}</text>
+            <text class="player-team">{{ player.teamName }}</text>
+          </view>
+          <u-icon name="arrow-right" color="#666" size="20"></u-icon>
+        </view>
+        <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
+      </view>
       
       <!-- Empty State -->
-      <view class="empty-state" v-else-if="!loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0))">
+      <view class="empty-state" v-else-if="!loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0) || (currentTab === 2 && playerList.length === 0))">
         <u-icon name="star" color="#666" size="60"></u-icon>
         <text class="empty-text">暂无收藏</text>
       </view>
       
       <!-- Loading State -->
-      <view class="loading-state" v-if="loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0))">
+      <view class="loading-state" v-if="loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0) || (currentTab === 2 && playerList.length === 0))">
         <u-loading-icon mode="circle" color="#f9d406"></u-loading-icon>
       </view>
     </scroll-view>
@@ -84,12 +97,14 @@
 <script setup>
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { favoriteApi, fileApi } from '@/api';
+import { favoriteApi, fileApi, playerApi } from '@/api';
 
 const currentTab = ref(0);
+const navbarPaddingRight = ref(0);
 const tabList = [
   { name: '帖子' },
-  { name: '新闻' }
+  { name: '新闻' },
+  { name: '球员' }
 ];
 
 const getCategoryName = (categoryId) => {
@@ -106,6 +121,7 @@ const getCategoryName = (categoryId) => {
 
 const posts = ref([]);
 const newsList = ref([]);
+const playerList = ref([]);
 const loading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
@@ -113,6 +129,19 @@ const hasMore = ref(true);
 const loadStatus = ref('loadmore');
 
 onLoad(() => {
+  // #ifdef MP-WEIXIN
+  // 适配小程序胶囊按钮，防止遮挡右上角功能键
+  try {
+    const menuButton = uni.getMenuButtonBoundingClientRect();
+    const systemInfo = uni.getSystemInfoSync();
+    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
+    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
+  } catch (e) {
+    console.error('获取胶囊按钮信息失败:', e);
+    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
+  }
+  // #endif
+
   loadData();
 });
 
@@ -127,6 +156,7 @@ const resetData = () => {
   page.value = 1;
   posts.value = [];
   newsList.value = [];
+  playerList.value = [];
   hasMore.value = true;
   loadStatus.value = 'loadmore';
 };
@@ -168,7 +198,7 @@ const loadData = async () => {
       } else {
         hasMore.value = false;
       }
-    } else {
+    } else if (currentTab.value === 1) {
       res = await favoriteApi.listNews({
         page: page.value,
         size: pageSize.value
@@ -190,6 +220,51 @@ const loadData = async () => {
         }
         
         hasMore.value = newNews.length === pageSize.value;
+      } else {
+        hasMore.value = false;
+      }
+    } else if (currentTab.value === 2) {
+      res = await favoriteApi.listPlayers({
+        page: page.value,
+        size: pageSize.value
+      });
+
+      if (res && res.records) {
+        // 这里的 res.records 包含 { playerId, createTime }
+        // 我们需要通过 playerApi 获取基础信息来展示
+        const newPlayers = await Promise.all(res.records.map(async (item) => {
+          try {
+            const detailRes = await playerApi.getSportApiDetail(item.playerId);
+            // 这里解析详情数据，取最基本信息
+            let p = null;
+            if (detailRes.response && detailRes.response.length > 0) {
+              p = detailRes.response[0].player;
+            } else if (detailRes.data && detailRes.data.player) {
+              p = detailRes.data.player;
+            } else if (detailRes.player) {
+              p = detailRes.player;
+            }
+
+            if (p) {
+              return {
+                id: p.id,
+                name: p.name,
+                photo: p.photo || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+                teamName: p.teamName || '未知球队'
+              };
+            }
+          } catch (e) {
+            console.error('Fetch player detail for favorite failed:', e);
+          }
+          return { id: item.playerId, name: '未知球员', photo: '', teamName: '' };
+        }));
+
+        if (page.value === 1) {
+          playerList.value = newPlayers;
+        } else {
+          playerList.value = [...playerList.value, ...newPlayers];
+        }
+        hasMore.value = newPlayers.length === pageSize.value;
       } else {
         hasMore.value = false;
       }
@@ -226,6 +301,12 @@ const goToDetail = (id) => {
 const goToNewsDetail = (id) => {
   uni.navigateTo({
     url: `/pages/news/detail?id=${id}`
+  });
+};
+
+const goToPlayerDetail = (id) => {
+  uni.navigateTo({
+    url: `/pages/player-detail/player-detail?id=${id}`
   });
 };
 
@@ -460,6 +541,54 @@ const formatTime = (time) => {
 .stat-num {
   color: #999;
   font-size: 11px;
+}
+
+.player-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.player-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  
+  &:active {
+    background-color: rgba(255, 255, 255, 0.06);
+    transform: scale(0.98);
+  }
+}
+
+.player-photo {
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  background-color: #2C2C2C;
+}
+
+.player-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-name {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.player-team {
+  color: #999;
+  font-size: 12px;
 }
 
 .empty-state {

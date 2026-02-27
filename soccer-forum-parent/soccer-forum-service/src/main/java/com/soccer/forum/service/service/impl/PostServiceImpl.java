@@ -99,6 +99,26 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         
         postMapper.insert(post);
         log.info("帖子创建成功: id={}", post.getId());
+
+        // 更新话题统计
+        if (post.getTopicId() != null) {
+            Topic topic = topicMapper.selectById(post.getTopicId());
+            if (topic != null) {
+                topic.setPostCount((topic.getPostCount() != null ? topic.getPostCount() : 0) + 1);
+                topicMapper.updateById(topic);
+                log.debug("更新话题讨论数: topicId={}, newCount={}", topic.getId(), topic.getPostCount());
+            }
+        }
+
+        // 更新圈子统计 (如果有相关字段)
+        if (post.getCircleId() != null) {
+            Team team = teamMapper.selectById(post.getCircleId());
+            if (team != null) {
+                // 如果 Team 实体有 postCount 字段可以同步更新
+                // 目前 Topic 确定有，先确保 Topic 更新
+            }
+        }
+
         return post.getId();
     }
 
@@ -212,6 +232,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         
         if (req.getTopicId() != null) {
             wrapper.eq(Post::getTopicId, req.getTopicId());
+        } else if (StringUtils.hasText(req.getTopic())) {
+            // 如果只有话题名称，先找到话题ID
+            Topic topic = topicMapper.selectOne(new LambdaQueryWrapper<Topic>()
+                    .eq(Topic::getTitle, req.getTopic()));
+            if (topic == null && !req.getTopic().startsWith("#")) {
+                topic = topicMapper.selectOne(new LambdaQueryWrapper<Topic>()
+                        .eq(Topic::getTitle, "#" + req.getTopic() + "#"));
+            }
+            if (topic != null) {
+                wrapper.eq(Post::getTopicId, topic.getId());
+            } else {
+                // 如果话题不存在，则通过内容模糊匹配
+                wrapper.like(Post::getContent, "#" + req.getTopic() + "#");
+            }
         }
         
         if (req.getUserId() != null) {

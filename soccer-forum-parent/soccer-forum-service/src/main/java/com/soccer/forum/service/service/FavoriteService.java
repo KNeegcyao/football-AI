@@ -3,17 +3,21 @@ package com.soccer.forum.service.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Post;
 
+import com.soccer.forum.service.model.dto.FavoriteToggleResp;
 import com.soccer.forum.service.model.dto.PostDetailResp;
+
+import java.util.Map;
 
 public interface FavoriteService {
     /**
      * 收藏/取消收藏
      * @param postId 帖子ID
      * @param newsId 新闻ID
+     * @param playerId 球员ID
      * @param userId 用户ID
-     * @return true:收藏成功, false:取消收藏成功
+     * @return FavoriteToggleResp 包含状态和最新计数
      */
-    boolean toggleFavorite(Long postId, Long newsId, Long userId);
+    FavoriteToggleResp toggleFavorite(Long postId, Long newsId, Long playerId, Long userId);
 
     /**
      * 获取用户收藏帖子列表
@@ -26,11 +30,17 @@ public interface FavoriteService {
     Page<com.soccer.forum.domain.entity.News> getMyFavoriteNews(Integer page, Integer size, Long userId);
 
     /**
+     * 获取用户收藏球员列表
+     */
+    Page<Map<String, Object>> getMyFavoritePlayers(Integer page, Integer size, Long userId);
+
+    /**
      * 检查是否已收藏
      * @param postId 帖子ID (可选)
      * @param newsId 新闻ID (可选)
+     * @param playerId 球员ID (可选)
      * @param userId 用户ID
      * @return true:已收藏, false:未收藏
      */
-    boolean isFavorited(Long postId, Long newsId, Long userId);
+    boolean isFavorited(Long postId, Long newsId, Long playerId, Long userId);
 }
