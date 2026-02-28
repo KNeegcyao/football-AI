@@ -99,6 +99,49 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* 修复 H5 下弹窗全屏问题，使其与 500px 主内容区域一致 */
+.u-popup {
+  .u-popup__content {
+    max-width: 500px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    margin: 0 auto;
+    background-color: transparent !important; /* 让内部 view 控制背景 */
+  }
+  .u-transition {
+    /* 遮罩层不应该被限制宽度和偏移 */
+    &.u-overlay {
+      max-width: none !important;
+      left: 0 !important;
+      transform: none !important;
+      width: 100% !important;
+    }
+    /* 内容区域的 transition 容器 */
+    &:not(.u-overlay) {
+      max-width: 500px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: 100% !important;
+    }
+  }
+}
+
+.u-action-sheet {
+  .u-popup__content {
+    max-width: 500px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    margin: 0 auto;
+  }
+  /* 确保选项内容也居中 */
+  .u-action-sheet__item-wrap {
+    width: 100% !important;
+  }
+}
+
 uni-page-body {
   max-width: 500px !important;
   margin: 0 auto !important;
@@ -110,7 +153,7 @@ uni-page-body {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   background-color: #1a1811;
 }
-/* 强制隐藏原生 TabBar 容器 */
+/* #endif */
 .uni-tabbar {
   display: none !important;
 }

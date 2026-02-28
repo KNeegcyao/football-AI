@@ -125,7 +125,7 @@
           <view class="mini-header">
             <view class="header-left">
               <view class="indicator"></view>
-              <text class="match-meta">{{ match.competitionName }} · {{ formatMatchDate(match.matchTime) }}</text>
+              <text class="match-meta">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
             </view>
           </view>
           <view class="mini-body">

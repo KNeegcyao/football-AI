@@ -395,7 +395,7 @@ onMounted(() => {
   width: 80rpx;
   height: 80rpx;
   background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
+  border-radius: 20rpx;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -410,7 +410,7 @@ onMounted(() => {
   color: white;
   font-size: 20rpx;
   padding: 4rpx 10rpx;
-  border-radius: 20rpx;
+  border-radius: 8rpx;
   min-width: 32rpx;
   text-align: center;
   line-height: 24rpx;
@@ -506,7 +506,7 @@ onMounted(() => {
 .circle-avatar-wrapper {
   width: 140rpx;
   height: 140rpx;
-  border-radius: 50%;
+  border-radius: 24rpx;
   padding: 6rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.1);
   margin-bottom: 16rpx;
@@ -521,7 +521,7 @@ onMounted(() => {
 .circle-avatar-inner {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 20rpx;
   background-color: $pitch-pulse-bg-dark;
   overflow: hidden;
   border: 4rpx solid $pitch-pulse-bg-dark;
@@ -530,6 +530,7 @@ onMounted(() => {
 .circle-avatar {
   width: 100%;
   height: 100%;
+  border-radius: 16rpx;
 }
 
 .circle-name {
@@ -630,8 +631,8 @@ onMounted(() => {
 .mini-avatar {
   width: 48rpx;
   height: 48rpx;
-  border-radius: 50%;
-  border: 4rpx solid #25231c;
+  border-radius: 8rpx;
+  border: 2rpx solid $pitch-pulse-bg-dark;
   margin-left: -16rpx;
 }
 
@@ -642,7 +643,7 @@ onMounted(() => {
 .mini-avatar-count {
   width: 48rpx;
   height: 48rpx;
-  border-radius: 50%;
+  border-radius: 12rpx;
   background-color: #35332c;
   border: 4rpx solid #25231c;
   display: flex;

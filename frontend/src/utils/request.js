@@ -10,8 +10,26 @@ const request = (options = {}) => {
   // 补全 URL
   options.url = BASE_URL + (options.url.startsWith('/') ? options.url : '/' + options.url)
   options.method = options.method || 'GET'
+  
+  // 对于 GET 请求，手动将 data 拼接到 URL 后面，确保参数传递
+  if (options.method.toUpperCase() === 'GET' && options.data) {
+    const params = Object.keys(options.data)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(options.data[key])}`)
+      .join('&');
+    if (params) {
+      options.url += (options.url.indexOf('?') > -1 ? '&' : '?') + params;
+    }
+    // 拼接完后清除 data，避免某些环境重复发送
+    delete options.data;
+  }
+  
+  // 对于 GET 请求，通常不需要 Content-Type，或者使用 application/x-www-form-urlencoded
+  const defaultHeader = options.method.toUpperCase() === 'GET' 
+    ? {} 
+    : { 'Content-Type': 'application/json' }
+
   options.header = {
-    'Content-Type': 'application/json',
+    ...defaultHeader,
     ...options.header
   }
 

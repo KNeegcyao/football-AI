@@ -492,7 +492,7 @@ onMounted(() => {
   width: 80rpx;
   height: 80rpx;
   background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
+  border-radius: 20rpx;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -501,7 +501,7 @@ onMounted(() => {
 .avatar-box {
   width: 80rpx;
   height: 80rpx;
-  border-radius: 50%;
+  border-radius: 20rpx;
   overflow: hidden;
   background-color: rgba(255, 255, 255, 0.05);
 }
@@ -509,6 +509,8 @@ onMounted(() => {
 .avatar {
   width: 100%;
   height: 100%;
+  border-radius: 12rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
 }
 
 .category-scroll {

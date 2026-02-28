@@ -323,6 +323,11 @@ export const notificationApi = {
   /**
    * 全部已读
    */
-  readAll: () => request.put('/api/notifications/read-all')
+  readAll: () => request.put('/api/notifications/read-all'),
+
+  /**
+   * 删除通知
+   */
+  delete: (id) => request.delete(`/api/notifications/${id}`)
 }
 

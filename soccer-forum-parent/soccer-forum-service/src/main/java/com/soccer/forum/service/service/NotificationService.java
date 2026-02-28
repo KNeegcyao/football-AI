@@ -2,6 +2,7 @@ package com.soccer.forum.service.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.domain.entity.Notification;
+import java.util.List;
 
 public interface NotificationService {
     /**
@@ -17,7 +18,7 @@ public interface NotificationService {
     /**
      * 分页查询通知
      */
-    Page<Notification> getNotificationPage(Long userId, Integer page, Integer size);
+    Page<Notification> getNotificationPage(Long userId, Integer page, Integer size, List<Integer> types);
 
     /**
      * 标记为已读
@@ -28,4 +29,9 @@ public interface NotificationService {
      * 全部标记为已读
      */
     void markAllAsRead(Long userId);
+
+    /**
+     * 删除通知
+     */
+    void deleteNotification(Long id, Long userId);
 }

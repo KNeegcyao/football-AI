@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -26,6 +27,27 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendNotification(Long userId, Long fromUserId, Integer type, Long targetId, String content) {
         // 如果是自己触发的通知，不发送（比如自己给自己点赞/评论）
         if (userId.equals(fromUserId)) {
+            return;
+        }
+
+        // 防重检查：如果同一个用户在短时间内（例如24小时内）对同一个目标已经发送过同类型的通知，则更新时间并设为未读，不再新增
+        // 特别是关注通知（type=5），防止反复 关注-取关 产生大量垃圾通知
+        LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<Notification>()
+                .eq(Notification::getUserId, userId)
+                .eq(Notification::getFromUserId, fromUserId)
+                .eq(Notification::getType, type)
+                .eq(Notification::getTargetId, targetId)
+                .ge(Notification::getCreatedAt, LocalDateTime.now().minusDays(1)); // 24小时内
+
+        List<Notification> existingNotifications = notificationMapper.selectList(queryWrapper);
+        if (!existingNotifications.isEmpty()) {
+            Notification existing = existingNotifications.get(0);
+            existing.setIsRead(0);
+            existing.setCreatedAt(LocalDateTime.now());
+            if (content != null) {
+                existing.setContent(content);
+            }
+            notificationMapper.updateById(existing);
             return;
         }
 
@@ -49,11 +71,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<Notification> getNotificationPage(Long userId, Integer page, Integer size) {
+    public Page<Notification> getNotificationPage(Long userId, Integer page, Integer size, List<Integer> types) {
         Page<Notification> p = new Page<>(page, size);
-        return notificationMapper.selectPage(p, new LambdaQueryWrapper<Notification>()
-                .eq(Notification::getUserId, userId)
-                .orderByDesc(Notification::getCreatedAt));
+        LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<Notification>()
+                .eq(Notification::getUserId, userId);
+        
+        if (types != null && !types.isEmpty()) {
+            wrapper.in(Notification::getType, types);
+        }
+        
+        return notificationMapper.selectPage(p, wrapper.orderByDesc(Notification::getCreatedAt));
     }
 
     @Override
@@ -78,5 +105,18 @@ public class NotificationServiceImpl implements NotificationService {
         notificationMapper.update(notification, new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getUserId, userId)
                 .eq(Notification::getIsRead, 0));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteNotification(Long id, Long userId) {
+        Notification notification = notificationMapper.selectById(id);
+        if (notification == null) {
+            return;
+        }
+        if (!notification.getUserId().equals(userId)) {
+            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+        }
+        notificationMapper.deleteById(id);
     }
 }

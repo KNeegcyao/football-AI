@@ -26,6 +26,9 @@ public class NotificationResp {
     @Schema(description = "关联帖子ID")
     private Long postId;
 
+    @Schema(description = "关联帖子标题")
+    private String postTitle;
+
     public static NotificationResp from(Notification notification, UserSimpleResp fromUser) {
         NotificationResp resp = new NotificationResp();
         resp.setId(notification.getId());
@@ -37,6 +40,9 @@ public class NotificationResp {
         resp.setFromUser(fromUser);
         return resp;
     }
+
+    public String getPostTitle() { return postTitle; }
+    public void setPostTitle(String postTitle) { this.postTitle = postTitle; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

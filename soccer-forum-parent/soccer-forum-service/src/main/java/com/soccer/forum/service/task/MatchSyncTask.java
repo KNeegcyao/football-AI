@@ -29,9 +29,9 @@ public class MatchSyncTask {
 
     /**
      * 每 5 分钟执行一次 (cron: 0 0/5 * * * ?)
-     * 或者使用 fixedRate = 300000 (5分钟 = 300,000 毫秒)
+     * initialDelay = 5000 表示服务启动 5 秒后立即执行第一次
      */
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 300000, initialDelay = 5000)
     public void syncMatchData() {
         log.info("开始执行赛程同步定时任务...");
         try {

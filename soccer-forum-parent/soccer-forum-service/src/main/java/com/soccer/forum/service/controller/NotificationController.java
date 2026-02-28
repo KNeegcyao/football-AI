@@ -17,8 +17,10 @@ import com.soccer.forum.service.model.dto.NotificationResp;
 import com.soccer.forum.service.model.dto.UserSimpleResp;
 import com.soccer.forum.service.service.UserService;
 import com.soccer.forum.service.service.CommentService;
+import com.soccer.forum.service.service.PostService;
 import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.domain.entity.Comment;
+import com.soccer.forum.domain.entity.Post;
 import org.springframework.beans.BeanUtils;
 import java.util.stream.Collectors;
 import java.util.List;
@@ -32,11 +34,13 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final UserService userService;
     private final CommentService commentService;
+    private final PostService postService;
 
-    public NotificationController(NotificationService notificationService, UserService userService, CommentService commentService) {
+    public NotificationController(NotificationService notificationService, UserService userService, CommentService commentService, PostService postService) {
         this.notificationService = notificationService;
         this.userService = userService;
         this.commentService = commentService;
+        this.postService = postService;
     }
 
     @Operation(summary = "获取未读消息数")
@@ -49,8 +53,29 @@ public class NotificationController {
     @GetMapping
     public R<Page<NotificationResp>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
                                           @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
+                                          @Parameter(description = "类型过滤 (支持单个数字或逗号分隔的多个数字)") @RequestParam(required = false) String type,
+                                          @Parameter(description = "多个类型过滤 (逗号分隔，兼容旧版)") @RequestParam(required = false) String types,
                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
-        Page<Notification> notificationPage = notificationService.getNotificationPage(loginUser.getUser().getId(), page, size);
+        
+        List<Integer> typeList = new ArrayList<>();
+        String typeStr = type != null ? type : types;
+        
+        System.out.println("Notification API Filter - Type: " + type + ", Types: " + types + ", Final TypeStr: " + typeStr);
+        
+        if (typeStr != null && !typeStr.isEmpty()) {
+            for (String t : typeStr.split(",")) {
+                try {
+                    int tInt = Integer.parseInt(t.trim());
+                    typeList.add(tInt);
+                } catch (NumberFormatException e) {
+                    System.err.println("Failed to parse type: " + t);
+                }
+            }
+        }
+        
+        System.out.println("Final TypeList for Query: " + typeList);
+
+        Page<Notification> notificationPage = notificationService.getNotificationPage(loginUser.getUser().getId(), page, size, typeList);
         
         // 1. 获取用户信息
         List<Long> userIds = notificationPage.getRecords().stream()
@@ -85,6 +110,29 @@ public class NotificationController {
             commentPostMap = Map.of();
         }
 
+        // 3. 获取评论/赞对应的帖子标题
+        List<Long> postIdsForTitle = notificationPage.getRecords().stream()
+                .filter(n -> n.getType() == 1 || n.getType() == 3)
+                .map(Notification::getTargetId)
+                .collect(Collectors.toList());
+
+        // 评论回复中的原帖ID
+        List<Long> postIdsFromComments = notificationPage.getRecords().stream()
+                .filter(n -> n.getType() == 2 || n.getType() == 4)
+                .map(n -> commentPostMap.get(n.getTargetId()))
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        postIdsForTitle.addAll(postIdsFromComments);
+
+        Map<Long, String> postTitleMap;
+        if (!postIdsForTitle.isEmpty()) {
+            List<Post> posts = postService.listByIds(postIdsForTitle.stream().distinct().collect(Collectors.toList()));
+            postTitleMap = posts.stream().collect(Collectors.toMap(Post::getId, Post::getTitle));
+        } else {
+            postTitleMap = Map.of();
+        }
+
         List<NotificationResp> resps = notificationPage.getRecords().stream().map(notification -> {
             UserSimpleResp fromUser = userMap.get(notification.getFromUserId());
             if (fromUser == null) {
@@ -96,13 +144,16 @@ public class NotificationController {
             }
             NotificationResp resp = NotificationResp.from(notification, fromUser);
             
-            // 设置 PostId
+            // 设置 PostId 和 PostTitle
             if (notification.getType() == 1 || notification.getType() == 3) {
                 // 1:点赞帖子, 3:评论帖子 -> targetId 就是 postId
                 resp.setPostId(notification.getTargetId());
+                resp.setPostTitle(postTitleMap.get(notification.getTargetId()));
             } else if (notification.getType() == 2 || notification.getType() == 4) {
                 // 2:点赞评论, 4:回复评论 -> targetId 是 commentId
-                resp.setPostId(commentPostMap.get(notification.getTargetId()));
+                Long pid = commentPostMap.get(notification.getTargetId());
+                resp.setPostId(pid);
+                resp.setPostTitle(postTitleMap.get(pid));
             }
             
             return resp;
@@ -127,6 +178,14 @@ public class NotificationController {
     @PutMapping("/read-all")
     public R<Void> readAll(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         notificationService.markAllAsRead(loginUser.getUser().getId());
+        return R.ok();
+    }
+
+    @Operation(summary = "删除通知")
+    @DeleteMapping("/{id}")
+    public R<Void> delete(@Parameter(description = "通知ID") @PathVariable Long id, 
+                          @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        notificationService.deleteNotification(id, loginUser.getUser().getId());
         return R.ok();
     }
 }

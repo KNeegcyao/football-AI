@@ -67,14 +67,14 @@
           <!-- 消息正文 -->
           <view class="message-row">
             <p class="desc-text">
-              {{ getActionDesc(item.type) }}
-              <text v-if="item.postTitle" class="highlight-text">"{{ item.postTitle }}"</text>
+              {{ getActionDesc(item) }}
+              <text v-if="item.postTitle && item.type !== 6" class="highlight-text">"{{ item.postTitle }}"</text>
             </p>
             <view class="unread-dot" v-if="!item.isRead"></view>
           </view>
 
-          <!-- 引用内容 (评论/回复内容) -->
-          <view class="quote-box" v-if="item.content" :class="getQuoteClass(item.type)">
+          <!-- 引用内容 (评论/回复内容，私信不显示) -->
+          <view class="quote-box" v-if="item.content && item.type !== 6" :class="getQuoteClass(item.type)">
             <text class="quote-text">"{{ item.content }}"</text>
           </view>
         </view>
@@ -129,7 +129,8 @@ export default {
         2: '点赞',
         3: '评论',
         4: '回复',
-        5: '关注'
+        5: '关注',
+        6: '私信'
       };
       return map[type] || '通知';
     },
@@ -140,7 +141,8 @@ export default {
         2: 'tag-pink',    // 点赞
         3: 'tag-green',   // 评论
         4: 'tag-blue',    // 回复
-        5: 'tag-primary'  // 关注
+        5: 'tag-primary', // 关注
+        6: 'tag-yellow'   // 私信
       };
       return map[type] || 'tag-primary';
     },
@@ -151,12 +153,15 @@ export default {
         2: 'thumb-up-fill',
         3: 'chat-fill',
         4: 'chat-fill',
-        5: 'account-fill'
+        5: 'account-fill',
+        6: 'email-fill'
       };
       return map[type] || 'bell-fill';
     },
     // 获取操作描述
-    getActionDesc(type) {
+    getActionDesc(item) {
+      if (item.type === 6) return item.content || '发来一条私信';
+      
       const map = {
         1: '赞了你的帖子',
         2: '赞了你的评论',
@@ -164,7 +169,7 @@ export default {
         4: '回复了你的评论',
         5: '关注了你'
       };
-      return map[type] || '有一条新消息';
+      return map[item.type] || '有一条新消息';
     },
     // 引用框样式
     getQuoteClass(type) {
@@ -216,14 +221,18 @@ export default {
             data: {
                 page: this.page,
                 size: this.size,
-                type: this.currentType // 增加类型过滤
+                type: 6 // 只显示私信类型 (type=6)
             }
         });
         
         const records = res.records || [];
         
+        // 前端二次过滤，确保主列表只显示私信 (type=6)
+        // 这样即使后端由于参数解析等问题返回了全部数据，前端也能正确显示
+        const privateMessages = records.filter(item => item.type === 6);
+        
         // 格式化数据，确保 fromUser 对象存在，并处理头像
-        const formattedRecords = records.map(item => {
+        const formattedRecords = privateMessages.map(item => {
           if (item.fromUser && item.fromUser.avatar) {
             item.fromUser.avatar = this.$utils.getFullImageUrl(item.fromUser.avatar);
           }
@@ -304,6 +313,9 @@ export default {
       // 跳转逻辑
       if (item.type === 5) {
         uni.navigateTo({ url: `/pages/my/profile?id=${item.fromUser.id}` });
+      } else if (item.type === 6) {
+        // 跳转到私信聊天页（假设路径为 /pages/community/chat）
+        uni.navigateTo({ url: `/pages/community/chat?id=${item.fromUser.id}&nickname=${item.fromUser.nickname}` });
       } else if ([1, 2, 3, 4].includes(item.type)) {
         if (item.postId) {
             const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
@@ -321,19 +333,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// 变量定义
-$bg-color: #000000;
-$card-bg: #000000;
-$text-primary: #ffffff;
-$text-secondary: #94a3b8;
-$text-muted: #64748b;
-$accent-color: #991B1B; // Deep Crimson
-$gold-color: #D4AF37;
-
 .container {
   min-height: 100vh;
-  background-color: $bg-color;
-  color: $text-primary;
+  background-color: $pitch-pulse-bg-dark;
+  color: #fff;
 }
 
 /* 自定义导航栏样式 */
@@ -341,22 +344,20 @@ $gold-color: #D4AF37;
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
+  background-color: rgba($pitch-pulse-bg-dark, 0.8);
+  backdrop-filter: blur(10px);
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
 
   .navbar-inner {
     height: 44px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 32rpx;
+    padding: 0 40rpx;
 
-    .left, .right {
+    .left {
       display: flex;
       align-items: center;
-      gap: 20rpx;
-      min-width: 100rpx;
+      min-width: 80rpx;
     }
 
     .center {
@@ -367,15 +368,34 @@ $gold-color: #D4AF37;
       .brand-text {
         font-size: 34rpx;
         font-weight: 800;
-        color: $accent-color;
+        color: #fff;
         letter-spacing: 2rpx;
+        
+        &::after {
+          content: 'PULSE';
+          color: $pitch-pulse-primary;
+        }
       }
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 20rpx;
+      min-width: 80rpx;
     }
     
     .icon-btn {
-      padding: 10rpx;
+      width: 64rpx;
+      height: 64rpx;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 16rpx;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       &:active {
-        opacity: 0.7;
+        background-color: rgba(255, 255, 255, 0.1);
       }
     }
   }
@@ -386,7 +406,7 @@ $gold-color: #D4AF37;
   display: flex;
   justify-content: space-around;
   padding: 40rpx 32rpx;
-  background-color: #000;
+  background-color: transparent;
 
   .category-item {
     display: flex;
@@ -395,33 +415,42 @@ $gold-color: #D4AF37;
     gap: 16rpx;
 
     .icon-wrapper {
-      width: 112rpx;
-      height: 112rpx;
-      border-radius: 32rpx;
+      width: 100rpx;
+      height: 100rpx;
+      border-radius: 24rpx;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1rpx solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s;
 
       &:active {
-        transform: scale(0.9);
+        transform: scale(0.95);
+        background-color: rgba(255, 255, 255, 0.1);
       }
 
-      &.bg-emerald { background-color: rgba(16, 185, 129, 0.15); }
-      &.bg-rose { background-color: rgba(244, 63, 94, 0.15); }
-      &.bg-sky { background-color: rgba(14, 165, 233, 0.15); }
+      &.bg-emerald { 
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+      &.bg-rose { 
+        border-color: rgba(244, 63, 94, 0.3);
+      }
+      &.bg-sky { 
+        border-color: rgba(14, 165, 233, 0.3);
+      }
     }
 
     .label {
       font-size: 24rpx;
       font-weight: 500;
-      color: #94a3b8;
+      color: rgba(255, 255, 255, 0.6);
     }
   }
 }
 
 .notification-list {
-  padding: 0 32rpx 40rpx;
+  padding: 0 40rpx 40rpx;
   
   .notification-item {
     display: flex;
@@ -438,11 +467,11 @@ $gold-color: #D4AF37;
       flex-shrink: 0;
 
       .avatar-img {
-        width: 112rpx;
-        height: 112rpx;
-        border-radius: 50%;
-        border: 2rpx solid rgba($accent-color, 0.2);
-        background-color: #1a1a1a;
+        width: 96rpx;
+        height: 96rpx;
+        border-radius: 16rpx;
+        border: 1rpx solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.05);
       }
       
       .badge-icon {
@@ -451,12 +480,16 @@ $gold-color: #D4AF37;
         right: 0;
         width: 36rpx;
         height: 36rpx;
-        background-color: $gold-color;
-        border-radius: 50%;
+        background-color: $pitch-pulse-primary;
+        border-radius: 8rpx;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 4rpx solid #000;
+        border: 4rpx solid $pitch-pulse-bg-dark;
+        
+        :deep(.u-icon__icon) {
+          color: #000 !important;
+        }
       }
     }
     
@@ -476,78 +509,82 @@ $gold-color: #D4AF37;
           gap: 12rpx;
           
           .nickname {
-            font-size: 30rpx;
+            font-size: 28rpx;
             font-weight: 700;
-            color: #f1f5f9;
+            color: #fff;
             
             &.official {
-              color: $accent-color;
+              color: $pitch-pulse-primary;
             }
           }
           
           .official-tag {
-            background-color: $gold-color;
-            padding: 2rpx 6rpx;
-            border-radius: 6rpx;
+            background-color: $pitch-pulse-primary;
+            padding: 2rpx 8rpx;
+            border-radius: 4rpx;
             display: flex;
             align-items: center;
+            
+            :deep(.u-icon__icon) {
+              color: #000 !important;
+            }
           }
         }
         
         .time {
           font-size: 22rpx;
-          color: #64748b;
+          color: rgba(255, 255, 255, 0.4);
         }
       }
-
+      
       .message-row {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16rpx;
-
+        gap: 20rpx;
+        
         .desc-text {
-          flex: 1;
-          font-size: 28rpx;
-          color: #94a3b8;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-size: 26rpx;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.5;
           
           .highlight-text {
-            color: $accent-color;
+            color: $pitch-pulse-primary;
             margin-left: 8rpx;
+            font-weight: 500;
           }
         }
-
+        
         .unread-dot {
           width: 12rpx;
           height: 12rpx;
-          background-color: #f43f5e;
-          border-radius: 50%;
-          margin-left: 16rpx;
-          box-shadow: 0 0 10rpx rgba(244, 63, 94, 0.5);
+          background-color: $pitch-pulse-primary;
+          border-radius: 4rpx;
+          margin-top: 12rpx;
+          flex-shrink: 0;
+          box-shadow: 0 0 10rpx rgba($pitch-pulse-primary, 0.5);
         }
       }
       
       .quote-box {
-        background-color: #111;
-        border-radius: 12rpx;
+        margin-top: 16rpx;
         padding: 16rpx 20rpx;
-        border-left: 4rpx solid $accent-color;
+        background-color: rgba(255, 255, 255, 0.03);
+        border-radius: 12rpx;
+        border-left: 4rpx solid rgba(255, 255, 255, 0.1);
+        
+        &.border-green { border-left-color: #10b981; }
+        &.border-blue { border-left-color: #0ea5e9; }
+        &.border-primary { border-left-color: $pitch-pulse-primary; }
         
         .quote-text {
-          font-size: 26rpx;
-          color: #64748b;
-          line-height: 1.5;
+          font-size: 24rpx;
+          color: rgba(255, 255, 255, 0.5);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
         }
-        
-        &.border-green { border-left-color: #10b981; }
-        &.border-blue { border-left-color: #0ea5e9; }
       }
     }
   }

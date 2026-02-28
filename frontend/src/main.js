@@ -3,6 +3,7 @@ import App from './App.vue'
 import uviewPlus from 'uview-plus'
 import { createPinia } from 'pinia'
 import request from './utils/request'
+import * as utils from './utils/utils'
 
 export function createApp() {
   const app = createSSRApp(App)
@@ -12,6 +13,7 @@ export function createApp() {
   app.use(pinia)
   
   app.config.globalProperties.$request = request
+  app.config.globalProperties.$utils = utils
   
   return {
     app,
