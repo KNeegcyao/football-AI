@@ -20,9 +20,9 @@ public class Notification implements Serializable {
     private Long userId;
     @Schema(description = "触发通知的用户ID")
     private Long fromUserId;
-    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:系统通知)")
+    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:关注, 6:@提及, 7:私信)")
     private Integer type;
-    @Schema(description = "目标ID (帖子ID或评论ID)")
+    @Schema(description = "目标ID (帖子ID或评论ID或消息ID)")
     private Long targetId;
     @Schema(description = "通知简述或系统消息内容")
     private String content;

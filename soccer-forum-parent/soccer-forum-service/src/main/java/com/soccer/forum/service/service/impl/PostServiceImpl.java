@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
     private static final Logger log = LoggerFactory.getLogger(PostServiceImpl.class);
+    private static final java.util.regex.Pattern MENTION_PATTERN = java.util.regex.Pattern.compile("@\\[(.*?)\\]\\(user_id:(\\d+)\\)");
 
     private final PostMapper postMapper;
     private final UserMapper userMapper;
@@ -58,8 +59,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final TopicMapper topicMapper;
     private final TeamMapper teamMapper;
     private final FavoriteMapper favoriteMapper;
+    private final com.soccer.forum.service.service.NotificationService notificationService;
 
-    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper) {
+    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper, com.soccer.forum.service.service.NotificationService notificationService) {
         this.postMapper = postMapper;
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
@@ -67,6 +69,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         this.topicMapper = topicMapper;
         this.teamMapper = teamMapper;
         this.favoriteMapper = favoriteMapper;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -97,8 +100,28 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
         
+        // 解析 @提及
+        List<Long> mentionedUserIds = new java.util.ArrayList<>();
+        if (req.getContent() != null) {
+            java.util.regex.Matcher matcher = MENTION_PATTERN.matcher(req.getContent());
+            while (matcher.find()) {
+                try {
+                    Long mentionedUserId = Long.parseLong(matcher.group(2));
+                    if (!mentionedUserIds.contains(mentionedUserId)) {
+                        mentionedUserIds.add(mentionedUserId);
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        post.setMentionedUserIds(mentionedUserIds);
+        
         postMapper.insert(post);
         log.info("帖子创建成功: id={}", post.getId());
+
+        // 发送 @提及 通知
+        for (Long mentionedUserId : mentionedUserIds) {
+            notificationService.sendNotification(mentionedUserId, userId, 6, post.getId(), req.getContent());
+        }
 
         // 更新话题统计
         if (post.getTopicId() != null) {

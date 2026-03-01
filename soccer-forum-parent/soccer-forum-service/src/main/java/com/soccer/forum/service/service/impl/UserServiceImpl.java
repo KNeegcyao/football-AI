@@ -96,6 +96,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (req.getAvatar() != null) {
             user.setAvatar(req.getAvatar());
         }
+        if (req.getCover() != null) {
+            user.setCover(req.getCover());
+        }
         if (req.getEmail() != null) {
             user.setEmail(req.getEmail());
         }

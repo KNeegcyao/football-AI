@@ -48,6 +48,10 @@ public class Post implements Serializable {
     @Schema(description = "关联话题ID")
     private Long topicId;
 
+    @Schema(description = "提到的用户ID列表")
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<Long> mentionedUserIds;
+
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -89,6 +93,9 @@ public class Post implements Serializable {
 
     public Long getTopicId() { return topicId; }
     public void setTopicId(Long topicId) { this.topicId = topicId; }
+
+    public List<Long> getMentionedUserIds() { return mentionedUserIds; }
+    public void setMentionedUserIds(List<Long> mentionedUserIds) { this.mentionedUserIds = mentionedUserIds; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

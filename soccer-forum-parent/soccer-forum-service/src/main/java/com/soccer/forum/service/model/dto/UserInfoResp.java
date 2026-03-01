@@ -19,6 +19,9 @@ public class UserInfoResp {
     @Schema(description = "头像URL")
     private String avatar;
 
+    @Schema(description = "背景图URL")
+    private String cover;
+
     @Schema(description = "电子邮箱")
     private String email;
 
@@ -40,6 +43,7 @@ public class UserInfoResp {
         resp.setUsername(user.getUsername());
         resp.setNickname(user.getNickname());
         resp.setAvatar(user.getAvatar());
+        resp.setCover(user.getCover());
         resp.setEmail(user.getEmail());
         resp.setPhone(user.getPhone());
         resp.setRole(user.getRole());
@@ -56,6 +60,8 @@ public class UserInfoResp {
     public void setNickname(String nickname) { this.nickname = nickname; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    public String getCover() { return cover; }
+    public void setCover(String cover) { this.cover = cover; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }

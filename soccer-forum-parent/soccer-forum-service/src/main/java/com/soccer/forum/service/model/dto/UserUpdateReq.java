@@ -15,6 +15,9 @@ public class UserUpdateReq {
     @Schema(description = "头像URL")
     private String avatar;
 
+    @Schema(description = "背景图URL")
+    private String cover;
+
     @Schema(description = "电子邮箱")
     @Email(message = "电子邮箱格式不正确")
     private String email;
@@ -30,6 +33,10 @@ public class UserUpdateReq {
     @Schema(description = "头像URL")
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    @Schema(description = "背景图URL")
+    public String getCover() { return cover; }
+    public void setCover(String cover) { this.cover = cover; }
 
     @Schema(description = "电子邮箱")
     public String getEmail() { return email; }

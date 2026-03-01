@@ -249,7 +249,7 @@ const loadData = async () => {
               return {
                 id: p.id,
                 name: p.name,
-                photo: p.photo || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+                photo: fileApi.getFileUrl(p.photo) || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
                 teamName: p.teamName || '未知球队'
               };
             }

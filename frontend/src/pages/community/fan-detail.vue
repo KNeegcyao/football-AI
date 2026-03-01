@@ -54,25 +54,22 @@ export default {
 			types: '5' // 新增粉丝
 		}
 	},
-	onLoad() {
-		// 计算导航栏高度
-		// #ifdef MP-WEIXIN
-		const menuButtonInfo = uni.getMenuButtonBoundingClientRect()
-		this.navbarHeight = menuButtonInfo.bottom + menuButtonInfo.top - this.statusBarHeight
-		// #endif
-		// #ifndef MP-WEIXIN
-		this.navbarHeight = 44 // H5/App 默认高度
-		// #endif
-		
-		this.loadData(true)
-	},
-	onPullDownRefresh() {
-		this.loadData(true)
-	},
-	onReachBottom() {
-		this.loadMore()
-	},
-	methods: {
+		onLoad() {
+			// 计算导航栏高度
+			// #ifdef MP-WEIXIN
+			const menuButtonInfo = uni.getMenuButtonBoundingClientRect()
+			this.navbarHeight = menuButtonInfo.bottom + menuButtonInfo.top - this.statusBarHeight
+			// #endif
+			// #ifndef MP-WEIXIN
+			this.navbarHeight = 44 // H5/App 默认高度
+			// #endif
+			
+			this.loadData(true)
+		},
+		onPullDownRefresh() {
+			this.loadData(true)
+		},
+		methods: {
 		goBack() {
 			uni.navigateBack()
 		},

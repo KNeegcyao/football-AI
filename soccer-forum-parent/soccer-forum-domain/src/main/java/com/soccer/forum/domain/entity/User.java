@@ -35,6 +35,9 @@ public class User implements Serializable {
     @Schema(description = "头像URL")
     private String avatar;
 
+    @Schema(description = "背景图URL")
+    private String cover;
+
     @Schema(description = "微信OpenID")
     private String openid;
 
@@ -79,6 +82,9 @@ public class User implements Serializable {
 
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    
+    public String getCover() { return cover; }
+    public void setCover(String cover) { this.cover = cover; }
     
     public String getOpenid() { return openid; }
     public void setOpenid(String openid) { this.openid = openid; }

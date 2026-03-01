@@ -24,37 +24,56 @@ public class MatchSyncTask {
     @Value("${match.sync.script-path:D:/project/football/scripts/fetch_schedule.py}")
     private String scriptPath;
 
+    @Value("${match.crawler.script-path:D:/project/football/scripts/live_crawler.py}")
+    private String crawlerPath;
+
     @Value("${match.sync.python-path:python}")
     private String pythonPath;
 
     /**
-     * 每 5 分钟执行一次 (cron: 0 0/5 * * * ?)
+     * 每 1 分钟执行一次实时爬虫 (针对进行中比赛)
+     * cron: 0 0/1 * * * ?
+     */
+    @Scheduled(fixedRate = 60000, initialDelay = 10000)
+    public void liveScoreSync() {
+        log.info("开始执行秒级实时爬虫同步任务...");
+        executePythonScript(crawlerPath, "实时比分同步");
+    }
+
+    /**
+     * 每 5 分钟执行一次全量 API 同步
      * initialDelay = 5000 表示服务启动 5 秒后立即执行第一次
      */
     @Scheduled(fixedRate = 300000, initialDelay = 5000)
     public void syncMatchData() {
-        log.info("开始执行赛程同步定时任务...");
+        log.info("开始执行赛程全量 API 同步任务...");
+        executePythonScript(scriptPath, "API全量同步");
+    }
+
+    /**
+     * 通用的 Python 脚本执行逻辑
+     */
+    private void executePythonScript(String path, String taskName) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(pythonPath, scriptPath);
+            ProcessBuilder pb = new ProcessBuilder(pythonPath, path);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            // 读取脚本输出，防止缓冲区溢出导致进程挂起
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    log.debug("Python Script Output: {}", line);
+                    log.debug("{} Output: {}", taskName, line);
                 }
             }
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                log.info("赛程同步任务执行成功");
+                log.info("{} 执行成功", taskName);
             } else {
-                log.error("赛程同步任务执行失败，退出代码: {}", exitCode);
+                log.error("{} 执行失败，退出代码: {}", taskName, exitCode);
             }
         } catch (Exception e) {
-            log.error("调用 Python 脚本执行赛程同步时发生异常", e);
+            log.error("调用 Python 脚本执行 {} 时发生异常", taskName, e);
         }
     }
 }

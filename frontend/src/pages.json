@@ -153,6 +153,13 @@
       }
     },
     {
+      "path": "pages/my/follow",
+      "style": {
+        "navigationBarTitleText": "关注与粉丝",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录",
@@ -170,6 +177,20 @@
       "path": "pages/player-detail/player-detail",
       "style": {
         "navigationBarTitleText": "球员详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/message/message-list",
+      "style": {
+        "navigationBarTitleText": "私信",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/message/chat",
+      "style": {
+        "navigationBarTitleText": "对话",
         "navigationStyle": "custom"
       }
     }

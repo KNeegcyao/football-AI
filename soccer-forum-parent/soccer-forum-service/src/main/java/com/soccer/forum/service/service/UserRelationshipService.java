@@ -19,4 +19,9 @@ public interface UserRelationshipService extends IService<UserRelationship> {
      * 是否已关注
      */
     boolean isFollowing(Long followerId, Long followingId);
+
+    /**
+     * 是否互相关注
+     */
+    boolean isMutualFollow(Long userA, Long userB);
 }

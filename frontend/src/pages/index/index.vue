@@ -115,7 +115,7 @@
     <view class="tab-bar">
       <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
         @tap="handleTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : '#7A7E83'" size="24"></u-icon>
+        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'" size="24"></u-icon>
         <text class="tab-text">{{ tab.text }}</text>
       </view>
     </view>
@@ -818,27 +818,27 @@ onMounted(() => {
 } 
 
 /* 3. 修正 tab-item：确保宽度平分 */ 
-.tab-item { 
-   flex: 1; /* 强制平分布局 */ 
-   display: flex; 
-   flex-direction: column; 
-   align-items: center; 
-   justify-content: center; 
-   gap: 8rpx; 
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
+.tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    
     .tab-text {
-      color: $pitch-pulse-primary;
-      font-weight: 700;
+      font-size: 20rpx;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+    
+    &.active {
+      .tab-text {
+        color: #f9d406;
+        font-weight: 700;
+      }
     }
   }
-}
 
 .bottom-placeholder {
   height: 160rpx;

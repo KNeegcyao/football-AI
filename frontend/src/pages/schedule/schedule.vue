@@ -56,20 +56,24 @@
               <text class="competition-text">{{ match.competitionName }} · {{ match.round }}</text>
             </view>
             <view class="teams-score">
-              <view class="team">
-                <view class="team-logo">
+              <view class="team-side">
+                <view class="logo-container">
                   <image :src="fileApi.getFileUrl(match.homeTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
                 </view>
                 <text class="team-name">{{ match.homeTeam?.name }}</text>
               </view>
-              <view class="score-box">
-                <text class="score-text">{{ match.homeScore }} - {{ match.awayScore }}</text>
-                <view class="status-tag">
-                  <text>下半场</text>
+              <view class="score-center">
+                <view class="score-text">
+                  <text class="num">{{ match.homeScore }}</text>
+                  <text class="divider">-</text>
+                  <text class="num">{{ match.awayScore }}</text>
+                </view>
+                <view class="status-badge">
+                  <text>{{ match.statusName || '进行中' }}</text>
                 </view>
               </view>
-              <view class="team">
-                <view class="mini-logo">
+              <view class="team-side">
+                <view class="logo-container">
                 <image :src="fileApi.getFileUrl(match.awayTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
                 <text class="team-name">{{ match.awayTeam?.name }}</text>
@@ -103,7 +107,7 @@
           <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
+                <image :src="fileApi.getFileUrl(match.homeTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
               <text class="mini-name">{{ match.homeTeam?.name }}</text>
             </view>
@@ -131,7 +135,7 @@
           <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
-                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
+                <image :src="fileApi.getFileUrl(match.homeTeam?.logoUrl) || '/static/soccer-logo.png'" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
               <view class="team-info">
                 <text class="mini-name">{{ match.homeTeam?.name }}</text>
@@ -171,7 +175,7 @@
         :class="{ active: currentTab === index }"
         @tap="handleTabClick(index)"
       >
-        <u-icon :name="tab.icon" size="24" :color="currentTab === index ? '#f9d406' : '#7A7E83'"></u-icon>
+        <u-icon :name="tab.icon" size="24" :color="currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'"></u-icon>
         <text class="tab-text">{{ tab.text }}</text>
       </view>
     </view>
@@ -373,21 +377,15 @@ const selectDate = (index) => {
   updateCurrentYearMonth(selectedDate)
   fetchMatches()
   
-  // 如果选中今天，重启自动刷新
-  if (dates.value[index].isToday) {
-    startAutoRefresh()
-  } else {
-    stopAutoRefresh()
-  }
+  // 切换日期后也开启自动刷新，以便在非“今天”页面停留时也能及时看到数据同步
+  startAutoRefresh()
 }
 
 // 自动刷新逻辑
 const startAutoRefresh = () => {
   stopAutoRefresh()
-  // 只有选中“今天”时才刷新
-  if (dates.value[activeDateIndex.value]?.isToday) {
-    refreshTimer = setInterval(fetchMatches, 30000)
-  }
+  // 保持后台定时刷新，获取最新数据（无论是否在“今天”标签）
+  refreshTimer = setInterval(fetchMatches, 30000)
 }
 
 const stopAutoRefresh = () => {
@@ -495,7 +493,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 40rpx;
-  background-color: rgba($pitch-pulse-bg-dark, 0.8);
+  background-color: rgba(26, 24, 17, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
   position: sticky;
@@ -705,57 +703,86 @@ onUnmounted(() => {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 40rpx 0;
 
-      .team {
+      .team-side {
         flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16rpx;
+        overflow: hidden;
 
-        .team-logo {
-          width: 200rpx;
-          height: 200rpx;
+        .logo-container {
+          width: 90rpx;
+          height: 90rpx;
           background-color: #fff;
           border-radius: 50%;
-          padding: 8rpx;
           display: flex;
           justify-content: center;
           align-items: center;
+          margin-bottom: 16rpx;
+          box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+          flex-shrink: 0;
 
           image {
-            width: 184rpx;
-            height: 184rpx;
+            width: 64rpx;
+            height: 64rpx;
           }
         }
 
         .team-name {
-        font-size: 28rpx;
-        font-weight: 700;
-        text-align: center;
-        color: #fff;
-      }
+          font-size: 28rpx;
+          font-weight: 800;
+          color: #fff;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          width: 100%;
+          padding: 0 10rpx;
+          box-sizing: border-box;
+        }
       }
 
-      .score-box {
+      .score-center {
+        flex: 0 0 160rpx; /* 固定宽度，不参与 flex 缩放 */
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8rpx;
-        margin: 0 32rpx;
+        justify-content: center;
 
         .score-text {
-          font-size: 60rpx;
-          font-weight: 800;
-          letter-spacing: 8rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12rpx; /* 缩小间距 */
+          margin-bottom: 12rpx;
+
+          .num {
+            font-size: 64rpx; /* 稍微缩小字号 */
+            font-weight: 900;
+            color: #fff;
+            width: 60rpx; /* 缩小容器宽度 */
+            text-align: center;
+            font-family: 'DIN Alternate', 'PingFang SC', sans-serif;
+          }
+
+          .divider {
+            font-size: 32rpx; /* 缩小分隔符 */
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 300;
+          }
         }
 
-        .status-tag {
-          font-size: 20rpx;
-          color: #f9d406;
-          background-color: rgba(249, 212, 6, 0.1);
-          padding: 4rpx 16rpx;
-          border-radius: 999rpx;
+        .status-badge {
+          background: linear-gradient(90deg, #ff2e63 0%, #ff4b5c 100%);
+          color: #fff;
+          font-size: 20rpx; /* 缩小字号 */
+          padding: 4rpx 16rpx; /* 缩小内边距 */
+          border-radius: 24rpx;
+          font-weight: 700;
+          box-shadow: 0 4rpx 12rpx rgba(255, 46, 99, 0.4);
+          white-space: nowrap;
         }
       }
     }
@@ -830,61 +857,53 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
 
-    .mini-team {
-      display: flex;
-      align-items: center;
-      gap: 24rpx;
-      flex: 1;
-
-      .mini-logo {
-        width: 120rpx;
-        height: 120rpx;
-        background-color: #fff;
-        border-radius: 50%;
-        padding: 6rpx;
+      .mini-team {
         display: flex;
-        justify-content: center;
         align-items: center;
-        flex-shrink: 0;
+        gap: 16rpx; /* 减小间距 */
+        flex: 1;
+        overflow: hidden; /* 必须溢出隐藏 */
 
-        image {
-          width: 108rpx;
-          height: 108rpx;
+        .mini-logo {
+          width: 80rpx; /* 减小尺寸 */
+          height: 80rpx;
+          background-color: #fff;
+          border-radius: 50%;
+          padding: 6rpx;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-shrink: 0;
+
+          image {
+            width: 60rpx;
+            height: 60rpx;
+          }
+        }
+
+        .mini-name {
+          font-size: 26rpx; /* 减小字号 */
+          font-weight: 600;
+          color: #fff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1; /* 让名字占据剩余空间 */
+        }
+
+        &.reverse {
+          flex-direction: row-reverse;
+          text-align: right;
         }
       }
 
-      .mini-name {
-        font-size: 28rpx;
-        font-weight: 600;
-        color: #fff;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .vs-text {
+        font-size: 24rpx;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: monospace;
+        margin: 0 20rpx; /* 增加左右边距 */
+        flex-shrink: 0;
       }
-
-      &.reverse {
-        flex-direction: row-reverse;
-        text-align: right;
-      }
-    }
-      
-    .team-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4rpx;
-      flex: 1;
-      overflow: hidden;
-      
-      &.reverse {
-        align-items: flex-end;
-      }
-    }
-
-    .vs-text {
-      font-size: 24rpx;
-      color: rgba(255, 255, 255, 0.4);
-      font-family: monospace;
-    }
   }
 
   &.finished {
@@ -902,10 +921,25 @@ onUnmounted(() => {
         color: rgba(255, 255, 255, 0.4);
       }
     }
-    
+
     .vs-dash {
       font-size: 24rpx;
       color: rgba(255, 255, 255, 0.2);
+      margin: 0 20rpx;
+      flex-shrink: 0;
+    }
+
+    /* 在完赛卡片中，mini-team 内包含 team-info 容器 */
+    .team-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4rpx;
+      flex: 1;
+      overflow: hidden;
+
+      &.reverse {
+        align-items: flex-end;
+      }
     }
   }
 }

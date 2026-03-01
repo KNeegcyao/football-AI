@@ -57,4 +57,9 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
                .eq(UserRelationship::getFollowingId, followingId);
         return this.count(wrapper) > 0;
     }
+
+    @Override
+    public boolean isMutualFollow(Long userA, Long userB) {
+        return isFollowing(userA, userB) && isFollowing(userB, userA);
+    }
 }

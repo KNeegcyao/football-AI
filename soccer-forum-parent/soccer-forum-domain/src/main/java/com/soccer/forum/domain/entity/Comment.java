@@ -1,12 +1,14 @@
 package com.soccer.forum.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@TableName("comments")
+@TableName(value = "comments", autoResultMap = true)
 @Schema(description = "评论实体")
 public class Comment implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -28,6 +30,10 @@ public class Comment implements Serializable {
     private Integer likes;
     @Schema(description = "状态 (1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
+
+    @Schema(description = "提到的用户ID列表")
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<Long> mentionedUserIds;
 
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
@@ -61,6 +67,9 @@ public class Comment implements Serializable {
 
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+
+    public List<Long> getMentionedUserIds() { return mentionedUserIds; }
+    public void setMentionedUserIds(List<Long> mentionedUserIds) { this.mentionedUserIds = mentionedUserIds; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

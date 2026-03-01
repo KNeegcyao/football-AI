@@ -30,6 +30,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
+    private static final java.util.regex.Pattern MENTION_PATTERN = java.util.regex.Pattern.compile("@\\[(.*?)\\]\\(user_id:(\\d+)\\)");
+
     private final CommentMapper commentMapper;
     private final UserMapper userMapper;
     private final PostMapper postMapper;
@@ -56,6 +58,21 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setLikes(0);
         comment.setStatus(1);
 
+        // 解析 @提及
+        List<Long> mentionedUserIds = new java.util.ArrayList<>();
+        if (req.getContent() != null) {
+            java.util.regex.Matcher matcher = MENTION_PATTERN.matcher(req.getContent());
+            while (matcher.find()) {
+                try {
+                    Long mentionedUserId = Long.parseLong(matcher.group(2));
+                    if (!mentionedUserIds.contains(mentionedUserId)) {
+                        mentionedUserIds.add(mentionedUserId);
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        comment.setMentionedUserIds(mentionedUserIds);
+
         Post post = postMapper.selectById(req.getPostId());
         if (post == null) {
             throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
@@ -80,6 +97,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         commentMapper.insert(comment);
+
+        // 发送 @提及 通知
+        for (Long mentionedUserId : mentionedUserIds) {
+            notificationService.sendNotification(mentionedUserId, userId, 6, comment.getId(), req.getContent());
+        }
         
         // 更新帖子评论数
         post.setCommentCount(post.getCommentCount() + 1);

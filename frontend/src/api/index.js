@@ -223,12 +223,32 @@ export const userApi = {
   /**
    * 获取个人资料
    */
-  getProfile: () => request.get('/api/users/profile'),
+  getProfile: (id) => id ? request.get(`/api/users/${id}/profile`) : request.get('/api/users/profile'),
 
   /**
    * 获取用户统计数据
    */
-  getStats: () => request.get('/api/users/stats'),
+  getStats: (id) => id ? request.get(`/api/users/${id}/stats`) : request.get('/api/users/stats'),
+
+  /**
+   * 获取关注列表
+   */
+  getFollowing: (params) => request.get('/api/relationships/following', params),
+
+  /**
+   * 获取粉丝列表
+   */
+  getFollowers: (params) => request.get('/api/relationships/followers', params),
+
+  /**
+   * 获取指定用户的关注列表
+   */
+  getUserFollowing: (userId, params) => request.get(`/api/relationships/following/${userId}`, params),
+
+  /**
+   * 获取指定用户的粉丝列表
+   */
+  getUserFollowers: (userId, params) => request.get(`/api/relationships/followers/${userId}`, params),
 
   /**
    * 更新个人资料
@@ -329,5 +349,27 @@ export const notificationApi = {
    * 删除通知
    */
   delete: (id) => request.delete(`/api/notifications/${id}`)
+}
+
+/**
+ * 私信相关接口
+ */
+export const messageApi = {
+  /**
+   * 发送私信
+   * @param {Object} data { receiverId, content }
+   */
+  send: (data) => request.post('/api/messages/send', data),
+
+  /**
+   * 获取对话列表
+   */
+  getConversations: (params) => request.get('/api/messages/conversations', params),
+
+  /**
+   * 获取消息记录
+   * @param {Long} otherUserId 对方用户ID
+   */
+  getMessages: (otherUserId, params) => request.get(`/api/messages/history/${otherUserId}`, params)
 }
 

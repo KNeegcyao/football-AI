@@ -31,7 +31,7 @@ public class FileController {
     private String accessPath;
 
     @Operation(summary = "上传图片", description = "上传单张图片，返回可访问的 URL")
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", produces = "application/json;charset=UTF-8")
     public R<String> upload(@Parameter(description = "要上传的文件") @RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return R.fail("文件不能为空");

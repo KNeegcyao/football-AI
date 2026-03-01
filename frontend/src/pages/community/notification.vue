@@ -40,6 +40,12 @@
         </view>
         <text class="label">新增粉丝</text>
       </view>
+      <view class="category-item" @click="goToMessageList">
+        <view class="icon-wrapper bg-orange">
+          <u-icon name="email-fill" color="#f97316" size="28"></u-icon>
+        </view>
+        <text class="label">私信消息</text>
+      </view>
     </section>
 
     <view class="notification-list">
@@ -130,7 +136,8 @@ export default {
         3: '评论',
         4: '回复',
         5: '关注',
-        6: '私信'
+        6: '@我',
+        7: '私信'
       };
       return map[type] || '通知';
     },
@@ -142,7 +149,8 @@ export default {
         3: 'tag-green',   // 评论
         4: 'tag-blue',    // 回复
         5: 'tag-primary', // 关注
-        6: 'tag-yellow'   // 私信
+        6: 'tag-purple',  // @我
+        7: 'tag-orange'   // 私信
       };
       return map[type] || 'tag-primary';
     },
@@ -154,20 +162,21 @@ export default {
         3: 'chat-fill',
         4: 'chat-fill',
         5: 'account-fill',
-        6: 'email-fill'
+        6: 'at',
+        7: 'email-fill'
       };
       return map[type] || 'bell-fill';
     },
     // 获取操作描述
     getActionDesc(item) {
-      if (item.type === 6) return item.content || '发来一条私信';
-      
       const map = {
         1: '赞了你的帖子',
         2: '赞了你的评论',
         3: '评论了你的帖子',
         4: '回复了你的评论',
-        5: '关注了你'
+        5: '关注了你',
+        6: '在内容中提到了你',
+        7: '给你发了一条私信'
       };
       return map[item.type] || '有一条新消息';
     },
@@ -220,19 +229,14 @@ export default {
             method: 'GET',
             data: {
                 page: this.page,
-                size: this.size,
-                type: 6 // 只显示私信类型 (type=6)
+                size: this.size
             }
         });
         
         const records = res.records || [];
         
-        // 前端二次过滤，确保主列表只显示私信 (type=6)
-        // 这样即使后端由于参数解析等问题返回了全部数据，前端也能正确显示
-        const privateMessages = records.filter(item => item.type === 6);
-        
         // 格式化数据，确保 fromUser 对象存在，并处理头像
-        const formattedRecords = privateMessages.map(item => {
+        const formattedRecords = records.map(item => {
           if (item.fromUser && item.fromUser.avatar) {
             item.fromUser.avatar = this.$utils.getFullImageUrl(item.fromUser.avatar);
           }
@@ -288,6 +292,12 @@ export default {
         });
       }
     },
+
+    goToMessageList() {
+      uni.navigateTo({
+        url: '/pages/message/message-list'
+      });
+    },
     
     goBack() {
       // 如果当前有筛选，点击返回则先清除筛选，否则返回上一页
@@ -313,10 +323,10 @@ export default {
       // 跳转逻辑
       if (item.type === 5) {
         uni.navigateTo({ url: `/pages/my/profile?id=${item.fromUser.id}` });
-      } else if (item.type === 6) {
-        // 跳转到私信聊天页（假设路径为 /pages/community/chat）
-        uni.navigateTo({ url: `/pages/community/chat?id=${item.fromUser.id}&nickname=${item.fromUser.nickname}` });
-      } else if ([1, 2, 3, 4].includes(item.type)) {
+      } else if (item.type === 7) {
+        // 跳转到私信详情 (假设有此页面)
+        uni.navigateTo({ url: `/pages/message/chat?id=${item.fromUser.id}` });
+      } else if ([1, 2, 3, 4, 6].includes(item.type)) {
         if (item.postId) {
             const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
             uni.navigateTo({
@@ -438,6 +448,9 @@ export default {
       }
       &.bg-sky { 
         border-color: rgba(14, 165, 233, 0.3);
+      }
+      &.bg-orange {
+        border-color: rgba(249, 115, 22, 0.3);
       }
     }
 
