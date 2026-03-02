@@ -127,6 +127,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public void updateNotificationSetting(Long userId, String replyType) {
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new ServiceException(ServiceErrorCode.USER_NOT_FOUND);
+        }
+        user.setReplyNotificationType(replyType);
+        this.updateById(user);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public void deleteAccount(Long userId) {
         User user = this.getById(userId);
         if (user == null) {

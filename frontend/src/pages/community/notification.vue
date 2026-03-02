@@ -40,12 +40,6 @@
         </view>
         <text class="label">新增粉丝</text>
       </view>
-      <view class="category-item" @click="goToMessageList">
-        <view class="icon-wrapper bg-orange">
-          <u-icon name="email-fill" color="#f97316" size="28"></u-icon>
-        </view>
-        <text class="label">私信消息</text>
-      </view>
     </section>
 
     <view class="notification-list">
@@ -79,7 +73,7 @@
             <view class="unread-dot" v-if="!item.isRead"></view>
           </view>
 
-          <!-- 引用内容 (评论/回复内容，私信不显示) -->
+          <!-- 引用内容 (评论/回复/私信内容，@提及不显示) -->
           <view class="quote-box" v-if="item.content && item.type !== 6" :class="getQuoteClass(item.type)">
             <text class="quote-text">"{{ item.content }}"</text>
           </view>
@@ -233,10 +227,13 @@ export default {
             }
         });
         
+        console.log('Notification API Full Response:', res);
         const records = res.records || [];
+        console.log('Notification Records:', records);
         
         // 格式化数据，确保 fromUser 对象存在，并处理头像
         const formattedRecords = records.map(item => {
+          console.log('Processing Notification Item:', item.id, 'Type:', item.type, 'PostId:', item.postId);
           if (item.fromUser && item.fromUser.avatar) {
             item.fromUser.avatar = this.$utils.getFullImageUrl(item.fromUser.avatar);
           }
@@ -250,7 +247,8 @@ export default {
             this.list = [...this.list, ...formattedRecords];
         }
         
-        if (formattedRecords.length < this.size) {
+        // 更新加载状态
+        if (records.length < this.size) {
             this.loadStatus = 'nomore';
         } else {
             this.loadStatus = 'loadmore';
@@ -291,12 +289,6 @@ export default {
           url: pageMap[type]
         });
       }
-    },
-
-    goToMessageList() {
-      uni.navigateTo({
-        url: '/pages/message/message-list'
-      });
     },
     
     goBack() {
@@ -449,9 +441,6 @@ export default {
       &.bg-sky { 
         border-color: rgba(14, 165, 233, 0.3);
       }
-      &.bg-orange {
-        border-color: rgba(249, 115, 22, 0.3);
-      }
     }
 
     .label {
@@ -480,9 +469,9 @@ export default {
       flex-shrink: 0;
 
       .avatar-img {
-        width: 96rpx;
-        height: 96rpx;
-        border-radius: 16rpx;
+        width: 68rpx;
+        height: 68rpx;
+        border-radius: 12rpx;
         border: 1rpx solid rgba(255, 255, 255, 0.1);
         background-color: rgba(255, 255, 255, 0.05);
       }
@@ -491,17 +480,18 @@ export default {
         position: absolute;
         bottom: 0;
         right: 0;
-        width: 36rpx;
-        height: 36rpx;
+        width: 26rpx;
+        height: 26rpx;
         background-color: $pitch-pulse-primary;
-        border-radius: 8rpx;
+        border-radius: 6rpx;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 4rpx solid $pitch-pulse-bg-dark;
+        border: 3rpx solid $pitch-pulse-bg-dark;
         
         :deep(.u-icon__icon) {
           color: #000 !important;
+          font-size: 16rpx !important;
         }
       }
     }

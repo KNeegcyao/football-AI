@@ -53,6 +53,9 @@ public class User implements Serializable {
     @Schema(description = "经验值")
     private Integer experience;
 
+    @Schema(description = "接收谁的回复提醒: all-所有人, following-关注的人, none-关闭")
+    private String replyNotificationType;
+
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -100,6 +103,9 @@ public class User implements Serializable {
 
     public Integer getExperience() { return experience; }
     public void setExperience(Integer experience) { this.experience = experience; }
+
+    public String getReplyNotificationType() { return replyNotificationType; }
+    public void setReplyNotificationType(String replyNotificationType) { this.replyNotificationType = replyNotificationType; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

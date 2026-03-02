@@ -281,7 +281,7 @@
         // 假设 request.js 返回 data 字段
         hotCircles.value = circlesRes.value.map(circle => ({
           ...circle,
-          image: circle.image ? fileApi.getFileUrl(circle.image) : '/static/default-team.png'
+          image: circle.image ? fileApi.getFileUrl(circle.image) : '/static/soccer-logo.png'
         }));
       } else {
         console.warn('Failed to load hot circles');

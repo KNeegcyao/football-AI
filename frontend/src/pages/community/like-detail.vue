@@ -18,11 +18,11 @@
 			<view v-for="item in list" :key="item.id" class="notification-item" @tap="goToPost(item)">
 				<view class="item-header">
 					<view class="avatar-group">
-						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="72" shape="square"></u-avatar>
+						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="50" shape="square"></u-avatar>
 						<!-- 这里通常后端会返回点赞人数及其中的代表人物 -->
 						<!-- 如果只是单个人，显示单个人头像；如果是多人，前端模拟聚合显示 -->
 						<view v-if="item.likeCount > 1" class="more-avatars">
-							<u-avatar :src="item.extraAvatar || '/static/default-avatar.png'" size="72" shape="square"></u-avatar>
+							<u-avatar :src="item.extraAvatar || '/static/default-avatar.png'" size="50" shape="square"></u-avatar>
 						</view>
 					</view>
 					<view class="content-box">
@@ -36,11 +36,13 @@
 						</view>
 					</view>
 					<!-- 右侧引用的原内容图片/文字预览 -->
-					<view class="origin-preview">
-						<view class="preview-text">{{ item.postTitle }}</view>
-					</view>
-					<view class="more-btn" @tap.stop="handleMore(item)">
-						<u-icon name="more-dot-fill" size="32" color="#666"></u-icon>
+					<view class="right-preview-area">
+						<view class="more-btn" @tap.stop="handleMore(item)">
+							<u-icon name="more-dot-fill" size="16" color="#999" customStyle="transform: rotate(90deg)"></u-icon>
+						</view>
+						<view class="origin-preview">
+							<view class="preview-text">{{ item.postTitle }}</view>
+						</view>
 					</view>
 				</view>
 			</view>
@@ -116,8 +118,9 @@ export default {
 		},
 		goToPost(item) {
 			if (item.postId) {
+				const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
 				uni.navigateTo({
-					url: `/pages/community/post-detail?id=${item.postId}`
+					url: `/pages/post/detail?id=${item.postId}${targetParam}`
 				})
 			}
 		},
@@ -151,12 +154,16 @@ export default {
 					size: 10,
 					type: this.types
 				})
+				console.log('Like Detail API Full Response:', res);
 				const newList = res.records || []
+				console.log('Like Detail Records:', newList);
+				
 				// 后端点赞消息通常是合并的，如果不是，前端可以根据 targetId 进行简单的聚类（可选）
 				this.list = refresh ? newList : [...this.list, ...newList]
 				this.loadStatus = newList.length < 10 ? 'nomore' : 'loadmore'
 				this.page++
 			} catch (e) {
+				console.error('Like Detail Load Error:', e);
 				this.loadStatus = 'loadmore'
 			}
 		},
@@ -290,33 +297,41 @@ export default {
 		}
 	}
 
-	.origin-preview {
-		width: 80rpx;
-		height: 80rpx;
-		background-color: rgba(255, 255, 255, 0.05);
-		border-radius: 12rpx;
-		overflow: hidden;
-		flex-shrink: 0;
-		border: 1rpx solid rgba(255, 255, 255, 0.1);
-		
-		.preview-text {
-			font-size: 18rpx;
-			color: rgba(255, 255, 255, 0.4);
-			padding: 6rpx;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 3;
-			overflow: hidden;
-		}
-	}
-
-	.more-btn {
-		padding: 0 10rpx;
+	.right-preview-area {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		&:active {
-			opacity: 0.6;
+		gap: 12rpx;
+		flex-shrink: 0;
+		margin-top: 32rpx;
+		margin-right: 10rpx; // 向右微调，减小原来的左偏量
+
+		.more-btn {
+			padding: 10rpx 0; // 增加点击热区
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			&:active {
+				opacity: 0.6;
+			}
+		}
+
+		.origin-preview {
+			width: 80rpx;
+			height: 80rpx;
+			background-color: rgba(255, 255, 255, 0.05);
+			border-radius: 12rpx;
+			overflow: hidden;
+			border: 1rpx solid rgba(255, 255, 255, 0.1);
+			
+			.preview-text {
+				font-size: 18rpx;
+				color: rgba(255, 255, 255, 0.4);
+				padding: 6rpx;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 3;
+				overflow: hidden;
+			}
 		}
 	}
 }

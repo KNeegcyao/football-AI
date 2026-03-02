@@ -97,4 +97,17 @@ public class UserController {
         userService.deleteAccount(loginUser.getUser().getId());
         return R.ok(null, "账号已成功注销");
     }
+
+    @Operation(summary = "更新回复提醒设置")
+    @PutMapping("/notification-setting")
+    public R<Void> updateNotificationSetting(@RequestBody Map<String, String> params,
+                                             @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        String replyType = params.get("replyType");
+        if (replyType == null) {
+            return R.fail("提醒类型不能为空");
+        }
+        log.info("更新回复提醒设置: 用户ID={}, 类型={}", loginUser.getUser().getId(), replyType);
+        userService.updateNotificationSetting(loginUser.getUser().getId(), replyType);
+        return R.ok(null, "设置成功");
+    }
 }

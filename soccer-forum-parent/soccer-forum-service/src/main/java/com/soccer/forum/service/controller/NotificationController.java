@@ -97,7 +97,7 @@ public class NotificationController {
 
         // 2. 获取评论对应的帖子ID
         List<Long> commentIds = notificationPage.getRecords().stream()
-                .filter(n -> n.getType() == 2 || n.getType() == 4)
+                .filter(n -> n.getType() == 2 || n.getType() == 4 || n.getType() == 6)
                 .map(Notification::getTargetId)
                 .distinct()
                 .collect(Collectors.toList());
@@ -118,7 +118,7 @@ public class NotificationController {
 
         // 评论回复中的原帖ID
         List<Long> postIdsFromComments = notificationPage.getRecords().stream()
-                .filter(n -> n.getType() == 2 || n.getType() == 4)
+                .filter(n -> n.getType() == 2 || n.getType() == 4 || n.getType() == 6)
                 .map(n -> commentPostMap.get(n.getTargetId()))
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
@@ -149,8 +149,8 @@ public class NotificationController {
                 // 1:点赞帖子, 3:评论帖子 -> targetId 就是 postId
                 resp.setPostId(notification.getTargetId());
                 resp.setPostTitle(postTitleMap.get(notification.getTargetId()));
-            } else if (notification.getType() == 2 || notification.getType() == 4) {
-                // 2:点赞评论, 4:回复评论 -> targetId 是 commentId
+            } else if (notification.getType() == 2 || notification.getType() == 4 || notification.getType() == 6) {
+                // 2:点赞评论, 4:回复评论, 6:@提及 -> targetId 是 commentId
                 Long pid = commentPostMap.get(notification.getTargetId());
                 resp.setPostId(pid);
                 resp.setPostTitle(postTitleMap.get(pid));

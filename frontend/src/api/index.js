@@ -264,7 +264,13 @@ export const userApi = {
   /**
    * 注销账号
    */
-  deleteAccount: () => request.delete('/api/users/account')
+  deleteAccount: () => request.delete('/api/users/account'),
+
+  /**
+   * 更新回复提醒设置
+   * @param {Object} data { replyType } all|following|none
+   */
+  updateNotificationSetting: (data) => request.put('/api/users/notification-setting', data)
 }
 
 /**
@@ -281,7 +287,15 @@ export const fileApi = {
    */
   getFileUrl: (url) => {
     if (!url) return ''
-    if (url.startsWith('http')) return url
+    if (url.startsWith('http')) {
+      // 如果 URL 包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
+      // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1)
+      if (url.includes('/uploads/')) {
+        const relativePath = url.substring(url.indexOf('/uploads/'))
+        return BASE_URL + relativePath
+      }
+      return url
+    }
     return BASE_URL + (url.startsWith('/') ? url : '/' + url)
   }
 }

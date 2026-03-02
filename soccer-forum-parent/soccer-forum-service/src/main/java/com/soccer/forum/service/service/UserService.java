@@ -41,6 +41,13 @@ public interface UserService extends IService<User> {
     void updatePassword(Long userId, String oldPassword, String newPassword);
 
     /**
+     * 更新消息提醒设置
+     * @param userId 用户ID
+     * @param replyType 回复提醒类型
+     */
+    void updateNotificationSetting(Long userId, String replyType);
+
+    /**
      * 注销账号
      * @param userId 用户ID
      */

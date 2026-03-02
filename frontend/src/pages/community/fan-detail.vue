@@ -18,7 +18,7 @@
 			<view v-for="item in list" :key="item.id" class="notification-item">
 				<view class="item-content">
 					<view class="avatar-box">
-						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="112" shape="square"></u-avatar>
+						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="80" shape="square"></u-avatar>
 					</view>
 					<view class="info-box">
 						<view class="user-line">

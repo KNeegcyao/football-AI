@@ -105,7 +105,33 @@
                     <text class="material-icons" style="font-size: 14px;">favorite_border</text>
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
-                  <text class="reply-btn">回复</text>
+                  <text class="reply-btn" @click="handleReply(comment)">回复</text>
+                </view>
+
+                <!-- Nested Replies -->
+                <view class="nested-replies" v-if="comment.replies && comment.replies.length > 0">
+                  <view class="comment-item nested" v-for="(reply, rIndex) in comment.replies" :key="rIndex" :id="'comment-' + reply.id" :class="{ 'highlight': reply.id == targetId }">
+                    <image class="comment-avatar small" :src="reply.userAvatar" mode="aspectFill"></image>
+                    <view class="comment-content-wrapper">
+                      <view class="comment-bubble semi-transparent">
+                        <view class="comment-user-row">
+                          <text class="comment-username">{{ reply.userName }}</text>
+                          <text class="comment-time">{{ formatTime(reply.createdAt) }}</text>
+                        </view>
+                        <text class="comment-text">
+                          <text class="reply-label" v-if="reply.replyToUserName">回复 @{{ reply.replyToUserName }}: </text>
+                          {{ reply.content }}
+                        </text>
+                      </view>
+                      <view class="comment-actions">
+                        <view class="action-item">
+                          <text class="material-icons" style="font-size: 12px;">favorite_border</text>
+                          <text class="action-text">{{ reply.likes || 0 }}</text>
+                        </view>
+                        <text class="reply-btn" @click="handleReply(reply)">回复</text>
+                      </view>
+                    </view>
+                  </view>
                 </view>
               </view>
             </view>
@@ -123,46 +149,53 @@
     </view>
 
     <!-- Unified Bottom Bar -->
-    <view class="bottom-bar" v-if="post">
-      <input 
-        class="comment-input" 
-        placeholder="说点什么..." 
-        v-model="commentText"
-        :disabled="submitting"
-        cursor-spacing="20"
-      />
-      
-      <button 
-        v-if="commentText.trim()"
-        class="send-btn" 
-        :disabled="submitting"
-        @click="submitComment"
-      >
-        发送
-      </button>
-      
-      <template v-else>
-        <view class="action-btn" @click="handleLike">
-          <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
-            {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
-          </text>
-          <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
-            {{ post.likes || 0 }}
-          </text>
-        </view>
-        <view class="action-btn" @click="handleFavorite">
-          <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : '#fff' }">
-            {{ post.isFavorited ? 'star' : 'star_border' }}
-          </text>
-        </view>
-        <view class="action-btn">
-          <text class="material-icons">chat_bubble_outline</text>
-          <text class="action-text">{{ post.commentCount || comments.length }}</text>
-        </view>
-        <view class="action-btn">
-          <text class="material-icons">share</text>
-        </view>
-      </template>
+    <view class="bottom-bar-wrapper" v-if="post">
+      <view class="reply-info" v-if="replyTarget">
+        <text class="reply-to">回复 @{{ replyTarget.userName }}</text>
+        <text class="material-icons cancel-reply" @click="cancelReply">close</text>
+      </view>
+      <view class="bottom-bar">
+        <input 
+          class="comment-input" 
+          :placeholder="replyTarget ? '回复评论...' : '说点什么...'" 
+          v-model="commentText"
+          :disabled="submitting"
+          cursor-spacing="20"
+          :focus="!!replyTarget"
+        />
+        
+        <button 
+          v-if="commentText.trim()"
+          class="send-btn" 
+          :disabled="submitting"
+          @click="submitComment"
+        >
+          发送
+        </button>
+        
+        <template v-else>
+          <view class="action-btn" @click="handleLike">
+            <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+              {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
+            </text>
+            <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+              {{ post.likes || 0 }}
+            </text>
+          </view>
+          <view class="action-btn" @click="handleFavorite">
+            <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : '#fff' }">
+              {{ post.isFavorited ? 'star' : 'star_border' }}
+            </text>
+          </view>
+          <view class="action-btn">
+            <text class="material-icons">chat_bubble_outline</text>
+            <text class="action-text">{{ post.commentCount || comments.length }}</text>
+          </view>
+          <view class="action-btn">
+            <text class="material-icons">share</text>
+          </view>
+        </template>
+      </view>
     </view>
   </view>
 </template>
@@ -182,6 +215,7 @@ const commentText = ref('');
 const submitting = ref(false);
 const scrollTarget = ref('');
 const targetId = ref(null);
+const replyTarget = ref(null); // { id, userName }
 
 const categoryText = computed(() => {
   if (!post.value) return '# 足球';
@@ -237,7 +271,7 @@ const loadPostDetail = async (id) => {
       const processedImages = images.map(img => fileApi.getFileUrl(img));
       
       // Process avatar URL
-      const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/avatar/default.png';
+      const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/soccer-logo.png';
 
       post.value = {
         ...data,
@@ -279,23 +313,30 @@ const loadComments = async (id) => {
       comments.value = records.map(c => ({
         ...c,
         userName: c.nickname || 'Unknown User',
-        userAvatar: c.avatar ? fileApi.getFileUrl(c.avatar) : '/static/avatar/default.png',
+        userAvatar: c.avatar ? fileApi.getFileUrl(c.avatar) : '/static/soccer-logo.png',
         likes: c.likes || 0,
         // Map replies recursively if needed, but for now flat list or simple structure
         replies: (c.replies || []).map(r => ({
             ...r,
             userName: r.nickname || 'Unknown User',
-            userAvatar: r.avatar ? fileApi.getFileUrl(r.avatar) : '/static/avatar/default.png',
-            likes: r.likes || 0
+            userAvatar: r.avatar ? fileApi.getFileUrl(r.avatar) : '/static/soccer-logo.png',
+            likes: r.likes || 0,
+            replyToUserName: r.replyToNickname // 映射后端字段
         }))
       }));
 
       // 如果有目标评论ID，尝试滚动到该位置
       if (targetId.value) {
         nextTick(() => {
-          scrollTarget.value = 'comment-' + targetId.value;
-          // 清除 targetId 以避免重复触发（如果需要）
-          // targetId.value = null; 
+          setTimeout(() => {
+            scrollTarget.value = 'comment-' + targetId.value;
+            console.log('Scrolling to target:', scrollTarget.value);
+            
+            // 3秒后移除高亮
+            setTimeout(() => {
+              targetId.value = null;
+            }, 3000);
+          }, 500);
         });
       }
     }
@@ -327,6 +368,21 @@ const toggleSort = () => {
   loadComments(postId.value);
 };
 
+const handleReply = (comment) => {
+  replyTarget.value = {
+    id: comment.id,
+    userName: comment.userName
+  };
+  // 滚动到底部或聚焦输入框
+  nextTick(() => {
+    // 聚焦逻辑通常在 uniapp 中通过 focus 属性实现
+  });
+};
+
+const cancelReply = () => {
+  replyTarget.value = null;
+};
+
 const submitComment = async () => {
   if (!commentText.value.trim()) {
     return;
@@ -334,13 +390,22 @@ const submitComment = async () => {
   
   submitting.value = true;
   try {
-    await postApi.createComment({
+    const params = {
       postId: postId.value,
       content: commentText.value
-    });
+    };
     
+    // 如果是回复某条评论
+    if (replyTarget.value) {
+      params.parentId = replyTarget.value.id;
+    }
+    
+    await postApi.createComment(params);
+    
+    const isReply = !!replyTarget.value;
     commentText.value = '';
-    uni.showToast({ title: '评论成功', icon: 'success' });
+    replyTarget.value = null; // 清除回复目标
+    uni.showToast({ title: isReply ? '回复成功' : '评论成功', icon: 'success' });
     
     // Reload comments and update count
     await loadComments(postId.value);
@@ -724,6 +789,14 @@ onLoad((options) => {
 .comment-item {
   display: flex;
   gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: all 0.5s ease;
+}
+
+.comment-item.highlight {
+  background-color: rgba(242, 185, 13, 0.15);
+  transform: scale(1.02);
 }
 
 .comment-item.nested {
@@ -784,6 +857,12 @@ onLoad((options) => {
   color: #f2b90d;
 }
 
+.reply-label {
+  color: #f2b90d;
+  font-size: 13px;
+  margin-right: 4px;
+}
+
 .comment-actions {
   display: flex;
   align-items: center;
@@ -820,17 +899,43 @@ onLoad((options) => {
   padding-left: 16px;
 }
 
-.bottom-bar {
+.bottom-bar-wrapper {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 100;
   /* #ifdef H5 */
   max-width: 500px;
   left: 50% !important;
   transform: translateX(-50%);
   width: 100%;
   /* #endif */
+}
+
+.reply-info {
+  background-color: #1A1A1A;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.reply-to {
+  font-size: 12px;
+  color: #f2b90d;
+  font-weight: 500;
+}
+
+.cancel-reply {
+  font-size: 16px;
+  color: #64748b;
+  padding: 4px;
+}
+
+.bottom-bar {
   height: 60px;
   background-color: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(20px);
@@ -840,7 +945,6 @@ onLoad((options) => {
   align-items: center;
   padding: 0 16px;
   padding-bottom: env(safe-area-inset-bottom);
-  z-index: 100;
   gap: 12px;
 }
 

@@ -7,7 +7,7 @@
 					<u-icon name="arrow-left" size="44rpx" color="#FFFFFF"></u-icon>
 				</view>
 				<view class="title">回复与@</view>
-				<view class="right">
+				<view class="right" @tap="showSettingSheet = true">
 					<u-icon name="setting" size="40rpx" color="#FFFFFF"></u-icon>
 				</view>
 			</view>
@@ -23,7 +23,7 @@
 			<view v-for="(item, index) in list" :key="index" class="notification-item" @tap="goToPost(item)">
 				<view class="item-header">
 					<view class="avatar-box">
-						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="72" shape="square"></u-avatar>
+						<u-avatar :src="item.fromUser.avatar || '/static/default-avatar.png'" size="50" shape="square"></u-avatar>
 						<view v-if="item.fromUser.id === 1" class="up-badge">OFFICIAL</view>
 					</view>
 					<view class="content-box">
@@ -42,16 +42,16 @@
 							<text class="time">{{ formatTime(item.createdAt) }}</text>
 							<view class="actions">
 								<view class="action-btn" @tap.stop="handleReply(item)">
-									<u-icon name="chat" size="28"></u-icon>
+									<u-icon name="chat" size="22"></u-icon>
 									<text>回复</text>
 								</view>
 								<view class="action-btn" @tap.stop="handleLike(item)">
-									<u-icon :name="item.isLiked ? 'thumb-up-fill' : 'thumb-up'" :color="item.isLiked ? '#991B1B' : ''" size="28"></u-icon>
+									<u-icon :name="item.isLiked ? 'thumb-up-fill' : 'thumb-up'" :color="item.isLiked ? '#991B1B' : ''" size="22"></u-icon>
 									<text :style="{ color: item.isLiked ? '#991B1B' : '' }">点赞</text>
 								</view>
-								<view class="more-btn" @tap.stop="handleMore(item)">
-									<u-icon name="more-dot-fill" size="32" color="#999"></u-icon>
-								</view>
+							</view>
+							<view class="more-btn" @tap.stop="handleMore(item)">
+								<u-icon name="more-dot-fill" size="15" color="#999" customStyle="transform: rotate(90deg)"></u-icon>
 							</view>
 						</view>
 					</view>
@@ -75,6 +75,38 @@
 			bgColor="#1a1811"
 			:safeAreaInsetBottom="true"
 		></u-action-sheet>
+
+		<!-- 设置菜单 (自定义 Popup 以实现极致流畅) -->
+		<u-popup :show="showSettingSheet" mode="bottom" @close="showSettingSheet = false" round="24rpx" bgColor="#1a1811">
+			<view class="setting-popup-content">
+				<view class="popup-header">接收谁的回复提醒</view>
+				<view class="setting-list">
+					<view 
+						v-for="(item, index) in settingActions.slice(0, 3)" 
+						:key="index"
+						class="setting-item"
+						hover-class="setting-item-hover"
+						:hover-stay-time="50"
+						@tap="onSettingSelect(item)"
+					>
+						<text class="item-name" :class="{ 'active': item.active }">{{ item.name }}</text>
+						<text v-if="item.subname" class="item-sub">{{ item.subname }}</text>
+					</view>
+				</view>
+				<view class="popup-gap"></view>
+				<view 
+					class="popup-cancel" 
+					hover-class="setting-item-hover"
+					:hover-stay-time="50"
+					@tap="showSettingSheet = false"
+				>
+					取消
+				</view>
+			</view>
+		</u-popup>
+
+		<!-- 提示组件 -->
+		<u-toast ref="uToast" />
 
 		<!-- 快捷回复弹窗 -->
 		<u-popup 
@@ -105,7 +137,7 @@
 </template>
 
 <script>
-import { notificationApi, postApi } from '@/api'
+import { notificationApi, postApi, userApi } from '@/api'
 
 export default {
 	data() {
@@ -120,15 +152,39 @@ export default {
 				{ name: '不再通知', value: 'mute' },
 				{ name: '删除', value: 'delete', color: '#ff4d4f' }
 			],
+			showSettingSheet: false,
+			settingActions: [
+				{ name: '所有人', value: 'all', subname: '推荐', active: true },
+				{ name: '关注的人', value: 'following', active: false },
+				{ name: '不接受任何消息提醒', value: 'none', active: false }
+			],
 			currentItem: {},
 			showReplyPopup: false,
 			replyContent: ''
 		}
 	},
-	onLoad() {
+	async onLoad() {
 		this.loadData(true)
+		// 初始显示“所有人”
+		this.updateSettingUI('all')
+		this.fetchNotificationSetting()
 	},
 	methods: {
+		updateSettingUI(currentSetting) {
+			this.settingActions.forEach(item => {
+				item.color = item.value === currentSetting ? '#f2b90d' : ''
+			})
+		},
+		async fetchNotificationSetting() {
+			try {
+				const res = await userApi.getProfile()
+				console.log('User Profile for setting:', res)
+				const currentSetting = res.replyNotificationType || 'all'
+				this.updateSettingUI(currentSetting)
+			} catch (e) {
+				console.error('Fetch notification setting error:', e)
+			}
+		},
 		goBack() {
 			uni.navigateBack()
 		},
@@ -143,8 +199,9 @@ export default {
 		},
 		goToPost(item) {
 			if (item.postId) {
+				const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
 				uni.navigateTo({
-					url: `/pages/community/post-detail?id=${item.postId}`
+					url: `/pages/post/detail?id=${item.postId}${targetParam}`
 				})
 			}
 		},
@@ -197,6 +254,31 @@ export default {
 			}
 			this.showActionSheet = false
 		},
+		async onSettingSelect(item) {
+			this.showSettingSheet = false
+			
+			this.$refs.uToast.show({
+				type: 'loading',
+				title: '正在保存设置...',
+				duration: 0
+			})
+			try {
+				await userApi.updateNotificationSetting({ replyType: item.value })
+				this.updateSettingUI(item.value)
+				this.$refs.uToast.show({
+					type: 'success',
+					title: '设置已更新',
+					message: '回复提醒设置已保存'
+				})
+			} catch (e) {
+				console.error('Update notification setting error:', e)
+				this.$refs.uToast.show({
+					type: 'error',
+					title: '设置失败',
+					message: e.message || '服务器繁忙，请稍后再试'
+				})
+			}
+		},
 		async loadData(refresh = false) {
 			if (refresh) {
 				this.page = 1
@@ -209,11 +291,15 @@ export default {
 					size: 10,
 					type: this.types
 				})
+				console.log('Reply Detail API Full Response:', res);
 				const newList = res.records || []
+				console.log('Reply Detail Records:', newList);
+				
 				this.list = refresh ? newList : [...this.list, ...newList]
 				this.loadStatus = newList.length < 10 ? 'nomore' : 'loadmore'
 				this.page++
 			} catch (e) {
+				console.error('Reply Detail Load Error:', e);
 				this.loadStatus = 'loadmore'
 			}
 		},
@@ -231,6 +317,71 @@ export default {
 	min-height: 100vh;
 	background-color: $pitch-pulse-bg-dark;
 	color: #fff;
+}
+
+/* 移除 u-action-sheet 相关样式，改用自定义 popup 样式 */
+.setting-popup-content {
+	padding-bottom: env(safe-area-inset-bottom);
+	
+	.popup-header {
+		padding: 32rpx;
+		text-align: center;
+		font-size: 28rpx;
+		color: rgba(255, 255, 255, 0.4);
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+	}
+	
+	.setting-list {
+		.setting-item {
+			padding: 36rpx 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+			transition: all 0.1s;
+			
+			.item-name {
+				font-size: 32rpx;
+				color: #fff;
+				
+				&.active {
+					color: $pitch-pulse-primary;
+					font-weight: bold;
+				}
+			}
+			
+			.item-sub {
+				font-size: 24rpx;
+				color: rgba(255, 255, 255, 0.3);
+				margin-top: 8rpx;
+			}
+		}
+	}
+	
+	.popup-gap {
+		height: 12rpx;
+		background-color: rgba(0, 0, 0, 0.3);
+	}
+	
+	.popup-cancel {
+		padding: 36rpx 0;
+		text-align: center;
+		font-size: 32rpx;
+		color: rgba(255, 255, 255, 0.6);
+		transition: all 0.1s;
+	}
+	
+	.setting-item-hover {
+		background-color: rgba(255, 255, 255, 0.05) !important;
+	}
+}
+
+/* 统一 toast 背景色 */
+::v-deep .u-toast {
+	&__content {
+		background-color: rgba(30, 30, 30, 0.9) !important;
+	}
 }
 
 .custom-navbar {
@@ -333,15 +484,15 @@ export default {
 
 		.up-badge {
 			position: absolute;
-			bottom: -4rpx;
-			right: -4rpx;
+			bottom: -2rpx;
+			right: -2rpx;
 			background-color: $pitch-pulse-primary;
 			color: #000;
-			font-size: 14rpx;
+			font-size: 12rpx;
 			font-weight: 800;
-			padding: 2rpx 4rpx;
-			border-radius: 4rpx;
-			border: 2rpx solid $pitch-pulse-bg-dark;
+			padding: 1rpx 3rpx;
+			border-radius: 3rpx;
+			border: 1rpx solid $pitch-pulse-bg-dark;
 		}
 	}
 
@@ -394,8 +545,10 @@ export default {
 		}
 		.item-footer {
 			display: flex;
-			justify-content: space-between;
+			justify-content: flex-start; // 整体靠左显示
 			align-items: center;
+			gap: 32rpx; // 增加时间与回复/点赞按钮组之间的间距
+			
 			.time {
 				font-size: 20rpx;
 				color: rgba(255, 255, 255, 0.3);
@@ -403,26 +556,27 @@ export default {
 			.actions {
 				display: flex;
 				align-items: center;
-				gap: 24rpx;
+				gap: 24rpx; // 回复和点赞按钮之间的间距
 				.action-btn {
 					display: flex;
 					align-items: center;
-					gap: 6rpx;
-					font-size: 22rpx;
+					gap: 4rpx;
+					font-size: 20rpx;
 					color: rgba(255, 255, 255, 0.4);
 					
 					&:active {
 						color: #fff;
 					}
 				}
-				.more-btn {
-					padding: 0 10rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					&:active {
-						opacity: 0.6;
-					}
+			}
+			.more-btn {
+				margin-left: auto; // 强制“更多”按钮推到最右侧
+				padding: 0 4rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				&:active {
+					opacity: 0.6;
 				}
 			}
 		}

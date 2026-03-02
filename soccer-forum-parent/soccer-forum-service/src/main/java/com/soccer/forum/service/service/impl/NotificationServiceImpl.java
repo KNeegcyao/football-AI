@@ -7,6 +7,10 @@ import com.soccer.forum.common.exception.ServiceException;
 import com.soccer.forum.domain.entity.Notification;
 import com.soccer.forum.service.mapper.NotificationMapper;
 import com.soccer.forum.service.service.NotificationService;
+import com.soccer.forum.service.service.UserRelationshipService;
+import com.soccer.forum.service.service.UserService;
+import com.soccer.forum.domain.entity.User;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +21,15 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final UserRelationshipService userRelationshipService;
+    private final UserService userService;
 
-    public NotificationServiceImpl(NotificationMapper notificationMapper) {
+    public NotificationServiceImpl(NotificationMapper notificationMapper, 
+                                   @Lazy UserRelationshipService userRelationshipService,
+                                   @Lazy UserService userService) {
         this.notificationMapper = notificationMapper;
+        this.userRelationshipService = userRelationshipService;
+        this.userService = userService;
     }
 
     @Override
@@ -28,6 +38,22 @@ public class NotificationServiceImpl implements NotificationService {
         // 如果是自己触发的通知，不发送（比如自己给自己点赞/评论）
         if (userId.equals(fromUserId)) {
             return;
+        }
+
+        // 消息提醒过滤逻辑 (仅针对回复/评论/@提及 类型: 3, 4, 6)
+        if (type == 3 || type == 4 || type == 6) {
+            User targetUser = userService.getById(userId);
+            if (targetUser != null && targetUser.getReplyNotificationType() != null) {
+                String setting = targetUser.getReplyNotificationType();
+                if ("none".equals(setting)) {
+                    return; // 关闭提醒
+                } else if ("following".equals(setting)) {
+                    // 仅接收关注的人的提醒
+                    if (!userRelationshipService.isFollowing(userId, fromUserId)) {
+                        return; // 目标用户未关注发送者，过滤
+                    }
+                }
+            }
         }
 
         // 防重检查：如果同一个用户在短时间内（例如24小时内）对同一个目标已经发送过同类型的通知，则更新时间并设为未读，不再新增
