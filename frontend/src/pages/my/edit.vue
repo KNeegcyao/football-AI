@@ -68,6 +68,20 @@
             />
           </view>
         </view>
+
+        <!-- Bio Field -->
+        <view class="mb-6">
+          <text class="text-sm font-bold text-[#f9d406] uppercase tracking-wider block mb-2">个人签名</text>
+          <view class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus-within:border-[#f9d406] transition-colors flex items-center">
+            <textarea 
+              v-model="form.bio" 
+              placeholder="介绍一下自己吧..." 
+              placeholder-class="text-gray-600"
+              class="flex-1 min-h-[80px] bg-transparent text-white text-base py-1"
+              auto-height
+            />
+          </view>
+        </view>
       </view>
 
       <!-- Save Button -->
@@ -97,7 +111,8 @@ const form = ref({
   nickname: '',
   phone: '',
   email: '',
-  avatar: ''
+  avatar: '',
+  bio: ''
 })
 
 const loading = ref(false)
@@ -133,7 +148,8 @@ const loadProfile = async () => {
         nickname: res.nickname || '',
         phone: res.phone || res.username || '',
         email: res.email || '',
-        avatar: res.avatar ? fileApi.getFileUrl(res.avatar) : ''
+        avatar: res.avatar ? fileApi.getFileUrl(res.avatar) : '',
+        bio: res.bio || ''
       }
       console.log('设置表单数据:', newData)
       form.value = newData
@@ -226,7 +242,8 @@ const handleSave = async () => {
   try {
     const data = {
       nickname: form.value.nickname,
-      email: form.value.email
+      email: form.value.email,
+      bio: form.value.bio
     }
     
     if (currentAvatarPath.value) {
@@ -241,7 +258,11 @@ const handleSave = async () => {
     }, 1500)
   } catch (e) {
     console.error('保存失败:', e)
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    uni.showToast({ 
+      title: e.message || '保存失败', 
+      icon: 'none',
+      duration: 2000
+    })
   } finally {
     loading.value = false
   }

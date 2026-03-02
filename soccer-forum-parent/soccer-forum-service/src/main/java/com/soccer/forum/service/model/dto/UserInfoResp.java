@@ -37,6 +37,9 @@ public class UserInfoResp {
     @Schema(description = "经验值")
     private Integer experience;
 
+    @Schema(description = "个人签名")
+    private String bio;
+
     @Schema(description = "回复提醒设置")
     private String replyNotificationType;
 
@@ -52,6 +55,7 @@ public class UserInfoResp {
         resp.setRole(user.getRole());
         resp.setLevel(user.getLevel() == null ? 1 : user.getLevel());
         resp.setExperience(user.getExperience() == null ? 0 : user.getExperience());
+        resp.setBio(user.getBio());
         resp.setReplyNotificationType(user.getReplyNotificationType());
         return resp;
     }
@@ -76,6 +80,8 @@ public class UserInfoResp {
     public void setLevel(Integer level) { this.level = level; }
     public Integer getExperience() { return experience; }
     public void setExperience(Integer experience) { this.experience = experience; }
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
     public String getReplyNotificationType() { return replyNotificationType; }
     public void setReplyNotificationType(String replyNotificationType) { this.replyNotificationType = replyNotificationType; }
 }

@@ -231,6 +231,17 @@ export const userApi = {
   getStats: (id) => id ? request.get(`/api/users/${id}/stats`) : request.get('/api/users/stats'),
 
   /**
+   * 获取当前用户的经验流水
+   */
+  getExperienceRecords: () => request.get('/api/experience/records'),
+
+  /**
+   * 分页获取当前用户的经验流水
+   * @param {Object} params { page, size }
+   */
+  getExperienceRecordsPage: (params) => request.get('/api/experience/records/page', params),
+
+  /**
    * 获取关注列表
    */
   getFollowing: (params) => request.get('/api/relationships/following', params),

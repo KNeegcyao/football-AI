@@ -26,6 +26,9 @@ public class UserUpdateReq {
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号码格式不正确")
     private String phone;
 
+    @Schema(description = "个人签名")
+    private String bio;
+
     @Schema(description = "昵称")
     public String getNickname() { return nickname; }
     public void setNickname(String nickname) { this.nickname = nickname; }
@@ -45,4 +48,8 @@ public class UserUpdateReq {
     @Schema(description = "手机号码")
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    @Schema(description = "个人签名")
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
 }

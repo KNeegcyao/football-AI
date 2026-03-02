@@ -24,7 +24,7 @@
         <springdoc.version>2.2.0</springdoc.version>
         <hutool.version>5.8.25</hutool.version>
         <langchain4j.version>0.31.0</langchain4j.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <wx-java.version>4.7.0</wx-java.version>
         <knife4j.version>4.5.0</knife4j.version>
     </properties>
@@ -131,6 +131,17 @@
                 <configuration>
                     <release>${java.version}</release>
                     <parameters>true</parameters>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                        <arg>-Xlint:deprecation</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

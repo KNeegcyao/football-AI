@@ -12,6 +12,7 @@ import com.soccer.forum.service.mapper.LikeMapper;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.mapper.UserMapper;
 import com.soccer.forum.service.model.dto.UserSimpleResp;
+import com.soccer.forum.service.service.ExperienceService;
 import com.soccer.forum.service.service.LikeService;
 import com.soccer.forum.service.service.NotificationService;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -33,16 +34,18 @@ public class LikeServiceImpl implements LikeService {
     private final CommentMapper commentMapper;
     private final UserMapper userMapper;
     private final NotificationService notificationService;
+    private final ExperienceService experienceService;
 
     public LikeServiceImpl(RedisTemplate<String, Object> redisTemplate, LikeMapper likeMapper, 
                            PostMapper postMapper, CommentMapper commentMapper, UserMapper userMapper,
-                           NotificationService notificationService) {
+                           NotificationService notificationService, ExperienceService experienceService) {
         this.redisTemplate = redisTemplate;
         this.likeMapper = likeMapper;
         this.postMapper = postMapper;
         this.commentMapper = commentMapper;
         this.userMapper = userMapper;
         this.notificationService = notificationService;
+        this.experienceService = experienceService;
     }
 
     @Override
@@ -77,11 +80,15 @@ public class LikeServiceImpl implements LikeService {
                 Post post = postMapper.selectById(targetId);
                 if (post != null) {
                     notificationService.sendNotification(post.getUserId(), userId, 1, targetId, null);
+                    // 增加获赞者经验 (+5)
+                    experienceService.addLikeExperience(post.getUserId());
                 }
             } else {
                 Comment comment = commentMapper.selectById(targetId);
                 if (comment != null) {
                     notificationService.sendNotification(comment.getUserId(), userId, 2, targetId, null);
+                    // 增加获赞者经验 (+5)
+                    experienceService.addLikeExperience(comment.getUserId());
                 }
             }
         }

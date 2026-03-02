@@ -272,7 +272,8 @@ const handleRegister = async () => {
       password: form.value.password,
       nickname: form.value.nickname,
       email: form.value.email,
-      phone: form.value.username // 手机号即用户名
+      phone: form.value.username, // 手机号即用户名
+      code: form.value.code // 传递验证码
     }
     
     await authApi.register(data)
@@ -286,6 +287,10 @@ const handleRegister = async () => {
     }, 1500)
   } catch (e) {
     console.error('注册失败:', e)
+    uni.showToast({
+      title: e.message || '注册失败，请稍后重试',
+      icon: 'none'
+    })
   } finally {
     loading.value = false
   }

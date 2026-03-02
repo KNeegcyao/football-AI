@@ -32,35 +32,68 @@
         
         <view class="profile-info-card">
           <view class="avatar-section">
-            <view class="avatar-wrapper">
-              <view class="avatar-border">
-                <image class="avatar-image" :src="userInfo.avatar" mode="aspectFill" @click="chooseAvatar"></image>
+            <view class="progress-ring-box">
+              <svg class="progress-ring" viewBox="0 0 112 112">
+                <circle class="ring-bg" cx="56" cy="56" r="50"></circle>
+                <circle class="ring-active" cx="56" cy="56" r="50" 
+                  :style="{ strokeDashoffset: 314.159 * (1 - progress), stroke: levelColor }"></circle>
+              </svg>
+              
+              <!-- Lv.5 流光背景层 (必须在最底层) -->
+              <view v-if="Number(userInfo.level) === 5" class="frame-glow-lv5-bg"></view>
+
+              <view class="avatar-wrapper">
+                <image class="avatar-img" :src="userInfo.avatar" mode="aspectFill" @click="chooseAvatar"></image>
               </view>
-              <view class="level-badge">
-                <text class="material-symbols-outlined text-xs">workspace_premium</text>
-                <text class="level-text">LV.{{ userInfo.level }}</text>
+
+              <!-- 头像框装饰层 -->
+              <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
+                <!-- Lv.2 足球装饰 (左上+左下) -->
+                <template v-if="Number(userInfo.level) === 2">
+                  <text class="material-symbols-outlined frame-deco deco-tl">sports_soccer</text>
+                  <text class="material-symbols-outlined frame-deco deco-bl">sports_soccer</text>
+                </template>
+                
+                <!-- Lv.4 皇冠装饰 (正上方) -->
+                <text v-if="Number(userInfo.level) === 4" class="material-symbols-outlined top-crown">workspace_premium</text>
+                
+                <!-- Lv.5 皇冠装饰 (正上方) -->
+                <text v-if="Number(userInfo.level) === 5" class="material-symbols-outlined top-crown">workspace_premium</text>
               </view>
+              
+              <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + userInfo.level">
+                <text class="material-symbols-outlined badge-icon">workspace_premium</text>
+                <text class="badge-text">LV.{{ userInfo.level }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view class="identity-info">
+            <view class="name-row">
+              <text class="nickname">{{ userInfo.nickname }}</text>
+              <text class="material-symbols-outlined text-primary text-xl">verified</text>
             </view>
             
-            <view class="identity-info">
-              <view class="name-row">
-                <text class="nickname">{{ userInfo.nickname }}</text>
-                <text class="material-symbols-outlined text-primary text-xl">verified</text>
-              </view>
-              <text class="user-handle">{{ userInfo.bio || '资深战术分析师 | 足球死忠' }}</text>
-              <text class="user-bio">{{ userInfo.description || '专注足球战术复盘，提供专业的比赛分析。绿茵场上的每一步都有逻辑。' }}</text>
+            <!-- 层次感称号标签 -->
+            <view class="title-container" v-if="userInfo.levelTitle">
+              <text class="primary-title">{{ userInfo.levelTitle.split('|')[0] }}</text>
+              <text class="divider">|</text>
+              <text class="secondary-title">{{ userInfo.levelTitle.split('|')[1] }}</text>
             </view>
+            <text v-else class="user-handle">{{ userInfo.nickname }} | 绿茵观察员</text>
+            
+            <text class="user-bio">{{ userInfo.bio || '此人没有留下任何足迹...' }}</text>
+          </view>
 
-            <view class="action-buttons">
-              <template v-if="!isOthersProfile">
-                <button class="btn-primary" @click="goToEdit">编辑资料</button>
-                <button class="btn-secondary" @click="logout">退出登录</button>
-              </template>
-              <template v-else>
-                <button class="btn-primary" @click="handleFollow">关注</button>
-                <button class="btn-secondary" @click="handleMessage">私信</button>
-              </template>
-            </view>
+          <view class="action-buttons">
+            <template v-if="!isOthersProfile">
+              <button class="btn-primary" @click="goToEdit">编辑资料</button>
+              <button class="btn-secondary" @click="logout">退出登录</button>
+            </template>
+            <template v-else>
+              <button class="btn-primary" @click="handleFollow">关注</button>
+              <button class="btn-secondary" @click="handleMessage">私信</button>
+            </template>
           </view>
         </view>
       </view>
@@ -229,7 +262,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi, postApi, favoriteApi, playerApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
@@ -257,6 +290,7 @@ const userInfo = ref({
   avatar: '/static/soccer-logo.png',
   cover: '',
   level: 1,
+  levelTitle: '新秀观察员 | 足球爱好者',
   bio: '',
   description: '',
   stats: {
@@ -264,6 +298,39 @@ const userInfo = ref({
     followers: 0,
     likesReceived: 0
   }
+})
+
+// 等级体系称号映射
+const levelTitles = {
+  1: '新秀观察员 | 足球爱好者',
+  2: '战术研究员 | 比赛分析者',
+  3: '资深分析师 | 绿茵智囊',
+  4: '战术大师 | 绿茵战略家',
+  5: '战术宗师 | 足球哲学家'
+}
+
+const levelColor = computed(() => {
+  const level = userInfo.value.level
+  if (level === 1) return '#4B5563' // 哑光石墨
+  if (level === 2) return '#B45309' // 古铜
+  if (level === 3) return '#CBD5E1' // 银白
+  if (level === 4) return '#FACC15' // 亮金
+  if (level === 5) return '#f2b90d' // 黑金
+  return '#4B5563'
+})
+
+const progress = computed(() => {
+  if (!userInfo.value.experience) return 0
+  const level = userInfo.value.level || 1
+  const levelExpMap = {
+    1: 100,
+    2: 200,
+    3: 300,
+    4: 400,
+    5: 99999
+  }
+  const nextExp = levelExpMap[level] || 100
+  return Math.min(1, userInfo.value.experience / nextExp)
 })
 
 // 添加格式化时间函数
@@ -311,6 +378,12 @@ const changeFavSubTab = (index) => {
   loadFavorites()
 }
 
+const goToLevelDetail = () => {
+  uni.navigateTo({
+    url: '/pages/my/level-detail'
+  })
+}
+
 const getCurrentFavList = () => {
   if (currentFavSubTab.value === 0) return favorites.value
   if (currentFavSubTab.value === 1) return favoriteNews.value
@@ -318,7 +391,6 @@ const getCurrentFavList = () => {
 }
 
 // 监听 tab 切换，切换到收藏时加载数据
-import { watch } from 'vue'
 watch(currentProfileTab, (newTab) => {
   if (newTab === 1 && getCurrentFavList().length === 0) {
     loadFavorites()
@@ -376,9 +448,8 @@ const loadUserProfile = async (userId) => {
       const coverUrlFromRes = getAvatarUrl(profileRes.cover, 'cover')
       
       console.log('加载用户信息成功:', profileRes)
-      console.log('处理后的头像 URL:', avatarUrl)
-      console.log('处理后的封面 URL:', coverUrlFromRes)
       
+      const level = profileRes.level || 1
       userInfo.value = {
         ...userInfo.value,
         id: profileRes.id,
@@ -387,8 +458,9 @@ const loadUserProfile = async (userId) => {
         avatar: avatarUrl,
         // 如果后端返回了有效的封面图，则更新；否则保留当前（可能是刚刚上传预览的）
         cover: coverUrlFromRes || userInfo.value.cover,
-        level: profileRes.level || 1,
-        bio: profileRes.bio || '资深战术分析师 | 足球死忠',
+        level: level,
+        levelTitle: levelTitles[level] || '新秀观察员 | 足球爱好者',
+        bio: profileRes.bio || '此人没有留下任何足迹...',
         description: profileRes.description || '专注足球战术复盘，提供专业的比赛分析。绿茵场上的每一步都有逻辑。'
       }
       if (!userId) {
@@ -742,16 +814,16 @@ const formatStats = (num) => {
   top: 0;
   z-index: 100;
   background-color: rgba(18, 17, 10, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(242, 185, 13, 0.1);
+  backdrop-filter: blur(20px);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
 }
 
 .header-content {
-  height: 88rpx;
+  height: 120rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32rpx;
+  padding: 0 40rpx;
 }
 
 .action-icon-btn {
@@ -771,175 +843,404 @@ const formatStats = (num) => {
   height: 0;
 }
 
-.profile-header {
+  .profile-header {
+    position: relative;
+    padding-bottom: 20rpx;
+    background: #0A0A0A;
+
+    .cover-image-container {
+      height: 480rpx;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+
+      .cover-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, #0A0A0A 0%, transparent 60%, rgba(0,0,0,0.3) 100%);
+        z-index: 1;
+      }
+
+      .cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cover-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      }
+    }
+
+    .profile-info-card {
+      position: relative;
+      margin-top: -120rpx;
+      padding: 0 40rpx 32rpx;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 2;
+
+      .avatar-section {
+        position: relative;
+        margin-bottom: 32rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+        z-index: 10;
+        width: 224rpx;
+        height: 224rpx;
+        border-radius: 50%;
+      }
+
+      .identity-info {
+        width: 100%;
+        padding-right: 40rpx;
+        box-sizing: border-box;
+
+        .name-row {
+          display: flex;
+          align-items: center;
+          gap: 16rpx;
+          margin-bottom: 12rpx;
+
+          .nickname {
+            font-size: 48rpx;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.5);
+          }
+        }
+
+        .title-container {
+          margin-bottom: 20rpx;
+          background: rgba(242, 185, 13, 0.15);
+          border: 1rpx solid rgba(242, 185, 13, 0.3);
+          padding: 8rpx 24rpx;
+          border-radius: 12rpx;
+          display: inline-flex;
+          align-items: center;
+          gap: 12rpx;
+
+          .primary-title {
+            font-size: 26rpx;
+            font-weight: 700;
+            color: #f2b90d;
+          }
+
+          .divider {
+            color: rgba(242, 185, 13, 0.4);
+            font-size: 20rpx;
+          }
+
+          .secondary-title {
+            font-size: 24rpx;
+            color: rgba(255, 255, 255, 0.8);
+          }
+        }
+
+        .user-handle {
+          display: block;
+          font-size: 26rpx;
+          color: rgba(255, 255, 255, 0.4);
+          margin-bottom: 12rpx;
+        }
+
+        .user-bio {
+          font-size: 28rpx;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.6;
+          margin-top: 8rpx;
+          width: 100%;
+          display: block;
+          word-break: break-all;
+        }
+      }
+
+      .action-buttons {
+        width: 100%;
+        display: flex;
+        gap: 24rpx;
+        margin-top: 48rpx;
+        padding-right: 40rpx;
+        box-sizing: border-box;
+
+        button {
+          flex: 1;
+          height: 88rpx;
+          line-height: 88rpx;
+          font-size: 30rpx;
+          font-weight: 700;
+          border-radius: 20rpx;
+          
+          &.btn-primary {
+            background: linear-gradient(135deg, #f2b90d 0%, #d9a30b 100%);
+            color: #000000;
+            box-shadow: 0 8rpx 20rpx rgba(242, 185, 13, 0.3);
+          }
+
+          &.btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1rpx solid rgba(255, 255, 255, 0.15);
+          }
+        }
+      }
+    }
+  }
+
+.progress-ring-box {
   position: relative;
-  margin-bottom: 40rpx;
+  width: 224rpx;
+  height: 224rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
 }
 
-.cover-image-container {
-  height: 384rpx;
-  position: relative;
-  overflow: hidden;
-}
-
-.cover-image {
-  width: 100%;
-  height: 100%;
-}
-
-.cover-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(18, 17, 10, 0.4) 0%, #12110a 100%),
-              url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
-  background-size: cover;
-  background-position: center;
-}
-
-.cover-overlay {
+.progress-ring {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, #12110a, transparent);
-  z-index: 1;
-}
-
-.profile-info-card {
-  padding: 0 32rpx;
-  margin-top: -128rpx;
-  position: relative;
-  z-index: 2;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  z-index: 10;
+  
+  circle {
+    fill: transparent;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  
+  .ring-bg {
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+  
+  .ring-active {
+    transition: stroke-dashoffset 0.35s;
+    stroke-dasharray: 314.159;
+  }
 }
 
 .avatar-wrapper {
-  position: relative;
-  width: 192rpx;
-  height: 192rpx;
-  margin-bottom: 32rpx;
+  position: absolute;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 20;
+  background: #1e293b;
+  border: 4rpx solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    background-color: #2d3748;
+  }
 }
 
-.avatar-border {
-  padding: 8rpx;
-  background-color: #f2b90d;
+/* 头像框通用样式 */
+.avatar-frame {
+  position: absolute;
+  inset: -10rpx;
   border-radius: 50%;
-  width: 100%;
-  height: 100%;
+  z-index: 30;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+
+  /* Lv.1: 哑光石墨 */
+  &.frame-lv1 {
+    border: 2rpx solid rgba(156, 163, 175, 0.4) !important;
+  }
+
+  /* Lv.2: 青铜足球 */
+  &.frame-lv2 {
+    border: 4rpx dashed #B45309 !important;
+    
+    .frame-deco {
+      position: absolute;
+      font-size: 32rpx;
+      color: #B45309;
+      text-shadow: 0 0 6rpx rgba(0, 0, 0, 0.5);
+      z-index: 40;
+      
+      &.deco-tl { top: 0; left: 0; transform: translate(-20%, -20%); }
+      &.deco-bl { bottom: 40rpx; left: -10rpx; }
+    }
+  }
+
+  /* Lv.3: 白金银色 */
+  &.frame-lv3 {
+    border: 5rpx double #CBD5E1 !important;
+    background: none;
+    box-shadow: 0 0 15rpx rgba(203, 213, 225, 0.5);
+    
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 4rpx;
+      border-radius: 50%;
+      border: 1rpx dashed rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  /* Lv.4: 黄金至尊 (呼吸灯) */
+  &.frame-lv4 {
+    border: 6rpx solid #FACC15 !important;
+    animation: gold-pulse 2s infinite ease-in-out;
+    
+    .top-crown {
+      position: absolute;
+      top: -30rpx;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 44rpx;
+      color: #FACC15;
+      text-shadow: 0 0 10rpx rgba(250, 204, 21, 0.5);
+      z-index: 40;
+    }
+  }
+
+  /* Lv.5: 黑金至尊 (旋转流光) */
+  &.frame-lv5 {
+    background: none !important;
+    border: none !important;
+    
+    .top-crown {
+      position: absolute;
+      top: -34rpx;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 56rpx;
+      color: #f2b90d;
+      text-shadow: 0 0 20rpx rgba(242, 185, 13, 0.8), 0 0 40rpx rgba(0, 0, 0, 0.5);
+      z-index: 40;
+    }
+  }
 }
 
-.avatar-image {
-  width: 100%;
-  height: 100%;
+.frame-glow-lv5-bg {
+  position: absolute;
+  inset: -8rpx;
   border-radius: 50%;
-  border: 8rpx solid #12110a;
+  /* 黑金交替渐变 */
+  background: conic-gradient(
+    from 0deg, 
+    #000000 0%, 
+    #f2b90d 25%, 
+    #000000 50%, 
+    #f2b90d 75%, 
+    #000000 100%
+  );
+  animation: rotate 1.5s linear infinite;
+  z-index: 4;
+  box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.4);
 }
 
 .level-badge {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  background-color: #f2b90d;
-  color: #12110a;
+  bottom: -4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #000000;
   padding: 4rpx 16rpx;
   border-radius: 999rpx;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4rpx;
-  font-size: 20rpx;
-  font-weight: bold;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
-}
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+  z-index: 40;
+  white-space: nowrap;
+  border: 2rpx solid #1e293b;
 
-.identity-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
+  .badge-icon {
+    font-size: 22rpx !important;
+    font-weight: bold;
+  }
 
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
+  .badge-text {
+    font-size: 20rpx;
+    font-weight: 800;
+    line-height: 1;
+  }
 
-.nickname {
-  font-size: 48rpx;
-  font-weight: bold;
-}
-
-.user-handle {
-  color: rgba(242, 185, 13, 0.7);
-  font-size: 28rpx;
-  font-weight: 500;
-}
-
-.user-bio {
-  color: #94a3b8;
-  font-size: 28rpx;
-  margin-top: 16rpx;
-  max-width: 600rpx;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 24rpx;
-  margin-top: 48rpx;
-}
-
-.btn-primary {
-  flex: 1;
-  height: 88rpx;
-  background-color: #f2b90d;
-  color: #12110a;
-  border-radius: 999rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(242, 185, 13, 0.2);
-}
-
-.btn-secondary {
-  flex: 1;
-  height: 88rpx;
-  background-color: #1e1b10;
-  color: #f1f5f9;
-  border-radius: 999rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  border: 1px solid rgba(242, 185, 13, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  &.lv-badge-5 {
+    background: linear-gradient(90deg, #f2b90d, #fff);
+    box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6);
+  }
 }
 
 .stats-container {
   display: flex;
-  gap: 24rpx;
-  padding: 48rpx 32rpx;
+  justify-content: space-between;
+  padding: 30rpx 40rpx;
+  gap: 20rpx;
+
+  .stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24rpx 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20rpx;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    .stat-value {
+      font-size: 34rpx;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 8rpx;
+      font-family: 'DIN Alternate', 'Inter', sans-serif;
+    }
+    
+    .stat-label {
+      font-size: 22rpx;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+
+    &:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
 }
 
-.stat-item {
-  flex: 1;
-  background-color: #1e1b10;
-  padding: 32rpx;
-  border-radius: 32rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid rgba(242, 185, 13, 0.05);
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.stat-value {
-  font-size: 40rpx;
-  font-weight: bold;
+@keyframes gold-pulse {
+  0% { transform: scale(1); border-color: #FACC15; }
+  50% { transform: scale(1.02); border-color: #FFF176; box-shadow: 0 0 20rpx #FACC15; }
+  100% { transform: scale(1); border-color: #FACC15; }
 }
 
-.stat-label {
-  font-size: 24rpx;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 2rpx;
-  margin-top: 8rpx;
+@keyframes frame-breath {
+  0% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
+  50% { box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.5); }
+  100% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
 }
 
 .tabs-sticky {
@@ -1198,7 +1499,25 @@ const formatStats = (num) => {
   display: inline-block;
   white-space: nowrap;
   word-wrap: normal;
-  direction: ltr;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  direction: ltr;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gold-pulse {
+  0% { transform: scale(1); border-color: #FACC15; }
+  50% { transform: scale(1.02); border-color: #FFF176; box-shadow: 0 0 20rpx #FACC15; }
+  100% { transform: scale(1); border-color: #FACC15; }
+}
+
+@keyframes frame-breath {
+  0% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
+  50% { box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.5); }
+  100% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
 }
 </style>

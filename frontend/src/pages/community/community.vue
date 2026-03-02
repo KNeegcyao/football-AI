@@ -44,7 +44,7 @@
               <view class="circle-item" v-for="(circle, index) in filteredHotCircles" :key="index" @click="navigateToCircle(circle)">
                 <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
                   <view class="circle-avatar-inner">
-                    <image class="circle-avatar" :src="circle.image" mode="aspectFill"></image>
+                    <image class="circle-avatar" :src="circle.image || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
                   </view>
                 </view>
                 <text class="circle-name">{{ circle.name }}</text>

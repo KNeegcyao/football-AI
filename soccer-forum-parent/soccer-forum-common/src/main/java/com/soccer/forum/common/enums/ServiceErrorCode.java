@@ -10,6 +10,8 @@ public enum ServiceErrorCode {
     USER_ALREADY_EXISTS(1002, "用户已存在"),
     USER_PASSWORD_ERROR(1003, "密码错误"),
     USER_ACCOUNT_LOCKED(1004, "账号已被锁定"),
+    EMAIL_ALREADY_EXISTS(1005, "该邮箱已被其他用户绑定"),
+    PHONE_ALREADY_EXISTS(1006, "该手机号已被其他用户绑定"),
     
     // 权限相关 2000-2999
     UNAUTHORIZED(2001, "未授权"),

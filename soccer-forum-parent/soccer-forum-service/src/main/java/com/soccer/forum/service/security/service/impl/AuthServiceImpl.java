@@ -125,6 +125,7 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(loginBody.getUsername());
         user.setPassword(passwordEncoder.encode(loginBody.getPassword()));
         user.setNickname(loginBody.getNickname() != null ? loginBody.getNickname() : "User_" + System.currentTimeMillis());
+        user.setBio("此人没有留下任何足迹...");
         
         if (loginBody.getEmail() != null && !loginBody.getEmail().isEmpty()) {
             user.setEmail(loginBody.getEmail());

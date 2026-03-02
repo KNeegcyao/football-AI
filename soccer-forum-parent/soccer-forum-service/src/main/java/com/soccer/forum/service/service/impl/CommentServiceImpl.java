@@ -37,15 +37,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private final PostMapper postMapper;
     private final RedisTemplate<String, Object> redisTemplate;
     private final com.soccer.forum.service.service.NotificationService notificationService;
+    private final com.soccer.forum.service.service.ExperienceService experienceService;
 
     public CommentServiceImpl(CommentMapper commentMapper, UserMapper userMapper, PostMapper postMapper, 
                               RedisTemplate<String, Object> redisTemplate,
-                              com.soccer.forum.service.service.NotificationService notificationService) {
+                              com.soccer.forum.service.service.NotificationService notificationService,
+                              com.soccer.forum.service.service.ExperienceService experienceService) {
         this.commentMapper = commentMapper;
         this.userMapper = userMapper;
         this.postMapper = postMapper;
         this.redisTemplate = redisTemplate;
         this.notificationService = notificationService;
+        this.experienceService = experienceService;
     }
 
     @Override
@@ -97,6 +100,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         commentMapper.insert(comment);
+
+        // 增加评论经验
+        experienceService.addCommentExperience(userId);
 
         // 发送 @提及 通知
         for (Long mentionedUserId : mentionedUserIds) {

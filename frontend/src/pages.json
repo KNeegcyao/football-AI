@@ -160,6 +160,13 @@
       }
     },
     {
+      "path": "pages/my/level-detail",
+      "style": {
+        "navigationBarTitleText": "等级详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录",

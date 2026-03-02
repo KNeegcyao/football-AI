@@ -60,8 +60,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final TeamMapper teamMapper;
     private final FavoriteMapper favoriteMapper;
     private final com.soccer.forum.service.service.NotificationService notificationService;
+    private final com.soccer.forum.service.service.ExperienceService experienceService;
 
-    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper, com.soccer.forum.service.service.NotificationService notificationService) {
+    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper, com.soccer.forum.service.service.NotificationService notificationService, com.soccer.forum.service.service.ExperienceService experienceService) {
         this.postMapper = postMapper;
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
@@ -70,6 +71,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         this.teamMapper = teamMapper;
         this.favoriteMapper = favoriteMapper;
         this.notificationService = notificationService;
+        this.experienceService = experienceService;
     }
 
     /**
@@ -117,6 +119,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         
         postMapper.insert(post);
         log.info("帖子创建成功: id={}", post.getId());
+
+        // 增加发帖经验
+        experienceService.addPostExperience(userId);
 
         // 发送 @提及 通知
         for (Long mentionedUserId : mentionedUserIds) {
