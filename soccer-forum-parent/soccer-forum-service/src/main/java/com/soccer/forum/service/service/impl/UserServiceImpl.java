@@ -99,25 +99,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (req.getCover() != null) {
             user.setCover(req.getCover());
         }
-        if (req.getEmail() != null && !req.getEmail().equals(user.getEmail())) {
-            // 检查邮箱是否已被占用
-            User existingUser = this.getOne(new LambdaQueryWrapper<User>()
-                    .eq(User::getEmail, req.getEmail())
-                    .ne(User::getId, userId));
-            if (existingUser != null) {
-                throw new ServiceException(ServiceErrorCode.EMAIL_ALREADY_EXISTS);
+        if (req.getEmail() != null) {
+            String newEmail = req.getEmail().trim();
+            if (newEmail.isEmpty()) {
+                user.setEmail(null);
+            } else if (!newEmail.equals(user.getEmail())) {
+                // 检查邮箱是否已被占用
+                User existingUser = this.getOne(new LambdaQueryWrapper<User>()
+                        .eq(User::getEmail, newEmail)
+                        .ne(User::getId, userId));
+                if (existingUser != null) {
+                    throw new ServiceException(ServiceErrorCode.EMAIL_ALREADY_EXISTS);
+                }
+                user.setEmail(newEmail);
             }
-            user.setEmail(req.getEmail());
         }
-        if (req.getPhone() != null && !req.getPhone().equals(user.getPhone())) {
-            // 检查手机号是否已被占用
-            User existingUser = this.getOne(new LambdaQueryWrapper<User>()
-                    .eq(User::getPhone, req.getPhone())
-                    .ne(User::getId, userId));
-            if (existingUser != null) {
-                throw new ServiceException(ServiceErrorCode.PHONE_ALREADY_EXISTS);
+        if (req.getPhone() != null) {
+            String newPhone = req.getPhone().trim();
+            if (newPhone.isEmpty()) {
+                user.setPhone(null);
+            } else if (!newPhone.equals(user.getPhone())) {
+                // 检查手机号是否已被占用
+                User existingUser = this.getOne(new LambdaQueryWrapper<User>()
+                        .eq(User::getPhone, newPhone)
+                        .ne(User::getId, userId));
+                if (existingUser != null) {
+                    throw new ServiceException(ServiceErrorCode.PHONE_ALREADY_EXISTS);
+                }
+                user.setPhone(newPhone);
             }
-            user.setPhone(req.getPhone());
         }
         if (req.getBio() != null) {
             user.setBio(req.getBio());

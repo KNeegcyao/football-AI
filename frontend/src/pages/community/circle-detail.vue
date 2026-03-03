@@ -700,6 +700,14 @@ const formatMatchDate = (timeStr) => {
 
 const isNavigating = ref(false);
 
+const onImageError = () => {
+  circleImage.value = '/static/default-team.png';
+};
+
+const onHeroError = () => {
+  heroImage.value = '/static/teams/real_madrid.jpg';
+};
+
 const navigateToPost = (post) => {
   if (isNavigating.value) return;
   isNavigating.value = true;
