@@ -46,6 +46,17 @@ public class UserController {
     }
 
     /**
+     * 获取他人公开资料
+     */
+    @Operation(summary = "获取他人资料", description = "获取指定用户ID的公开详细个人资料")
+    @GetMapping("/{id}/profile")
+    public R<UserInfoResp> getOtherProfile(@Parameter(description = "用户ID") @PathVariable Long id) {
+        log.info("获取他人资料: 用户ID={}", id);
+        UserInfoResp userInfo = userService.getUserInfo(id);
+        return R.ok(userInfo);
+    }
+
+    /**
      * 获取用户统计数据
      */
     @Operation(summary = "获取用户统计数据", description = "获取当前登录用户的发帖数、收获点赞数、收藏数等统计信息")
@@ -53,6 +64,17 @@ public class UserController {
     public R<UserStatsResp> getStats(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         log.info("获取用户统计数据: 用户ID={}", loginUser.getUser().getId());
         UserStatsResp stats = userService.getUserStats(loginUser.getUser().getId());
+        return R.ok(stats);
+    }
+
+    /**
+     * 获取他人公开统计数据
+     */
+    @Operation(summary = "获取他人统计数据", description = "获取指定用户ID的公开统计信息")
+    @GetMapping("/{id}/stats")
+    public R<UserStatsResp> getOtherStats(@Parameter(description = "用户ID") @PathVariable Long id) {
+        log.info("获取他人统计数据: 用户ID={}", id);
+        UserStatsResp stats = userService.getUserStats(id);
         return R.ok(stats);
     }
 

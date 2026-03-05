@@ -17,7 +17,12 @@
           </view>
         </view>
         <view class="header-center">
-          <view class="author-info">
+          <view 
+            class="author-info" 
+            @click.stop="navigateToProfile(post.userId)"
+            hover-class="clickable-hover"
+            :hover-stay-time="100"
+          >
             <view class="avatar-container">
               <image class="author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
               <view class="verified-badge">
@@ -68,7 +73,16 @@
           <!-- Stats -->
           <view class="interaction-stats">
             <view class="avatar-stack" v-if="post.recentLikes && post.recentLikes.length > 0">
-              <image v-for="(liker, index) in post.recentLikes" :key="index" class="stack-avatar" :src="liker.avatar" mode="aspectFill"></image>
+              <image 
+                v-for="(liker, index) in post.recentLikes" 
+                :key="index" 
+                class="stack-avatar" 
+                :src="liker.avatar" 
+                mode="aspectFill"
+                @click.stop="navigateToProfile(liker.id)"
+                hover-class="clickable-hover"
+                :hover-stay-time="100"
+              ></image>
               <view class="stack-count" style="background-color: #f2b90d; color: #000;">
                 <text class="material-icons" style="font-size: 12px;">thumb_up</text>
               </view>
@@ -91,11 +105,23 @@
 
           <view class="comments-list">
             <view class="comment-item" v-for="(comment, index) in comments" :key="index" :id="'comment-' + comment.id" :class="{ 'highlight': comment.id == targetId }">
-              <image class="comment-avatar" :src="comment.userAvatar" mode="aspectFill"></image>
+              <image 
+                class="comment-avatar" 
+                :src="comment.userAvatar" 
+                mode="aspectFill" 
+                @click.stop="navigateToProfile(comment.userId)"
+                hover-class="clickable-hover"
+                :hover-stay-time="100"
+              ></image>
               <view class="comment-content-wrapper">
                 <view class="comment-bubble">
                   <view class="comment-user-row">
-                    <text class="comment-username">{{ comment.userName }}</text>
+                    <text 
+                      class="comment-username" 
+                      @click.stop="navigateToProfile(comment.userId)"
+                      hover-class="text-hover"
+                      :hover-stay-time="100"
+                    >{{ comment.userName }}</text>
                     <text class="comment-time">{{ formatTime(comment.createdAt) }}</text>
                   </view>
                   <text class="comment-text">{{ comment.content }}</text>
@@ -111,11 +137,23 @@
                 <!-- Nested Replies -->
                 <view class="nested-replies" v-if="comment.replies && comment.replies.length > 0">
                   <view class="comment-item nested" v-for="(reply, rIndex) in comment.replies" :key="rIndex" :id="'comment-' + reply.id" :class="{ 'highlight': reply.id == targetId }">
-                    <image class="comment-avatar small" :src="reply.userAvatar" mode="aspectFill"></image>
+                    <image 
+                      class="comment-avatar small" 
+                      :src="reply.userAvatar" 
+                      mode="aspectFill" 
+                      @click.stop="navigateToProfile(reply.userId)"
+                      hover-class="clickable-hover"
+                      :hover-stay-time="100"
+                    ></image>
                     <view class="comment-content-wrapper">
                       <view class="comment-bubble semi-transparent">
                         <view class="comment-user-row">
-                          <text class="comment-username">{{ reply.userName }}</text>
+                          <text 
+                            class="comment-username" 
+                            @click.stop="navigateToProfile(reply.userId)"
+                            hover-class="text-hover"
+                            :hover-stay-time="100"
+                          >{{ reply.userName }}</text>
                           <text class="comment-time">{{ formatTime(reply.createdAt) }}</text>
                         </view>
                         <text class="comment-text">
@@ -273,11 +311,18 @@ const loadPostDetail = async (id) => {
       // Process avatar URL
       const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/soccer-logo.png';
 
+      // Process recent likes avatars
+      const processedRecentLikes = (data.recentLikes || []).map(liker => ({
+        ...liker,
+        avatar: liker.avatar ? fileApi.getFileUrl(liker.avatar) : '/static/soccer-logo.png'
+      }));
+
       post.value = {
         ...data,
         userName: data.userName || 'Unknown User',
         userAvatar: avatarUrl,
         images: processedImages,
+        recentLikes: processedRecentLikes,
         views: data.views || 0,
         likes: data.likes || 0,
         isLiked: data.isLiked || false,
@@ -473,6 +518,40 @@ const previewImage = (index) => {
   }
 };
 
+const navigateToProfile = (userId) => {
+  console.log('Attempting to navigate to profile for userId:', userId);
+  if (!userId) {
+    console.warn('Cannot navigate: userId is missing');
+    return;
+  }
+  
+  const userInfo = uni.getStorageSync('userInfo');
+  const currentUserId = userInfo?.id;
+  console.log('Current logged-in userId:', currentUserId);
+  
+  // 如果是当前用户，使用 switchTab 跳转到 TabBar 的“我的”页面
+  if (userId == currentUserId) {
+    console.log('Navigating to own profile (TabBar)');
+    uni.switchTab({
+      url: '/pages/my/my',
+      success: () => console.log('Successfully switched to own profile tab'),
+      fail: (err) => console.error('Failed to switch to own profile tab:', err)
+    });
+  } else {
+    // 如果是他人，使用 navigateTo 跳转到专门的他人主页
+    const url = `/pages/my/user-profile?userId=${userId}`;
+    console.log('Navigating to others profile:', url);
+    uni.navigateTo({
+      url: url,
+      success: () => console.log('Successfully navigated to user-profile'),
+      fail: (err) => {
+        console.error('Failed to navigate to user-profile:', err);
+        uni.showToast({ title: '跳转失败', icon: 'none' });
+      }
+    });
+  }
+};
+
 onLoad((options) => {
   if (options.id) {
     postId.value = options.id;
@@ -523,6 +602,7 @@ onLoad((options) => {
   display: flex;
   justify-content: flex-start;
   overflow: hidden;
+  padding: 4px 0;
 }
 
 .header-right {
@@ -950,10 +1030,8 @@ onLoad((options) => {
 
 .action-btn {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px;
 }
 
 .action-text {
@@ -1001,5 +1079,16 @@ onLoad((options) => {
   border: 1px solid rgba(242, 185, 13, 0.3);
   border-radius: 12px;
   transition: all 0.3s ease;
+}
+
+.clickable-hover {
+  opacity: 0.7;
+  transform: scale(0.98);
+  transition: all 0.1s;
+}
+
+.text-hover {
+  opacity: 0.6;
+  text-decoration: underline;
 }
 </style>

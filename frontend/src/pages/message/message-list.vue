@@ -22,7 +22,7 @@
         @click="goToChat(item)"
       >
         <view class="avatar-wrapper">
-          <image class="avatar" :src="item.otherUserAvatar || '/static/avatar/default.png'" mode="aspectFill"></image>
+          <image class="avatar" :src="item.otherAvatar || '/static/avatar/default.png'" mode="aspectFill"></image>
           <view class="unread-badge" v-if="item.unreadCount > 0">
             <text>{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</text>
           </view>
@@ -30,8 +30,8 @@
         
         <view class="content-wrapper">
           <view class="top-row">
-            <text class="nickname">{{ item.otherUserNickname || '用户' }}</text>
-            <text class="time">{{ formatTime(item.updatedAt) }}</text>
+            <text class="nickname">{{ item.otherNickname || '用户' }}</text>
+            <text class="time">{{ formatTime(item.lastMessageTime) }}</text>
           </view>
           <view class="bottom-row">
             <text class="last-msg">{{ item.lastMessage }}</text>
@@ -52,68 +52,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { messageApi, fileApi } from '@/api';
+import { useChatStore } from '@/store/chat';
+import { fileApi } from '@/api';
 
-const conversations = ref([]);
+const chatStore = useChatStore();
 const loading = ref(false);
-const page = ref(1);
-const hasMore = ref(true);
+
+const conversations = computed(() => chatStore.sessions);
 
 onShow(() => {
-  page.value = 1;
-  conversations.value = [];
   loadConversations();
+  // 建立连接
+  chatStore.connect();
 });
 
 const loadConversations = async () => {
   if (loading.value) return;
   loading.value = true;
-  
-  try {
-    const res = await messageApi.getConversations({ page: page.value, size: 20 });
-    if (res && res.records) {
-      const records = res.records.map(item => ({
-        ...item,
-        otherUserAvatar: item.otherUserAvatar ? fileApi.getFileUrl(item.otherUserAvatar) : '/static/avatar/default.png'
-      }));
-      
-      if (page.value === 1) {
-        conversations.value = records;
-      } else {
-        conversations.value = [...conversations.value, ...records];
-      }
-      
-      hasMore.value = res.current < res.pages;
-    }
-  } catch (e) {
-    console.error('Failed to load conversations:', e);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const loadMore = () => {
-  if (hasMore.value && !loading.value) {
-    page.value++;
-    loadConversations();
-  }
+  await chatStore.fetchSessions();
+  loading.value = false;
 };
 
 const goToChat = (item) => {
   uni.navigateTo({
-    url: `/pages/message/chat?id=${item.otherUserId}`
+    url: `/pages/message/chat?sessionId=${item.id}&otherUserId=${item.otherUserId}&otherNickname=${item.otherNickname}&otherAvatar=${item.otherAvatar}`
   });
 };
 
-const goBack = () => {
-  uni.navigateBack();
-};
-
-const formatTime = (timeStr) => {
-  if (!timeStr) return '';
-  const date = new Date(timeStr);
+const formatTime = (time) => {
+  if (!time) return '';
+  const date = new Date(time);
   const now = new Date();
   
   if (date.toDateString() === now.toDateString()) {
@@ -126,7 +96,11 @@ const formatTime = (timeStr) => {
     return '昨天';
   }
   
-  return (date.getMonth() + 1) + '/' + date.getDate();
+  return (date.getMonth() + 1) + '月' + date.getDate() + '日';
+};
+
+const goBack = () => {
+  uni.navigateBack();
 };
 </script>
 

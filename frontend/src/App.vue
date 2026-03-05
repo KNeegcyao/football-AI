@@ -1,7 +1,16 @@
 <script>
+import { useChatStore } from '@/store/chat';
+
 export default {
   onLaunch: function () {
     console.log('App Launch')
+
+    const chatStore = useChatStore();
+    // 如果已登录，建立 WebSocket 连接
+    const token = uni.getStorageSync('token');
+    if (token) {
+      chatStore.connect();
+    }
     
     // #ifdef MP-WEIXIN
     // 仅在微信小程序中使用 uni.loadFontFace 加载远程字体

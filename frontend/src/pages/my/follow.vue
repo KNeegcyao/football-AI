@@ -94,7 +94,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { userApi, postApi, fileApi } from '@/api'
+import { userApi, postApi, fileApi, relationshipApi } from '@/api'
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const currentTab = ref(0)
@@ -210,7 +210,7 @@ const loadMore = () => {
 const toggleFollow = async (user, index) => {
   try {
     if (user.isFollowing) {
-      await postApi.unfollowUser(user.id)
+      await relationshipApi.unfollow(user.id)
       user.isFollowing = false
       if (isSelf.value && currentTab.value === 0) {
         // 如果是在自己的关注列表取消关注，可以直接移除
@@ -218,10 +218,11 @@ const toggleFollow = async (user, index) => {
         // tabs.value[0].count--
       }
     } else {
-      await postApi.followUser(user.id)
+      await relationshipApi.follow(user.id)
       user.isFollowing = true
     }
   } catch (e) {
+    console.error('关注操作失败:', e)
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
 }
@@ -231,7 +232,7 @@ const goToUserProfile = (id) => {
   if (id === userInfo?.id) {
     uni.switchTab({ url: '/pages/my/my' })
   } else {
-    uni.navigateTo({ url: `/pages/my/my?userId=${id}` })
+    uni.navigateTo({ url: `/pages/my/user-profile?userId=${id}` })
   }
 }
 

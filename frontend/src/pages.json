@@ -167,6 +167,13 @@
       }
     },
     {
+      "path": "pages/my/user-profile",
+      "style": {
+        "navigationBarTitleText": "用户主页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录",

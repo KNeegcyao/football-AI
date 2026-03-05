@@ -1,5 +1,6 @@
 package com.soccer.forum.service.utils;
 
+import com.soccer.forum.service.security.model.LoginUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -47,7 +48,19 @@ public class JwtUtils {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        if (userDetails instanceof LoginUser) {
+            claims.put("userId", ((LoginUser) userDetails).getUser().getId());
+        }
         return createToken(claims, userDetails.getUsername());
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        Object userId = claims.get("userId");
+        if (userId != null) {
+            return Long.valueOf(userId.toString());
+        }
+        return null;
     }
 
     private String createToken(Map<String, Object> claims, String subject) {

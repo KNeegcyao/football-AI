@@ -14,6 +14,12 @@ public class UserStatsResp {
     @Schema(description = "收藏帖子数")
     private Long favoriteCount;
 
+    @Schema(description = "关注数")
+    private Long followingCount;
+
+    @Schema(description = "粉丝数")
+    private Long followerCount;
+
     public Long getPostCount() { return postCount; }
     public void setPostCount(Long postCount) { this.postCount = postCount; }
 
@@ -22,4 +28,10 @@ public class UserStatsResp {
 
     public Long getFavoriteCount() { return favoriteCount; }
     public void setFavoriteCount(Long favoriteCount) { this.favoriteCount = favoriteCount; }
+
+    public Long getFollowingCount() { return followingCount; }
+    public void setFollowingCount(Long followingCount) { this.followingCount = followingCount; }
+
+    public Long getFollowerCount() { return followerCount; }
+    public void setFollowerCount(Long followerCount) { this.followerCount = followerCount; }
 }

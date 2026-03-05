@@ -43,68 +43,57 @@
     </section>
 
     <view class="notification-list">
-      <view class="notification-item" v-for="(item, index) in list" :key="index" @click="handleNotificationClick(item)">
+      <view class="notification-item" v-for="(item, index) in sessions" :key="index" @click="handleSessionClick(item)">
         <!-- 头像区域 -->
         <view class="avatar-box">
-          <image :src="item.fromUser.avatar || '/static/default-avatar.png'" class="avatar-img" mode="aspectFill"></image>
-          <view class="badge-icon" v-if="getTypeIcon(item.type)">
-            <u-icon :name="getTypeIcon(item.type)" size="10" color="#fff"></u-icon>
-          </view>
+          <image :src="getAvatarUrl(item.otherAvatar)" class="avatar-img" mode="aspectFill"></image>
         </view>
 
         <!-- 内容区域 -->
         <view class="content-box">
           <view class="header-row">
             <view class="user-info">
-              <text class="nickname" :class="{ 'official': item.fromUser.id === 1 }">{{ item.fromUser.nickname }}</text>
-              <view v-if="item.fromUser.id === 1" class="official-tag">
-                <u-icon name="flash-fill" color="#fff" size="10"></u-icon>
-              </view>
+              <text class="nickname">{{ item.otherNickname || '用户' }}</text>
             </view>
-            <text class="time">{{ formatTime(item.createdAt) }}</text>
+            <text class="time">{{ formatTime(item.lastMessageTime) }}</text>
           </view>
 
           <!-- 消息正文 -->
           <view class="message-row">
-            <p class="desc-text">
-              {{ getActionDesc(item) }}
-              <text v-if="item.postTitle && item.type !== 6" class="highlight-text">"{{ item.postTitle }}"</text>
-            </p>
-            <view class="unread-dot" v-if="!item.isRead"></view>
-          </view>
-
-          <!-- 引用内容 (评论/回复/私信内容，@提及不显示) -->
-          <view class="quote-box" v-if="item.content && item.type !== 6" :class="getQuoteClass(item.type)">
-            <text class="quote-text">"{{ item.content }}"</text>
+            <text class="desc-text">{{ formatMessage(item.lastMessage) }}</text>
+            <view class="unread-badge" v-if="item.unreadCount > 0">{{ item.unreadCount }}</view>
           </view>
         </view>
       </view>
 
-      <u-loadmore :status="loadStatus" @loadmore="loadMore" marginTop="30" color="#64748b" />
+      <view class="empty-tip" v-if="sessions.length === 0">
+        <text>暂无私聊消息</text>
+      </view>
       <view class="safe-area-bottom"></view>
     </view>
   </view>
 </template>
 
 <script>
+import { useChatStore } from '@/store/chat';
+import { fileApi } from '@/api';
+import { mapState, mapActions } from 'pinia';
+
 export default {
   data() {
     return {
-      list: [],
-      page: 1,
-      size: 10,
-      loadStatus: 'loadmore',
-      isLoading: false,
       navbarPaddingRight: 16,
-      statusBarHeight: 0,
-      currentType: null // 当前筛选的类型
+      statusBarHeight: 0
     };
+  },
+  computed: {
+    ...mapState(useChatStore, ['sessions'])
   },
   onLoad() {
     const systemInfo = uni.getSystemInfoSync();
     this.statusBarHeight = systemInfo.statusBarHeight || 0;
     
-    this.loadData(true);
+    this.fetchSessions();
 
     // #ifdef MP-WEIXIN
     try {
@@ -116,80 +105,44 @@ export default {
     // #endif
   },
   onPullDownRefresh() {
-    this.loadData(true);
-  },
-  onReachBottom() {
-    this.loadData();
+    this.fetchSessions().finally(() => {
+      uni.stopPullDownRefresh();
+    });
   },
   methods: {
-    // 获取类型标签文本
-    getTypeLabel(type) {
-      const map = {
-        1: '点赞',
-        2: '点赞',
-        3: '评论',
-        4: '回复',
-        5: '关注',
-        6: '@我',
-        7: '私信'
-      };
-      return map[type] || '通知';
+    fetchSessions() {
+      return useChatStore().fetchSessions();
     },
-    // 获取类型样式类
-    getTypeClass(type) {
-      const map = {
-        1: 'tag-pink',    // 点赞
-        2: 'tag-pink',    // 点赞
-        3: 'tag-green',   // 评论
-        4: 'tag-blue',    // 回复
-        5: 'tag-primary', // 关注
-        6: 'tag-purple',  // @我
-        7: 'tag-orange'   // 私信
+
+    filterByType(type) {
+      const routes = {
+        reply: '/pages/community/reply-detail',
+        like: '/pages/community/like-detail',
+        follow: '/pages/community/fan-detail'
       };
-      return map[type] || 'tag-primary';
+      const url = routes[type];
+      if (url) {
+        uni.navigateTo({ url });
+      }
     },
-    // 获取类型图标
-    getTypeIcon(type) {
-      const map = {
-        1: 'thumb-up-fill',
-        2: 'thumb-up-fill',
-        3: 'chat-fill',
-        4: 'chat-fill',
-        5: 'account-fill',
-        6: 'at',
-        7: 'email-fill'
-      };
-      return map[type] || 'bell-fill';
+    
+    getAvatarUrl(url) {
+      return fileApi.getFileUrl(url) || '/static/default-avatar.png';
     },
-    // 获取操作描述
-    getActionDesc(item) {
-      const map = {
-        1: '赞了你的帖子',
-        2: '赞了你的评论',
-        3: '评论了你的帖子',
-        4: '回复了你的评论',
-        5: '关注了你',
-        6: '在内容中提到了你',
-        7: '给你发了一条私信'
-      };
-      return map[item.type] || '有一条新消息';
-    },
-    // 引用框样式
-    getQuoteClass(type) {
-      const map = {
-        3: 'border-green',
-        4: 'border-blue'
-      };
-      return map[type] || 'border-primary';
+
+    formatMessage(content) {
+      if (!content) return '暂无新消息';
+      // 如果消息内容是图片路径，则显示为 [图片]
+      if (content.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || content.startsWith('/uploads/')) {
+        return '[图片]';
+      }
+      return content;
     },
     
     formatTime(time) {
       if (!time) return '';
-      // 简单处理：将 T 替换为空格，去掉秒
-      // 示例: 2023-10-01T12:00:00 -> 2023-10-01 12:00
+      // 兼容 T 格式
       const dateStr = time.replace('T', ' ');
-      
-      // 计算时间差，显示人性化时间
       const date = new Date(dateStr);
       const now = new Date();
       const diff = now - date;
@@ -206,129 +159,21 @@ export default {
       return dateStr.substring(0, 10);
     },
     
-    async loadData(refresh = false) {
-      if (this.isLoading) return;
-      if (refresh) {
-        this.page = 1;
-        this.list = [];
-        this.loadStatus = 'loading';
-      } else if (this.loadStatus === 'nomore') {
-        return;
-      }
-      
-      this.isLoading = true;
-      try {
-        const res = await this.$request({
-            url: '/api/notifications',
-            method: 'GET',
-            data: {
-                page: this.page,
-                size: this.size
-            }
-        });
-        
-        console.log('Notification API Full Response:', res);
-        const records = res.records || [];
-        console.log('Notification Records:', records);
-        
-        // 格式化数据，确保 fromUser 对象存在，并处理头像
-        const formattedRecords = records.map(item => {
-          console.log('Processing Notification Item:', item.id, 'Type:', item.type, 'PostId:', item.postId);
-          if (item.fromUser && item.fromUser.avatar) {
-            item.fromUser.avatar = this.$utils.getFullImageUrl(item.fromUser.avatar);
-          }
-          return item;
-        });
-
-        if (refresh) {
-            this.list = formattedRecords;
-            uni.stopPullDownRefresh();
-        } else {
-            this.list = [...this.list, ...formattedRecords];
-        }
-        
-        // 更新加载状态
-        if (records.length < this.size) {
-            this.loadStatus = 'nomore';
-        } else {
-            this.loadStatus = 'loadmore';
-            this.page++;
-        }
-      } catch (e) {
-        console.error(e);
-        this.loadStatus = 'loadmore';
-        if (refresh) uni.stopPullDownRefresh();
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    
-    async markAllRead() {
-        try {
-            await this.$request({
-                url: '/api/notifications/read-all',
-                method: 'PUT'
-            });
-            this.list.forEach(item => item.isRead = 1);
-            uni.showToast({ title: '全部已读', icon: 'success' });
-        } catch (e) {
-            console.error(e);
-            uni.showToast({ title: '操作失败', icon: 'none' });
-        }
-    },
-
-    // 过滤类型
-    filterByType(type) {
-      const pageMap = {
-        'reply': '/pages/community/reply-detail',
-        'like': '/pages/community/like-detail',
-        'follow': '/pages/community/fan-detail'
-      };
-      if (pageMap[type]) {
-        uni.navigateTo({
-          url: pageMap[type]
-        });
-      }
+    markAllRead() {
+      // 私聊消息暂不支持一键已读，或者需要后端支持
+      uni.showToast({ title: '私聊消息暂不支持一键已读', icon: 'none' });
     },
     
     goBack() {
-      // 如果当前有筛选，点击返回则先清除筛选，否则返回上一页
-      if (this.currentType) {
-        this.currentType = null;
-        this.loadData(true);
-      } else {
-        uni.navigateBack();
-      }
+      uni.navigateBack();
     },
     
-    handleNotificationClick(item) {
-      // 标记已读
-      if (!item.isRead) {
-        this.$request({
-            url: `/api/notifications/${item.id}/read`,
-            method: 'PUT'
-        }).then(() => {
-            item.isRead = 1;
-        });
-      }
-
-      // 跳转逻辑
-      if (item.type === 5) {
-        uni.navigateTo({ url: `/pages/my/profile?id=${item.fromUser.id}` });
-      } else if (item.type === 7) {
-        // 跳转到私信详情 (假设有此页面)
-        uni.navigateTo({ url: `/pages/message/chat?id=${item.fromUser.id}` });
-      } else if ([1, 2, 3, 4, 6].includes(item.type)) {
-        if (item.postId) {
-            const targetParam = item.targetId ? `&targetId=${item.targetId}` : '';
-            uni.navigateTo({
-                url: `/pages/post/detail?id=${item.postId}${targetParam}`
-            });
-        }
-      }
-    },
-    loadMore() {
-        this.loadData();
+    handleSessionClick(session) {
+      const otherNickname = encodeURIComponent(session.otherNickname || '');
+      const otherAvatar = encodeURIComponent(session.otherAvatar || '');
+      uni.navigateTo({
+        url: `/pages/message/chat?sessionId=${session.id}&otherUserId=${session.otherUserId}&otherNickname=${otherNickname}&otherAvatar=${otherAvatar}`
+      });
     }
   }
 };
@@ -469,36 +314,20 @@ export default {
       flex-shrink: 0;
 
       .avatar-img {
-        width: 68rpx;
-        height: 68rpx;
-        border-radius: 12rpx;
+        width: 100rpx;
+        height: 100rpx;
+        border-radius: 50rpx;
         border: 1rpx solid rgba(255, 255, 255, 0.1);
         background-color: rgba(255, 255, 255, 0.05);
-      }
-      
-      .badge-icon {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 26rpx;
-        height: 26rpx;
-        background-color: $pitch-pulse-primary;
-        border-radius: 6rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3rpx solid $pitch-pulse-bg-dark;
-        
-        :deep(.u-icon__icon) {
-          color: #000 !important;
-          font-size: 16rpx !important;
-        }
       }
     }
     
     .content-box {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       
       .header-row {
         display: flex;
@@ -512,25 +341,9 @@ export default {
           gap: 12rpx;
           
           .nickname {
-            font-size: 28rpx;
+            font-size: 30rpx;
             font-weight: 700;
             color: #fff;
-            
-            &.official {
-              color: $pitch-pulse-primary;
-            }
-          }
-          
-          .official-tag {
-            background-color: $pitch-pulse-primary;
-            padding: 2rpx 8rpx;
-            border-radius: 4rpx;
-            display: flex;
-            align-items: center;
-            
-            :deep(.u-icon__icon) {
-              color: #000 !important;
-            }
           }
         }
         
@@ -542,54 +355,42 @@ export default {
       
       .message-row {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 20rpx;
         
         .desc-text {
           font-size: 26rpx;
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.5;
-          
-          .highlight-text {
-            color: $pitch-pulse-primary;
-            margin-left: 8rpx;
-            font-weight: 500;
-          }
+          color: rgba(255, 255, 255, 0.5);
+          line-height: 1.4;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         
-        .unread-dot {
-          width: 12rpx;
-          height: 12rpx;
+        .unread-badge {
+          min-width: 32rpx;
+          height: 32rpx;
+          padding: 0 8rpx;
           background-color: $pitch-pulse-primary;
-          border-radius: 4rpx;
-          margin-top: 12rpx;
-          flex-shrink: 0;
+          border-radius: 16rpx;
+          color: #000;
+          font-size: 20rpx;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           box-shadow: 0 0 10rpx rgba($pitch-pulse-primary, 0.5);
         }
       }
-      
-      .quote-box {
-        margin-top: 16rpx;
-        padding: 16rpx 20rpx;
-        background-color: rgba(255, 255, 255, 0.03);
-        border-radius: 12rpx;
-        border-left: 4rpx solid rgba(255, 255, 255, 0.1);
-        
-        &.border-green { border-left-color: #10b981; }
-        &.border-blue { border-left-color: #0ea5e9; }
-        &.border-primary { border-left-color: $pitch-pulse-primary; }
-        
-        .quote-text {
-          font-size: 24rpx;
-          color: rgba(255, 255, 255, 0.5);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-        }
-      }
     }
+  }
+
+  .empty-tip {
+    padding: 100rpx 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 28rpx;
   }
 }
 

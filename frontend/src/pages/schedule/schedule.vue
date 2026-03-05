@@ -186,6 +186,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { matchApi, userApi, fileApi } from '@/api/index'
+import { BASE_URL } from '@/utils/request'
 
 const liveMatches = ref([])
 const upcomingMatches = ref([])
@@ -328,13 +329,14 @@ const getFullImageUrl = (url) => {
   // 外部链接处理 (包含 http, //, 或特定域名)
   if (url.startsWith('http') || url.startsWith('//') || 
       url.includes('pstatp.com') || url.includes('zhibo8.cc') ||
-      url.includes('wikimedia.org')) {
+      url.includes('wikimedia.org') || url.includes('premierleague.com') ||
+      url.includes('football-data.org')) {
     return url
   }
   // 本地静态资源 (排除球队logo)
   if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) return url
   // 后端资源
-  return 'http://192.168.5.6:8080' + url
+  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 
 const handleImageError = (team) => {

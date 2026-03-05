@@ -52,7 +52,7 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error").permitAll()
+                .requestMatchers("/api/auth/**", "/error", "/ws/chat/**").permitAll()
                 .requestMatchers("/api/players/sync/**", "/api/players/sync-sportapi/**", "/api/players/sync-scorers").permitAll()
                 // Explicitly allow list endpoints to ensure access
                 .requestMatchers("/api/news/list", "/api/players/list", "/api/teams/list").permitAll()

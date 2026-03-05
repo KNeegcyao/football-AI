@@ -1,23 +1,34 @@
 package com.soccer.forum.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
+import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.domain.entity.UserRelationship;
 import com.soccer.forum.service.mapper.UserRelationshipMapper;
+import com.soccer.forum.service.model.dto.UserFollowResp;
 import com.soccer.forum.service.service.UserRelationshipService;
+import com.soccer.forum.service.service.UserService;
 import com.soccer.forum.service.service.NotificationService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMapper, UserRelationship> implements UserRelationshipService {
 
     private final NotificationService notificationService;
+    private final UserService userService;
 
-    public UserRelationshipServiceImpl(NotificationService notificationService) {
+    public UserRelationshipServiceImpl(NotificationService notificationService, @Lazy UserService userService) {
         this.notificationService = notificationService;
+        this.userService = userService;
     }
 
     @Override
@@ -52,6 +63,7 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
 
     @Override
     public boolean isFollowing(Long followerId, Long followingId) {
+        if (followerId == null || followingId == null) return false;
         LambdaQueryWrapper<UserRelationship> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRelationship::getFollowerId, followerId)
                .eq(UserRelationship::getFollowingId, followingId);
@@ -61,5 +73,91 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
     @Override
     public boolean isMutualFollow(Long userA, Long userB) {
         return isFollowing(userA, userB) && isFollowing(userB, userA);
+    }
+
+    @Override
+    public IPage<UserFollowResp> getFollowingList(Long userId, Page<UserRelationship> page, Long currentUserId) {
+        LambdaQueryWrapper<UserRelationship> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRelationship::getFollowerId, userId)
+               .orderByDesc(UserRelationship::getCreatedAt);
+        
+        IPage<UserRelationship> relationshipPage = this.page(page, wrapper);
+        
+        IPage<UserFollowResp> resultPage = new Page<>(relationshipPage.getCurrent(), relationshipPage.getSize(), relationshipPage.getTotal());
+        
+        List<Long> followingIds = relationshipPage.getRecords().stream()
+                .map(UserRelationship::getFollowingId)
+                .collect(Collectors.toList());
+        
+        if (followingIds.isEmpty()) {
+            return resultPage;
+        }
+        
+        List<User> users = userService.listByIds(followingIds);
+        List<UserFollowResp> records = users.stream().map(user -> {
+            UserFollowResp resp = new UserFollowResp(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getNickname(),
+                    user.getAvatar(),
+                    user.getBio(),
+                    false // isVerified 默认 false
+            );
+            // 补充关注状态
+            if (currentUserId != null) {
+                resp.setIsFollowing(isFollowing(currentUserId, user.getId()));
+                resp.setIsFollower(isFollowing(user.getId(), currentUserId));
+            } else {
+                resp.setIsFollowing(false);
+                resp.setIsFollower(false);
+            }
+            return resp;
+        }).collect(Collectors.toList());
+        
+        resultPage.setRecords(records);
+        return resultPage;
+    }
+
+    @Override
+    public IPage<UserFollowResp> getFollowersList(Long userId, Page<UserRelationship> page, Long currentUserId) {
+        LambdaQueryWrapper<UserRelationship> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRelationship::getFollowingId, userId)
+               .orderByDesc(UserRelationship::getCreatedAt);
+        
+        IPage<UserRelationship> relationshipPage = this.page(page, wrapper);
+        
+        IPage<UserFollowResp> resultPage = new Page<>(relationshipPage.getCurrent(), relationshipPage.getSize(), relationshipPage.getTotal());
+        
+        List<Long> followerIds = relationshipPage.getRecords().stream()
+                .map(UserRelationship::getFollowerId)
+                .collect(Collectors.toList());
+        
+        if (followerIds.isEmpty()) {
+            return resultPage;
+        }
+        
+        List<User> users = userService.listByIds(followerIds);
+        List<UserFollowResp> records = users.stream().map(user -> {
+            UserFollowResp resp = new UserFollowResp(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getNickname(),
+                    user.getAvatar(),
+                    user.getBio(),
+                    false // isVerified 默认 false
+            );
+            // 补充关注状态
+            if (currentUserId != null) {
+                resp.setIsFollowing(isFollowing(currentUserId, user.getId()));
+                resp.setIsFollower(isFollowing(user.getId(), currentUserId));
+            } else {
+                resp.setIsFollowing(false);
+                resp.setIsFollower(false);
+            }
+            return resp;
+        }).collect(Collectors.toList());
+        
+        resultPage.setRecords(records);
+        return resultPage;
     }
 }

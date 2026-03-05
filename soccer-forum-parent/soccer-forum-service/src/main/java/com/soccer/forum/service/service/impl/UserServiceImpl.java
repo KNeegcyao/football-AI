@@ -8,10 +8,12 @@ import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.Like;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.User;
+import com.soccer.forum.domain.entity.UserRelationship;
 import com.soccer.forum.service.mapper.FavoriteMapper;
 import com.soccer.forum.service.mapper.LikeMapper;
 import com.soccer.forum.service.mapper.PostMapper;
 import com.soccer.forum.service.mapper.UserMapper;
+import com.soccer.forum.service.mapper.UserRelationshipMapper;
 import com.soccer.forum.service.model.dto.UserInfoResp;
 import com.soccer.forum.service.model.dto.UserStatsResp;
 import com.soccer.forum.service.model.dto.UserUpdateReq;
@@ -31,12 +33,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final PostMapper postMapper;
     private final LikeMapper likeMapper;
     private final FavoriteMapper favoriteMapper;
+    private final UserRelationshipMapper relationshipMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(PostMapper postMapper, LikeMapper likeMapper, FavoriteMapper favoriteMapper, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(PostMapper postMapper, LikeMapper likeMapper, FavoriteMapper favoriteMapper, 
+                          UserRelationshipMapper relationshipMapper, PasswordEncoder passwordEncoder) {
         this.postMapper = postMapper;
         this.likeMapper = likeMapper;
         this.favoriteMapper = favoriteMapper;
+        this.relationshipMapper = relationshipMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -78,6 +83,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .in(Like::getTargetId, postIds));
             stats.setLikeReceivedCount(likeCount);
         }
+
+        // 4. 关注数
+        Long followingCount = relationshipMapper.selectCount(new LambdaQueryWrapper<UserRelationship>()
+                .eq(UserRelationship::getFollowerId, userId));
+        stats.setFollowingCount(followingCount);
+
+        // 5. 粉丝数
+        Long followerCount = relationshipMapper.selectCount(new LambdaQueryWrapper<UserRelationship>()
+                .eq(UserRelationship::getFollowingId, userId));
+        stats.setFollowerCount(followerCount);
 
         return stats;
     }

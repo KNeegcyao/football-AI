@@ -137,6 +137,11 @@ export const postApi = {
    * 检查关注状态
    */
   checkFollowStatus: (userId) => request.get(`/api/relationships/isFollowing/${userId}`),
+
+  /**
+   * 检查关注状态 (别名)
+   */
+  isFollowing: (userId) => request.get(`/api/relationships/isFollowing/${userId}`),
 }
 
 /**
@@ -281,7 +286,45 @@ export const userApi = {
    * 更新回复提醒设置
    * @param {Object} data { replyType } all|following|none
    */
-  updateNotificationSetting: (data) => request.put('/api/users/notification-setting', data)
+  updateNotificationSetting: (replyType) => request.put('/api/users/notification', { replyType })
+}
+
+/**
+ * 关注/关系相关接口
+ */
+export const relationshipApi = {
+  follow: (userId) => request.post(`/api/relationships/follow/${userId}`),
+  unfollow: (userId) => request.post(`/api/relationships/unfollow/${userId}`),
+  getFollowing: (params) => request.get('/api/relationships/following', params),
+  getFollowers: (params) => request.get('/api/relationships/followers', params)
+}
+
+/**
+ * 聊天相关接口
+ */
+export const chatApi = {
+  /**
+   * 获取会话列表
+   */
+  getSessions: () => request.get('/api/chat/sessions'),
+
+  /**
+   * 获取会话消息列表
+   */
+  getMessages: (sessionId, params) => request.get(`/api/chat/messages/${sessionId}`, params),
+
+  /**
+   * 通过对方用户ID获取会话ID
+   */
+  getSessionByUserId: (otherUserId) => request.get(`/api/chat/session/user/${otherUserId}`),
+
+  /**
+   * 获取 WebSocket 连接地址
+   */
+  getWsUrl: () => {
+    const token = uni.getStorageSync('token')
+    return `${BASE_URL.replace('http', 'ws')}/ws/chat?token=${token}`
+  }
 }
 
 /**

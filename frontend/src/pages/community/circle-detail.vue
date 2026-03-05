@@ -628,18 +628,6 @@ const onScroll = (e) => {
   isSticky.value = e.detail.scrollTop > 200;
 };
 
-const onHeroError = (e) => {
-  console.error('Hero Image Load Failed:', e);
-  // Fallback to local image
-  heroImage.value = '/static/teams/real_madrid.jpg';
-};
-
-const onImageError = (e) => {
-  console.error('Logo Image Load Failed:', e);
-  // Fallback to local default logo
-  circleImage.value = '/static/default-team.png';
-};
-
 const goBack = () => {
   const pages = getCurrentPages();
   if (pages.length > 1) {
@@ -700,11 +688,15 @@ const formatMatchDate = (timeStr) => {
 
 const isNavigating = ref(false);
 
-const onImageError = () => {
+const onImageError = (e) => {
+  console.error('Logo Image Load Failed:', e);
+  // Fallback to local default logo
   circleImage.value = '/static/default-team.png';
 };
 
-const onHeroError = () => {
+const onHeroError = (e) => {
+  console.error('Hero Image Load Failed:', e);
+  // Fallback to local image
   heroImage.value = '/static/teams/real_madrid.jpg';
 };
 

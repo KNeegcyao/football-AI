@@ -3,7 +3,7 @@
  * 封装 uni.request，支持拦截器、BaseURL 及 Promise 异步处理
  */
 
-const BASE_URL = 'http://192.168.5.25:8080' // 模拟器测试使用本机实际 IP，真机测试确保在同一局域网
+const BASE_URL = 'http://localhost:8080' // 模拟器测试使用本机实际 IP，真机测试确保在同一局域网
 export { BASE_URL }
 
 const request = (options = {}) => {
@@ -51,10 +51,15 @@ const request = (options = {}) => {
         // 处理 HTTP 状态码为 401 的情况 (Spring Security 默认行为)
         if (res.statusCode === 401) {
           uni.removeStorageSync('token')
-          uni.showToast({ title: '登录已过期', icon: 'none' })
-          setTimeout(() => {
-            uni.navigateTo({ url: '/pages/login/login' })
-          }, 1500)
+          // 获取当前页面路径，如果是登录页则不提示和跳转
+          const pages = getCurrentPages()
+          const currentPage = pages[pages.length - 1]
+          if (currentPage && currentPage.route !== 'pages/login/login') {
+            uni.showToast({ title: '登录已过期', icon: 'none' })
+            setTimeout(() => {
+              uni.navigateTo({ url: '/pages/login/login' })
+            }, 1500)
+          }
           reject(new Error('未登录或登录已过期'))
           return
         }
@@ -83,10 +88,14 @@ const request = (options = {}) => {
         } else if (code === 401) {
           // 业务逻辑返回的 401
           uni.removeStorageSync('token')
-          uni.showToast({ title: '登录已过期', icon: 'none' })
-          setTimeout(() => {
-            uni.navigateTo({ url: '/pages/login/login' })
-          }, 1500)
+          const pages = getCurrentPages()
+          const currentPage = pages[pages.length - 1]
+          if (currentPage && currentPage.route !== 'pages/login/login') {
+            uni.showToast({ title: '登录已过期', icon: 'none' })
+            setTimeout(() => {
+              uni.navigateTo({ url: '/pages/login/login' })
+            }, 1500)
+          }
           reject(new Error(msg || '未登录'))
         } else {
           uni.showToast({ title: msg || '请求失败', icon: 'none' })
