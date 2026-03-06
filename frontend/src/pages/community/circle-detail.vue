@@ -135,6 +135,7 @@
               </view>
               
               <button 
+                v-if="post.userId !== currentUserId"
                 class="follow-btn" 
                 :class="{ 'following': post.isFollowing }"
                 @click.stop="handleFollow(post)"
@@ -191,6 +192,21 @@
           <view class="loading-status">
             <text v-if="loading">加载中...</text>
             <text v-else-if="noMore">没有更多了</text>
+          </view>
+
+          <!-- Pagination Buttons -->
+          <view class="pagination-box" v-if="!loading && posts.length > 0">
+            <button 
+              class="page-btn" 
+              :disabled="page === 1" 
+              @click="handlePrevPage"
+            >上一页</text>
+            <text class="page-num">第 {{ page }} 页</text>
+            <button 
+              class="page-btn" 
+              :disabled="noMore" 
+              @click="handleNextPage"
+            >下一页</button>
           </view>
         </view>
 
@@ -281,6 +297,14 @@ const navbarPaddingRight = ref(16); // 默认 16px
 const scrollTop = ref(0);
 const isSticky = ref(false);
 const isJoined = ref(false);
+const currentUserId = ref(null);
+
+onMounted(() => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && userInfo.id) {
+    currentUserId.value = userInfo.id;
+  }
+});
 
 // 格式化数字工具函数
 const formatCount = (count) => {
@@ -546,7 +570,7 @@ const loadPosts = async () => {
   try {
     const pageData = await communityApi.getCirclePosts(circleName.value, {
       page: page.value,
-      size: 10
+      size: 5 // 一次最多显示 5 个
     });
     
     if (pageData && pageData.records) {
@@ -589,16 +613,16 @@ const loadPosts = async () => {
         };
       });
       
-      if (pageData.records.length < 10) {
+      if (pageData.records.length < 5) { // 一次最多显示 5 个
         noMore.value = true;
       }
       
       if (page.value === 1) {
         posts.value = newPosts;
       } else {
-        posts.value = [...posts.value, ...newPosts];
+        // 如果是点击下一页，我们直接替换列表内容而不是追加，这样才符合换页按钮的逻辑
+        posts.value = newPosts;
       }
-      page.value++;
     }
   } catch (error) {
     console.error('Failed to load posts:', error);
@@ -737,6 +761,30 @@ const onImgError = (e, type) => {
     } else {
       e.target.src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=20&w=200';
     }
+  }
+};
+
+const handlePrevPage = () => {
+  if (page.value > 1) {
+    page.value--;
+    noMore.value = false;
+    loadPosts();
+    // 滚动到顶部方便阅读
+    uni.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
+  }
+};
+
+const handleNextPage = () => {
+  if (!noMore.value) {
+    page.value++;
+    loadPosts();
+    uni.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
   }
 };
 
@@ -1241,6 +1289,45 @@ const previewImage = (urls, current) => {
   padding: 20px;
   font-size: 12px;
 }
+
+/* Pagination */
+.pagination-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0 40px;
+  gap: 20px;
+}
+
+.page-btn {
+  background-color: #1c1a11;
+  color: #f2b90d;
+  border: 1px solid #2d2a1d;
+  font-size: 14px;
+  padding: 0 20px;
+  height: 36px;
+  line-height: 34px;
+  border-radius: 18px;
+  margin: 0;
+}
+
+.page-btn[disabled] {
+  background-color: #12110a;
+  color: #4b5563;
+  border-color: #1c1a11;
+}
+
+.page-btn:active:not([disabled]) {
+  background-color: #2d2a1d;
+  transform: scale(0.95);
+}
+
+.page-num {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
 /* Match Card */
 .match-card {
   background-color: #1c1a11;

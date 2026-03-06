@@ -89,13 +89,34 @@
       <!-- Real User Post Cards -->
       <view class="post-card" v-for="(post, index) in postList" :key="post.id || index" @click="navigateToPost(post)">
         <view class="post-header">
-          <view class="user-info">
-            <image class="user-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-            <view class="user-meta">
-              <text class="user-name">{{ post.userName || '球迷用户' }}</text>
-              <text class="post-time">{{ formatTime(post.createTime) }}</text>
+          <view class="user-info-rich">
+            <view class="avatar-container">
+              <image class="user-avatar-rich" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
+              <view class="verified-badge">
+                <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
+              </view>
+            </view>
+            <view class="author-details">
+              <view class="author-name-row">
+                <text class="author-name">{{ post.userName || '未知用户' }}</text>
+                <text class="material-icons verified-icon">verified</text>
+              </view>
+              <view class="author-meta-row">
+                <text class="author-role">社区成员</text>
+                <text class="meta-divider">·</text>
+                <text class="post-time-rich">{{ formatTime(post.createTime) }}</text>
+              </view>
             </view>
           </view>
+          
+          <button 
+            v-if="post.userId !== currentUserId"
+            class="follow-btn" 
+            :class="{ 'following': post.isFollowing }"
+            @click.stop="handleFollow(post)"
+          >
+            {{ post.isFollowing ? '已关注' : '关注' }}
+          </button>
         </view>
 
         <text class="post-content">{{ post.content }}</text>
@@ -138,6 +159,21 @@
       <view v-if="loading" class="loading-status">
         <text>加载中...</text>
       </view>
+
+      <!-- Pagination Buttons -->
+      <view class="pagination-box" v-if="!loading && postList.length > 0">
+        <button 
+          class="page-btn" 
+          :disabled="page === 1" 
+          @click="handlePrevPage"
+        >上一页</button>
+        <text class="page-num">第 {{ page }} 页</text>
+        <button 
+          class="page-btn" 
+          :disabled="noMore" 
+          @click="handleNextPage"
+        >下一页</button>
+      </view>
     </view>
 
     <!-- Floating Action Button -->
@@ -151,15 +187,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { communityApi, fileApi, postApi } from '@/api';
 
-const topicTitle = ref('梅西中国行');
+const topicTitle = ref('');
 const topicId = ref(null);
 const topicInfo = ref({});
 const loading = ref(false);
+const noMore = ref(false);
+const page = ref(1);
 const postList = ref([]);
+const currentUserId = ref(null);
+
+// Get current user info on mount
+onMounted(() => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && userInfo.id) {
+    currentUserId.value = userInfo.id;
+  }
+});
+
 const navbarPaddingRight = ref(16); // 默认 16px
 const isExpanded = ref(false);
 const currentTab = ref('hot'); // hot, new, media
@@ -173,7 +221,33 @@ const toggleExpand = () => {
 const switchTab = (tab) => {
   if (currentTab.value === tab) return;
   currentTab.value = tab;
+  // 切换 tab 时，回到第一页并重新加载
+  page.value = 1;
+  noMore.value = false;
   loadPosts(topicTitle.value);
+};
+
+const handlePrevPage = () => {
+  if (page.value > 1) {
+    page.value--;
+    noMore.value = false;
+    loadPosts(topicTitle.value);
+    uni.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
+  }
+};
+
+const handleNextPage = () => {
+  if (!noMore.value) {
+    page.value++;
+    loadPosts(topicTitle.value);
+    uni.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
+  }
 };
 
 const formatCount = (num) => {
@@ -241,23 +315,30 @@ const handleShare = () => {
 };
 
 onLoad((options) => {
+  // 基础占位信息
+  topicInfo.value = {
+    image: 'https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/image-20260219223955621.png',
+    title: topicTitle.value,
+    postCount: 0,
+    viewCount: 0,
+    description: '话题讨论进行中...'
+  };
+
+  if (options.title) {
+    topicTitle.value = decodeURIComponent(options.title).replace(/^#|#$/g, '');
+    topicInfo.value.title = topicTitle.value;
+  }
+  
   if (options.id) {
     topicId.value = options.id;
     loadTopicDetail(options.id);
-  } else if (options.title) {
-    topicTitle.value = decodeURIComponent(options.title).replace(/^#|#$/g, '');
+  }
+  
+  if (topicTitle.value) {
     // 如果只有标题没有 ID，先通过标题加载帖子，loadPosts 会尝试从帖子中反向获取 topicId
     loadPosts(topicTitle.value);
   }
   
-  topicInfo.value = {
-    image: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop',
-    title: topicTitle.value,
-    postCount: 0,
-    viewCount: 0,
-    description: '加载中...'
-  };
-
   // #ifdef MP-WEIXIN
   // 适配小程序胶囊按钮，防止遮挡右上角功能键
   try {
@@ -270,8 +351,6 @@ onLoad((options) => {
     navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
   }
   // #endif
-
-  // onShow 会处理初次加载，这里不需要重复调用
 });
 
 onShareAppMessage(() => {
@@ -291,9 +370,7 @@ onShareTimeline(() => {
 });
 
 onShow(() => {
-  if (topicTitle.value) {
-    loadPosts(topicTitle.value);
-  }
+  // onShow 时不再重复触发 loadPosts，由 onLoad 初次加载
 });
 
 const loadTopicDetail = async (id) => {
@@ -320,24 +397,40 @@ const loadPosts = async (title) => {
   try {
     loading.value = true
     const params = { 
-      page: 1, 
-      size: 20,
+      page: page.value, 
+      size: 5, // 一次最多显示 5 个
       topic: title 
     }
     
+    // 如果有 topicId，优先传入以提高过滤精度
+    if (topicId.value) {
+      params.topicId = topicId.value;
+    }
+    
+    // 调试日志：确认当前 Tab 和参数
+    console.log('Loading posts for topic:', title, 'ID:', topicId.value, 'Tab:', currentTab.value);
+    
     // Add sorting/filter based on currentTab
     if (currentTab.value === 'hot') {
-      params.sort = 'likes' // Assume backend supports sorting by likes for 'hot'
+      params.sort = 'hot' // 显式传递 hot
     } else if (currentTab.value === 'new') {
       params.sort = 'create_time'
     } else if (currentTab.value === 'media') {
-      params.hasImage = true // Assume backend supports filtering by images
+      params.hasImage = true
     }
+    
+    console.log('Request params:', params);
 
     const res = await communityApi.getTopicPosts(title, params)
     if (res) {
       const data = res.posts || res; // 兼容旧版或新版返回格式
       const records = data.records || []
+      
+      postList.value = records;
+      
+      if (records.length < 5) {
+        noMore.value = true;
+      }
       
       // 自动获取并设置话题信息
       if (res.topic) {
@@ -364,9 +457,13 @@ const loadPosts = async (title) => {
         try {
           if (post.images) {
             if (Array.isArray(post.images)) {
-                postImages = post.images;
+              postImages = post.images;
             } else if (typeof post.images === 'string') {
+              if (post.images.startsWith('[')) {
                 postImages = JSON.parse(post.images);
+              } else {
+                postImages = [post.images];
+              }
             }
           }
         } catch (e) {
@@ -381,6 +478,7 @@ const loadPosts = async (title) => {
           images: postImages.map(img => fileApi.getFileUrl(img)),
           likes: post.likes || 0,
           isLiked: post.isLiked || false,
+          isFollowing: post.isFollowing || false,
           comments: post.commentCount || 0,
           shares: 0,
           userName: post.userName || '未知用户',
@@ -395,6 +493,29 @@ const loadPosts = async (title) => {
     loading.value = false
   }
 }
+
+const handleFollow = async (post) => {
+  if (!post.userId) return;
+  if (post.userId === currentUserId.value) {
+    uni.showToast({ title: '不能关注自己', icon: 'none' });
+    return;
+  }
+  
+  try {
+    if (post.isFollowing) {
+      await postApi.unfollowUser(post.userId);
+      post.isFollowing = false;
+      uni.showToast({ title: '已取消关注', icon: 'none' });
+    } else {
+      await postApi.followUser(post.userId);
+      post.isFollowing = true;
+      uni.showToast({ title: '已关注', icon: 'success' });
+    }
+  } catch (error) {
+    console.error('Follow failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
 
 const handleLike = async (post) => {
   try {
@@ -464,8 +585,9 @@ const previewImage = (images, current) => {
 /* Header */
 .header-image-container {
   position: relative;
-  height: 480rpx;
+  height: 520rpx;
   width: 100%;
+  z-index: 1;
 }
 
 .header-image {
@@ -559,8 +681,10 @@ const previewImage = (images, current) => {
 
 /* Content Body */
 .content-body {
+  position: relative;
+  z-index: 2;
   padding: 0 32rpx;
-  margin-top: -20rpx;
+  margin-top: -40rpx;
 }
 
 .stats-row {
@@ -689,32 +813,100 @@ const previewImage = (images, current) => {
   margin-bottom: 12px;
 }
 
-.user-info {
+/* Rich User Header */
+.user-info-rich {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
-.user-avatar {
-  width: 32px;
-  height: 32px;
+.avatar-container {
+  position: relative;
+}
+
+.user-avatar-rich {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  margin-right: 8px;
+  border: 1px solid rgba(242, 185, 13, 0.2);
 }
 
-.user-meta {
+.verified-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background-color: #f2b90d;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #1c1a11; /* Match card background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-details {
   display: flex;
   flex-direction: column;
 }
 
-.user-name {
+.author-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.author-name {
   font-size: 14px;
   font-weight: bold;
   color: #fff;
 }
 
-.post-time {
+.verified-icon {
+  color: #f2b90d;
+  font-size: 14px;
+}
+
+.author-meta-row {
+  display: flex;
+  align-items: center;
+}
+
+.author-role {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-divider {
+  margin: 0 4px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.post-time-rich {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.follow-btn {
+  background-color: #f2b90d;
+  color: #000;
   font-size: 12px;
-  color: #6b7280;
+  font-weight: bold;
+  padding: 0 12px;
+  height: 24px;
+  line-height: 24px;
+  border-radius: 9999px;
+  margin: 0;
+}
+
+.follow-btn.following {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .post-content {
@@ -762,6 +954,44 @@ const previewImage = (images, current) => {
   padding: 40rpx;
   color: #6b7280;
   font-size: 26rpx;
+}
+
+/* Pagination */
+.pagination-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0 40px;
+  gap: 20px;
+}
+
+.page-btn {
+  background-color: #1c1a11;
+  color: #f2b90d;
+  border: 1px solid #2d2a1d;
+  font-size: 14px;
+  padding: 0 20px;
+  height: 36px;
+  line-height: 34px;
+  border-radius: 18px;
+  margin: 0;
+}
+
+.page-btn[disabled] {
+  background-color: #12110a;
+  color: #4b5563;
+  border-color: #1c1a11;
+}
+
+.page-btn:active:not([disabled]) {
+  background-color: #2d2a1d;
+  transform: scale(0.95);
+}
+
+.page-num {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
 /* FAB */

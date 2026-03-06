@@ -30,6 +30,17 @@ public class PostPageReq {
     @Schema(description = "用户ID")
     private Long userId;
 
+    @Schema(description = "排序字段", example = "create_time")
+    private String sort;
+
+    @Schema(description = "是否仅看图片", example = "false")
+    private Boolean hasImage;
+
+    public String getSort() { return sort; }
+    public void setSort(String sort) { this.sort = sort; }
+    public Boolean getHasImage() { return hasImage; }
+    public void setHasImage(Boolean hasImage) { this.hasImage = hasImage; }
+
     public Integer getPage() { return page; }
     public void setPage(Integer page) { this.page = page; }
     public Integer getSize() { return size; }

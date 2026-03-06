@@ -93,6 +93,21 @@
               </button>
             </view>
           </view>
+
+          <!-- Pagination Buttons -->
+          <view class="pagination-box" v-if="!searchKey && trendTopics.length > 0">
+            <button 
+              class="page-btn" 
+              :disabled="page === 1" 
+              @click="handlePrevPage"
+            >上一页</button>
+            <text class="page-num">第 {{ page }} 页</text>
+            <button 
+              class="page-btn" 
+              :disabled="noMore" 
+              @click="handleNextPage"
+            >下一页</button>
+          </view>
         </view>
 
         <!-- Empty State -->
@@ -345,7 +360,8 @@
       }
 
       if (topicsRes.status === 'fulfilled' && topicsRes.value) {
-        trendTopics.value = topicsRes.value.map(topic => ({
+        // 限制热门话题最多显示 4 个
+        trendTopics.value = topicsRes.value.slice(0, 4).map(topic => ({
           ...topic,
           avatars: topic.avatars ? topic.avatars.map(avatar => getAvatarUrl(avatar)) : []
         }));

@@ -40,6 +40,7 @@
         </view>
         <view class="header-right">
           <button 
+            v-if="post.userId !== currentUserId"
             class="follow-btn" 
             :class="{ 'following': isFollowing }"
             @click="toggleFollow"
@@ -239,7 +240,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi, favoriteApi } from '@/api';
 
@@ -254,6 +255,14 @@ const submitting = ref(false);
 const scrollTarget = ref('');
 const targetId = ref(null);
 const replyTarget = ref(null); // { id, userName }
+const currentUserId = ref(null);
+
+onMounted(() => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && userInfo.id) {
+    currentUserId.value = userInfo.id;
+  }
+});
 
 const categoryText = computed(() => {
   if (!post.value) return '# 足球';

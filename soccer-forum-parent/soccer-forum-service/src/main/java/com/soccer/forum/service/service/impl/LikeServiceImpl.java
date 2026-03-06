@@ -97,13 +97,17 @@ public class LikeServiceImpl implements LikeService {
         if (targetType == 1) {
             Post post = postMapper.selectById(targetId);
             if (post != null) {
-                post.setLikes(isLiked ? post.getLikes() + 1 : Math.max(0, post.getLikes() - 1));
+                // 防御性代码：处理 likes 为 null 的情况
+                int currentLikes = post.getLikes() != null ? post.getLikes() : 0;
+                post.setLikes(isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1));
                 postMapper.updateById(post);
             }
         } else {
             Comment comment = commentMapper.selectById(targetId);
             if (comment != null) {
-                comment.setLikes(isLiked ? comment.getLikes() + 1 : Math.max(0, comment.getLikes() - 1));
+                // 防御性代码：处理 likes 为 null 的情况
+                int currentLikes = comment.getLikes() != null ? comment.getLikes() : 0;
+                comment.setLikes(isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1));
                 commentMapper.updateById(comment);
             }
         }

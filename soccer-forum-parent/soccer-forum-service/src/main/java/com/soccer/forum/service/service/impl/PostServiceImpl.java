@@ -96,7 +96,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setTopicId(req.getTopicId());
         post.setUserId(userId);
         post.setViews(0);
-        post.setLikes(0);
+        post.setLikes(0); // 初始化点赞数为 0
         post.setCommentCount(0);
         post.setStatus(1); // 1: Normal
         post.setCreatedAt(LocalDateTime.now());
@@ -247,7 +247,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
      */
     @Override
     public Page<PostDetailResp> getPostPage(PostPageReq req, Long currentUserId) {
-        log.debug("分页查询帖子: 页码={}, 大小={}", req.getPage(), req.getSize());
+        log.debug("分页查询帖子: 页码={}, 大小={}, 话题={}, 话题ID={}, 排序={}", 
+            req.getPage(), req.getSize(), req.getTopic(), req.getTopicId(), req.getSort());
         Page<Post> page = new Page<>(req.getPage(), req.getSize());
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         
@@ -259,9 +260,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         
         if (req.getTopicId() != null) {
+            // 如果提供了 ID，直接根据 ID 过滤，提高效率和准确度
             wrapper.eq(Post::getTopicId, req.getTopicId());
         } else if (StringUtils.hasText(req.getTopic())) {
-            // 如果只有话题名称，先找到话题ID
+            // 只有在没提供 ID 的情况下，才尝试通过名称查找 ID 或进行模糊匹配
             Topic topic = topicMapper.selectOne(new LambdaQueryWrapper<Topic>()
                     .eq(Topic::getTitle, req.getTopic()));
             if (topic == null && !req.getTopic().startsWith("#")) {
@@ -271,7 +273,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             if (topic != null) {
                 wrapper.eq(Post::getTopicId, topic.getId());
             } else {
-                // 如果话题不存在，则通过内容模糊匹配
+                // 如果话题不存在，则通过内容模糊匹配（备选方案）
                 wrapper.like(Post::getContent, "#" + req.getTopic() + "#");
             }
         }
@@ -298,8 +300,29 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 }
             });
         }
+
+        // 处理仅看图片
+        if (Boolean.TRUE.equals(req.getHasImage())) {
+            wrapper.isNotNull(Post::getImages).ne(Post::getImages, "").ne(Post::getImages, "[]");
+        }
         
-        wrapper.orderByDesc(Post::getCreatedAt);
+        // 处理排序逻辑
+        if (StringUtils.hasText(req.getSort())) {
+            if ("likes".equalsIgnoreCase(req.getSort()) || "hot".equalsIgnoreCase(req.getSort())) {
+                wrapper.orderByDesc(Post::getLikes).orderByDesc(Post::getCreatedAt);
+            } else if ("views".equalsIgnoreCase(req.getSort())) {
+                wrapper.orderByDesc(Post::getViews).orderByDesc(Post::getCreatedAt);
+            } else {
+                wrapper.orderByDesc(Post::getCreatedAt);
+            }
+        } else if (req.getTopicId() != null || StringUtils.hasText(req.getTopic())) {
+            // 如果是话题详情页且未指定排序，默认使用最热排序
+            log.debug("话题详情页未指定排序，默认使用最热排序");
+            wrapper.orderByDesc(Post::getLikes).orderByDesc(Post::getCreatedAt);
+        } else {
+            wrapper.orderByDesc(Post::getCreatedAt);
+        }
+        
         postMapper.selectPage(page, wrapper);
 
         // Map to PostDetailResp
