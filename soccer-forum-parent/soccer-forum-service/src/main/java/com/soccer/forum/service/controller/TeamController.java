@@ -93,15 +93,8 @@ public class TeamController {
      */
     @Operation(summary = "获取球队详情", description = "根据ID查询球队详细信息")
     @GetMapping("/{id}")
-    public R<Team> get(@Parameter(description = "球队ID") @PathVariable Long id,
-                       @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+    public R<Team> get(@Parameter(description = "球队ID") @PathVariable Long id) {
         log.info("收到获取球队详情请求: id={}", id);
-        
-        // 如果用户已登录，记录在线状态
-        if (loginUser != null) {
-            teamService.recordUserOnline(id, loginUser.getUser().getId());
-        }
-        
         Team team = teamService.getTeamDetail(id);
         return R.ok(team);
     }

@@ -25,10 +25,7 @@
     <!-- 日期选择器 -->
     <view class="calendar-header">
       <text class="current-month">{{ currentYearMonth }}</text>
-      <view class="ai-predict-entry" @click="openAIPredict">
-        <u-icon name="star-fill" color="#f9d406" size="28rpx"></u-icon>
-        <text class="ai-predict-text">AI 赛前预测</text>
-      </view>
+      <text class="view-calendar-btn">查看日历</text>
     </view>
     <scroll-view scroll-x class="date-selector" show-scrollbar="false">
       <view class="date-list">
@@ -348,25 +345,6 @@ const handleImageError = (team) => {
   }
 }
 
-const openAIPredict = () => {
-  uni.showLoading({
-    title: 'AI 正在分析中...',
-    mask: true
-  })
-  
-  // 模拟 AI 分析过程
-  setTimeout(() => {
-    uni.hideLoading()
-    uni.showModal({
-      title: 'AI 赛前深度分析',
-      content: '基于大数据模型分析，今日焦点赛事主队胜率较高。系统正在集成更详细的 Agent 实时预测功能，敬请期待！',
-      showCancel: false,
-      confirmText: '了解',
-      confirmColor: '#f9d406'
-    })
-  }, 1500)
-}
-
 const goToSearch = () => {
   uni.navigateTo({
     url: '/pages/search/search'
@@ -517,7 +495,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 40rpx;
-  background-color: rgba($pitch-pulse-bg-dark, 0.8);
+  background-color: rgba(26, 24, 17, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
   position: sticky;
@@ -534,7 +512,6 @@ onUnmounted(() => {
 .logo-icon {
   width: 60rpx;
   height: 60rpx;
-  background-color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -552,7 +529,7 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: -1rpx;
   .primary {
-    color: $pitch-pulse-primary;
+    color: #f9d406;
   }
 }
 
@@ -566,7 +543,7 @@ onUnmounted(() => {
   width: 80rpx;
   height: 80rpx;
   background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 20rpx;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -575,16 +552,14 @@ onUnmounted(() => {
 .avatar-box {
   width: 80rpx;
   height: 80rpx;
-  border-radius: 20rpx;
+  border-radius: 50%;
   overflow: hidden;
   background-color: rgba(255, 255, 255, 0.05);
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 12rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  
+  .avatar {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .calendar-header {
@@ -601,26 +576,10 @@ onUnmounted(() => {
     letter-spacing: 1rpx;
   }
 
-  .ai-predict-entry {
-    display: flex;
-    align-items: center;
-    gap: 8rpx;
-    background: rgba($pitch-pulse-primary, 0.1);
-    padding: 10rpx 20rpx;
-    border-radius: 30rpx;
-    border: 1rpx solid rgba($pitch-pulse-primary, 0.2);
-    transition: all 0.3s ease;
-
-    &:active {
-      transform: scale(0.95);
-      background: rgba($pitch-pulse-primary, 0.2);
-    }
-
-    .ai-predict-text {
-      font-size: 24rpx;
-      font-weight: 700;
-      color: $pitch-pulse-primary;
-    }
+  .view-calendar-btn {
+    font-size: 26rpx;
+    font-weight: 600;
+    color: #ff2e63;
   }
 }
 

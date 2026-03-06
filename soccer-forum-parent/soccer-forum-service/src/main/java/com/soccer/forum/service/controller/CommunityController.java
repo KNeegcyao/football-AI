@@ -9,8 +9,6 @@ import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
-import com.soccer.forum.service.service.TeamFollowService;
-import com.soccer.forum.domain.entity.TeamFollow;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
 import com.soccer.forum.domain.entity.User;
@@ -48,14 +46,12 @@ public class CommunityController {
     private final TopicService topicService;
     private final PostService postService;
     private final UserService userService;
-    private final TeamFollowService teamFollowService;
 
-    public CommunityController(TeamService teamService, TopicService topicService, PostService postService, UserService userService, TeamFollowService teamFollowService) {
+    public CommunityController(TeamService teamService, TopicService topicService, PostService postService, UserService userService) {
         this.teamService = teamService;
         this.topicService = topicService;
         this.postService = postService;
         this.userService = userService;
-        this.teamFollowService = teamFollowService;
     }
 
     /**
@@ -209,14 +205,10 @@ public class CommunityController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", team.getId());
             map.put("name", team.getName());
-            
-            // 使用已经填充好的统计数据（直接展示原始数字）
-            long totalMembers = team.getFollowerCount() != null ? team.getFollowerCount() : 0;
-            map.put("members", String.valueOf(totalMembers));
-            
-            // 使用已经填充好的在线人数
-            map.put("online", team.getOnlineCount() != null ? team.getOnlineCount() : 0);
-            
+            // 模拟成员数，基于ID生成一个确定的数字，例如 ID*1000 + 50000
+            long memberCount = 50000 + (team.getId() * 1234) % 900000;
+            String memberStr = String.format("%.1f万", memberCount / 10000.0);
+            map.put("members", memberStr);
             map.put("image", team.getLogoUrl());
             return map;
         }).collect(Collectors.toList());
@@ -239,14 +231,9 @@ public class CommunityController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", team.getId());
             map.put("name", team.getName());
-            
-            // 使用已经填充好的统计数据（直接展示原始数字）
-            long totalMembers = team.getFollowerCount() != null ? team.getFollowerCount() : 0;
-            map.put("members", String.valueOf(totalMembers));
-            
-            // 使用已经填充好的在线人数
-            map.put("online", team.getOnlineCount() != null ? team.getOnlineCount() : 0);
-            
+            long memberCount = 50000 + (team.getId() * 1234) % 900000;
+            String memberStr = String.format("%.1f万", memberCount / 10000.0);
+            map.put("members", memberStr);
             map.put("image", team.getLogoUrl());
             return map;
         }).collect(Collectors.toList());
@@ -265,15 +252,17 @@ public class CommunityController {
      */
     @Operation(summary = "获取趋势话题", description = "获取社区首页的趋势话题列表")
     @GetMapping("/topics/trending")
-    public R<List<Map<String, Object>>> getTrendTopics() {
-        // 获取前10个热门话题
-        List<Topic> hotTopics = topicService.list(
+    public R<Map<String, Object>> getTrendTopics(@RequestParam(defaultValue = "1") Integer page,
+                                           @RequestParam(defaultValue = "4") Integer size) {
+        // 分页获取热门话题
+        Page<Topic> topicPage = topicService.page(
+            new Page<>(page, size),
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Topic>()
                 .orderByDesc(Topic::getViewCount)
-                .last("LIMIT 5")
         );
         
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<Topic> hotTopics = topicPage.getRecords();
+        List<Map<String, Object>> topicList = new ArrayList<>();
 
         for (int i = 0; i < hotTopics.size(); i++) {
             Topic topic = hotTopics.get(i);
@@ -340,8 +329,15 @@ public class CommunityController {
                 map.put("time", "刚刚活跃");
             }
             
-            result.add(map);
+            topicList.add(map);
         }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", topicList);
+        result.put("total", topicPage.getTotal());
+        result.put("current", topicPage.getCurrent());
+        result.put("pages", topicPage.getPages());
+        result.put("size", topicPage.getSize());
         
         return R.ok(result);
     }

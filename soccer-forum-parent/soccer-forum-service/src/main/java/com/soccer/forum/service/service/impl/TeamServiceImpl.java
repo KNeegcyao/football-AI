@@ -5,21 +5,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.mapper.TeamMapper;
-import com.soccer.forum.service.service.TeamFollowService;
-import com.soccer.forum.domain.entity.TeamFollow;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.common.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 球队服务实现类
@@ -36,13 +30,9 @@ public class TeamServiceImpl implements TeamService {
     private static final Logger log = LoggerFactory.getLogger(TeamServiceImpl.class);
 
     private final TeamMapper teamMapper;
-    private final TeamFollowService teamFollowService;
-    private final RedisTemplate<String, Object> redisTemplate;
 
-    public TeamServiceImpl(TeamMapper teamMapper, TeamFollowService teamFollowService, RedisTemplate<String, Object> redisTemplate) {
+    public TeamServiceImpl(TeamMapper teamMapper) {
         this.teamMapper = teamMapper;
-        this.teamFollowService = teamFollowService;
-        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -82,51 +72,7 @@ public class TeamServiceImpl implements TeamService {
             log.warn("球队详情查询失败, 未找到球队: id={}", id);
             throw new ServiceException(ServiceErrorCode.DATA_NOT_FOUND);
         }
-        populateTeamStats(team);
         return team;
-    }
-
-    private void populateTeamStats(Team team) {
-        if (team == null) return;
-        
-        // 获取真实关注人数
-        long followCount = teamFollowService.count(new LambdaQueryWrapper<TeamFollow>()
-                .eq(TeamFollow::getTeamId, team.getId()));
-        
-        // 仅使用真实关注数
-        team.setFollowerCount(followCount);
-        
-        // 从 Redis 获取实时在线人数 (Set 集合大小)
-        String onlineKey = "circle:online:" + team.getId();
-        Long redisOnlineCount = 0L;
-        try {
-            redisOnlineCount = redisTemplate.opsForSet().size(onlineKey);
-        } catch (Exception e) {
-            log.warn("获取 Redis 在线人数失败: {}", e.getMessage());
-        }
-
-        // 如果 Redis 数量为 0，则返回总成员数的 5% 作为默认在线人数
-        if (redisOnlineCount == null || redisOnlineCount == 0) {
-            team.setOnlineCount((long)(followCount * 0.05));
-        } else {
-            team.setOnlineCount(redisOnlineCount);
-        }
-    }
-
-    @Override
-    public void recordUserOnline(Long teamId, Long userId) {
-        if (teamId == null || userId == null) return;
-        
-        String onlineKey = "circle:online:" + teamId;
-        try {
-            // 将用户 ID 存入 Redis 的 Set 集合
-            redisTemplate.opsForSet().add(onlineKey, userId.toString());
-            // 设置 2 分钟有效期
-            redisTemplate.expire(onlineKey, 2, TimeUnit.MINUTES);
-            log.debug("记录用户在线状态: teamId={}, userId={}", teamId, userId);
-        } catch (Exception e) {
-            log.error("记录用户在线状态失败: {}", e.getMessage());
-        }
     }
 
     /**
@@ -161,9 +107,7 @@ public class TeamServiceImpl implements TeamService {
             query.eq(Team::getIsHot, true);
         }
         
-        Page<Team> result = teamMapper.selectPage(teamPage, query);
-        result.getRecords().forEach(this::populateTeamStats);
-        return result;
+        return teamMapper.selectPage(teamPage, query);
     }
 
     /**
@@ -172,12 +116,10 @@ public class TeamServiceImpl implements TeamService {
      * @return 热门球队列表
      */
     @Override
-    public List<Team> listHotTeams() {
-        List<Team> teams = teamMapper.selectList(new LambdaQueryWrapper<Team>()
+    public java.util.List<Team> listHotTeams() {
+        return teamMapper.selectList(new LambdaQueryWrapper<Team>()
                 .eq(Team::getIsHot, true)
                 .orderByDesc(Team::getTotalMatches));
-        teams.forEach(this::populateTeamStats);
-        return teams;
     }
 
     /**
@@ -186,25 +128,21 @@ public class TeamServiceImpl implements TeamService {
      * @return 推荐球队列表
      */
     @Override
-    public List<Team> listRecommendTeams() {
-        List<Team> teams = teamMapper.selectList(new LambdaQueryWrapper<Team>()
+    public java.util.List<Team> listRecommendTeams() {
+        return teamMapper.selectList(new LambdaQueryWrapper<Team>()
                 .eq(Team::getIsRecommend, true));
-        teams.forEach(this::populateTeamStats);
-        return teams;
     }
 
 
     @Override
-    public List<Team> getTeamsByNames(List<String> names) {
+    public java.util.List<Team> getTeamsByNames(java.util.List<String> names) {
         log.debug("根据名称获取球队: names={}", names);
         if (names == null || names.isEmpty()) {
-            return Collections.emptyList();
+            return java.util.Collections.emptyList();
         }
         LambdaQueryWrapper<Team> query = new LambdaQueryWrapper<>();
         query.in(Team::getName, names);
-        List<Team> teams = teamMapper.selectList(query);
-        teams.forEach(this::populateTeamStats);
-        return teams;
+        return teamMapper.selectList(query);
     }
 
     /**

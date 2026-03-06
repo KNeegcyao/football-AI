@@ -15,7 +15,7 @@
           <image class="circle-avatar" :src="fileApi.getFileUrl(circle.image) || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
           <view class="circle-info">
             <text class="circle-name">{{ circle.name }}</text>
-            <text class="circle-members">{{ formatCount(circle.members) }} 成员</text>
+            <text class="circle-members">{{ circle.members }} 成员</text>
           </view>
           <view class="action-area">
             <text class="material-icons" style="color: rgba(242, 185, 13, 0.5);">chevron_right</text>
@@ -42,17 +42,6 @@ const size = ref(20);
 const loading = ref(false);
 const noMore = ref(false);
 const mode = ref('normal'); // normal | select
-
-// 格式化数字工具函数
-const formatCount = (count) => {
-  if (!count) return '0';
-  const num = parseInt(count);
-  if (isNaN(num)) return count;
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + 'w';
-  }
-  return num.toString();
-};
 
 const loadCircles = async () => {
   if (loading.value || noMore.value) return;
@@ -96,7 +85,7 @@ const navigateToCircle = (circle) => {
     return;
   }
   uni.navigateTo({
-    url: `/pages/community/circle-detail?id=${circle.id}&name=${encodeURIComponent(circle.name)}&memberCount=${circle.members || 0}&image=${encodeURIComponent(circle.image)}`
+    url: `/pages/community/circle-detail?id=${circle.id}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`
   });
 };
 
