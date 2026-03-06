@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN reply_notification_type VARCHAR(20) DEFAULT 'all' COMMENT '接收谁的回复提醒: all-所有人, following-关注的人, none-关闭' AFTER experience;

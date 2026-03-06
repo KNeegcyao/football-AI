@@ -33,39 +33,39 @@
         </view>
 
         <!-- Hot Circles -->
-        <view class="section" v-if="filteredHotCircles.length > 0">
+        <view class="section" v-if="displayCircles.length > 0">
           <view class="section-header">
-            <text class="section-title">热门圈子</text>
-            <text class="view-all" @click="navigateToCircleList">查看全部</text>
+            <text class="section-title">{{ searchKey ? '圈子搜索结果' : '热门圈子' }}</text>
+            <text class="view-all" @click="navigateToCircleList" v-if="!searchKey">查看全部</text>
           </view>
           
           <scroll-view scroll-x class="circles-scroll" show-scrollbar="false">
             <view class="circles-container">
-              <view class="circle-item" v-for="(circle, index) in filteredHotCircles" :key="index" @click="navigateToCircle(circle)">
-                <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
+              <view class="circle-item" v-for="(circle, index) in displayCircles" :key="index" @click="navigateToCircle(circle)">
+                <view class="circle-avatar-wrapper" :class="{'highlight': index === 0 && !searchKey}">
                   <view class="circle-avatar-inner">
                     <image class="circle-avatar" :src="circle.image || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
                   </view>
                 </view>
                 <text class="circle-name">{{ circle.name }}</text>
-                <text class="circle-members">{{ circle.members }} 成员</text>
+                <text class="circle-members">{{ formatCount(circle.memberCount) }} 成员</text>
               </view>
             </view>
           </scroll-view>
         </view>
 
         <!-- Trend Topics -->
-        <view class="section" v-if="filteredTrendTopics.length > 0">
+        <view class="section" v-if="displayTopics.length > 0">
           <view class="section-header">
-            <text class="section-title">趋势话题</text>
-            <view class="trending-badge">
+            <text class="section-title">{{ searchKey ? '相关内容' : '趋势话题' }}</text>
+            <view class="trending-badge" v-if="!searchKey">
               <u-icon name="level" size="32rpx" color="#f9d406"></u-icon>
               <text class="trending-text">正在热议</text>
             </view>
           </view>
 
           <view class="trends-list">
-            <view class="trend-item glass-panel" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
+            <view class="trend-item glass-panel" v-for="(topic, index) in displayTopics" :key="index" @click="navigateToPost(topic)">
               <view class="trend-bg-icon">
                 <u-icon name="tags" size="96rpx" color="#f9d406" style="opacity: 0.1;"></u-icon>
               </view>
@@ -73,7 +73,7 @@
                 <text class="trend-title">{{ topic.title }}</text>
                 <text class="trend-stats">{{ topic.stats }}</text>
                 
-                <view class="trend-avatars" v-if="topic.avatars">
+                <view class="trend-avatars" v-if="topic.avatars && topic.avatars.length > 0">
                   <view class="avatar-group">
                     <image v-for="(avatar, i) in topic.avatars" :key="i" :src="getAvatarUrl(avatar)" class="mini-avatar" mode="aspectFill"></image>
                     <view class="mini-avatar-count" v-if="topic.extraCount">
@@ -88,7 +88,7 @@
                 </view>
               </view>
               
-              <button class="action-btn" :class="{'btn-join': topic.action === '加入', 'btn-explore': topic.action === '探索'}">
+              <button class="action-btn" :class="{'btn-join': topic.action === '加入', 'btn-explore': topic.action === '探索', 'btn-read': topic.action === '阅读'}">
                 {{ topic.action }}
               </button>
             </view>
@@ -96,7 +96,7 @@
         </view>
 
         <!-- Empty State -->
-        <view class="empty-state" v-if="searchKey && filteredHotCircles.length === 0 && filteredTrendTopics.length === 0">
+        <view class="empty-state" v-if="searchKey && !isSearching && displayCircles.length === 0 && displayTopics.length === 0">
           <u-icon name="search" size="120rpx" color="rgba(249, 212, 6, 0.2)" class="empty-icon"></u-icon>
           <text class="empty-text">未找到与“{{ searchKey }}”相关的结果</text>
           <text class="empty-sub">换个关键词试试吧</text>
@@ -120,9 +120,9 @@
   </template>
 
   <script setup>
-  import { ref, onMounted, getCurrentInstance, computed } from 'vue';
+  import { ref, onMounted, getCurrentInstance, computed, watch } from 'vue';
   import { onShow } from '@dcloudio/uni-app';
-  import { communityApi, fileApi, notificationApi } from '@/api';
+  import { communityApi, fileApi, notificationApi, searchApi } from '@/api';
   import { BASE_URL } from '@/utils/request.js';
 
   const unreadCount = ref(0);
@@ -130,26 +130,89 @@
   const searchKey = ref('');
   const { proxy } = getCurrentInstance();
 
+  // 格式化数字工具函数
+  const formatCount = (count) => {
+    if (!count) return '0';
+    const num = parseInt(count);
+    if (isNaN(num)) return count;
+    if (num >= 10000) {
+      return (num / 10000).toFixed(1) + 'w';
+    }
+    return num.toString();
+  };
+
   const hotCircles = ref([]);
   const trendTopics = ref([]);
+  const searchResults = ref({
+    teams: [],
+    posts: []
+  });
+  const isSearching = ref(false);
 
-  // 过滤后的热门圈子
-  const filteredHotCircles = computed(() => {
+  // 最终展示的圈子列表
+  const displayCircles = computed(() => {
     if (!searchKey.value) return hotCircles.value;
-    const key = searchKey.value.toLowerCase();
-    return hotCircles.value.filter(circle => 
-      circle.name.toLowerCase().includes(key)
-    );
+    return searchResults.value.teams;
   });
 
-  // 过滤后的趋势话题
-  const filteredTrendTopics = computed(() => {
+  // 最终展示的话题/帖子列表
+  const displayTopics = computed(() => {
     if (!searchKey.value) return trendTopics.value;
-    const key = searchKey.value.toLowerCase();
-    return trendTopics.value.filter(topic => 
-      topic.title.toLowerCase().includes(key)
-    );
+    return searchResults.value.posts;
   });
+
+  // 搜索防抖
+  let searchTimer = null;
+  watch(searchKey, (newVal) => {
+    if (searchTimer) clearTimeout(searchTimer);
+    
+    if (!newVal) {
+      searchResults.value = { teams: [], posts: [] };
+      return;
+    }
+
+    searchTimer = setTimeout(() => {
+      performSearch(newVal);
+    }, 500);
+  });
+
+  const performSearch = async (keyword) => {
+    if (!keyword) return;
+    isSearching.value = true;
+    try {
+      const res = await searchApi.globalSearch({ keyword, page: 1, size: 20 });
+      // 注意：request.js 中已经处理了 code === 200，res 此时就是 data 部分
+      if (res) {
+        // 适配球队数据为圈子格式
+        const teams = (res.teams?.records || []).map(team => {
+            return {
+              id: team.id,
+              name: team.name,
+              image: getAvatarUrl(team.logoUrl),
+              memberCount: team.followerCount || 0,
+              online: team.onlineCount || 0
+            };
+          });
+
+        // 适配帖子数据为话题格式
+        const posts = (res.posts?.records || []).map(post => ({
+          id: post.id,
+          title: post.title,
+          stats: `${post.viewCount || 0} 阅读 · ${post.likeCount || 0} 点赞`,
+          avatars: post.authorAvatar ? [post.authorAvatar] : [],
+          tags: post.categoryName ? [post.categoryName] : ['足球'],
+          time: post.createTime || '刚刚',
+          action: '阅读'
+        }));
+
+        searchResults.value = { teams, posts };
+      }
+    } catch (e) {
+      console.error('搜索失败:', e);
+    } finally {
+      isSearching.value = false;
+    }
+  };
 
   const currentTab = ref(2); // 社区是第3个，索引为2
   const tabs = [
@@ -190,7 +253,7 @@
     isNavigating.value = true;
     
     uni.navigateTo({
-      url: `/pages/community/circle-detail?id=${circle.id || ''}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`,
+      url: `/pages/community/circle-detail?id=${circle.id || ''}&name=${encodeURIComponent(circle.name)}&memberCount=${circle.memberCount || 0}&image=${encodeURIComponent(circle.image)}`,
       complete: () => {
         setTimeout(() => {
           isNavigating.value = false;
@@ -276,7 +339,8 @@
       if (circlesRes.status === 'fulfilled' && circlesRes.value) {
         hotCircles.value = circlesRes.value.map(circle => ({
           ...circle,
-          image: getAvatarUrl(circle.image)
+          image: getAvatarUrl(circle.image),
+          memberCount: circle.members || 0
         }));
       }
 
@@ -693,6 +757,11 @@
     background-color: rgba(255, 255, 255, 0.05);
     border: 1rpx solid rgba(255, 255, 255, 0.1);
     color: #fff;
+  }
+
+  .btn-read {
+    background-color: rgba($pitch-pulse-primary, 0.15);
+    color: $pitch-pulse-primary;
   }
 
   /* Empty State */

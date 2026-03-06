@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f2b90d",
+                        "background-light": "#f8f8f5",
+                        "background-dark": "#12110a",
+                        "card-dark": "#1e1b10",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>PitchPulse - 用户主页</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Top Navigation Header -->
+<header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-slate-200 dark:border-primary/10">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">罗德里戈的战术板</h2>
+<div class="flex w-10 items-center justify-end">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">more_horiz</span>
+</button>
+</div>
+</header>
+<main class="pb-24">
+<!-- Profile Header Section -->
+<div class="relative w-full h-48 bg-slate-800 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark to-transparent z-10"></div>
+<div class="w-full h-full bg-cover bg-center" data-alt="Cinematic night view of a football stadium" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBq0Bke3-xVepDff5lB0kfDxAm-jCUyCo9p1sEfNJr_UCOtkHjP7decFo-eCgTvjToMVjF4_moQ9j5RkuVK72GOJ0t2kPkpsmzDxnGqgIl7N5Wnr9WUGsTjdbSStJtGIVbIQfK29ln9hjZcGetTwou-42-fDJAUt9CjphIgqaj5PYhByoFhsQ5JjMolwIGn81lVTKv-MXhm0lR1QsYl3N_s61PkYtMZgTP1T_4TA35qv0i2EiRF1Kse9aGzNBMp2xjn0mAEdKJvSGR6')"></div>
+</div>
+<div class="px-4 -mt-16 relative z-20">
+<div class="flex flex-col items-start gap-4">
+<!-- Avatar & Badge -->
+<div class="relative">
+<div class="bg-primary p-1 rounded-full">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-24 w-24 border-4 border-background-dark" data-alt="Professional football player profile portrait" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuARP4ygb_V_ed-lBnI3-CO08rrTiv_GS0uCPA6AP-btcLSv7ZQNlPZEySka_702tMy9HkI3zumBpkXbcSu10SRG6-sfgoMF8e_4OruShmVPWhDQ6zQn2R8kfeq5Mhom6MTbPuWO562HToDabc2vfY9oYaTUeYcsKXV7RZSBQfnqc6eNkfVdgy46uRCJz0tKUwqwXVHOw8VsejMUrGFWwJulq-5NRko4AxGScinpNda4dsMoZ1HCl8oASuLj36wt_-mVXQVFuifMHixq");'></div>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-background-dark px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">workspace_premium</span>
+                        LV.8
+                    </div>
+</div>
+<!-- Identity Info -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<h1 class="text-2xl font-bold tracking-tight">Rodrigo_Tactics</h1>
+<span class="material-symbols-outlined text-primary text-xl">verified</span>
+</div>
+<p class="text-slate-500 dark:text-primary/70 text-sm font-medium">资深战术分析师 | 皇马死忠</p>
+<p class="text-slate-400 dark:text-slate-400 text-sm mt-2 max-w-xs">专注欧冠战术复盘，提供最专业的比赛分析。绿茵场上的每一步都有逻辑。</p>
+</div>
+<!-- Action Buttons -->
+<div class="flex w-full gap-3 mt-2">
+<button class="flex-1 cursor-pointer items-center justify-center rounded-full h-11 bg-primary text-background-dark text-sm font-bold transition-transform active:scale-95 shadow-lg shadow-primary/20">
+                        关注
+                    </button>
+<button class="flex-1 cursor-pointer items-center justify-center rounded-full h-11 bg-slate-200 dark:bg-card-dark text-slate-900 dark:text-slate-100 text-sm font-bold border border-slate-300 dark:border-primary/20 transition-transform active:scale-95">
+                        私信
+                    </button>
+</div>
+</div>
+</div>
+<!-- Stats Section -->
+<div class="flex gap-3 px-4 py-6">
+<div class="flex-1 flex flex-col gap-1 rounded-2xl bg-slate-100 dark:bg-card-dark p-4 items-center text-center border border-transparent dark:border-primary/5">
+<p class="text-xl font-bold">428</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">关注</p>
+</div>
+<div class="flex-1 flex flex-col gap-1 rounded-2xl bg-slate-100 dark:bg-card-dark p-4 items-center text-center border border-transparent dark:border-primary/5">
+<p class="text-xl font-bold">12.5K</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">粉丝</p>
+</div>
+<div class="flex-1 flex flex-col gap-1 rounded-2xl bg-slate-100 dark:bg-card-dark p-4 items-center text-center border border-transparent dark:border-primary/5">
+<p class="text-xl font-bold">86K</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">获赞</p>
+</div>
+</div>
+<!-- Tabs Navigation -->
+<div class="sticky top-[72px] z-40 bg-background-light dark:bg-background-dark">
+<div class="flex border-b border-slate-200 dark:border-primary/10 px-4">
+<button class="flex-1 flex flex-col items-center justify-center pt-4 pb-3 border-b-2 border-primary">
+<span class="text-sm font-bold text-slate-900 dark:text-slate-100">动态 (42)</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center pt-4 pb-3 border-b-2 border-transparent opacity-50">
+<span class="text-sm font-bold">收藏</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center pt-4 pb-3 border-b-2 border-transparent opacity-50">
+<span class="text-sm font-bold">相册</span>
+</button>
+</div>
+</div>
+<!-- Content Feed -->
+<div class="p-4 space-y-4">
+<!-- Post Item 1 -->
+<div class="bg-slate-100 dark:bg-card-dark rounded-2xl p-4 border border-transparent dark:border-primary/5">
+<div class="flex gap-3">
+<div class="flex-1">
+<h3 class="font-bold text-base leading-snug">深度解析：为什么克罗斯的缺阵让皇马失去了进攻节奏？</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">在这场对阵马竞的德比战中，我们明显可以看到中场出球点匮乏的问题...</p>
+<div class="flex items-center gap-4 mt-4 text-xs text-slate-400">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span> 1.2k</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 89</span>
+<span>2小时前</span>
+</div>
+</div>
+<div class="w-24 h-24 rounded-xl bg-slate-300 dark:bg-slate-800 shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Football match action shot with tactical overlay" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa5FybH16YtiDWT7B1JZpAxUvafURKXFbxIeTdmip54W_ncbZzayD0vNnH1es2ERa3carqoEOrg-d8-5i1_0kmBd5SyqmxbAZwu4MIBCH3lXvD25D1c0Dpp38G-viBnhVFx5j8hispJrK7PvoJN6bKr1dvevl9whMe4C06dlri0tdWZ1kvLXjWqycOqbo8nxL5gQexsCDql-B_4cllKQQxywDrkDN79ny1g56JP3fnZICzu3krrWvicSQ1jgC1owhN_qpqqBlZ7sbD"/>
+</div>
+</div>
+</div>
+<!-- Post Item 2 -->
+<div class="bg-slate-100 dark:bg-card-dark rounded-2xl p-4 border border-transparent dark:border-primary/5">
+<div class="flex gap-3">
+<div class="flex-1">
+<h3 class="font-bold text-base leading-snug">金球奖预测：罗德里还是维尼修斯？</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">数据不会说谎，但场上的统治力往往难以被量化。让我们看看进阶数据怎么说...</p>
+<div class="flex items-center gap-4 mt-4 text-xs text-slate-400">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span> 856</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 243</span>
+<span>昨天 18:30</span>
+</div>
+</div>
+<div class="w-24 h-24 rounded-xl bg-slate-300 dark:bg-slate-800 shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Golden trophy on display in a stadium" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFv6tiIKo3_tVLgIdYyn3E_o-iGEEBDlM-la9WI560cDsEWoxKpWuR43zvREHZBkczZMP4mSzk11c5EqAfl15s53LLFFHqqXWegzERh5ULSbbAI0-HdRFyQ6w892R_WD2qjqDM3-eJtHXAKcMiT6T-QdozsACeKvb1MEngFOVBgToKJUmwKxWpU5JKRPKgGr0yX11DWoRmqZFQydyBu7jZSpvz50wtNey_TLiE56ymjDsHScFGzNRSaMDI5vKT78oP9-gqHxDXKfuE"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/10 px-4 pb-6 pt-2 z-50">
+<div class="flex justify-between items-center max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-primary/40" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<p class="text-[10px] font-medium uppercase tracking-tighter">首页</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">group</span>
+<p class="text-[10px] font-medium uppercase tracking-tighter">社区</p>
+</a>
+<div class="relative -mt-8">
+<div class="bg-primary size-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/40 border-4 border-background-dark">
+<span class="material-symbols-outlined text-background-dark text-3xl font-bold">add</span>
+</div>
+</div>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-primary/40" href="#">
+<span class="material-symbols-outlined text-2xl">monitoring</span>
+<p class="text-[10px] font-medium uppercase tracking-tighter">数据</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-primary/40" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<p class="text-[10px] font-medium uppercase tracking-tighter">我的</p>
+</a>
+</div>
+</nav>
+</body></html>

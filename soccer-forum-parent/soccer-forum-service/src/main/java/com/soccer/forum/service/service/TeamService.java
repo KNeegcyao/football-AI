@@ -83,6 +83,14 @@ public interface TeamService {
     void updateTeam(Long id, Team team);
 
     /**
+     * 记录用户进入圈子（在线状态）
+     *
+     * @param teamId 球队 ID
+     * @param userId 用户 ID
+     */
+    void recordUserOnline(Long teamId, Long userId);
+
+    /**
      * 删除球队
      *
      * @param id 球队 ID

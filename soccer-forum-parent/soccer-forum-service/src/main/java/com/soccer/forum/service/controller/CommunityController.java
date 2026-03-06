@@ -9,6 +9,8 @@ import com.soccer.forum.service.model.dto.PostDetailResp;
 import com.soccer.forum.service.model.dto.PostPageReq;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.service.PostService;
+import com.soccer.forum.service.service.TeamFollowService;
+import com.soccer.forum.domain.entity.TeamFollow;
 import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.service.TopicService;
 import com.soccer.forum.domain.entity.User;
@@ -46,12 +48,14 @@ public class CommunityController {
     private final TopicService topicService;
     private final PostService postService;
     private final UserService userService;
+    private final TeamFollowService teamFollowService;
 
-    public CommunityController(TeamService teamService, TopicService topicService, PostService postService, UserService userService) {
+    public CommunityController(TeamService teamService, TopicService topicService, PostService postService, UserService userService, TeamFollowService teamFollowService) {
         this.teamService = teamService;
         this.topicService = topicService;
         this.postService = postService;
         this.userService = userService;
+        this.teamFollowService = teamFollowService;
     }
 
     /**
@@ -205,10 +209,14 @@ public class CommunityController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", team.getId());
             map.put("name", team.getName());
-            // 模拟成员数，基于ID生成一个确定的数字，例如 ID*1000 + 50000
-            long memberCount = 50000 + (team.getId() * 1234) % 900000;
-            String memberStr = String.format("%.1f万", memberCount / 10000.0);
-            map.put("members", memberStr);
+            
+            // 使用已经填充好的统计数据（直接展示原始数字）
+            long totalMembers = team.getFollowerCount() != null ? team.getFollowerCount() : 0;
+            map.put("members", String.valueOf(totalMembers));
+            
+            // 使用已经填充好的在线人数
+            map.put("online", team.getOnlineCount() != null ? team.getOnlineCount() : 0);
+            
             map.put("image", team.getLogoUrl());
             return map;
         }).collect(Collectors.toList());
@@ -231,9 +239,14 @@ public class CommunityController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", team.getId());
             map.put("name", team.getName());
-            long memberCount = 50000 + (team.getId() * 1234) % 900000;
-            String memberStr = String.format("%.1f万", memberCount / 10000.0);
-            map.put("members", memberStr);
+            
+            // 使用已经填充好的统计数据（直接展示原始数字）
+            long totalMembers = team.getFollowerCount() != null ? team.getFollowerCount() : 0;
+            map.put("members", String.valueOf(totalMembers));
+            
+            // 使用已经填充好的在线人数
+            map.put("online", team.getOnlineCount() != null ? team.getOnlineCount() : 0);
+            
             map.put("image", team.getLogoUrl());
             return map;
         }).collect(Collectors.toList());

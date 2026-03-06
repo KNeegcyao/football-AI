@@ -1,0 +1,1 @@
+SELECT id, title, likes, comment_count FROM posts WHERE id = 18;

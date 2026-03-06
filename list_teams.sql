@@ -1,0 +1,1 @@
+SELECT id, name, english_name, logo_url FROM teams LIMIT 100;

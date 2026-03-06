@@ -1,0 +1,1 @@
+SELECT id, name, is_recommend, is_hot FROM teams WHERE is_recommend = 1 OR is_hot = 1;

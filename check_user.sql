@@ -1,0 +1,1 @@
+SELECT id, username, nickname, avatar, cover FROM users WHERE id = 5;

@@ -86,98 +86,24 @@
 
     <!-- Discussion Feed -->
     <view class="feed-list">
-      <!-- Post Card 1 (Static Featured) -->
-      <view class="post-card">
-        <view class="post-header">
-          <view class="user-info">
-            <view class="avatar-wrapper">
-              <image class="avatar" src="/static/soccer-logo.png" mode="aspectFill"></image>
-            </view>
-            <view class="user-meta">
-              <view class="name-row">
-                <text class="username">阿根廷死忠张伟</text>
-                <u-icon name="checkmark-circle-fill" color="#f20d33" size="14"></u-icon>
-              </view>
-              <text class="time">2小时前 · 北京</text>
-            </view>
-          </view>
-          <u-icon name="more-dot-fill" color="rgba(255,255,255,0.4)" size="20"></u-icon>
-        </view>
-        <text class="post-content">
-          梅西的首秀太震撼了！全场齐声高呼名号的那一刻，我甚至觉得这就是工体的巅峰时刻。阿根廷的中场控制力依然是顶级。 <text class="hashtag">#梅西中国行#</text>
-        </text>
-        <view class="media-container">
-          <image class="post-image" src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop" mode="aspectFill"></image>
-        </view>
-        <view class="post-actions">
-          <view class="action-group">
-            <view class="action-btn">
-              <u-icon name="heart" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">1,245</text>
-            </view>
-            <view class="action-btn">
-              <u-icon name="chat" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">89</text>
-            </view>
-          </view>
-          <view class="action-btn">
-            <u-icon name="hourglass" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-            <text class="count">AI 分析</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- Post Card 2 (AI Analysis - Static) -->
-      <view class="post-card ai-card">
-        <view class="ai-bg-icon">
-          <u-icon name="info-circle" color="rgba(255,255,255,0.1)" size="60"></u-icon>
-        </view>
-        <view class="post-header">
-          <view class="user-info">
-            <view class="avatar-wrapper ai-avatar">
-              <u-icon name="star-fill" color="#fff" size="20"></u-icon>
-            </view>
-            <view class="user-meta">
-              <view class="name-row">
-                <text class="username">PitchPulse AI 分析师</text>
-                <view class="pro-badge">PRO</view>
-              </view>
-              <text class="time">战术实时同步</text>
-            </view>
-          </view>
-        </view>
-        <view class="ai-content-box">
-          <text class="ai-title">实时热点摘要</text>
-          <text class="ai-text">大部分用户正在讨论上半场第32分钟梅西的过人动作。该区域社交讨论热度上升 400%。</text>
-        </view>
-        <view class="ai-footer">
-          <text class="ai-footer-text">AI Insights</text>
-          <view class="subscribe-btn">订阅分析报</view>
-        </view>
-      </view>
-
       <!-- Real User Post Cards -->
       <view class="post-card" v-for="(post, index) in postList" :key="post.id || index" @click="navigateToPost(post)">
         <view class="post-header">
           <view class="user-info">
-            <view class="avatar-wrapper">
-              <image class="avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-            </view>
+            <image class="user-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
             <view class="user-meta">
-              <view class="name-row">
-                <text class="username">{{ post.userName || '球迷用户' }}</text>
-              </view>
-              <text class="time">{{ formatTime(post.createTime) }}</text>
+              <text class="user-name">{{ post.userName || '球迷用户' }}</text>
+              <text class="post-time">{{ formatTime(post.createTime) }}</text>
             </view>
           </view>
-          <u-icon name="more-dot-fill" color="rgba(255,255,255,0.4)" size="20"></u-icon>
         </view>
+
         <text class="post-content">{{ post.content }}</text>
         
         <!-- Post Images -->
-        <view class="media-container" v-if="post.images && post.images.length > 0">
+        <view class="post-images-grid" v-if="post.images && post.images.length > 0">
           <image 
-            class="post-image" 
+            class="post-grid-img" 
             v-for="(img, i) in post.images" 
             :key="i" 
             :src="img" 
@@ -186,23 +112,31 @@
           ></image>
         </view>
         
-        <view class="post-actions">
-          <view class="action-group">
-            <view class="action-btn">
-              <u-icon name="heart" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">{{ post.likeCount || 0 }}</text>
-            </view>
-            <view class="action-btn">
-              <u-icon name="chat" color="rgba(255,255,255,0.6)" size="20"></u-icon>
-              <text class="count">{{ post.commentCount || 0 }}</text>
-            </view>
+        <view class="post-footer">
+          <view class="interaction-item" @click.stop="handleLike(post)">
+            <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
+              {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+            </text>
+            <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes || 0 }}</text>
+          </view>
+          <view class="interaction-item">
+            <text class="material-icons footer-icon">chat_bubble_outline</text>
+            <text>{{ post.comments || 0 }}</text>
+          </view>
+          <view class="interaction-item">
+            <text class="material-icons footer-icon">share</text>
+            <text>{{ post.shares || 0 }}</text>
           </view>
         </view>
       </view>
 
       <!-- Empty State -->
-      <view v-if="postList.length === 0" class="empty-state">
+      <view v-if="postList.length === 0 && !loading" class="empty-state">
         <text>暂无更多话题讨论</text>
+      </view>
+      
+      <view v-if="loading" class="loading-status">
+        <text>加载中...</text>
       </view>
     </view>
 
@@ -219,7 +153,7 @@
 <script setup>
 import { ref } from 'vue';
 import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-import { communityApi, fileApi } from '@/api';
+import { communityApi, fileApi, postApi } from '@/api';
 
 const topicTitle = ref('梅西中国行');
 const topicId = ref(null);
@@ -440,12 +374,17 @@ const loadPosts = async (title) => {
         }
 
         return {
-          ...post,
+          id: post.id,
+          userId: post.userId,
+          title: post.title,
+          content: post.content,
+          images: postImages.map(img => fileApi.getFileUrl(img)),
+          likes: post.likes || 0,
+          isLiked: post.isLiked || false,
+          comments: post.commentCount || 0,
+          shares: 0,
           userName: post.userName || '未知用户',
           userAvatar: post.userAvatar ? fileApi.getFileUrl(post.userAvatar) : '/static/default-avatar.png',
-          images: postImages.map(img => fileApi.getFileUrl(img)),
-          likeCount: post.likeCount || 0,
-          commentCount: post.commentCount || 0,
           createTime: post.createdAt || post.createTime
         }
       })
@@ -456,6 +395,29 @@ const loadPosts = async (title) => {
     loading.value = false
   }
 }
+
+const handleLike = async (post) => {
+  try {
+    const res = await postApi.like({
+      targetId: post.id,
+      targetType: 1
+    });
+    
+    if (res && res.liked !== undefined) {
+      post.isLiked = res.liked;
+      if (res.liked) {
+        post.likes++;
+        uni.showToast({ title: '已点赞', icon: 'none' });
+      } else {
+        post.likes--;
+        uni.showToast({ title: '已取消', icon: 'none' });
+      }
+    }
+  } catch (error) {
+    console.error('Like failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
 
 const getRandomAvatar = () => {
   const avatars = [
@@ -494,65 +456,67 @@ const previewImage = (images, current) => {
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  background-color: #0a0a0a;
+  background-color: #12110a;
   color: #fff;
   padding-bottom: 100rpx;
 }
 
+/* Header */
 .header-image-container {
   position: relative;
-  height: 500rpx;
+  height: 480rpx;
   width: 100%;
 }
 
 .header-image {
   width: 100%;
   height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .header-overlay {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(10,10,10,0.4), rgba(10,10,10,1));
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(18,17,10,1) 100%);
 }
 
 .nav-bar {
   position: absolute;
-  top: 0; /* Will be adjusted by safe-area-inset-top in logic if needed, but fixed here */
-  padding-top: var(--status-bar-height); /* Safe area padding */
+  top: 40rpx;
   left: 0;
-  right: 0;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 32rpx;
-  padding-right: 32rpx;
-  height: 88rpx; /* Standard nav height */
-  z-index: 20;
+  padding: 0 32rpx;
+  z-index: 10;
+  
+  /* #ifdef MP-WEIXIN */
+  padding-top: var(--status-bar-height);
+  /* #endif */
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
 }
 
 .icon-btn {
   width: 80rpx;
   height: 80rpx;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
   display: flex;
-  align-items: center;
   justify-content: center;
-}
-
-.nav-actions {
-  display: flex;
-  gap: 16rpx;
+  align-items: center;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  margin-left: 20rpx;
 }
 
 .topic-info {
   position: absolute;
-  bottom: 32rpx;
+  bottom: 40rpx;
   left: 32rpx;
   right: 32rpx;
 }
@@ -560,188 +524,181 @@ const previewImage = (images, current) => {
 .topic-badge-row {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  margin-bottom: 8rpx;
+  margin-bottom: 16rpx;
 }
 
 .badge {
   background-color: #f20d33;
-  padding: 4rpx 12rpx;
-  border-radius: 8rpx;
-  font-size: 20rpx;
-  font-weight: bold;
-  text-transform: uppercase;
   color: #fff;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+  font-weight: bold;
 }
 
 .ai-label {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  background-color: rgba(255,255,255,0.1);
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
 }
 
 .ai-text {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 20rpx;
+  margin-left: 8rpx;
 }
 
 .topic-title {
   font-size: 48rpx;
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: -1px;
+  font-weight: bold;
   color: #fff;
 }
 
+/* Content Body */
 .content-body {
-  padding: 32rpx;
+  padding: 0 32rpx;
+  margin-top: -20rpx;
 }
 
 .stats-row {
   display: flex;
-  gap: 24rpx;
+  justify-content: space-between;
   margin-bottom: 32rpx;
 }
 
 .stat-card {
   flex: 1;
-  background-color: #1a1a1a;
-  border: 1rpx solid rgba(255, 255, 255, 0.05);
-  border-radius: 24rpx;
+  background-color: #1c1a11;
   padding: 24rpx;
+  border-radius: 16rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  margin-right: 16rpx;
+  
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
 .stat-label {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  color: #9ca3af;
+  font-size: 24rpx;
   margin-bottom: 8rpx;
 }
 
 .stat-value {
-  font-size: 36rpx;
-  font-weight: 900;
+  font-size: 32rpx;
+  font-weight: bold;
   color: #fff;
-}
-
-.stat-value.highlight {
-  color: #f20d33;
+  
+  &.highlight {
+    color: #f20d33;
+  }
 }
 
 .description-box {
-  background-color: rgba(242, 13, 51, 0.1);
-  border-left: 8rpx solid #f20d33;
+  background-color: #1c1a11;
   padding: 24rpx;
-  border-top-right-radius: 16rpx;
-  border-bottom-right-radius: 16rpx;
-  margin-bottom: 32rpx;
+  border-radius: 16rpx;
+  margin-bottom: 40rpx;
 }
 
 .description-text {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 26rpx;
+  color: #d1d5db;
   line-height: 1.6;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-}
-
-.description-text.expanded {
-  display: block;
-  -webkit-line-clamp: initial;
+  
+  &.expanded {
+    -webkit-line-clamp: unset;
+  }
 }
 
 .expand-btn {
-  margin-top: 16rpx;
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  justify-content: center;
+  margin-top: 16rpx;
   font-size: 24rpx;
   color: #f20d33;
-  font-weight: bold;
+}
+
+/* Tabs */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #12110a;
 }
 
 .tabs-header {
-  position: sticky;
-  top: 0; /* Needs adjustment if header is fixed, but here it flows */
-  z-index: 10;
-  background-color: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
   display: flex;
   padding: 0 32rpx;
+  border-bottom: 1rpx solid #2d2a1d;
+  margin-bottom: 32rpx;
 }
 
 .tab-item {
-  padding: 32rpx;
+  padding: 24rpx 0;
+  margin-right: 48rpx;
   font-size: 28rpx;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.4);
+  color: #9ca3af;
   position: relative;
+  
+  &.active {
+    color: #f2b90d;
+    font-weight: bold;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4rpx;
+      background-color: #f2b90d;
+    }
+  }
 }
 
-.tab-item.active {
-  color: #fff;
-  font-weight: bold;
-}
-
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 32rpx;
-  right: 32rpx;
-  height: 4rpx;
-  background-color: #f20d33;
-}
-
+/* Feed List */
 .feed-list {
-  padding: 32rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 32rpx;
+  padding: 0 32rpx;
 }
 
+/* Post Card Styles from circle-detail.vue */
 .post-card {
-  background-color: #1a1a1a;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.3);
+  background-color: #1c1a11;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #2d2a1d;
 }
 
 .post-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24rpx;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 24rpx;
 }
 
-.avatar-wrapper {
-  width: 80rpx;
-  height: 80rpx;
+.user-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  overflow: hidden;
-  border: 4rpx solid rgba(242, 13, 51, 0.3);
-  background-color: #333;
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
+  margin-right: 8px;
 }
 
 .user-meta {
@@ -749,191 +706,92 @@ const previewImage = (images, current) => {
   flex-direction: column;
 }
 
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.username {
-  font-size: 28rpx;
+.user-name {
+  font-size: 14px;
   font-weight: bold;
   color: #fff;
 }
 
-.time {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.4);
+.post-time {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .post-content {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
-  margin-bottom: 24rpx;
+  font-size: 14px;
+  color: #d1d5db;
+  line-height: 1.6;
   display: block;
+  margin-bottom: 16px;
 }
 
-.hashtag {
-  color: #f20d33;
-  font-weight: 500;
-  margin-left: 8rpx;
-}
-
-.media-container {
-  border-radius: 16rpx;
-  overflow: hidden;
-  margin-bottom: 32rpx;
-  height: 400rpx;
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.post-image {
-  width: 100%;
-  height: 100%;
-}
-
-.post-actions {
+.post-images-grid {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16rpx;
-  border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
-.action-group {
-  display: flex;
-  gap: 32rpx;
+.post-grid-img {
+  width: calc(33.33% - 3px);
+  height: 220rpx;
+  border-radius: 4px;
+  background-color: #2d2a1d;
 }
 
-.action-btn {
+.post-footer {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 24px;
 }
 
-.count {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* AI Card Styles */
-.ai-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.ai-bg-icon {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 16rpx;
-  opacity: 0.1;
-  pointer-events: none;
-}
-
-.ai-avatar {
-  background-color: #f20d33;
+.interaction-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: none;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
-.pro-badge {
-  background-color: rgba(242, 13, 51, 0.2);
-  color: #f20d33;
-  font-size: 16rpx;
-  font-weight: 900;
-  padding: 2rpx 8rpx;
-  border-radius: 4rpx;
+.footer-icon {
+  font-size: 16px;
+  margin-right: 6px;
 }
 
-.ai-content-box {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 16rpx;
-  padding: 24rpx;
-  border: 1rpx solid rgba(242, 13, 51, 0.2);
-  margin-bottom: 24rpx;
-}
-
-.ai-title {
-  font-size: 24rpx;
-  font-weight: bold;
-  color: #f20d33;
-  margin-bottom: 8rpx;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  display: block;
-}
-
-.ai-text {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.ai-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ai-footer-text {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.3);
-  text-transform: uppercase;
-  font-weight: 900;
-  font-style: italic;
-}
-
-.subscribe-btn {
-  font-size: 20rpx;
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 8rpx 16rpx;
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.6);
+.loading-status, .empty-state {
+  text-align: center;
+  padding: 40rpx;
+  color: #6b7280;
+  font-size: 26rpx;
 }
 
 /* FAB */
 .fab-container {
   position: fixed;
-  bottom: 48rpx;
+  bottom: 60rpx;
   left: 0;
-  right: 0;
-  /* #ifdef H5 */
-  max-width: 500px;
-  margin: 0 auto;
-  /* #endif */
-  display: flex;
+  width: 100%;
+  display: flex; 
   justify-content: center;
-  z-index: 50;
-  pointer-events: none; /* Container passes clicks */
+  pointer-events: none;
+  z-index: 100;
 }
 
 .fab-btn {
-  pointer-events: auto;
-  background-color: #f20d33;
-  color: #fff;
-  padding: 0 48rpx;
-  height: 96rpx;
-  border-radius: 999rpx;
+  background-color: #f2b90d;
+  color: #12110a;
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  box-shadow: 0 16rpx 60rpx rgba(242, 13, 51, 0.4);
-  border: 1rpx solid rgba(255, 255, 255, 0.1);
-  /* Reset button default styles */
-  margin: 0;
-  line-height: 1;
-}
-
-.fab-btn:active {
-  transform: scale(0.95);
+  padding: 0 48rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  box-shadow: 0 8rpx 32rpx rgba(242, 185, 13, 0.4);
+  pointer-events: auto;
+  border: none;
 }
 
 .fab-text {
+  font-weight: bold;
   font-size: 28rpx;
-  font-weight: 900;
-  letter-spacing: 2px;
+  margin-left: 12rpx;
 }
 </style>

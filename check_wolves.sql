@@ -1,0 +1,1 @@
+SELECT id, name, logo_url FROM teams WHERE name LIKE '%狼队%';

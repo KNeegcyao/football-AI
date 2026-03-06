@@ -43,9 +43,9 @@
         <view class="info-content">
           <text class="circle-name">{{ circleName }}圈</text>
           <view class="circle-stats">
-            <text class="stat-highlight">1.2M</text> <text class="stat-label">成员</text>
+            <text class="stat-highlight">{{ circleMembers }}</text> <text class="stat-label">成员</text>
             <text class="stat-divider">•</text>
-            <text class="stat-highlight">5,240</text> <text class="stat-label">在线</text>
+            <text class="stat-highlight">{{ circleOnline }}</text> <text class="stat-label">在线</text>
           </view>
           <text class="circle-desc">{{ circleDesc }}</text>
         </view>
@@ -91,8 +91,8 @@
             <text class="post-content">基于维尼修斯最近的跑位数据，他在左路的突破效率提升了15%。今晚对阵曼城的关键在于能否利用罗德里戈的交叉换位拉开空间...</text>
             
             <view class="ai-images-grid">
-              <image class="ai-img-half" src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
-              <image class="ai-img-half" src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
+              <image class="ai-img-half" src="https://images.fotmob.com/image_resources/news/574629810360-7efbbe195018.jpg" mode="aspectFill" @error="(e) => onImgError(e, 'ai-1')"></image>
+              <image class="ai-img-half" src="https://images.fotmob.com/image_resources/news/508098682722-e99c43a406b2.jpg" mode="aspectFill" @error="(e) => onImgError(e, 'ai-2')"></image>
             </view>
             
             <view class="post-footer">
@@ -262,7 +262,9 @@ import { communityApi, fileApi, postApi, matchApi, playerApi } from '@/api/index
 const circleId = ref(null);
 const circleName = ref('');
 const circleImage = ref('');
-const circleMembers = ref('1.2M'); // Placeholder
+const circleMembers = ref('0');
+const memberCount = ref(0);
+const circleOnline = ref('0');
 const circleDesc = ref('');
 const heroImage = ref('');
 const currentTab = ref(0);
@@ -279,6 +281,17 @@ const navbarPaddingRight = ref(16); // 默认 16px
 const scrollTop = ref(0);
 const isSticky = ref(false);
 const isJoined = ref(false);
+
+// 格式化数字工具函数
+const formatCount = (count) => {
+  if (!count) return '0';
+  const num = parseInt(count);
+  if (isNaN(num)) return count;
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + 'w';
+  }
+  return num.toString();
+};
 
 const loadMatches = async () => {
   if (matchesLoaded.value || !circleId.value) return;
@@ -365,10 +378,16 @@ const handleJoin = async () => {
       await communityApi.leaveCircle(circleId.value);
       uni.showToast({ title: '已退出圈子', icon: 'none' });
       isJoined.value = false;
+      // 实时更新成员数
+      memberCount.value = Math.max(0, memberCount.value - 1);
+      circleMembers.value = formatCount(memberCount.value);
     } else {
       await communityApi.joinCircle(circleId.value);
       uni.showToast({ title: '加入成功', icon: 'success' });
       isJoined.value = true;
+      // 实时更新成员数
+      memberCount.value++;
+      circleMembers.value = formatCount(memberCount.value);
     }
   } catch (e) {
     console.error('Toggle join failed:', e);
@@ -376,7 +395,7 @@ const handleJoin = async () => {
   }
 };
 
-const teamData = {
+const circleConfigs = {
     '利物浦': {
       hero: 'http://stadiumdb.com/pictures/stadiums/eng/anfield/anfield50.jpg',
       desc: '“YNWA，安菲尔德永远不离不弃。”\n红军魂，逆转命。在这里，没有一个灵魂会感到孤独。'
@@ -447,6 +466,10 @@ onLoad((options) => {
   if (options.name) {
     circleName.value = decodeURIComponent(options.name);
   }
+  if (options.memberCount) {
+    memberCount.value = parseInt(options.memberCount);
+    circleMembers.value = formatCount(memberCount.value);
+  }
   if (options.image) {
     circleImage.value = fileApi.getFileUrl(decodeURIComponent(options.image));
   }
@@ -482,29 +505,33 @@ const fetchCircleDetail = async () => {
     if (team) {
       circleName.value = team.name;
       circleImage.value = fileApi.getFileUrl(team.logoUrl);
-      // Use description or fallback
-      circleDesc.value = team.description || team.englishName || '暂无简介'; 
-      // Use stadiumBgUrl or fallback
-      heroImage.value = fileApi.getFileUrl(team.stadiumBgUrl || team.logoUrl);
       
-      // If no description, maybe use teamData fallback if name matches
-      if (!team.description && teamData[team.name]) {
-        circleDesc.value = teamData[team.name].desc;
+      // 更新成员数与在线人数（确保使用详情接口返回的真实实时数据）
+      memberCount.value = team.followerCount || 0;
+      circleMembers.value = formatCount(memberCount.value);
+      circleOnline.value = formatCount(team.onlineCount || 0);
+      
+      // 使用后端简介或回退到本地配置
+      const config = circleConfigs[team.name] || circleConfigs['皇家马德里'];
+      circleDesc.value = team.description || team.englishName || config.desc || '暂无简介'; 
+      heroImage.value = team.stadiumBgUrl ? fileApi.getFileUrl(team.stadiumBgUrl) : config.hero;
+      
+      if (!team.description && circleConfigs[team.name]) {
+        circleDesc.value = circleConfigs[team.name].desc;
       }
-      if (!team.stadiumBgUrl && teamData[team.name]) {
-        heroImage.value = teamData[team.name].hero;
+      if (!team.stadiumBgUrl && circleConfigs[team.name]) {
+        heroImage.value = circleConfigs[team.name].hero;
       }
     }
   } catch (error) {
     console.error('Failed to fetch circle detail:', error);
-    // Fallback to teamData if API fails or if we just want to ensure we have data
-    if (circleName.value && teamData[circleName.value]) {
-        const team = teamData[circleName.value];
-        heroImage.value = team.hero;
-        circleDesc.value = team.desc;
+    // 接口失败时的回退逻辑
+    if (circleName.value && circleConfigs[circleName.value]) {
+        const config = circleConfigs[circleName.value];
+        heroImage.value = config.hero;
+        circleDesc.value = config.desc;
     } else {
-        // Ultimate fallback
-        heroImage.value = '/static/teams/real_madrid.jpg';
+        heroImage.value = 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop';
         if (!circleDesc.value) {
             circleDesc.value = `这里是${circleName.value}的集结地！分享${circleName.value}最新动态、转会传闻及比赛讨论。`;
         }
@@ -698,6 +725,19 @@ const onHeroError = (e) => {
   console.error('Hero Image Load Failed:', e);
   // Fallback to local image
   heroImage.value = '/static/teams/real_madrid.jpg';
+};
+
+const onImgError = (e, type) => {
+  console.error(`Image Load Failed (${type}):`, e);
+  if (type.startsWith('ai-')) {
+    // 替换为更可靠的占位图
+    const target = e.target || e.detail;
+    if (type === 'ai-1') {
+      e.target.src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=20&w=200';
+    } else {
+      e.target.src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=20&w=200';
+    }
+  }
 };
 
 const navigateToPost = (post) => {

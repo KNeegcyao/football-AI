@@ -51,6 +51,10 @@
                 <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
+                <u-icon name="thumb-up" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <text class="meta-text">{{ heroPost.likes || 0 }}</text>
+              </view>
+              <view class="meta-item">
                 <u-icon name="star" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
                 <text class="meta-text">{{ heroPost.collections || 0 }}</text>
               </view>
@@ -86,6 +90,10 @@
                 </view>
                 <view class="post-stats">
                   <text class="post-time">{{ post.time }}</text>
+                  <view class="stat-item">
+                    <u-icon name="thumb-up" color="#9CA3AF" size="28rpx"></u-icon>
+                    <text class="stat-num">{{ post.likes || 0 }}</text>
+                  </view>
                   <view class="stat-item">
                     <u-icon name="star" color="#9CA3AF" size="28rpx"></u-icon>
                     <text class="stat-num">{{ post.collections || 0 }}</text>

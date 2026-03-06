@@ -1,0 +1,1 @@
+UPDATE users SET cover = 'http://192.168.5.6:8080/uploads/5b173826-5ffa-494f-87b0-38c5fb8ddf02.png' WHERE id = 5;
