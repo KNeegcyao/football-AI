@@ -2,11 +2,14 @@ package com.soccer.forum.service.controller;
 
 import com.soccer.forum.common.core.domain.R;
 import com.soccer.forum.service.security.model.LoginBody;
+import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.security.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -128,5 +131,18 @@ public class AuthController {
         log.info("收到验证码登录请求: 手机号={}", loginBody.getPhone());
         String token = authService.loginByCode(loginBody);
         return R.ok(Map.of("token", token), "登录成功");
+    }
+
+    /**
+     * 退出登录接口
+     */
+    @Operation(summary = "退出登录", description = "退出当前登录状态")
+    @PostMapping("/logout")
+    public R<Void> logout(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        if (loginUser != null) {
+            log.info("用户登出: id={}", loginUser.getUser().getId());
+            authService.logout(loginUser.getUser().getId());
+        }
+        return R.ok(null, "登出成功");
     }
 }

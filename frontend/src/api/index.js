@@ -284,9 +284,15 @@ export const userApi = {
 
   /**
    * 更新回复提醒设置
-   * @param {Object} data { replyType } all|following|none
+   * @param {String} replyType all|following|none
    */
-  updateNotificationSetting: (replyType) => request.put('/api/users/notification', { replyType })
+  updateNotificationSetting: (replyType) => request.put('/api/users/notification-setting', { replyType }),
+
+  /**
+   * 更新粉丝提醒设置
+   * @param {String} fanType receive|never
+   */
+  updateFanNotificationSetting: (fanType) => request.put('/api/users/fan-notification-setting', { fanType })
 }
 
 /**
@@ -400,18 +406,20 @@ export const notificationApi = {
 
   /**
    * 获取通知列表
+   * @param {Object} params { page, size, types } types: 1系统, 2点赞, 3评论, 4回复, 5收藏, 6@
    */
   getList: (params) => request.get('/api/notifications', params),
 
   /**
    * 标记已读
+   * @param {String} id 通知ID
    */
   read: (id) => request.put(`/api/notifications/${id}/read`),
 
   /**
    * 全部已读
    */
-  readAll: () => request.put('/api/notifications/read-all'),
+  readAll: (types) => request.put('/api/notifications/read-all', { types }),
 
   /**
    * 删除通知

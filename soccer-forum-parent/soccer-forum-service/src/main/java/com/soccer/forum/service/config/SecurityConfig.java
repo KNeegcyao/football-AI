@@ -1,7 +1,8 @@
 package com.soccer.forum.service.config;
 
 import com.soccer.forum.service.security.filter.JwtAuthenticationTokenFilter;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import com.soccer.forum.service.service.TeamFollowService;
+import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.utils.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,12 +17,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -30,18 +30,24 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final AuthenticationEntryPoint unauthorizedHandler;
     private final JwtUtils jwtUtils;
+    private final TeamService teamService;
+    private final TeamFollowService teamFollowService;
 
     public SecurityConfig(UserDetailsService userDetailsService, 
                           AuthenticationEntryPoint unauthorizedHandler,
-                          JwtUtils jwtUtils) {
+                          JwtUtils jwtUtils,
+                          TeamService teamService,
+                          TeamFollowService teamFollowService) {
         this.userDetailsService = userDetailsService;
         this.unauthorizedHandler = unauthorizedHandler;
         this.jwtUtils = jwtUtils;
+        this.teamService = teamService;
+        this.teamFollowService = teamFollowService;
     }
 
     @Bean
     public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter() {
-        return new JwtAuthenticationTokenFilter(userDetailsService, jwtUtils);
+        return new JwtAuthenticationTokenFilter(userDetailsService, jwtUtils, teamService, teamFollowService);
     }
 
     @Bean

@@ -1,20 +1,20 @@
   <template>
-    <view class="container">
+    <view class="container" :class="themeClass">
       <!-- Status Bar Placeholder -->
       <view class="status-bar"></view>
 
       <!-- Header (Aligned with index.vue) -->
-      <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+      <view class="nav-bar bg-nav-bar border-b border-theme-main" :style="{ paddingRight: navbarPaddingRight + 'px' }">
         <view class="logo-area">
           <view class="logo-icon">
             <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
           </view>
-          <text class="logo-text">PULSE<text class="primary">DISCOVERY</text></text>
+          <text class="logo-text text-theme-main">PULSE<text class="primary">DISCOVERY</text></text>
         </view>
 
         <view class="nav-actions">
-          <view class="action-btn" @click="navigateToNotification">
-            <u-icon name="bell" color="#fff" size="44rpx"></u-icon>
+          <view class="action-btn bg-theme-secondary" @click="navigateToNotification">
+            <u-icon name="bell" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
             <view class="notification-badge" v-if="unreadCount > 0">
               {{ unreadCount > 99 ? '99+' : unreadCount }}
             </view>
@@ -26,16 +26,16 @@
       <view class="main-content">
         <!-- Search Bar (Integrated into main content) -->
         <view class="search-section">
-          <view class="search-bar">
+          <view class="search-bar bg-theme-secondary border border-theme-main">
             <u-icon name="search" size="40rpx" color="rgba(249, 212, 6, 0.4)" class="search-icon"></u-icon>
-            <input class="search-input" v-model="searchKey" placeholder="搜索圈子、话题" placeholder-style="color: rgba(255, 255, 255, 0.2)" />
+            <input class="search-input text-theme-main" v-model="searchKey" placeholder="搜索圈子、话题" :placeholder-style="themeStore.theme === 'dark' ? 'color: rgba(255, 255, 255, 0.2)' : 'color: rgba(0, 0, 0, 0.2)'" />
           </view>
         </view>
 
         <!-- Hot Circles -->
         <view class="section" v-if="filteredHotCircles.length > 0">
           <view class="section-header">
-            <text class="section-title">热门圈子</text>
+            <text class="section-title text-theme-main">热门圈子</text>
             <text class="view-all" @click="navigateToCircleList">查看全部</text>
           </view>
           
@@ -43,12 +43,12 @@
             <view class="circles-container">
               <view class="circle-item" v-for="(circle, index) in filteredHotCircles" :key="index" @click="navigateToCircle(circle)">
                 <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
-                  <view class="circle-avatar-inner">
+                  <view class="circle-avatar-inner border border-theme-main bg-theme-secondary">
                     <image class="circle-avatar" :src="circle.image || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
                   </view>
                 </view>
-                <text class="circle-name">{{ circle.name }}</text>
-                <text class="circle-members">{{ circle.members }} 成员</text>
+                <text class="circle-name text-theme-main">{{ circle.name }}</text>
+                <text class="circle-members text-theme-secondary">{{ circle.members }} 成员</text>
               </view>
             </view>
           </scroll-view>
@@ -57,34 +57,34 @@
         <!-- Trend Topics -->
         <view class="section" v-if="filteredTrendTopics.length > 0">
           <view class="section-header">
-            <text class="section-title">趋势话题</text>
-            <view class="trending-badge">
+            <text class="section-title text-theme-main">趋势话题</text>
+            <view class="trending-badge bg-[#f9d406]/10">
               <u-icon name="level" size="32rpx" color="#f9d406"></u-icon>
               <text class="trending-text">正在热议</text>
             </view>
           </view>
 
           <view class="trends-list">
-            <view class="trend-item glass-panel" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
+            <view class="trend-item bg-card border border-theme-main" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
               <view class="trend-bg-icon">
                 <u-icon name="tags" size="96rpx" color="#f9d406" style="opacity: 0.1;"></u-icon>
               </view>
               <view class="trend-content">
-                <text class="trend-title">{{ topic.title }}</text>
-                <text class="trend-stats">{{ topic.stats }}</text>
+                <text class="trend-title text-theme-main">{{ topic.title }}</text>
+                <text class="trend-stats text-theme-secondary">{{ topic.stats }}</text>
                 
                 <view class="trend-avatars" v-if="topic.avatars">
                   <view class="avatar-group">
-                    <image v-for="(avatar, i) in topic.avatars" :key="i" :src="getAvatarUrl(avatar)" class="mini-avatar" mode="aspectFill"></image>
-                    <view class="mini-avatar-count" v-if="topic.extraCount">
-                      <text class="count-text">+{{ topic.extraCount }}</text>
+                    <image v-for="(avatar, i) in topic.avatars" :key="i" :src="getAvatarUrl(avatar)" class="mini-avatar border border-theme-main" mode="aspectFill"></image>
+                    <view class="mini-avatar-count bg-theme-secondary border border-theme-main" v-if="topic.extraCount">
+                      <text class="count-text text-theme-secondary">+{{ topic.extraCount }}</text>
                     </view>
                   </view>
                 </view>
                 
                 <view class="trend-meta" v-if="topic.tags">
-                  <text class="meta-tag">{{ topic.tags[0] }}</text>
-                  <text class="meta-time">{{ topic.time }}</text>
+                  <text class="meta-tag bg-theme-secondary text-theme-secondary">{{ topic.tags[0] }}</text>
+                  <text class="meta-time text-theme-secondary">{{ topic.time }}</text>
                 </view>
               </view>
               
@@ -134,11 +134,11 @@
 
 
       <!-- 底部导航栏 -->
-      <view class="tab-bar">
+      <view class="tab-bar bg-tab-bar border-theme-main">
         <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
           @tap="handleTabClick(index)">
-          <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'" size="24"></u-icon>
-          <text class="tab-text">{{ tab.text }}</text>
+          <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
+          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
         </view>
       </view>
     </view>
@@ -149,7 +149,10 @@
   import { onShow } from '@dcloudio/uni-app';
   import { communityApi, fileApi, notificationApi } from '@/api';
   import { BASE_URL } from '@/utils/request.js';
+  import { useThemeStore } from '@/store/theme';
 
+  const themeStore = useThemeStore();
+  const themeClass = computed(() => `theme-${themeStore.theme}`);
   const unreadCount = ref(0);
   const navbarPaddingRight = ref(0);
   const searchKey = ref('');
@@ -380,9 +383,9 @@
   <style lang="scss" scoped>
   /* Colors & Base */
   .container {
-    background-color: $pitch-pulse-bg-dark;
+    background-color: var(--bg-main);
     min-height: 100vh;
-    color: #fff;
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -390,6 +393,7 @@
     margin: 0 auto;
     overflow-x: hidden;
     box-sizing: border-box;
+    transition: all 0.3s;
   }
 
   .status-bar {
@@ -404,9 +408,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 20rpx 40rpx;
-    background-color: rgba($pitch-pulse-bg-dark, 0.8);
+    background-color: var(--bg-nav-bar);
     backdrop-filter: blur(20px);
-    border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -437,7 +440,7 @@
     font-size: 36rpx;
     font-weight: 800;
     letter-spacing: -1rpx;
-    color: #fff;
+    color: var(--text-main);
     .primary {
       color: $pitch-pulse-primary;
     }
@@ -452,7 +455,7 @@
   .action-btn {
     width: 80rpx;
     height: 80rpx;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-secondary);
     border-radius: 20rpx;
     display: flex;
     justify-content: center;
@@ -472,7 +475,7 @@
     min-width: 32rpx;
     text-align: center;
     line-height: 24rpx;
-    border: 4rpx solid $pitch-pulse-bg-dark;
+    border: 4rpx solid var(--bg-main);
     font-weight: 700;
   }
 
@@ -483,9 +486,8 @@
 
   .search-bar {
     position: relative;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-secondary);
     border-radius: 30rpx;
-    border: 1rpx solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     padding: 20rpx 32rpx;
@@ -493,7 +495,6 @@
   }
 
   .search-bar:focus-within {
-    background-color: rgba(255, 255, 255, 0.08);
     border-color: rgba($pitch-pulse-primary, 0.4);
     box-shadow: 0 0 20rpx rgba($pitch-pulse-primary, 0.1);
   }
@@ -504,7 +505,7 @@
 
   .search-input {
     flex: 1;
-    color: #fff;
+    color: var(--text-main);
     font-size: 28rpx;
   }
 
@@ -529,7 +530,7 @@
   .section-title {
     font-size: 36rpx;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
   }
 
   .view-all {
@@ -566,7 +567,7 @@
     height: 140rpx;
     border-radius: 24rpx;
     padding: 6rpx;
-    border: 2rpx solid rgba(255, 255, 255, 0.1);
+    border: 2rpx solid var(--border-main);
     margin-bottom: 16rpx;
   }
 
@@ -580,9 +581,9 @@
     width: 100%;
     height: 100%;
     border-radius: 20rpx;
-    background-color: $pitch-pulse-bg-dark;
+    background-color: var(--bg-main);
     overflow: hidden;
-    border: 4rpx solid $pitch-pulse-bg-dark;
+    border: 4rpx solid var(--bg-main);
   }
 
   .circle-avatar {
@@ -594,13 +595,13 @@
   .circle-name {
     font-size: 24rpx;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 4rpx;
   }
 
   .circle-members {
     font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
     font-weight: 500;
   }
 
@@ -630,10 +631,7 @@
     gap: 30rpx;
   }
 
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20rpx);
-    border: 1rpx solid rgba(255, 255, 255, 0.05);
+  .trend-item {
     padding: 32rpx;
     border-radius: 30rpx;
     display: flex;
@@ -641,6 +639,7 @@
     align-items: center;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
   }
 
   .trend-bg-icon {
@@ -661,7 +660,7 @@
   .trend-title {
     font-size: 32rpx;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 12rpx;
     display: block;
   }
@@ -675,6 +674,7 @@
     display: block;
     margin-bottom: 20rpx;
     opacity: 0.8;
+    transition: all 0.3s;
   }
 
   .trend-avatars {
@@ -690,7 +690,7 @@
     width: 48rpx;
     height: 48rpx;
     border-radius: 8rpx;
-    border: 2rpx solid $pitch-pulse-bg-dark;
+    border: 2rpx solid var(--bg-main);
     margin-left: -16rpx;
   }
 
@@ -702,8 +702,6 @@
     width: 48rpx;
     height: 48rpx;
     border-radius: 12rpx;
-    background-color: #35332c;
-    border: 4rpx solid #25231c;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -713,7 +711,7 @@
   .count-text {
     font-size: 16rpx;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-main);
   }
 
   .trend-meta {
@@ -733,7 +731,7 @@
 
   .meta-time {
     font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
     font-weight: 500;
   }
 
@@ -757,9 +755,9 @@
   }
 
   .btn-explore {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1rpx solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background-color: var(--bg-secondary);
+    border: 1rpx solid var(--border-main);
+    color: var(--text-main);
   }
 
   /* Empty State */
@@ -779,14 +777,14 @@
 
   .empty-text {
     font-size: 32rpx;
-    color: #fff;
+    color: var(--text-main);
     font-weight: 700;
     margin-bottom: 16rpx;
   }
 
   .empty-sub {
     font-size: 26rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
   }
 
   /* TabBar Styles */
@@ -807,9 +805,9 @@
     /* #endif */
     
     height: 120rpx;
-    background-color: rgba(26, 24, 17, 0.98);
+    background-color: var(--bg-tab-bar);
     backdrop-filter: blur(20px);
-    border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+    border-top: 1rpx solid var(--border-main);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -829,7 +827,7 @@
     
     .tab-text {
       font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--text-secondary);
       font-weight: 500;
     }
     
@@ -884,8 +882,8 @@
 
   .page-btn.disabled {
     opacity: 0.3;
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.3);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
     border-color: transparent;
   }
 
@@ -907,12 +905,13 @@
 
   .page-divider {
     font-size: 24rpx;
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary);
+    opacity: 0.3;
   }
 
   .total-label {
     font-size: 24rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
     font-weight: 500;
   }
   </style>

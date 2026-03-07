@@ -1,5 +1,5 @@
 <template>
-  <view class="level-detail-container">
+  <view class="level-detail-container" :class="themeClass">
     <!-- 顶部背景 -->
     <view class="header-bg"></view>
     
@@ -13,11 +13,11 @@
     <!-- 导航栏 -->
     <view class="nav-header" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <text class="material-symbols-outlined nav-icon">chevron_left</text>
+        <text class="material-symbols-outlined nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333' }">chevron_left</text>
       </view>
       <text class="nav-title">等级详情</text>
       <view class="nav-right" @click="handleShare">
-        <text class="material-symbols-outlined nav-icon">share</text>
+        <text class="material-symbols-outlined nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333' }">share</text>
       </view>
     </view>
 
@@ -236,6 +236,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { fileApi, userApi } from '@/api'
+import { useThemeStore } from '@/store/theme'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = ref(0)
 const contentHeight = ref(0)
@@ -405,10 +409,68 @@ const goBack = () => {
 <style lang="scss" scoped>
 .level-detail-container {
   min-height: 100vh;
-  background-color: #0A0A0A;
-  color: #FFFFFF;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   position: relative;
   overflow: hidden;
+
+  &.theme-light {
+    .header-bg {
+      background: linear-gradient(to bottom, rgba(59, 130, 246, 0.1), transparent);
+    }
+    .pitch-lines {
+      opacity: 0.05;
+      .pitch-rect, .pitch-center-line, .pitch-center-circle {
+        border-color: #333333;
+        background-color: transparent;
+      }
+      .pitch-center-line {
+        background-color: #333333;
+      }
+    }
+    .nav-header {
+      .nav-left, .nav-right {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .nav-title {
+        color: #333333;
+      }
+    }
+    .user-info-text {
+      .user-name {
+        color: #1a1a1a;
+      }
+      .user-bio {
+        color: #666666;
+      }
+    }
+    .exp-card, .privilege-item, .record-item, .rules-card, .page-btn {
+      background-color: #ffffff;
+      border-color: rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.02);
+    }
+    .exp-info {
+      .current-exp {
+        color: #1a1a1a;
+      }
+    }
+    .record-text .record-name, .rule-name {
+      color: #1a1a1a !important;
+    }
+    .section-title {
+      color: #1a1a1a;
+    }
+    .progress-bar-bg {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .ring-bg {
+      stroke: rgba(0, 0, 0, 0.05);
+    }
+    .avatar-wrapper {
+      background: #f1f5f9;
+      border-color: #f1f5f9;
+    }
+  }
 }
 
 /* 海报遮罩 */

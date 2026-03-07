@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <view class="status-bar"></view>
     <view class="header">
       <view class="back-btn" @click="goBack">
@@ -31,10 +31,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import request from '@/utils/request';
 import { fileApi } from '@/api/index';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const circles = ref([]);
 const page = ref(1);
@@ -101,13 +105,13 @@ onLoad((options) => {
 });
 </script>
 
-<style>
+<style lang="scss" scoped>
 .container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #1A1811;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   /* #ifdef H5 */
   max-width: 500px;
   margin: 0 auto;
@@ -116,7 +120,7 @@ onLoad((options) => {
 
 .status-bar {
   height: var(--status-bar-height);
-  background-color: #1A1811;
+  background-color: var(--bg-main);
 }
 
 .header {
@@ -124,8 +128,8 @@ onLoad((options) => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background-color: #1A1811;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-main);
+  border-bottom: 1px solid var(--border-main);
 }
 
 .title {
@@ -152,10 +156,11 @@ onLoad((options) => {
 .circle-item {
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary);
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 12px;
+  border: 1px solid var(--border-main);
 }
 
 .circle-avatar {
@@ -175,13 +180,13 @@ onLoad((options) => {
 .circle-name {
   font-size: 16px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 4px;
 }
 
 .circle-members {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
 }
 
 .loading-status {
@@ -190,7 +195,17 @@ onLoad((options) => {
 }
 
 .status-text {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-secondary);
   font-size: 12px;
+  opacity: 0.6;
+}
+
+/* 浅色模式微调 */
+.theme-light {
+  .circle-item {
+    background-color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #F3F4F6;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container">
+  <view class="page-container" :class="themeClass">
     <!-- Status Bar -->
     <view class="status-bar"></view>
 
@@ -160,7 +160,11 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { postApi, communityApi, userApi, fileApi } from '@/api';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const API_BASE_URL = 'http://192.168.5.6:8080';
 
@@ -915,5 +919,64 @@ const handlePublish = async () => {
 .topic-hot {
   font-size: 12px;
   color: #64748b;
+}
+
+/* 浅色模式适配 */
+.theme-light {
+  background-color: var(--bg-main);
+  
+  .nav-header {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .page-title, .cancel-btn {
+      color: var(--text-main);
+    }
+  }
+  
+  .user-info {
+    .user-name {
+      color: var(--text-main);
+    }
+  }
+  
+  .title-input, .content-textarea {
+    color: var(--text-main) !important;
+    &::placeholder {
+      color: #9CA3AF !important;
+    }
+  }
+  
+  .upload-btn {
+    background-color: #F3F4F6;
+    border: 1px dashed #D1D5DB;
+    .upload-text {
+      color: #6B7280;
+    }
+  }
+  
+  .circle-preview {
+    background-color: #FFFFFF;
+    border-top: 1px solid #F3F4F6;
+    .circle-badge {
+      background-color: #F9FAFB;
+      .circle-name {
+        color: var(--text-main);
+      }
+    }
+  }
+  
+  .bottom-bar {
+    background-color: var(--bg-main);
+    border-top: 1px solid var(--border-main);
+    .tool-label {
+      color: var(--text-secondary);
+    }
+    .icon-circle {
+      background-color: #F3F4F6;
+      .tool-icon {
+        color: #6B7280;
+      }
+    }
+  }
 }
 </style>

@@ -34,7 +34,7 @@ public class MatchSyncTask {
      * 每 1 分钟执行一次实时爬虫 (针对进行中比赛)
      * cron: 0 0/1 * * * ?
      */
-    @Scheduled(fixedRate = 60000, initialDelay = 10000)
+    // @Scheduled(fixedRate = 60000, initialDelay = 10000)
     public void liveScoreSync() {
         log.info("开始执行秒级实时爬虫同步任务...");
         executePythonScript(crawlerPath, "实时比分同步");
@@ -44,7 +44,7 @@ public class MatchSyncTask {
      * 每 5 分钟执行一次全量 API 同步
      * initialDelay = 5000 表示服务启动 5 秒后立即执行第一次
      */
-    @Scheduled(fixedRate = 300000, initialDelay = 5000)
+    // @Scheduled(fixedRate = 300000, initialDelay = 5000)
     public void syncMatchData() {
         log.info("开始执行赛程全量 API 同步任务...");
         executePythonScript(scriptPath, "API全量同步");

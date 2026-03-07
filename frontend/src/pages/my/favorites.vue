@@ -1,62 +1,62 @@
 <template>
-  <view class="container">
+  <view :class="['container', themeClass]">
     <!-- Navigation Bar -->
-    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+    <view :class="['nav-bar', 'bg-nav-bar']" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
+        <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#000'" size="24"></u-icon>
       </view>
-      <text class="nav-title">我的收藏</text>
+      <text class="nav-title text-theme-main">我的收藏</text>
       <view class="nav-right"></view>
     </view>
 
     <!-- Tabs -->
-    <view class="tabs-container">
-      <u-tabs :list="tabList" :current="currentTab" @click="handleTabClick" lineColor="#f9d406" activeStyle="color: #f9d406; font-weight: bold;" inactiveStyle="color: #999;" itemStyle="height: 88rpx; padding: 0 30rpx;"></u-tabs>
+    <view :class="['tabs-container', 'bg-nav-bar']">
+      <u-tabs :list="tabList" :current="currentTab" @click="handleTabClick" :lineColor="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" :activeStyle="{color: themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37', fontWeight: 'bold'}" :inactiveStyle="{color: themeStore.theme === 'dark' ? '#999' : '#666'}" itemStyle="height: 88rpx; padding: 0 30rpx;"></u-tabs>
     </view>
 
     <!-- Content Area -->
     <scroll-view scroll-y class="content-scroll" @scrolltolower="loadMore">
       <!-- Post List -->
       <view class="post-list" v-if="currentTab === 0 && posts.length > 0">
-        <view v-for="(post, index) in posts" :key="index" class="post-item" @click="goToDetail(post.id)">
+        <view v-for="(post, index) in posts" :key="index" class="post-item bg-theme-main border-theme-main" @click="goToDetail(post.id)">
           <view class="post-main">
             <view class="post-img-box" v-if="post.image">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
             </view>
             <view class="post-info">
-              <text class="post-title">{{ post.title }}</text>
+              <text class="post-title text-theme-main">{{ post.title }}</text>
               <view class="post-footer">
                 <view class="post-stats">
-                  <text class="post-time">{{ formatTime(post.createTime) }}</text>
+                  <text class="post-time text-theme-secondary">{{ formatTime(post.createTime) }}</text>
                   <view class="stat-item">
-                    <u-icon name="thumb-up" color="#f9d406" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.likes || 0 }}</text>
+                    <u-icon name="thumb-up" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="28rpx"></u-icon>
+                    <text class="stat-num text-theme-secondary">{{ post.likes || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.commentCount || 0 }}</text>
+                    <u-icon name="chat" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="28rpx"></u-icon>
+                    <text class="stat-num text-theme-secondary">{{ post.commentCount || 0 }}</text>
                   </view>
                 </view>
                 <view class="post-author-info">
                   <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-                  <text class="post-author-name">{{ post.userName }}</text>
+                  <text class="post-author-name text-theme-secondary">{{ post.userName }}</text>
                 </view>
               </view>
             </view>
           </view>
         </view>
-        <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
+        <u-loadmore :status="loadStatus" :lineColor="themeStore.theme === 'dark' ? '#333' : '#eee'" :color="themeStore.theme === 'dark' ? '#999' : '#666'" />
       </view>
 
       <!-- News List -->
       <view class="news-list" v-if="currentTab === 1 && newsList.length > 0">
-        <view v-for="(news, index) in newsList" :key="index" class="news-item" @click="goToNewsDetail(news.id)">
+        <view v-for="(news, index) in newsList" :key="index" class="news-item bg-theme-main border-theme-main" @click="goToNewsDetail(news.id)">
           <view class="news-content">
             <view class="news-info">
-              <text class="news-title">{{ news.title }}</text>
+              <text class="news-title text-theme-main">{{ news.title }}</text>
               <view class="news-meta">
-                <text class="news-tag" v-if="news.category">{{ news.category }}</text>
-                <text class="news-time">{{ formatTime(news.createTime) }}</text>
+                <text class="news-tag" v-if="news.category" :style="{ backgroundColor: themeStore.theme === 'dark' ? 'rgba(249, 212, 6, 0.1)' : 'rgba(212, 175, 55, 0.1)', color: themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37' }">{{ news.category }}</text>
+                <text class="news-time text-theme-secondary">{{ formatTime(news.createTime) }}</text>
               </view>
             </view>
             <view class="news-img-box" v-if="news.coverUrl">
@@ -64,40 +64,44 @@
             </view>
           </view>
         </view>
-        <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
+        <u-loadmore :status="loadStatus" :lineColor="themeStore.theme === 'dark' ? '#333' : '#eee'" :color="themeStore.theme === 'dark' ? '#999' : '#666'" />
       </view>
 
       <!-- Player List -->
       <view class="player-list" v-if="currentTab === 2 && playerList.length > 0">
-        <view v-for="(player, index) in playerList" :key="index" class="player-card" @click="goToPlayerDetail(player.id)">
+        <view v-for="(player, index) in playerList" :key="index" class="player-card bg-theme-main border-theme-main" @click="goToPlayerDetail(player.id)">
           <image class="player-photo" :src="player.photo" mode="aspectFill"></image>
           <view class="player-info">
-            <text class="player-name">{{ player.name }}</text>
-            <text class="player-team">{{ player.teamName }}</text>
+            <text class="player-name text-theme-main">{{ player.name }}</text>
+            <text class="player-team text-theme-secondary">{{ player.teamName }}</text>
           </view>
-          <u-icon name="arrow-right" color="#666" size="20"></u-icon>
+          <u-icon name="arrow-right" :color="themeStore.theme === 'dark' ? '#666' : '#999'" size="20"></u-icon>
         </view>
-        <u-loadmore :status="loadStatus" lineColor="#666" color="#999" />
+        <u-loadmore :status="loadStatus" :lineColor="themeStore.theme === 'dark' ? '#333' : '#eee'" :color="themeStore.theme === 'dark' ? '#999' : '#666'" />
       </view>
       
       <!-- Empty State -->
       <view class="empty-state" v-else-if="!loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0) || (currentTab === 2 && playerList.length === 0))">
-        <u-icon name="star" color="#666" size="60"></u-icon>
-        <text class="empty-text">暂无收藏</text>
+        <u-icon name="star" :color="themeStore.theme === 'dark' ? '#666' : '#ccc'" size="60"></u-icon>
+        <text class="empty-text text-theme-secondary">暂无收藏</text>
       </view>
       
       <!-- Loading State -->
       <view class="loading-state" v-if="loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0) || (currentTab === 2 && playerList.length === 0))">
-        <u-loading-icon mode="circle" color="#f9d406"></u-loading-icon>
+        <u-loading-icon mode="circle" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'"></u-loading-icon>
       </view>
     </scroll-view>
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { favoriteApi, fileApi, playerApi } from '@/api';
+import { useThemeStore } from '@/store/theme';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const currentTab = ref(0);
 const navbarPaddingRight = ref(0);
@@ -338,7 +342,7 @@ const formatTime = (time) => {
 
 <style lang="scss" scoped>
 .container {
-  background-color: #1A1811;
+  background-color: var(--bg-main);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -352,20 +356,19 @@ const formatTime = (time) => {
   justify-content: space-between;
   padding-left: 16px;
   padding-right: 16px;
-  background-color: #1A1811;
+  background-color: var(--nav-bar-bg);
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-main);
 }
 
 .tabs-container {
-  background-color: #1A1811;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--nav-bar-bg);
+  border-bottom: 1px solid var(--border-main);
 }
 
 .nav-title {
-  color: #fff;
   font-size: 16px;
   font-weight: bold;
 }
@@ -386,19 +389,19 @@ const formatTime = (time) => {
 }
 
 .post-item {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card-bg);
   border-radius: 12px;
   margin-bottom: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-main);
 }
 
 .news-item {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card-bg);
   border-radius: 12px;
   margin-bottom: 16px;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-main);
 }
 
 .news-content {
@@ -415,7 +418,6 @@ const formatTime = (time) => {
 }
 
 .news-title {
-  color: #fff;
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -441,7 +443,6 @@ const formatTime = (time) => {
 }
 
 .news-time {
-  color: #666;
   font-size: 11px;
 }
 
@@ -456,7 +457,7 @@ const formatTime = (time) => {
 .news-img {
   width: 100%;
   height: 100%;
-  background-color: #2C2C2C;
+  background-color: var(--bg-secondary);
 }
 
 .post-main {
@@ -476,7 +477,7 @@ const formatTime = (time) => {
 .post-img {
   width: 100%;
   height: 100%;
-  background-color: #2C2C2C;
+  background-color: var(--bg-secondary);
 }
 
 .post-info {
@@ -487,7 +488,6 @@ const formatTime = (time) => {
 }
 
 .post-title {
-  color: #fff;
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -517,7 +517,6 @@ const formatTime = (time) => {
 }
 
 .post-author-name {
-  color: #999;
   font-size: 12px;
 }
 
@@ -528,7 +527,6 @@ const formatTime = (time) => {
 }
 
 .post-time {
-  color: #666;
   font-size: 11px;
 }
 
@@ -539,7 +537,6 @@ const formatTime = (time) => {
 }
 
 .stat-num {
-  color: #999;
   font-size: 11px;
 }
 
@@ -551,8 +548,8 @@ const formatTime = (time) => {
 }
 
 .player-card {
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-main);
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -561,7 +558,7 @@ const formatTime = (time) => {
   transition: all 0.2s;
   
   &:active {
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: var(--bg-secondary);
     transform: scale(0.98);
   }
 }
@@ -570,7 +567,7 @@ const formatTime = (time) => {
   width: 50px;
   height: 50px;
   border-radius: 25px;
-  background-color: #2C2C2C;
+  background-color: var(--bg-secondary);
 }
 
 .player-info {
@@ -581,13 +578,11 @@ const formatTime = (time) => {
 }
 
 .player-name {
-  color: #fff;
   font-size: 15px;
   font-weight: 600;
 }
 
 .player-team {
-  color: #999;
   font-size: 12px;
 }
 
@@ -601,7 +596,6 @@ const formatTime = (time) => {
 }
 
 .empty-text {
-  color: #666;
   font-size: 14px;
 }
 

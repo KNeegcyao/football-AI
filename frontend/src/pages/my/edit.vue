@@ -1,7 +1,7 @@
 <template>
-  <view class="page-container bg-[#1A1811] text-white min-h-screen font-display pb-12 max-w-[500px] mx-auto shadow-2xl relative">
+  <view class="page-container min-h-screen font-display pb-12 max-w-[500px] mx-auto shadow-2xl relative" :class="themeClass">
     <!-- Header -->
-    <view class="fixed top-0 left-0 right-0 z-[999] bg-[#1A1811] px-4 pt-12 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix">
+    <view class="fixed top-0 left-0 right-0 z-[999] px-4 pt-12 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix header-bg">
       <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white active:bg-white/10" @click="goBack">
         <text class="material-icons-round" style="font-size: 24px;">arrow_back</text>
       </view>
@@ -101,7 +101,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi } from '@/api'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const isEmail = (email) => {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
@@ -271,4 +275,38 @@ const handleSave = async () => {
 
 <style lang="scss" scoped>
   /* No special styles needed, using Tailwind */
+
+/* 浅色模式适配 */
+.theme-light {
+  background-color: var(--bg-main);
+  
+  .header-bg {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .text-white {
+      color: var(--text-main) !important;
+    }
+  }
+  
+  .bg-white\/5 {
+    background-color: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+  }
+  
+  .text-white {
+    color: var(--text-main) !important;
+  }
+  
+  .text-gray-400, .text-gray-500, .text-gray-600 {
+    color: var(--text-secondary) !important;
+  }
+  
+  .input-field, .textarea-field {
+    color: var(--text-main) !important;
+  }
+  
+  .bg-transparent {
+    color: var(--text-main) !important;
+  }
+}
 </style>

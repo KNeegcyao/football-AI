@@ -1,7 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { newsApi, favoriteApi } from '@/api/index'
+import { useThemeStore } from '@/store/theme'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const newsId = ref(null)
 const news = ref({
@@ -164,18 +168,18 @@ const getFullImageUrl = (url) => {
 </script>
 
 <template>
-  <view :class="['news-detail-container font-display min-h-screen transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6] text-gray-800' : 'bg-[#1a1811] text-gray-200']">
+  <view :class="['news-detail-container font-display min-h-screen transition-colors duration-300', themeClass, isEyeProtection ? 'bg-[#f0ecd6] text-gray-800' : 'bg-theme-main text-theme-main']">
     <!-- Header / Navigation -->
-    <header :class="['fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b h5-header-fix transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/80 border-black/5' : 'bg-[#1a1811]/80 border-white/5']">
+    <header :class="['fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b h5-header-fix transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/80 border-black/5' : 'bg-nav-bar border-theme-main']">
       <view class="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
-          <text class="material-icons">chevron_left</text>
+          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="44rpx"></u-icon>
         </button>
         <view class="flex items-center gap-1">
           <view class="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
             <text class="text-white font-bold text-xs">P</text>
           </view>
-          <text :class="['font-bold tracking-tight transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">PITCHPULSE</text>
+          <text :class="['font-bold tracking-tight transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">PITCHPULSE</text>
         </view>
         <view class="w-10"></view> <!-- Spacer for balance -->
       </view>
@@ -193,69 +197,69 @@ const getFullImageUrl = (url) => {
           <text class="text-xs font-semibold uppercase tracking-wider text-primary py-1 px-2 bg-primary/10 rounded">
             {{ getCategoryName(news.categoryId) }}
           </text>
-          <text :class="['text-xs transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-400']">{{ formatTime(news.publishTime) }}</text>
+          <text :class="['text-xs transition-colors', isEyeProtection ? 'text-gray-500' : 'text-theme-secondary']">{{ formatTime(news.publishTime) }}</text>
         </view>
-        <h1 :class="['text-3xl md:text-4xl font-bold leading-tight mb-6 transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">
+        <h1 :class="['text-3xl md:text-4xl font-bold leading-tight mb-6 transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">
           {{ news.title }}
         </h1>
-        <view :class="['flex items-center justify-between border-y py-4 transition-colors', isEyeProtection ? 'border-black/5' : 'border-white/5']">
+        <view :class="['flex items-center justify-between border-y py-4 transition-colors', isEyeProtection ? 'border-theme-main' : 'border-theme-main']">
           <view class="flex items-center gap-3">
             <view class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <text class="material-icons text-primary text-sm">edit</text>
+              <u-icon name="edit-pen" color="#f9d406" size="32rpx"></u-icon>
             </view>
             <view>
-              <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-white']">{{ news.author }}</text>
-              <text :class="['text-xs block transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-500']">{{ news.authorSub }}</text>
+              <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">{{ news.author }}</text>
+              <text :class="['text-xs block transition-colors text-theme-secondary']">{{ news.authorSub }}</text>
             </view>
           </view>
         </view>
       </view>
 
       <!-- Article Body -->
-      <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-gray-300', fontClasses[fontSizeLevel]]">
+      <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-theme-main', fontClasses[fontSizeLevel]]">
         <rich-text :nodes="news.content"></rich-text>
       </article>
 
       <!-- End of Article Decorator -->
       <view class="mt-20 flex flex-col items-center">
-        <view :class="['w-12 h-px mb-6 transition-colors', isEyeProtection ? 'bg-black/10' : 'bg-white/20']"></view>
+        <view :class="['w-12 h-px mb-6 transition-colors', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
         <view class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mb-2">
           <text class="text-primary font-bold text-sm tracking-tighter">PP</text>
         </view>
-        <text :class="['text-xs tracking-widest uppercase transition-colors', isEyeProtection ? 'text-gray-500' : 'text-gray-600']">END OF ARTICLE</text>
+        <text :class="['text-xs tracking-widest uppercase transition-colors', isEyeProtection ? 'text-gray-500' : 'text-theme-secondary']">END OF ARTICLE</text>
       </view>
     </main>
 
     <!-- Bottom Action Bar (Floating) -->
-    <view :class="['fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 backdrop-blur-xl rounded-full border shadow-2xl flex items-center justify-around px-6 z-50 transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/90 border-black/10 shadow-gray-200/50' : 'bg-[#1a1811]/90 border-white/10']">
+    <view :class="['fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 backdrop-blur-xl rounded-full border shadow-2xl flex items-center justify-around px-6 z-50 transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/90 border-black/10 shadow-gray-200/50' : 'bg-tab-bar border-theme-main']">
       
       <!-- Favorite -->
-      <view @click="toggleFavorite" class="flex flex-col items-center gap-0.5 transition-colors cursor-pointer" :class="isFavorited ? 'text-red-500' : (isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary')">
-        <text class="material-icons text-xl">{{ isFavorited ? 'favorite' : 'favorite_border' }}</text>
+      <view @click="toggleFavorite" class="flex flex-col items-center gap-0.5 transition-colors cursor-pointer" :class="isFavorited ? 'text-red-500' : (isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary')">
+        <u-icon :name="isFavorited ? 'heart-fill' : 'heart'" :color="isFavorited ? '#ef4444' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')" size="40rpx"></u-icon>
         <text class="text-[10px] font-medium">{{ isFavorited ? '已收藏' : '收藏' }}</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
 
       <!-- Font Size -->
-      <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary']">
-        <text class="material-icons text-xl">text_fields</text>
+      <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
+        <u-icon name="font-size" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563'" size="40rpx"></u-icon>
         <text class="text-[10px] font-medium">字号</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
 
       <!-- Eye Protection -->
-      <view @click="toggleEyeProtection" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-primary' : 'text-gray-400 hover:text-primary']">
-        <text class="material-icons text-xl">{{ isEyeProtection ? 'brightness_7' : 'nightlight_round' }}</text>
+      <view @click="toggleEyeProtection" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-primary' : 'text-theme-secondary hover:text-primary']">
+        <u-icon :name="isEyeProtection ? 'eye-fill' : 'eye'" :color="isEyeProtection ? '#f9d406' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')" size="40rpx"></u-icon>
         <text class="text-[10px] font-medium">{{ isEyeProtection ? '日间' : '护眼' }}</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
 
       <!-- Share -->
-      <view @click="handleShare" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-gray-400 hover:text-primary']">
-        <text class="material-icons text-xl">share</text>
+      <view @click="handleShare" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
+        <u-icon name="share" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563'" size="40rpx"></u-icon>
         <text class="text-[10px] font-medium">转发</text>
       </view>
     </view>

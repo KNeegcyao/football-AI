@@ -27,4 +27,10 @@ public interface TeamFollowService extends IService<TeamFollow> {
      * @return 是否已关注
      */
     boolean isFollowing(Long userId, Long teamId);
+    /**
+     * 获取用户关注的所有球队ID
+     * @param userId 用户ID
+     * @return 球队ID列表
+     */
+    java.util.List<Long> getFollowedTeamIds(Long userId);
 }

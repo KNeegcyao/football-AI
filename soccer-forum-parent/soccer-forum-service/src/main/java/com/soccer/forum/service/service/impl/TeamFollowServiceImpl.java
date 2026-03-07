@@ -44,4 +44,11 @@ public class TeamFollowServiceImpl extends ServiceImpl<TeamFollowMapper, TeamFol
                .eq(TeamFollow::getTeamId, teamId);
         return this.count(wrapper) > 0;
     }
+
+    @Override
+    public java.util.List<Long> getFollowedTeamIds(Long userId) {
+        LambdaQueryWrapper<TeamFollow> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TeamFollow::getUserId, userId);
+        return this.list(wrapper).stream().map(TeamFollow::getTeamId).collect(java.util.stream.Collectors.toList());
+    }
 }

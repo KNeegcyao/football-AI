@@ -48,6 +48,13 @@ public interface UserService extends IService<User> {
     void updateNotificationSetting(Long userId, String replyType);
 
     /**
+     * 更新粉丝提醒设置
+     * @param userId 用户ID
+     * @param fanType 粉丝提醒类型
+     */
+    void updateFanNotificationSetting(Long userId, String fanType);
+
+    /**
      * 注销账号
      * @param userId 用户ID
      */

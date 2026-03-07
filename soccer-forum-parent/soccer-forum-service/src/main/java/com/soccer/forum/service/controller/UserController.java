@@ -132,4 +132,17 @@ public class UserController {
         userService.updateNotificationSetting(loginUser.getUser().getId(), replyType);
         return R.ok(null, "设置成功");
     }
+
+    @Operation(summary = "更新粉丝提醒设置")
+    @PutMapping("/fan-notification-setting")
+    public R<Void> updateFanNotificationSetting(@RequestBody Map<String, String> params,
+                                                @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        String fanType = params.get("fanType");
+        if (fanType == null) {
+            return R.fail("提醒类型不能为空");
+        }
+        log.info("更新粉丝提醒设置: 用户ID={}, 类型={}", loginUser.getUser().getId(), fanType);
+        userService.updateFanNotificationSetting(loginUser.getUser().getId(), fanType);
+        return R.ok(null, "设置成功");
+    }
 }

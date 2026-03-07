@@ -1,7 +1,16 @@
 <script>
 import { useChatStore } from '@/store/chat';
+import { useThemeStore } from '@/store/theme';
+import { computed } from 'vue';
 
 export default {
+  setup() {
+    const themeStore = useThemeStore();
+    const themeClass = computed(() => `theme-${themeStore.theme}`);
+    return {
+      themeClass
+    };
+  },
   onLaunch: function () {
     console.log('App Launch')
 
@@ -96,6 +105,70 @@ export default {
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
+}
+
+/* 主题变量定义 */
+:root, .theme-dark {
+  --bg-main: #1A1811;
+  --bg-secondary: rgba(255, 255, 255, 0.05);
+  --text-main: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --border-main: rgba(255, 255, 255, 0.05);
+  --accent-color: #f9d406;
+  --tab-bar-bg: rgba(26, 24, 17, 0.95);
+  --nav-bar-bg: rgba(26, 24, 17, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.03);
+}
+
+.theme-light {
+  --bg-main: #F9FAFB;
+  --bg-secondary: #FFFFFF;
+  --text-main: #111827;
+  --text-secondary: #4B5563;
+  --border-main: #E5E7EB;
+  --accent-color: #D4AF37;
+  --tab-bar-bg: rgba(255, 255, 255, 0.95);
+  --nav-bar-bg: rgba(249, 250, 251, 0.8);
+  --card-bg: #FFFFFF;
+}
+
+/* 全局主题样式应用 */
+.page-container {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.bg-theme-main {
+  background-color: var(--bg-main) !important;
+}
+
+.bg-theme-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.text-theme-main {
+  color: var(--text-main) !important;
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.border-theme-main {
+  border-color: var(--border-main) !important;
+}
+
+.bg-nav-bar {
+  background-color: var(--nav-bar-bg) !important;
+}
+
+.bg-tab-bar {
+  background-color: var(--tab-bar-bg) !important;
+}
+
+.bg-card {
+  background-color: var(--card-bg) !important;
 }
 
 view, text, image, scroll-view, swiper, swiper-item {

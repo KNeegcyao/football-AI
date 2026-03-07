@@ -83,6 +83,23 @@ public interface TeamService {
     void updateTeam(Long id, Team team);
 
     /**
+     * 更新球队在线人数
+     *
+     * @param teamId 球队 ID
+     * @param userId 用户 ID
+     * @param isOnline 是否在线
+     */
+    void updateOnlineCount(Long teamId, Long userId, boolean isOnline);
+
+    /**
+     * 获取球队在线人数
+     *
+     * @param teamId 球队 ID
+     * @return 在线人数
+     */
+    int getOnlineCount(Long teamId);
+
+    /**
      * 删除球队
      *
      * @param id 球队 ID

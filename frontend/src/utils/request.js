@@ -6,6 +6,15 @@
 const BASE_URL = 'http://192.168.5.29:8080' // 模拟器测试使用本机实际 IP，真机测试确保在同一局域网
 export { BASE_URL }
 
+/**
+ * 获取完整图片 URL
+ */
+export const getFullImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return BASE_URL + (path.startsWith('/') ? path : '/' + path);
+};
+
 const request = (options = {}) => {
   // 补全 URL
   options.url = BASE_URL + (options.url.startsWith('/') ? options.url : '/' + options.url)

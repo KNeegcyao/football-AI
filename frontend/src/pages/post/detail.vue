@@ -1,19 +1,19 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- Status Bar -->
-    <view class="status-bar"></view>
+    <view class="status-bar bg-nav-bar"></view>
 
     <!-- Loading State -->
     <view v-if="loading" class="loading-state">
-      <text style="color: #fff;">Loading...</text>
+      <text :style="{ color: 'var(--text-main)' }">Loading...</text>
     </view>
 
     <template v-else-if="post">
       <!-- Header -->
-      <view class="header">
+      <view class="header bg-nav-bar border-b border-theme-main">
         <view class="header-left">
           <view class="back-btn" @click="goBack">
-            <text class="material-icons" style="font-size: 24px; color: #fff;">arrow_back_ios_new</text>
+            <text class="material-icons" :style="{ fontSize: '24px', color: 'var(--text-main)' }">arrow_back_ios_new</text>
           </view>
         </view>
         <view class="header-center">
@@ -24,7 +24,7 @@
             :hover-stay-time="100"
           >
             <view class="avatar-container">
-              <image class="author-avatar" :src="post.userAvatar" mode="aspectFill"></image>
+              <image class="author-avatar bg-theme-secondary" :src="post.userAvatar" mode="aspectFill"></image>
               <view class="verified-badge">
                 <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
               </view>
@@ -66,18 +66,18 @@
 
           <!-- Image Grid -->
           <view class="image-grid" v-if="post.images && post.images.length > 0">
-            <view class="grid-item" v-for="(img, index) in post.images" :key="index" @click="previewImage(index)">
+            <view class="grid-item bg-theme-secondary" v-for="(img, index) in post.images" :key="index" @click="previewImage(index)">
               <image class="grid-image" :src="img" mode="aspectFill"></image>
             </view>
           </view>
 
           <!-- Stats -->
-          <view class="interaction-stats">
+          <view class="interaction-stats border-theme-main">
             <view class="avatar-stack" v-if="post.recentLikes && post.recentLikes.length > 0">
               <image 
                 v-for="(liker, index) in post.recentLikes" 
                 :key="index" 
-                class="stack-avatar" 
+                class="stack-avatar bg-theme-secondary" 
                 :src="liker.avatar" 
                 mode="aspectFill"
                 @click.stop="navigateToProfile(liker.id)"
@@ -107,7 +107,7 @@
           <view class="comments-list">
             <view class="comment-item" v-for="(comment, index) in comments" :key="index" :id="'comment-' + comment.id" :class="{ 'highlight': comment.id == targetId }">
               <image 
-                class="comment-avatar" 
+                class="comment-avatar bg-theme-secondary" 
                 :src="comment.userAvatar" 
                 mode="aspectFill" 
                 @click.stop="navigateToProfile(comment.userId)"
@@ -115,7 +115,7 @@
                 :hover-stay-time="100"
               ></image>
               <view class="comment-content-wrapper">
-                <view class="comment-bubble">
+                <view class="comment-bubble bg-theme-secondary">
                   <view class="comment-user-row">
                     <text 
                       class="comment-username" 
@@ -139,7 +139,7 @@
                 <view class="nested-replies" v-if="comment.replies && comment.replies.length > 0">
                   <view class="comment-item nested" v-for="(reply, rIndex) in comment.replies" :key="rIndex" :id="'comment-' + reply.id" :class="{ 'highlight': reply.id == targetId }">
                     <image 
-                      class="comment-avatar small" 
+                      class="comment-avatar small bg-theme-secondary" 
                       :src="reply.userAvatar" 
                       mode="aspectFill" 
                       @click.stop="navigateToProfile(reply.userId)"
@@ -147,7 +147,7 @@
                       :hover-stay-time="100"
                     ></image>
                     <view class="comment-content-wrapper">
-                      <view class="comment-bubble semi-transparent">
+                      <view class="comment-bubble semi-transparent bg-theme-secondary">
                         <view class="comment-user-row">
                           <text 
                             class="comment-username" 
@@ -175,7 +175,7 @@
               </view>
             </view>
             
-            <view v-if="comments.length === 0" style="text-align: center; padding: 20px; color: #666;">
+            <view v-if="comments.length === 0" style="text-align: center; padding: 20px; color: var(--text-secondary);">
               <text>暂无评论。</text>
             </view>
           </view>
@@ -184,23 +184,24 @@
     </template>
     
     <view v-else class="error-state">
-      <text style="color: #fff;">加载帖子失败。</text>
+      <text :style="{ color: 'var(--text-main)' }">加载帖子失败。</text>
     </view>
 
     <!-- Unified Bottom Bar -->
     <view class="bottom-bar-wrapper" v-if="post">
-      <view class="reply-info" v-if="replyTarget">
+      <view class="reply-info bg-theme-secondary">
         <text class="reply-to">回复 @{{ replyTarget.userName }}</text>
         <text class="material-icons cancel-reply" @click="cancelReply">close</text>
       </view>
-      <view class="bottom-bar">
+      <view class="bottom-bar bg-nav-bar border-t border-theme-main">
         <input 
-          class="comment-input" 
+          class="comment-input bg-theme-secondary" 
           :placeholder="replyTarget ? '回复评论...' : '说点什么...'" 
           v-model="commentText"
           :disabled="submitting"
           cursor-spacing="20"
           :focus="!!replyTarget"
+          placeholder-style="color: var(--text-secondary)"
         />
         
         <button 
@@ -214,24 +215,24 @@
         
         <template v-else>
           <view class="action-btn" @click="handleLike">
-            <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+            <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
               {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
             </text>
-            <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : '#fff' }">
+            <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
               {{ post.likes || 0 }}
             </text>
           </view>
           <view class="action-btn" @click="handleFavorite">
-            <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : '#fff' }">
+            <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : 'var(--text-main)' }">
               {{ post.isFavorited ? 'star' : 'star_border' }}
             </text>
           </view>
           <view class="action-btn">
-            <text class="material-icons">chat_bubble_outline</text>
-            <text class="action-text">{{ post.commentCount || comments.length }}</text>
+            <text class="material-icons" style="color: var(--text-main)">chat_bubble_outline</text>
+            <text class="action-text" style="color: var(--text-main)">{{ post.commentCount || comments.length }}</text>
           </view>
           <view class="action-btn">
-            <text class="material-icons">share</text>
+            <text class="material-icons" style="color: var(--text-main)">share</text>
           </view>
         </template>
       </view>
@@ -243,7 +244,10 @@
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi, favoriteApi } from '@/api';
+import { useThemeStore } from '@/store/theme';
 
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 const post = ref(null);
 const comments = ref([]);
 const postId = ref(null);
@@ -576,24 +580,21 @@ onLoad((options) => {
 <style scoped>
 /* Colors */
 .container {
-  background-color: #0A0A0A;
+  background-color: var(--bg-main);
   min-height: 100vh;
-  color: #fff;
+  color: var(--text-main);
+  transition: all 0.3s;
 }
 
 .status-bar {
   height: var(--status-bar-height);
   width: 100%;
-  background-color: rgba(248, 245, 246, 0.8);
 }
 
 .header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background-color: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(242, 185, 13, 0.1);
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
@@ -639,7 +640,7 @@ onLoad((options) => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(242, 185, 13, 0.2);
+  border: 1px solid var(--border-main);
 }
 
 .verified-badge {
@@ -650,7 +651,7 @@ onLoad((options) => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid #0A0A0A;
+  border: 2px solid var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -670,7 +671,7 @@ onLoad((options) => {
 .author-name {
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .verified-icon {
@@ -680,14 +681,14 @@ onLoad((options) => {
 
 .author-role {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .follow-btn {
   background-color: #f2b90d;
-  color: #000;
+  color: #12110a;
   font-size: 12px;
   font-weight: bold;
   padding: 6px 16px;
@@ -697,9 +698,9 @@ onLoad((options) => {
 }
 
 .follow-btn.following {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-main);
 }
 
 /* Article */
@@ -718,14 +719,14 @@ onLoad((options) => {
   color: #f2b90d;
   font-size: 12px;
   font-weight: 600;
-  background-color: rgba(242, 185, 13, 0.1);
+  background-color: rgba(242, 185, 13, 0.15);
   padding: 2px 8px;
   border-radius: 4px;
 }
 
 .time {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .article-title {
@@ -733,7 +734,7 @@ onLoad((options) => {
   font-weight: bold;
   line-height: 1.25;
   margin-bottom: 12px;
-  color: #fff;
+  color: var(--text-main);
   display: block;
 }
 
@@ -743,7 +744,7 @@ onLoad((options) => {
 
 .body-text {
   font-size: 14px;
-  color: #cbd5e1;
+  color: var(--text-main);
   line-height: 1.625;
 }
 
@@ -766,7 +767,6 @@ onLoad((options) => {
 
 .grid-item {
   aspect-ratio: 1;
-  background-color: #1A1A1A;
   overflow: hidden;
   position: relative;
 }
@@ -797,8 +797,8 @@ onLoad((options) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  border-top: 1px solid rgba(30, 41, 59, 0.5);
-  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+  border-top: 1px solid var(--border-main);
+  border-bottom: 1px solid var(--border-main);
 }
 
 .avatar-stack {
@@ -810,7 +810,7 @@ onLoad((options) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid #0A0A0A;
+  border: 2px solid var(--bg-main);
   margin-left: -8px;
 }
 
@@ -818,32 +818,30 @@ onLoad((options) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #1e293b;
-  border: 2px solid #0A0A0A;
+  border: 2px solid var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 8px;
   font-weight: bold;
-  color: #94a3b8;
   margin-left: -8px;
 }
 
 .view-stats {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: -0.05em;
 }
 
 .stat-highlight {
-  color: #cbd5e1;
+  color: var(--text-main);
   font-weight: bold;
 }
 
 /* Comments */
 .comments-section {
-  background-color: #0A0A0A;
+  background-color: var(--bg-main);
   margin-top: 8px;
 }
 
@@ -857,7 +855,7 @@ onLoad((options) => {
 .comments-title {
   font-weight: bold;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .sort-btn {
@@ -865,7 +863,7 @@ onLoad((options) => {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .comments-list {
@@ -908,14 +906,12 @@ onLoad((options) => {
 }
 
 .comment-bubble {
-  background-color: #1A1A1A;
   padding: 12px;
   border-radius: 12px;
   border-top-left-radius: 0;
 }
 
 .comment-bubble.semi-transparent {
-  background-color: rgba(26, 26, 26, 0.5);
   padding: 10px;
 }
 
@@ -929,17 +925,17 @@ onLoad((options) => {
 .comment-username {
   font-size: 12px;
   font-weight: bold;
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .comment-time {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .comment-text {
   font-size: 14px;
-  color: #cbd5e1;
+  color: var(--text-main);
 }
 
 .highlight-text {
@@ -964,7 +960,7 @@ onLoad((options) => {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .action-item.active {
@@ -979,12 +975,12 @@ onLoad((options) => {
 .reply-btn {
   font-size: 10px;
   font-weight: bold;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .nested-replies {
   margin-top: 16px;
-  border-left: 2px solid #1e293b;
+  border-left: 2px solid var(--border-main);
   padding-left: 16px;
 }
 
@@ -1003,13 +999,12 @@ onLoad((options) => {
 }
 
 .reply-info {
-  background-color: #1A1A1A;
   padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-main);
+  border-bottom: 1px solid var(--border-main);
 }
 
 .reply-to {
@@ -1020,15 +1015,12 @@ onLoad((options) => {
 
 .cancel-reply {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-secondary);
   padding: 4px;
 }
 
 .bottom-bar {
   height: 60px;
-  background-color: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1045,23 +1037,21 @@ onLoad((options) => {
 
 .action-text {
   font-size: 14px;
-  color: #fff;
   font-weight: 500;
 }
 
 .comment-input {
   flex: 1;
-  background-color: #2C2C2C;
   border-radius: 20px;
   padding: 8px 16px;
-  color: #fff;
+  color: var(--text-main);
   font-size: 14px;
   height: 36px;
 }
 
 .send-btn {
   background-color: #f2b90d;
-  color: #000;
+  color: #12110a;
   font-size: 14px;
   font-weight: bold;
   padding: 0 16px;

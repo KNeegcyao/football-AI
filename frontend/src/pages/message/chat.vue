@@ -1,17 +1,17 @@
 <template>
-  <view class="container">
-    <view class="status-bar"></view>
+  <view class="container" :class="themeClass">
+    <view class="status-bar bg-nav-bar"></view>
     
     <!-- Header -->
-    <view class="header">
+    <view class="header bg-nav-bar border-b border-theme-main">
       <view class="header-left" @click="goBack">
-        <text class="material-icons">arrow_back_ios_new</text>
+        <text class="material-icons" style="color: var(--text-main)">arrow_back_ios_new</text>
       </view>
       <view class="header-center">
         <text class="username">{{ otherUserNickname || '对话中' }}</text>
       </view>
       <view class="header-right">
-        <text class="material-icons">more_horiz</text>
+        <text class="material-icons" style="color: var(--text-main)">more_horiz</text>
       </view>
     </view>
 
@@ -24,19 +24,19 @@
       @scrolltoupper="loadHistory"
     >
       <view class="message-item-wrapper" v-for="(msg, index) in messages" :key="msg.id" :id="'msg-' + msg.id">
-        <!-- Time Separator (Optional: show if time difference > 5 mins) -->
+        <!-- Time Separator -->
         <view class="time-separator" v-if="shouldShowTime(index)">
-          <text>{{ formatTime(msg.createdAt) }}</text>
+          <text class="bg-theme-secondary text-secondary">{{ formatTime(msg.createdAt) }}</text>
         </view>
 
         <view class="message-item" :class="{ 'message-me': Number(msg.senderId) === Number(currentUserId) }">
           <image 
-            class="avatar" 
+            class="avatar bg-theme-secondary" 
             :src="Number(msg.senderId) === Number(currentUserId) ? currentUserAvatar : otherUserAvatar" 
             mode="aspectFill"
             @error="onAvatarError(msg.senderId)"
           ></image>
-          <view class="message-bubble">
+          <view class="message-bubble shadow-sm">
             <text v-if="Number(msg.type) === 0" class="message-text">{{ msg.content }}</text>
             <image 
               v-else-if="Number(msg.type) === 1" 
@@ -52,17 +52,17 @@
     </scroll-view>
 
     <!-- Input Bar -->
-    <view class="input-bar-container">
+    <view class="input-bar-container bg-nav-bar border-t border-theme-main">
       <view class="tool-bar">
         <view class="tool-item" @click="chooseImage">
-          <text class="material-icons">image</text>
+          <text class="material-icons text-secondary">image</text>
         </view>
         <view class="tool-item" @click="toggleEmojiPicker">
-          <text class="material-icons">{{ showEmojiPicker ? 'keyboard' : 'sentiment_satisfied' }}</text>
+          <text class="material-icons text-secondary">{{ showEmojiPicker ? 'keyboard' : 'sentiment_satisfied' }}</text>
         </view>
       </view>
       <view class="input-bar">
-        <view class="input-wrapper">
+        <view class="input-wrapper bg-theme-secondary">
           <textarea 
             class="chat-input" 
             v-model="inputText" 
@@ -70,6 +70,7 @@
             :fixed="true"
             :cursor-spacing="20"
             placeholder="发送消息..."
+            placeholder-style="color: var(--text-secondary)"
             :focus="inputFocus"
             @focus="onInputFocus"
           ></textarea>
@@ -85,7 +86,7 @@
       </view>
       
       <!-- Emoji Picker -->
-      <view class="emoji-picker" v-if="showEmojiPicker">
+      <view class="emoji-picker bg-nav-bar border-t border-theme-main" v-if="showEmojiPicker">
         <scroll-view scroll-y class="emoji-scroll">
           <view class="emoji-list">
             <text 
@@ -105,10 +106,13 @@
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useChatStore } from '@/store/chat';
+import { useThemeStore } from '@/store/theme';
 import { chatApi, fileApi, userApi } from '@/api';
 import { BASE_URL } from '@/utils/request';
 
 const chatStore = useChatStore();
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const sessionId = ref(null);
 const otherUserId = ref(null);
@@ -120,18 +124,15 @@ const currentUserAvatar = ref('/static/soccer-logo.png');
 const getAvatarUrl = (avatar) => {
   if (!avatar) return '/static/soccer-logo.png';
   
-  // 处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
   if (avatar.includes('/uploads/')) {
     const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
     return fileApi.getFileUrl(relativePath)
   }
   
-  // 如果已经是完整 URL 且不含 /uploads/，则直接返回
   if (avatar.startsWith('http')) {
     return avatar
   }
   
-  // 如果是相对路径
   if (avatar.startsWith('/static')) return avatar;
   
   return fileApi.getFileUrl(avatar)
@@ -184,12 +185,10 @@ onLoad(async (options) => {
     currentUserId.value = userInfo.id;
     currentUserAvatar.value = getAvatarUrl(userInfo.avatar);
     
-    // 如果本地没有头像或解析失败，尝试从后端获取最新资料
     if (!userInfo.avatar || currentUserAvatar.value === '/static/soccer-logo.png') {
       userApi.getProfile().then(res => {
         if (res && res.avatar) {
           currentUserAvatar.value = getAvatarUrl(res.avatar);
-          // 同步更新本地存储
           userInfo.avatar = res.avatar;
           uni.setStorageSync('userInfo', JSON.stringify(userInfo));
         }
@@ -198,7 +197,6 @@ onLoad(async (options) => {
   }
 
   if (!sessionId.value && otherUserId.value) {
-    // 如果是从用户主页进来的，没有 sessionId，先获取或创建会话
     try {
       const res = await chatApi.getSessionByUserId(otherUserId.value);
       sessionId.value = res;
@@ -213,7 +211,6 @@ onLoad(async (options) => {
     scrollToBottom();
   }
 
-  // 监听新消息
   uni.$on('newChatMessage', (msg) => {
     if (msg.sessionId === sessionId.value) {
       scrollToBottom();
@@ -251,7 +248,6 @@ const sendMessage = async () => {
   inputText.value = '';
   sending.value = false;
   
-  // 发送后滚动到底部
   nextTick(() => {
     scrollToBottom();
   });
@@ -287,13 +283,10 @@ const chooseImage = () => {
 const uploadImage = (filePath) => {
   uni.showLoading({ title: '发送中...' });
   
-  // 统一使用 BASE_URL 拼接上传地址
   const uploadUrl = fileApi.uploadUrl.startsWith('http') 
     ? fileApi.uploadUrl 
     : (BASE_URL + (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl));
     
-  console.log('Uploading image to:', uploadUrl);
-  
   const token = uni.getStorageSync('token');
 
   uni.uploadFile({
@@ -304,8 +297,6 @@ const uploadImage = (filePath) => {
       'Authorization': 'Bearer ' + token
     },
     success: (uploadFileRes) => {
-      console.log('Upload response raw:', uploadFileRes.data);
-      
       let resData;
       try {
         resData = typeof uploadFileRes.data === 'string' 
@@ -317,7 +308,6 @@ const uploadImage = (filePath) => {
         return;
       }
 
-      // 兼容两种返回格式：{code: 200, data: "url"} 或直接返回 {data: "url"}
       const imageUrl = resData.code === 200 ? resData.data : (resData.data || resData);
       
       if (imageUrl && typeof imageUrl === 'string') {
@@ -326,12 +316,10 @@ const uploadImage = (filePath) => {
           scrollToBottom();
         });
       } else {
-        console.error('Invalid image URL in response:', resData);
         uni.showToast({ title: '获取图片地址失败', icon: 'none' });
       }
     },
     fail: (err) => {
-      console.error('Upload image failed:', err);
       uni.showToast({ title: '发送图片失败: ' + (err.errMsg || '网络错误'), icon: 'none' });
     },
     complete: () => {
@@ -360,7 +348,7 @@ const shouldShowTime = (index) => {
   if (index === 0) return true;
   const curr = new Date(messages.value[index].createdAt);
   const prev = new Date(messages.value[index - 1].createdAt);
-  return (curr - prev) > 5 * 60 * 1000; // 5分钟显示一次时间
+  return (curr - prev) > 5 * 60 * 1000;
 };
 
 const formatTime = (time) => {
@@ -379,8 +367,9 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #0f172a;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: all 0.3s;
 }
 
 .status-bar {
@@ -393,13 +382,15 @@ const goBack = () => {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background-color: #1e293b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   
   .header-left, .header-right {
     width: 40px;
     display: flex;
     align-items: center;
+    
+    .material-icons {
+      font-size: 20px;
+    }
   }
   
   .header-center {
@@ -408,6 +399,7 @@ const goBack = () => {
     .username {
       font-size: 16px;
       font-weight: bold;
+      color: var(--text-main);
     }
   }
 }
@@ -423,10 +415,8 @@ const goBack = () => {
   margin: 16px 0;
   text {
     font-size: 12px;
-    color: #64748b;
-    background-color: rgba(255, 255, 255, 0.05);
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 4rpx 16rpx;
+    border-radius: 20rpx;
   }
 }
 
@@ -439,7 +429,6 @@ const goBack = () => {
     height: 40px;
     border-radius: 20px;
     margin-right: 12px;
-    background-color: #1e293b;
   }
   
   .message-bubble {
@@ -449,15 +438,15 @@ const goBack = () => {
     font-size: 15px;
     line-height: 1.4;
     position: relative;
-    background-color: #1e293b;
-    color: #fff;
+    background-color: var(--bg-secondary);
+    color: var(--text-main);
     border-top-left-radius: 4px;
     word-break: break-all;
 
     .message-text {
       font-size: 14px;
       line-height: 1.5;
-      color: #cbd5e1;
+      color: var(--text-main);
       word-break: break-all;
     }
 
@@ -477,7 +466,7 @@ const goBack = () => {
     }
 
     .message-bubble {
-      background-color: #fbbf24;
+      background-color: $pitch-pulse-primary;
       color: #000;
       border-top-left-radius: 18px;
       border-top-right-radius: 4px;
@@ -494,8 +483,6 @@ const goBack = () => {
 }
 
 .input-bar-container {
-  background-color: #1e293b;
-  border-top: 1px solid #334155;
   padding-bottom: env(safe-area-inset-bottom);
 
   .tool-bar {
@@ -506,7 +493,6 @@ const goBack = () => {
     .tool-item {
       .material-icons {
         font-size: 24px;
-        color: #94a3b8;
       }
 
       &:active {
@@ -523,14 +509,13 @@ const goBack = () => {
 
     .input-wrapper {
       flex: 1;
-      background-color: #0f172a;
       border-radius: 20px;
       padding: 8px 16px;
 
       .chat-input {
         width: 100%;
         font-size: 15px;
-        color: #fff;
+        color: var(--text-main);
         line-height: 20px;
         max-height: 100px;
       }
@@ -540,8 +525,8 @@ const goBack = () => {
       width: 64px;
       height: 36px;
       line-height: 36px;
-      background-color: #334155;
-      color: #94a3b8;
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
       font-size: 14px;
       border-radius: 18px;
       padding: 0;
@@ -553,7 +538,7 @@ const goBack = () => {
       }
 
       &.send-btn-active {
-        background-color: #fbbf24;
+        background-color: $pitch-pulse-primary;
         color: #000;
       }
     }
@@ -562,8 +547,6 @@ const goBack = () => {
 
 .emoji-picker {
   height: 250px;
-  background-color: #1e293b;
-  border-top: 1px solid #334155;
 
   .emoji-scroll {
     height: 100%;
@@ -583,10 +566,34 @@ const goBack = () => {
       font-size: 24px;
 
       &:active {
-        background-color: #334155;
+        background-color: var(--bg-secondary);
         border-radius: 8px;
       }
     }
+  }
+}
+
+// 浅色模式微调
+.theme-light {
+  .message-item:not(.message-me) {
+    .message-bubble {
+      background-color: var(--border-main);
+      color: var(--text-main);
+    }
+  }
+  .time-separator text {
+    background-color: var(--border-main);
+    color: var(--text-secondary);
+  }
+  .input-wrapper {
+    background-color: var(--border-main) !important;
+  }
+  .send-btn:not(.send-btn-active) {
+    background-color: var(--border-main);
+    color: var(--text-secondary);
+  }
+  .tool-item .material-icons {
+    color: var(--text-secondary);
   }
 }
 </style>

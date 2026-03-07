@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <view class="status-bar"></view>
     
     <!-- Header -->
@@ -54,8 +54,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { useChatStore } from '@/store/chat';
 import { fileApi } from '@/api';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const chatStore = useChatStore();
 const loading = ref(false);
@@ -248,5 +252,35 @@ const goBack = () => {
   padding: 20px;
   color: #64748b;
   font-size: 14px;
+}
+
+/* 浅色模式适配 */
+.theme-light {
+  background-color: var(--bg-main);
+  
+  .header {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .title {
+      color: var(--text-main);
+    }
+    .header-left .material-icons {
+      color: var(--text-main);
+    }
+  }
+  
+  .conversation-item {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #F3F4F6;
+    .nickname {
+      color: var(--text-main);
+    }
+    .last-msg {
+      color: var(--text-secondary);
+    }
+    .time {
+      color: #9CA3AF;
+    }
+  }
 }
 </style>

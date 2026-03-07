@@ -58,4 +58,11 @@ public interface AuthService {
      * @return 登录成功后生成的 JWT 令牌
      */
     String loginByCode(LoginBody loginBody);
+
+    /**
+     * 用户登出
+     *
+     * @param userId 用户 ID
+     */
+    void logout(Long userId);
 }

@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- Header Image & Overlay -->
     <view class="header-image-container">
       <image 
@@ -12,14 +12,14 @@
       <!-- Top Navigation Bar -->
       <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
         <view class="icon-btn" @click="goBack">
-          <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
+          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
         </view>
         <view class="nav-actions">
           <view class="icon-btn" @click="handleSearch">
-            <u-icon name="search" color="#fff" size="24"></u-icon>
+            <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
           </view>
           <view class="icon-btn" @click="handleShare">
-            <u-icon name="share" color="#fff" size="24"></u-icon>
+            <u-icon name="share" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
           </view>
         </view>
       </view>
@@ -197,9 +197,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { communityApi, fileApi, postApi } from '@/api';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const topicTitle = ref('');
 const topicId = ref(null);
@@ -587,9 +591,10 @@ const previewImage = (images, current) => {
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  background-color: #12110a;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   padding-bottom: 100rpx;
+  transition: all 0.3s;
 }
 
 /* Header */
@@ -611,7 +616,7 @@ const previewImage = (images, current) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(18,17,10,1) 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, var(--bg-main) 100%);
 }
 
 .nav-bar {
@@ -705,13 +710,14 @@ const previewImage = (images, current) => {
 
 .stat-card {
   flex: 1;
-  background-color: #1c1a11;
+  background-color: var(--card-bg);
   padding: 24rpx;
   border-radius: 16rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-right: 16rpx;
+  border: 1px solid var(--border-main);
   
   &:last-child {
     margin-right: 0;
@@ -719,7 +725,7 @@ const previewImage = (images, current) => {
 }
 
 .stat-label {
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 24rpx;
   margin-bottom: 8rpx;
 }
@@ -727,7 +733,7 @@ const previewImage = (images, current) => {
 .stat-value {
   font-size: 32rpx;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
   
   &.highlight {
     color: #f20d33;
@@ -735,15 +741,17 @@ const previewImage = (images, current) => {
 }
 
 .description-box {
-  background-color: #1c1a11;
+  background-color: var(--card-bg);
   padding: 24rpx;
   border-radius: 16rpx;
   margin-bottom: 40rpx;
+  border: 1px solid var(--border-main);
 }
 
 .description-text {
   font-size: 26rpx;
-  color: #d1d5db;
+  color: var(--text-main);
+  opacity: 0.8;
   line-height: 1.6;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -769,13 +777,13 @@ const previewImage = (images, current) => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #12110a;
+  background-color: var(--bg-main);
 }
 
 .tabs-header {
   display: flex;
   padding: 0 32rpx;
-  border-bottom: 1rpx solid #2d2a1d;
+  border-bottom: 1rpx solid var(--border-main);
   margin-bottom: 32rpx;
 }
 
@@ -783,7 +791,7 @@ const previewImage = (images, current) => {
   padding: 24rpx 0;
   margin-right: 48rpx;
   font-size: 28rpx;
-  color: #9ca3af;
+  color: var(--text-secondary);
   position: relative;
   
   &.active {
@@ -809,11 +817,11 @@ const previewImage = (images, current) => {
 
 /* Post Card Styles from circle-detail.vue */
 .post-card {
-  background-color: #1c1a11;
+  background-color: var(--card-bg);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #2d2a1d;
+  border: 1px solid var(--border-main);
 }
 
 .post-header {
@@ -850,7 +858,7 @@ const previewImage = (images, current) => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid #1c1a11; /* Match card background */
+  border: 2px solid var(--card-bg); /* Match card background */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -870,7 +878,7 @@ const previewImage = (images, current) => {
 .author-name {
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .verified-icon {
@@ -885,20 +893,20 @@ const previewImage = (images, current) => {
 
 .author-role {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .meta-divider {
   margin: 0 4px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 10px;
 }
 
 .post-time-rich {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .follow-btn {
@@ -915,13 +923,14 @@ const previewImage = (images, current) => {
 
 .follow-btn.following {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+  border: 1px solid var(--border-main);
 }
 
 .post-content {
   font-size: 14px;
-  color: #d1d5db;
+  color: var(--text-main);
+  opacity: 0.9;
   line-height: 1.6;
   display: block;
   margin-bottom: 16px;
@@ -938,7 +947,7 @@ const previewImage = (images, current) => {
   width: calc(33.33% - 3px);
   height: 220rpx;
   border-radius: 4px;
-  background-color: #2d2a1d;
+  background-color: var(--bg-secondary);
 }
 
 .post-footer {
@@ -950,7 +959,7 @@ const previewImage = (images, current) => {
 .interaction-item {
   display: flex;
   align-items: center;
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
@@ -962,7 +971,7 @@ const previewImage = (images, current) => {
 .loading-status, .empty-state {
   text-align: center;
   padding: 40rpx;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 26rpx;
 }
 
@@ -997,8 +1006,8 @@ const previewImage = (images, current) => {
 
 .page-btn.disabled {
   opacity: 0.4;
-  background: rgba(255, 255, 255, 0.05);
-  color: #9ca3af;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
   border-color: transparent;
 }
 
@@ -1022,13 +1031,13 @@ const previewImage = (images, current) => {
 
 .page-divider {
   font-size: 12px;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin: 0 2px;
 }
 
 .total-label {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 /* FAB */
@@ -1060,5 +1069,37 @@ const previewImage = (images, current) => {
   font-weight: bold;
   font-size: 28rpx;
   margin-left: 12rpx;
+}
+
+/* Light theme overrides */
+.theme-light {
+  .header-overlay {
+    background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, var(--bg-main) 100%);
+  }
+  
+  .icon-btn {
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  .ai-label {
+    background-color: rgba(0,0,0,0.05);
+    .ai-text {
+      color: var(--text-main);
+    }
+  }
+  
+  .topic-title {
+    color: #fff; /* Keep white on header image */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .follow-btn.following {
+    background-color: #f1f5f9;
+  }
+  
+  .fab-btn {
+    box-shadow: 0 8rpx 32rpx rgba(242, 185, 13, 0.2);
+  }
 }
 </style>

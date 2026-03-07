@@ -69,6 +69,19 @@ public class Team {
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
+    @TableField(exist = false)
+    @Schema(description = "关注者数量")
+    private Integer followerCount;
+
+    @TableField(exist = false)
+    @Schema(description = "在线人数")
+    private Integer onlineCount;
+
+    public Integer getFollowerCount() { return followerCount; }
+    public void setFollowerCount(Integer followerCount) { this.followerCount = followerCount; }
+    public Integer getOnlineCount() { return onlineCount; }
+    public void setOnlineCount(Integer onlineCount) { this.onlineCount = onlineCount; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getApiId() { return apiId; }

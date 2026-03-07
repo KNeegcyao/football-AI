@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- Navbar with Search -->
     <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
@@ -13,7 +13,7 @@
           class="search-input" 
           type="text" 
           :placeholder="`搜索${circleName}圈内的帖子`" 
-          placeholder-style="color: rgba(255, 255, 255, 0.2)"
+          :placeholder-style="themeStore.theme === 'light' ? 'color: rgba(0, 0, 0, 0.2)' : 'color: rgba(255, 255, 255, 0.2)'"
           v-model="keyword"
           confirm-type="search"
           @confirm="handleSearch"
@@ -62,10 +62,10 @@
           
           <view class="post-footer">
             <view class="interaction-item">
-              <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
+              <text class="material-icons footer-icon" :class="{ 'liked': post.isLiked }">
                 {{ post.isLiked ? 'favorite' : 'favorite_border' }}
               </text>
-              <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes }}</text>
+              <text :class="{ 'liked': post.isLiked }">{{ post.likes }}</text>
             </view>
             <view class="interaction-item">
               <text class="material-icons footer-icon">chat_bubble_outline</text>
@@ -89,9 +89,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { communityApi, fileApi } from '@/api/index';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const circleId = ref(null);
 const circleName = ref('');
@@ -254,8 +258,8 @@ $text-white: #ffffff;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: $bg-dark;
-  color: $text-white;
+  background-color: var(--bg-main);
+  color: var(--text-main);
 }
 
 /* Navbar */
@@ -263,8 +267,8 @@ $text-white: #ffffff;
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background-color: $surface-dark;
-  border-bottom: 1px solid $border-dark;
+  background-color: var(--bg-main);
+  border-bottom: 1px solid var(--border-main);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -278,23 +282,23 @@ $text-white: #ffffff;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: rgba(255,255,255,0.1);
+  background-color: var(--bg-secondary);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .back-icon {
-  color: #fff;
+  color: var(--text-main);
   font-size: 20px;
 }
 
 .search-box {
   flex: 1;
   height: 38px;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-main);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -303,26 +307,28 @@ $text-white: #ffffff;
 }
 
 .search-box:focus-within, .search-box:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-secondary);
   border-color: rgba(242, 185, 13, 0.5);
   box-shadow: 0 0 10px rgba(242, 185, 13, 0.1);
 }
 
 .search-icon {
-  color: rgba(156, 163, 175, 0.4);
+  color: var(--text-secondary);
+  opacity: 0.6;
   font-size: 18px;
   margin-right: 8px;
   transition: color 0.3s ease;
 }
 
 .search-box:focus-within .search-icon {
-  color: rgba(242, 185, 13, 0.8);
+  color: $primary;
+  opacity: 1;
 }
 
 .search-input {
   flex: 1;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-main);
   outline: none;
 }
 
@@ -331,7 +337,7 @@ $text-white: #ffffff;
 }
 
 .clear-icon {
-  color: $text-gray;
+  color: var(--text-secondary);
   font-size: 16px;
 }
 
@@ -361,7 +367,7 @@ $text-white: #ffffff;
   align-items: center;
   justify-content: center;
   padding: 40px 0;
-  color: $text-gray;
+  color: var(--text-secondary);
 }
 
 .empty-icon {
@@ -376,11 +382,11 @@ $text-white: #ffffff;
 
 /* Post Card (Copied from circle-detail) */
 .post-card {
-  background-color: $surface-dark;
+  background-color: var(--bg-main);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid $border-dark;
+  border: 1px solid var(--border-main);
 }
 
 .post-header {
@@ -405,17 +411,17 @@ $text-white: #ffffff;
 .user-name {
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .post-time {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .post-content-text {
   font-size: 14px;
-  color: #d1d5db;
+  color: var(--text-main);
   line-height: 1.625;
   display: block;
   margin-bottom: 16px;
@@ -431,7 +437,7 @@ $text-white: #ffffff;
   height: 192px;
   border-radius: 8px;
   margin-bottom: 16px;
-  background-color: $border-dark;
+  background-color: var(--border-main);
 }
 
 .post-footer {
@@ -443,8 +449,12 @@ $text-white: #ffffff;
 .interaction-item {
   display: flex;
   align-items: center;
-  color: $text-gray;
+  color: var(--text-secondary);
   font-size: 12px;
+  
+  .liked {
+    color: $primary;
+  }
 }
 
 .footer-icon {
@@ -454,7 +464,7 @@ $text-white: #ffffff;
 
 .loading-status {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
   padding: 20px;
   font-size: 12px;
 }
@@ -467,5 +477,18 @@ $text-white: #ffffff;
 ::v-deep input {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* 浅色模式微调 */
+.theme-light {
+  .search-box {
+    background-color: #F3F4F6;
+    border-color: #E5E7EB;
+  }
+  .post-card {
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #F3F4F6;
+  }
 }
 </style>

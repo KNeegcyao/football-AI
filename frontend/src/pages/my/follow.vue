@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container bg-background-dark text-slate-100 min-h-screen font-display antialiased">
+  <view class="page-container min-h-screen font-display antialiased" :class="themeClass">
     <!-- Top Navigation Bar -->
     <view class="header-sticky" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="header-content">
@@ -92,9 +92,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useThemeStore } from '@/store/theme'
 import { userApi, postApi, fileApi, relationshipApi } from '@/api'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const currentTab = ref(0)
@@ -453,5 +457,45 @@ const goBack = () => {
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 浅色模式适配 */
+.theme-light {
+  background-color: var(--bg-main);
+  
+  .header-sticky {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .text-slate-100 {
+      color: var(--text-main) !important;
+    }
+  }
+  
+  .tabs-container {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .tab-text {
+      color: var(--text-secondary);
+      &.text-primary {
+        color: var(--accent-color) !important;
+      }
+    }
+  }
+  
+  .user-item {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #F3F4F6;
+    .nickname {
+      color: var(--text-main);
+    }
+    .bio {
+      color: var(--text-secondary);
+    }
+  }
+  
+  .btn-following {
+    background-color: #F3F4F6 !important;
+    color: #6B7280 !important;
+  }
 }
 </style>

@@ -1,26 +1,26 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- Navbar with Search -->
-    <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
+    <view class="navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
         <view class="nav-btn-glass">
-          <u-icon name="arrow-left" color="#fff" size="20"></u-icon>
+          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#000'" size="20"></u-icon>
         </view>
       </view>
-      <view class="search-box">
-        <u-icon name="search" color="rgba(156, 163, 175, 0.4)" size="18"></u-icon>
+      <view class="search-box bg-theme-secondary border-theme-main">
+        <u-icon name="search" :color="themeStore.theme === 'dark' ? 'rgba(156, 163, 175, 0.4)' : 'rgba(0, 0, 0, 0.3)'" size="18"></u-icon>
         <input 
           class="search-input" 
           type="text" 
           placeholder="搜索资讯或帖子..." 
-          placeholder-style="color: rgba(255, 255, 255, 0.2)"
+          :placeholder-style="themeStore.theme === 'dark' ? 'color: rgba(255, 255, 255, 0.2)' : 'color: rgba(0, 0, 0, 0.3)'"
           v-model="keyword"
           confirm-type="search"
           @confirm="handleSearch"
           :focus="autoFocus"
         />
         <view v-if="keyword" class="clear-btn" @click="clearSearch">
-          <u-icon name="close" color="#9ca3af" size="16"></u-icon>
+          <u-icon name="close" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#666'" size="16"></u-icon>
         </view>
       </view>
       <view class="nav-right" @click="handleSearch">
@@ -39,7 +39,7 @@
 
         <!-- Empty State -->
         <view v-else-if="searched && results.length === 0" class="empty-state">
-          <u-icon name="search" color="#374151" size="60"></u-icon>
+          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#374151' : '#e2e8f0'" size="60"></u-icon>
           <text class="empty-text">未找到相关内容</text>
           <text class="empty-subtext">换个关键词试试吧</text>
         </view>
@@ -49,7 +49,7 @@
           <view 
             v-for="(item, index) in results" 
             :key="index" 
-            class="result-card"
+            class="result-card bg-theme-secondary border-theme-main"
             @click="goToDetail(item)"
           >
             <!-- 赛事卡片 -->
@@ -57,11 +57,11 @@
                <view class="card-header">
                   <view class="badge-row">
                     <text class="badge match-badge">赛事</text>
-                    <text class="competition-name">{{ item.competitionName }}</text>
+                    <text class="competition-name text-secondary">{{ item.competitionName }}</text>
                   </view>
-                  <text class="time-text">{{ formatTime(item.matchTime) }}</text>
+                  <text class="time-text text-secondary">{{ formatTime(item.matchTime) }}</text>
                </view>
-               <view class="match-teams">
+               <view class="match-teams team-bg-box">
                   <view class="team">
                      <image :src="getFullImageUrl(item.homeTeam?.logoUrl)" class="team-logo" mode="aspectFit" @error="handleImageError(item.homeTeam)"></image>
                      <text class="team-name">{{ item.homeTeam?.name }}</text>
@@ -80,14 +80,14 @@
                </view>
             </view>
 
-            <!-- 帖子卡片 (同步圈子搜索样式) -->
+            <!-- 帖子卡片 -->
             <view v-else-if="item.type === 'post'" class="post-card-style">
               <view class="post-header">
                 <view class="user-info">
-                  <image class="user-avatar" :src="getFullImageUrl(item.userAvatar) || '/static/default-avatar.png'" mode="aspectFill"></image>
+                  <image class="user-avatar bg-theme-secondary" :src="getFullImageUrl(item.userAvatar) || '/static/default-avatar.png'" mode="aspectFill"></image>
                   <text class="user-name">{{ item.author || '社区用户' }}</text>
                 </view>
-                <text class="post-time">{{ formatTime(item.displayTime) }}</text>
+                <text class="post-time text-secondary">{{ formatTime(item.displayTime) }}</text>
               </view>
               
               <view class="post-content">
@@ -95,19 +95,19 @@
                 <text class="post-text">{{ item.summary || item.content }}</text>
               </view>
               
-              <image v-if="item.cover" class="post-main-img" :src="getFullImageUrl(item.cover)" mode="aspectFill"></image>
+              <image v-if="item.cover" class="post-main-img bg-theme-secondary" :src="getFullImageUrl(item.cover)" mode="aspectFill"></image>
               
               <view class="post-footer-stats">
                 <view class="interaction-item">
-                  <u-icon name="heart" size="18" color="#9ca3af"></u-icon>
+                  <u-icon name="heart" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
                   <text>{{ item.likes || 0 }}</text>
                 </view>
                 <view class="interaction-item">
-                  <u-icon name="chat" size="18" color="#9ca3af"></u-icon>
+                  <u-icon name="chat" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
                   <text>{{ item.commentCount || 0 }}</text>
                 </view>
                 <view class="interaction-item">
-                  <u-icon name="share-square" size="18" color="#9ca3af"></u-icon>
+                  <u-icon name="share-square" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
                   <text>{{ item.shares || 0 }}</text>
                 </view>
               </view>
@@ -118,24 +118,24 @@
               <view class="card-main">
                 <view class="card-header">
                   <text class="badge news-badge">资讯</text>
-                  <text class="time-text">{{ formatTime(item.displayTime) }}</text>
+                  <text class="time-text text-secondary">{{ formatTime(item.displayTime) }}</text>
                 </view>
                 <text class="title-text">{{ item.title }}</text>
-                <text class="summary-text">{{ item.summary || item.content }}</text>
+                <text class="summary-text text-secondary">{{ item.summary || item.content }}</text>
                 <view class="card-footer">
                   <view class="stat-item" v-if="item.author">
-                    <u-icon name="account" size="14" color="#6b7280"></u-icon>
+                    <u-icon name="account" size="14" :color="themeStore.theme === 'dark' ? '#6b7280' : '#64748b'"></u-icon>
                     <text>{{ item.author }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="eye" size="14" color="#6b7280"></u-icon>
+                    <u-icon name="eye" size="14" :color="themeStore.theme === 'dark' ? '#6b7280' : '#64748b'"></u-icon>
                     <text>{{ item.viewCount || item.views || 0 }}</text>
                   </view>
                 </view>
               </view>
               
               <view v-if="item.cover" class="cover-area">
-                <image :src="getFullImageUrl(item.cover)" class="cover-img" mode="aspectFill" @error="item.cover = null"></image>
+                <image :src="getFullImageUrl(item.cover)" class="cover-img bg-theme-secondary" mode="aspectFill" @error="item.cover = null"></image>
               </view>
             </view>
           </view>
@@ -146,10 +146,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { searchApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
+import { useThemeStore } from '@/store/theme'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const keyword = ref('')
 const loading = ref(false)
@@ -179,7 +183,6 @@ const handleSearch = async () => {
     return
   }
 
-  console.log('开始搜索, 关键词:', keyword.value)
   loading.value = true
   searched.value = true
   results.value = []
@@ -196,7 +199,6 @@ const handleSearch = async () => {
     
     const combinedResults = []
     
-    // 1. 处理赛事 (优先显示)
     const matchesData = res.matches || res.Matches
     if (matchesData && matchesData.records) {
       matchesData.records.forEach(item => {
@@ -208,11 +210,9 @@ const handleSearch = async () => {
       })
     }
 
-    // 2. 处理资讯
     const newsData = res.news || res.News
     if (newsData && newsData.records) {
       newsData.records.forEach(item => {
-        // 提取封面图 (如果没封面，尝试从内容提取第一张图)
         let cover = item.coverUrl || item.cover
         if (!cover && item.content) {
           const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/)
@@ -221,12 +221,9 @@ const handleSearch = async () => {
           }
         }
         
-        // 处理摘要 (去除 HTML 标签)
         let summary = item.summary
         if (!summary && item.content) {
-          // 移除 HTML 标签
           const textContent = item.content.replace(/<[^>]+>/g, '')
-          // 移除多余空白
           summary = textContent.replace(/\s+/g, ' ').trim().substring(0, 60) + '...'
         }
 
@@ -240,11 +237,9 @@ const handleSearch = async () => {
       })
     }
     
-    // 3. 处理帖子
     const postsData = res.posts || res.Posts
     if (postsData && postsData.records) {
       postsData.records.forEach(item => {
-        // 提取封面图 (帖子首图)
         let postCover = null
         if (item.images && Array.isArray(item.images) && item.images.length > 0) {
           postCover = item.images[0]
@@ -271,7 +266,6 @@ const handleSearch = async () => {
       })
     }
     
-    // 按时间倒序排序
     combinedResults.sort((a, b) => {
       const timeA = new Date(a.displayTime || 0)
       const timeB = new Date(b.displayTime || 0)
@@ -316,7 +310,6 @@ const handleImageError = (team) => {
 
 const goToDetail = (item) => {
   if (item.type === 'match') {
-    // 赛事没有详情页，跳转到赛程页面
     uni.switchTab({
       url: '/pages/schedule/schedule'
     })
@@ -345,7 +338,6 @@ const formatTime = (timeStr) => {
 
 const getFullImageUrl = (url) => {
   if (!url) return ''
-  // Handle frontend static assets (except team logos which are on backend)
   if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) {
       return url
   }
@@ -355,19 +347,13 @@ const getFullImageUrl = (url) => {
 </script>
 
 <style lang="scss" scoped>
-$bg-dark: #1a1811;
-$surface-dark: #24211a;
-$border-dark: rgba(255, 255, 255, 0.05);
-$primary: #f2b90d;
-$text-gray: #9ca3af;
-$text-white: #ffffff;
-
 .container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: $bg-dark;
-  color: $text-white;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: all 0.3s;
 }
 
 /* Navbar */
@@ -375,8 +361,6 @@ $text-white: #ffffff;
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background-color: $surface-dark;
-  border-bottom: 1px solid $border-dark;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -390,7 +374,7 @@ $text-white: #ffffff;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-secondary);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -399,26 +383,25 @@ $text-white: #ffffff;
 .search-box {
   flex: 1;
   height: 38px;
-  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   padding: 0 16px;
   margin-right: 12px;
   transition: all 0.3s ease;
+  background-color: var(--bg-secondary);
+  border: 1rpx solid var(--border-main);
 
   &:focus-within {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba($primary, 0.5);
-    box-shadow: 0 0 10px rgba($primary, 0.1);
+    border-color: rgba($pitch-pulse-primary, 0.5);
+    box-shadow: 0 0 10px rgba($pitch-pulse-primary, 0.1);
   }
 }
 
 .search-input {
   flex: 1;
   font-size: 14px;
-  color: #fff;
+  color: var(--text-main);
   margin-left: 8px;
   background: transparent;
   border: none;
@@ -434,7 +417,7 @@ $text-white: #ffffff;
 }
 
 .search-btn-text {
-  color: $primary;
+  color: $pitch-pulse-primary;
   font-size: 14px;
   font-weight: bold;
 }
@@ -461,8 +444,8 @@ $text-white: #ffffff;
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba($primary, 0.2);
-  border-top-color: $primary;
+  border: 3px solid rgba($pitch-pulse-primary, 0.2);
+  border-top-color: $pitch-pulse-primary;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -473,7 +456,7 @@ $text-white: #ffffff;
 }
 
 .loading-text {
-  color: $text-gray;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -486,13 +469,14 @@ $text-white: #ffffff;
 }
 
 .empty-text {
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 16px;
   margin-top: 16px;
 }
 
 .empty-subtext {
-  color: #4b5563;
+  color: var(--text-secondary);
+  opacity: 0.6;
   font-size: 12px;
   margin-top: 8px;
 }
@@ -505,10 +489,8 @@ $text-white: #ffffff;
 }
 
 .result-card {
-  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .badge {
@@ -527,11 +509,11 @@ $text-white: #ffffff;
 }
 
 .news-badge {
-  color: $primary;
-  background-color: rgba($primary, 0.1);
+  color: $pitch-pulse-primary;
+  background-color: rgba($pitch-pulse-primary, 0.1);
 }
 
-/* Post Card Style (Sync with circle-search) */
+/* Post Card Style */
 .post-card-style {
   display: flex;
   flex-direction: column;
@@ -554,18 +536,16 @@ $text-white: #ffffff;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .post-time {
   font-size: 12px;
-  color: #6b7280;
 }
 
 .post-content {
@@ -573,7 +553,7 @@ $text-white: #ffffff;
 }
 
 .highlight-title {
-  color: $primary;
+  color: $pitch-pulse-primary;
   font-weight: bold;
   font-size: 15px;
   margin-right: 4px;
@@ -581,7 +561,8 @@ $text-white: #ffffff;
 
 .post-text {
   font-size: 14px;
-  color: #d1d5db;
+  color: var(--text-main);
+  opacity: 0.9;
   line-height: 1.6;
 }
 
@@ -603,12 +584,11 @@ $text-white: #ffffff;
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 .time-text {
   font-size: 12px;
-  color: #6b7280;
 }
 
 /* Match Card */
@@ -617,7 +597,6 @@ $text-white: #ffffff;
   align-items: center;
   justify-content: space-between;
   margin-top: 12px;
-  background-color: rgba(0, 0, 0, 0.2);
   padding: 12px;
   border-radius: 8px;
 }
@@ -638,7 +617,7 @@ $text-white: #ffffff;
 .team-name {
   font-size: 12px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
   text-align: center;
 }
 
@@ -652,21 +631,21 @@ $text-white: #ffffff;
 .score {
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .vs {
   font-size: 20px;
   font-weight: bold;
-  color: $primary;
+  color: $pitch-pulse-primary;
 }
 
 .status-badge {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--text-secondary);
   margin-top: 4px;
   padding: 2px 8px;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary);
   border-radius: 10px;
 }
 
@@ -695,13 +674,12 @@ $text-white: #ffffff;
 
 .competition-name {
   font-size: 12px;
-  color: #9ca3af;
 }
 
 .title-text {
   font-size: 16px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -711,7 +689,6 @@ $text-white: #ffffff;
 
 .summary-text {
   font-size: 12px;
-  color: #9ca3af;
   margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -730,7 +707,7 @@ $text-white: #ffffff;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .cover-area {
@@ -744,5 +721,17 @@ $text-white: #ffffff;
 .cover-img {
   width: 100%;
   height: 100%;
+}
+
+.theme-light {
+  .team-bg-box {
+    background-color: #f8fafc;
+  }
+}
+
+.theme-dark {
+  .team-bg-box {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 }
 </style>
