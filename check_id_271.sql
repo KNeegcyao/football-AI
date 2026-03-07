@@ -1,1 +1,0 @@
-SELECT id, name, logo_url FROM teams WHERE id = 271;

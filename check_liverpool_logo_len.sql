@@ -1,1 +1,0 @@
-SELECT id, name, logo_url, LENGTH(logo_url) as len FROM teams WHERE id = 271;

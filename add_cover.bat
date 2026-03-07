@@ -1,1 +1,0 @@
-mysql -h 127.0.0.1 -P 3306 -u root -p290390 soccer_forum -e "ALTER TABLE users ADD COLUMN cover VARCHAR(255) DEFAULT NULL COMMENT '背景图' AFTER avatar;"

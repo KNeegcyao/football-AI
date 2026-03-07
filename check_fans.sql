@@ -1,1 +1,0 @@
-SELECT id, user_id, from_user_id, type, created_at FROM notifications WHERE type = 5 ORDER BY created_at DESC LIMIT 10;
