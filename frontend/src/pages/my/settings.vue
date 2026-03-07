@@ -115,6 +115,12 @@
   </view>
 </template>
 
+<style lang="scss" scoped>
+.gold-gradient {
+  background: linear-gradient(135deg, #f9d406 0%, #ffeb3b 100%);
+}
+</style>
+
 <script setup>
 import { ref, reactive } from 'vue'
 import { userApi } from '@/api/index'
