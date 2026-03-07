@@ -67,6 +67,9 @@ public class User implements Serializable {
     @Schema(description = "接收谁的回复提醒: all-所有人, following-关注的人, none-关闭")
     private String replyNotificationType;
 
+    @Schema(description = "是否接收粉丝提醒: receive-接收, never-永不")
+    private String fanNotificationType;
+
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

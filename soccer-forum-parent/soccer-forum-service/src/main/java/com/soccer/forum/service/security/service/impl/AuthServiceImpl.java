@@ -9,6 +9,8 @@ import com.soccer.forum.service.mapper.UserMapper;
 import com.soccer.forum.service.security.model.LoginBody;
 import com.soccer.forum.service.security.model.LoginUser;
 import com.soccer.forum.service.security.service.AuthService;
+import com.soccer.forum.service.service.TeamFollowService;
+import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.utils.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,17 +44,23 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final StringRedisTemplate redisTemplate;
+    private final TeamService teamService;
+    private final TeamFollowService teamFollowService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager, 
                            JwtUtils jwtUtils, 
                            UserMapper userMapper, 
                            PasswordEncoder passwordEncoder,
-                           StringRedisTemplate redisTemplate) {
+                           StringRedisTemplate redisTemplate,
+                           TeamService teamService,
+                           TeamFollowService teamFollowService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
+        this.teamService = teamService;
+        this.teamFollowService = teamFollowService;
     }
 
     /**
@@ -75,6 +83,17 @@ public class AuthServiceImpl implements AuthService {
             
             log.debug("用户认证成功: {}", loginBody.getUsername());
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            
+            // 登录成功，更新该用户关注的所有圈子的在线人数
+            try {
+                java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(loginUser.getUser().getId());
+                for (Long teamId : followedTeamIds) {
+                    teamService.updateOnlineCount(teamId, loginUser.getUser().getId(), true);
+                }
+            } catch (Exception e) {
+                log.error("更新在线人数失败", e);
+            }
+
             return jwtUtils.generateToken(loginUser);
         } catch (AuthenticationException e) {
             log.warn("用户认证失败: {}", loginBody.getUsername());
@@ -284,6 +303,36 @@ public class AuthServiceImpl implements AuthService {
         
         // 生成 Token
         LoginUser loginUser = new LoginUser(user);
+
+        // 登录成功，更新该用户关注的所有圈子的在线人数
+        try {
+            java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(user.getId());
+            for (Long teamId : followedTeamIds) {
+                teamService.updateOnlineCount(teamId, user.getId(), true);
+            }
+        } catch (Exception e) {
+            log.error("更新在线人数失败", e);
+        }
+
         return jwtUtils.generateToken(loginUser);
+    }
+
+    /**
+     * 用户登出实现
+     *
+     * @param userId 用户ID
+     */
+    @Override
+    public void logout(Long userId) {
+        log.info("用户 {} 请求登出", userId);
+        // 清除所有圈子的在线状态
+        try {
+            java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(userId);
+            for (Long teamId : followedTeamIds) {
+                teamService.updateOnlineCount(teamId, userId, false);
+            }
+        } catch (Exception e) {
+            log.error("清除在线人数失败", e);
+        }
     }
 }

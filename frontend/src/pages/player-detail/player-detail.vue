@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <view v-if="loading" class="loading-state">
       <text class="loading-text">加载中...</text>
     </view>
@@ -128,9 +128,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { playerApi, fileApi, favoriteApi } from '@/api/index';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const statusBarHeight = ref(20);
 const navbarPaddingRight = ref(0);
@@ -329,8 +333,8 @@ $text-gray: #9ca3af;
 
 .container {
   min-height: 100vh;
-  background-color: $bg-dark;
-  color: $text-white;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
 }
@@ -340,15 +344,17 @@ $text-gray: #9ca3af;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: var(--bg-main);
   
   .loading-text {
-    color: $text-gray;
+    color: var(--text-secondary);
   }
 }
 
 .content-scroll {
   flex: 1;
   height: 100vh;
+  background-color: var(--bg-main);
 }
 
 /* Navbar */
@@ -370,7 +376,7 @@ $text-gray: #9ca3af;
   border-radius: 50%;
   background: rgba(18, 18, 18, 0.4);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-main);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -382,7 +388,7 @@ $text-gray: #9ca3af;
 }
 
 .nav-icon {
-  color: #fff;
+  color: var(--text-main);
   font-size: 20px;
   
   &.active {
@@ -409,7 +415,7 @@ $text-gray: #9ca3af;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, rgba(18, 18, 18, 0.8) 70%, rgba(18, 18, 18, 1) 100%);
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, rgba(18, 18, 18, 0.4) 50%, var(--bg-main) 100%);
 }
 
 .hero-content {
@@ -435,7 +441,8 @@ $text-gray: #9ca3af;
 }
 
 .player-pos {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
+  opacity: 0.8;
   font-size: 20px;
   font-weight: 500;
   text-transform: uppercase;
@@ -444,7 +451,7 @@ $text-gray: #9ca3af;
 
 .player-name-cn {
   display: block;
-  color: #fff;
+  color: var(--text-main);
   font-size: 48px;
   font-weight: bold;
   line-height: 1.1;
@@ -461,9 +468,9 @@ $text-gray: #9ca3af;
 
 /* Glass Card Common */
 .glass-card {
-  background: rgba(30, 30, 30, 0.8);
+  background: var(--bg-secondary);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(242, 185, 13, 0.1);
+  border: 1px solid var(--border-main);
   border-radius: 16px;
 }
 
@@ -476,7 +483,7 @@ $text-gray: #9ca3af;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .team-info {
@@ -520,7 +527,7 @@ $text-gray: #9ca3af;
 }
 
 .label {
-  color: $text-gray;
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
@@ -528,7 +535,7 @@ $text-gray: #9ca3af;
 }
 
 .value {
-  color: #fff;
+  color: var(--text-main);
   font-size: 18px;
   font-weight: bold;
 }
@@ -553,10 +560,10 @@ $text-gray: #9ca3af;
 }
 
 .info-box {
-  background: $surface-dark;
+  background: var(--bg-main);
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-main);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -569,13 +576,13 @@ $text-gray: #9ca3af;
 }
 
 .info-value {
-  color: #fff;
+  color: var(--text-main);
   font-weight: bold;
   font-size: 16px;
 }
 
 .info-label {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 10px;
   text-transform: uppercase;
   font-weight: bold;
@@ -602,64 +609,87 @@ $text-gray: #9ca3af;
 }
 
 .section-title {
-  color: #fff;
+  color: var(--text-main);
   font-size: 18px;
   font-weight: bold;
 }
 
-/* Info List */
 .info-list {
-  border-radius: 16px;
-  overflow: hidden;
+  padding: 8px 16px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-main);
   
-  .info-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-  
-  .item-label {
-    color: $text-gray;
-  }
-  
-  .item-value {
-    color: #fff;
-    font-weight: 500;
+  &:last-child {
+    border-bottom: none;
   }
 }
 
-/* Stats Grid */
+.item-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.item-value {
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 20px 0;
-  
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-    
-    &:last-child {
-      border-right: none;
-    }
+  padding: 20px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-num {
+  color: var(--text-main);
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+  /* 浅色模式适配 */
+.theme-light {
+  .hero-gradient {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, var(--bg-main) 100%);
   }
   
-  .stat-num {
-    color: $primary;
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 4px;
+  .nav-btn-glass {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.05);
   }
   
-  .stat-label {
-    color: $text-gray;
-    font-size: 12px;
+  .glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #F3F4F6;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+  
+  .team-logo-wrapper {
+    background: #F9FAFB;
+    border-color: #F3F4F6;
+  }
+  
+  .info-box {
+    background: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   }
 }
 </style>

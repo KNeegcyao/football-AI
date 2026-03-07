@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- Navigation Bar -->
     <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
@@ -57,9 +57,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
 import { postApi, fileApi } from '@/api';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
 
 const posts = ref([]);
 const navbarPaddingRight = ref(0);
@@ -386,5 +390,27 @@ const formatTime = (time) => {
   display: flex;
   justify-content: center;
   padding: 20px;
+}
+
+/* 浅色模式微调 */
+.theme-light {
+  .nav-bar {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .u-icon {
+      color: var(--text-main) !important;
+    }
+    .nav-title {
+      color: var(--text-main);
+    }
+  }
+  .post-item {
+    background-color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #F3F4F6;
+    .post-title {
+      color: var(--text-main);
+    }
+  }
 }
 </style>

@@ -40,8 +40,8 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        // 消息提醒过滤逻辑 (仅针对回复/评论/@提及 类型: 3, 4, 6)
-        if (type == 3 || type == 4 || type == 6) {
+        // 消息提醒过滤逻辑 (仅针对回复/评论/@提及 类型: 2, 3, 4, 6)
+        if (type == 2 || type == 3 || type == 4 || type == 6) {
             User targetUser = userService.getById(userId);
             if (targetUser != null && targetUser.getReplyNotificationType() != null) {
                 String setting = targetUser.getReplyNotificationType();
@@ -53,6 +53,14 @@ public class NotificationServiceImpl implements NotificationService {
                         return; // 目标用户未关注发送者，过滤
                     }
                 }
+            }
+        }
+
+        // 粉丝提醒过滤逻辑 (类型: 5)
+        if (type == 5) {
+            User targetUser = userService.getById(userId);
+            if (targetUser != null && "never".equals(targetUser.getFanNotificationType())) {
+                return; // 用户设置了永不提醒粉丝消息
             }
         }
 

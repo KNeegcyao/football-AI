@@ -43,6 +43,9 @@ public class UserInfoResp {
     @Schema(description = "回复提醒设置")
     private String replyNotificationType;
 
+    @Schema(description = "粉丝提醒设置")
+    private String fanNotificationType;
+
     public static UserInfoResp fromEntity(User user) {
         UserInfoResp resp = new UserInfoResp();
         resp.setId(user.getId());
@@ -57,6 +60,7 @@ public class UserInfoResp {
         resp.setExperience(user.getExperience() == null ? 0 : user.getExperience());
         resp.setBio(user.getBio());
         resp.setReplyNotificationType(user.getReplyNotificationType());
+        resp.setFanNotificationType(user.getFanNotificationType());
         return resp;
     }
 
@@ -84,4 +88,6 @@ public class UserInfoResp {
     public void setBio(String bio) { this.bio = bio; }
     public String getReplyNotificationType() { return replyNotificationType; }
     public void setReplyNotificationType(String replyNotificationType) { this.replyNotificationType = replyNotificationType; }
+    public String getFanNotificationType() { return fanNotificationType; }
+    public void setFanNotificationType(String fanNotificationType) { this.fanNotificationType = fanNotificationType; }
 }

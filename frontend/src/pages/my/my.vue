@@ -1,17 +1,17 @@
 <template>
-  <view class="page-container bg-background-dark text-slate-100 min-h-screen font-display">
+  <view class="page-container min-h-screen font-display" :class="themeClass">
     <!-- Top Navigation Header -->
-    <view class="header-sticky" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <view class="header-sticky bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="header-content">
         <view class="header-left" v-if="isOthersProfile" @click="goBack">
-          <text class="material-symbols-outlined text-2xl">arrow_back</text>
+          <text class="material-symbols-outlined text-2xl text-theme-main">arrow_back</text>
         </view>
         <view class="header-center">
-          <text class="text-lg font-bold">{{ userInfo.nickname }}的战术板</text>
+          <text class="text-lg font-bold text-theme-main">{{ userInfo.nickname }}的战术板</text>
         </view>
         <view class="header-right" v-if="!isOthersProfile">
-          <button class="action-icon-btn" @click="goToSettings">
-            <text class="material-symbols-outlined text-2xl">settings</text>
+          <button class="action-icon-btn bg-theme-secondary" @click="goToSettings">
+            <text class="material-symbols-outlined text-2xl text-theme-main">settings</text>
           </button>
         </view>
         <view class="header-right" v-else>
@@ -27,7 +27,7 @@
         <view class="cover-image-container" @click="chooseCover">
           <view class="cover-overlay"></view>
           <image v-if="userInfo.cover" class="cover-image" :src="userInfo.cover" mode="aspectFill"></image>
-          <view v-else class="cover-placeholder"></view>
+          <view v-else class="cover-placeholder bg-theme-secondary"></view>
         </view>
         
         <view class="profile-info-card">
@@ -42,7 +42,7 @@
               <!-- Lv.5 流光背景层 (必须在最底层) -->
               <view v-if="Number(userInfo.level) === 5" class="frame-glow-lv5-bg"></view>
 
-              <view class="avatar-wrapper">
+              <view class="avatar-wrapper border-2 border-white/20">
                 <image class="avatar-img" :src="userInfo.avatar" mode="aspectFill" @click="chooseAvatar"></image>
               </view>
 
@@ -85,17 +85,21 @@
             <text class="user-bio">{{ userInfo.bio || '此人没有留下任何足迹...' }}</text>
           </view>
 
-          <view class="action-buttons">
-            <template v-if="!isOthersProfile">
-              <button class="btn-primary" @click="goToEdit">编辑资料</button>
-              <button class="btn-secondary" @click="logout">退出登录</button>
-            </template>
-            <template v-else>
-              <button class="btn-primary" @click="handleFollow">关注</button>
-              <button class="btn-secondary" @click="handleMessage">私信</button>
-            </template>
-          </view>
         </view>
+      </view>
+
+      <view class="action-buttons-row">
+        <template v-if="!isOthersProfile">
+          <button class="btn-primary" @click="goToEdit">编辑资料</button>
+          <button class="btn-secondary" @click="logout">退出登录</button>
+        </template>
+        <template v-else>
+          <button class="btn-primary" @click="handleFollow">关注</button>
+          <button class="btn-secondary" @click="handleMessage">
+            <text class="material-symbols-outlined" style="font-size: 32rpx; margin-right: 8rpx;">chat_bubble</text>
+            <text>私信</text>
+          </button>
+        </template>
       </view>
 
       <!-- Stats Section -->
@@ -115,13 +119,13 @@
       </view>
 
       <!-- Tabs Navigation -->
-      <view class="tabs-sticky">
+      <view class="tabs-sticky bg-nav-bar border-b border-theme-main">
         <view class="tabs-content">
           <view v-for="(tab, index) in profileTabs" :key="index" 
                 class="tab-item" 
                 :class="{ active: currentProfileTab === index }"
                 @click="currentProfileTab = index">
-            <text class="tab-text">{{ tab.name }} ({{ tab.count }})</text>
+            <text class="tab-text" :class="currentProfileTab === index ? 'text-theme-main font-bold' : 'text-theme-secondary'">{{ tab.name }} ({{ tab.count }})</text>
             <view class="tab-indicator" v-if="currentProfileTab === index"></view>
           </view>
         </view>
@@ -131,63 +135,63 @@
       <view class="content-feed">
         <!-- 动态列表 (Tab 0) -->
         <view v-if="currentProfileTab === 0">
-          <view v-for="(post, index) in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
+          <view v-for="(post, index) in posts" :key="post.id" class="post-card bg-card border border-theme-main" @click="goToPostDetail(post.id)">
             <view class="post-content-row">
               <view class="post-text-side">
-                <text class="post-title">{{ post.title }}</text>
-                <text class="post-excerpt">{{ post.content }}</text>
+                <text class="post-title text-theme-main">{{ post.title }}</text>
+                <text class="post-excerpt text-theme-secondary">{{ post.content }}</text>
                 <view class="post-meta">
-                  <view class="meta-item">
+                  <view class="meta-item text-theme-secondary">
                     <text class="material-symbols-outlined text-sm">favorite</text>
                     <text>{{ formatStats(post.likes) }}</text>
                   </view>
-                  <view class="meta-item">
+                  <view class="meta-item text-theme-secondary">
                     <text class="material-symbols-outlined text-sm">chat_bubble</text>
                     <text>{{ post.commentCount }}</text>
                   </view>
-                  <text class="post-time">{{ formatTime(post.createTime) }}</text>
+                  <text class="post-time text-theme-secondary">{{ formatTime(post.createTime) }}</text>
                 </view>
               </view>
               <image v-if="post.image" class="post-image" :src="post.image" mode="aspectFill"></image>
             </view>
           </view>
           
-          <u-loadmore :status="loadStatus" color="#64748b" v-if="posts.length > 0" />
+          <u-loadmore :status="loadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="posts.length > 0" />
           <view class="empty-state" v-if="posts.length === 0 && !loading">
-            <text class="material-symbols-outlined empty-icon">description</text>
-            <text>暂无动态</text>
+            <text class="material-symbols-outlined empty-icon text-theme-secondary">description</text>
+            <text class="text-theme-secondary">暂无动态</text>
           </view>
         </view>
         
         <!-- 收藏列表 (Tab 1) -->
         <view v-else-if="currentProfileTab === 1">
           <!-- 收藏二级分类 -->
-          <view class="fav-sub-tabs">
+          <view class="fav-sub-tabs bg-theme-secondary border border-theme-main">
             <view v-for="(subTab, subIdx) in favSubTabs" :key="subIdx" 
                   class="sub-tab-item" 
                   :class="{ active: currentFavSubTab === subIdx }"
                   @click="changeFavSubTab(subIdx)">
-              <text>{{ subTab }}</text>
+              <text :class="currentFavSubTab === subIdx ? 'text-theme-main font-bold' : 'text-theme-secondary'">{{ subTab }}</text>
             </view>
           </view>
 
           <!-- 帖子收藏列表 -->
           <view v-if="currentFavSubTab === 0">
-            <view v-for="(item, index) in favorites" :key="item.id" class="post-card" @click="goToPostDetail(item.id)">
+            <view v-for="(item, index) in favorites" :key="item.id" class="post-card bg-card border border-theme-main" @click="goToPostDetail(item.id)">
               <view class="post-content-row">
                 <view class="post-text-side">
-                  <text class="post-title">{{ item.title }}</text>
-                  <text class="post-excerpt">{{ item.content }}</text>
+                  <text class="post-title text-theme-main">{{ item.title }}</text>
+                  <text class="post-excerpt text-theme-secondary">{{ item.content }}</text>
                   <view class="post-meta">
-                    <view class="meta-item">
+                    <view class="meta-item text-theme-secondary">
                       <text class="material-symbols-outlined text-sm">favorite</text>
                       <text>{{ formatStats(item.likes) }}</text>
                     </view>
-                    <view class="meta-item">
+                    <view class="meta-item text-theme-secondary">
                       <text class="material-symbols-outlined text-sm">chat_bubble</text>
                       <text>{{ item.commentCount }}</text>
                     </view>
-                    <text class="post-time">{{ formatTime(item.createTime) }}</text>
+                    <text class="post-time text-theme-secondary">{{ formatTime(item.createTime) }}</text>
                   </view>
                 </view>
                 <image v-if="item.image" class="post-image" :src="item.image" mode="aspectFill"></image>
@@ -197,13 +201,13 @@
 
           <!-- 新闻收藏列表 -->
           <view v-else-if="currentFavSubTab === 1">
-            <view v-for="(item, index) in favoriteNews" :key="item.id" class="post-card" @click="goToNewsDetail(item.id)">
+            <view v-for="(item, index) in favoriteNews" :key="item.id" class="post-card bg-card border border-theme-main" @click="goToNewsDetail(item.id)">
               <view class="post-content-row">
                 <view class="post-text-side">
-                  <text class="post-title">{{ item.title }}</text>
-                  <text class="post-excerpt">{{ item.content }}</text>
+                  <text class="post-title text-theme-main">{{ item.title }}</text>
+                  <text class="post-excerpt text-theme-secondary">{{ item.content }}</text>
                   <view class="post-meta">
-                    <text class="post-time">{{ formatTime(item.createTime) }}</text>
+                    <text class="post-time text-theme-secondary">{{ formatTime(item.createTime) }}</text>
                   </view>
                 </view>
                 <image v-if="item.image" class="post-image" :src="item.image" mode="aspectFill"></image>
@@ -213,38 +217,38 @@
 
           <!-- 球员收藏列表 -->
           <view v-else-if="currentFavSubTab === 2" class="player-grid">
-            <view v-for="(player, index) in favoritePlayers" :key="player.id" class="player-card" @click="goToPlayerDetail(player.id)">
+            <view v-for="(player, index) in favoritePlayers" :key="player.id" class="player-card bg-card border border-theme-main" @click="goToPlayerDetail(player.id)">
               <image class="player-avatar" :src="player.avatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
-              <text class="player-name">{{ player.name }}</text>
-              <text class="player-position">{{ player.position }}</text>
+              <text class="player-name text-theme-main">{{ player.name }}</text>
+              <text class="player-position text-theme-secondary">{{ player.position }}</text>
             </view>
           </view>
           
-          <u-loadmore :status="favLoadStatus" color="#64748b" v-if="getCurrentFavList().length > 0" />
+          <u-loadmore :status="favLoadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="getCurrentFavList().length > 0" />
           <view class="empty-state" v-if="getCurrentFavList().length === 0 && !favLoading">
-            <text class="material-symbols-outlined empty-icon">bookmark</text>
-            <text>暂无{{ favSubTabs[currentFavSubTab] }}收藏</text>
+            <text class="material-symbols-outlined empty-icon text-theme-secondary">bookmark</text>
+            <text class="text-theme-secondary">暂无{{ favSubTabs[currentFavSubTab] }}收藏</text>
           </view>
         </view>
         
         <!-- 相册 (Tab 2) -->
         <view v-else-if="currentProfileTab === 2" class="empty-state">
-          <text class="material-symbols-outlined empty-icon">photo_library</text>
-          <text>暂无相册</text>
+          <text class="material-symbols-outlined empty-icon text-theme-secondary">photo_library</text>
+          <text class="text-theme-secondary">暂无相册</text>
         </view>
       </view>
       
       <view class="footer-info">
-        <text class="version-text">PitchPulse v2.4.0 (Build 503)</text>
+        <text class="version-text text-theme-secondary">PitchPulse v2.4.0 (Build 503)</text>
       </view>
     </scroll-view>
 
     <!-- Bottom Navigation Bar -->
-    <view class="tab-bar">
+    <view class="tab-bar bg-tab-bar border-theme-main">
       <view v-for="(tab, index) in mainTabs" :key="index" class="tab-item" :class="{ active: currentMainTab === index }"
         @tap="handleMainTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentMainTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'" size="24"></u-icon>
-        <text class="tab-text">{{ tab.text }}</text>
+        <u-icon :name="tab.icon" :color="currentMainTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
+        <text class="tab-text" :class="currentMainTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
       </view>
     </view>
     
@@ -266,6 +270,10 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi, postApi, favoriteApi, playerApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
+import { useThemeStore } from '@/store/theme'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const currentMainTab = ref(3)
@@ -845,20 +853,22 @@ const formatStats = (num) => {
 
   .profile-header {
     position: relative;
-    padding-bottom: 20rpx;
-    background: #0A0A0A;
+    overflow: hidden;
 
     .cover-image-container {
-      height: 480rpx;
-      width: 100%;
+      height: 520rpx;
       position: relative;
-      overflow: hidden;
-
-      .cover-overlay {
+      background-color: var(--bg-main);
+      
+      &::after {
+        content: '';
         position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, #0A0A0A 0%, transparent 60%, rgba(0,0,0,0.3) 100%);
-        z-index: 1;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 60%;
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+        z-index: 2;
       }
 
       .cover-image {
@@ -870,22 +880,26 @@ const formatStats = (num) => {
       .cover-placeholder {
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        background: linear-gradient(45deg, var(--bg-main), var(--bg-secondary));
       }
     }
 
     .profile-info-card {
-      position: relative;
-      margin-top: -120rpx;
-      padding: 0 40rpx 32rpx;
+      position: absolute;
+      bottom: 40rpx;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 40rpx;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      z-index: 2;
+      align-items: flex-end;
+      gap: 30rpx;
 
       .avatar-section {
+        flex-shrink: 0;
         position: relative;
-        margin-bottom: 32rpx;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -897,9 +911,9 @@ const formatStats = (num) => {
       }
 
       .identity-info {
-        width: 100%;
-        padding-right: 40rpx;
-        box-sizing: border-box;
+        flex: 1;
+        margin-top: 0;
+        padding-bottom: 10rpx;
 
         .name-row {
           display: flex;
@@ -908,86 +922,84 @@ const formatStats = (num) => {
           margin-bottom: 12rpx;
 
           .nickname {
-            font-size: 48rpx;
+            font-size: 44rpx;
             font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.5);
+            color: #ffffff !important;
+            text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3);
           }
         }
 
         .title-container {
-          margin-bottom: 20rpx;
-          background: rgba(242, 185, 13, 0.15);
-          border: 1rpx solid rgba(242, 185, 13, 0.3);
-          padding: 8rpx 24rpx;
-          border-radius: 12rpx;
           display: inline-flex;
           align-items: center;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(4rpx);
+          padding: 6rpx 16rpx;
+          border-radius: 8rpx;
+          margin-top: 12rpx;
+          border: 1rpx solid rgba(255, 255, 255, 0.2);
           gap: 12rpx;
 
           .primary-title {
-            font-size: 26rpx;
-            font-weight: 700;
+            font-size: 24rpx;
+            font-weight: 600;
             color: #f2b90d;
           }
 
           .divider {
-            color: rgba(242, 185, 13, 0.4);
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0 10rpx;
             font-size: 20rpx;
           }
 
           .secondary-title {
-            font-size: 24rpx;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 22rpx;
+            color: rgba(255, 255, 255, 0.9);
           }
-        }
-
-        .user-handle {
-          display: block;
-          font-size: 26rpx;
-          color: rgba(255, 255, 255, 0.4);
-          margin-bottom: 12rpx;
         }
 
         .user-bio {
-          font-size: 28rpx;
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.6;
-          margin-top: 8rpx;
+          font-size: 26rpx;
+          color: rgba(255, 255, 255, 0.8) !important;
+          line-height: 1.4;
+          margin-top: 10rpx;
           width: 100%;
           display: block;
           word-break: break-all;
+          text-shadow: 0 1rpx 4rpx rgba(0,0,0,0.3);
         }
       }
+    }
+  }
 
-      .action-buttons {
-        width: 100%;
-        display: flex;
-        gap: 24rpx;
-        margin-top: 48rpx;
-        padding-right: 40rpx;
-        box-sizing: border-box;
+  .action-buttons-row {
+    display: flex;
+    gap: 20rpx;
+    margin: 30rpx 40rpx 0;
+    
+    button {
+      flex: 1;
+      height: 88rpx;
+      line-height: 88rpx;
+      font-size: 30rpx;
+      font-weight: 700;
+      border-radius: 44rpx;
+      transition: all 0.3s;
+      
+      &:active { transform: scale(0.97); }
+      &::after { border: none; }
 
-        button {
-          flex: 1;
-          height: 88rpx;
-          line-height: 88rpx;
-          font-size: 30rpx;
-          font-weight: 700;
-          border-radius: 20rpx;
-          
-          &.btn-primary {
-            background: linear-gradient(135deg, #f2b90d 0%, #d9a30b 100%);
-            color: #000000;
-            box-shadow: 0 8rpx 20rpx rgba(242, 185, 13, 0.3);
-          }
+      &.btn-primary {
+        background: #f2b90d;
+        color: #000000;
+        box-shadow: 0 8rpx 20rpx rgba(242, 185, 13, 0.3);
+      }
 
-          &.btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffffff;
-            border: 1rpx solid rgba(255, 255, 255, 0.15);
-          }
-        }
+      &.btn-secondary {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4rpx);
+        color: #ffffff;
+        border: 1rpx solid rgba(255, 255, 255, 0.2);
       }
     }
   }
@@ -1186,42 +1198,59 @@ const formatStats = (num) => {
 
 .stats-container {
   display: flex;
-  justify-content: space-between;
-  padding: 30rpx 40rpx;
-  gap: 20rpx;
+  justify-content: space-around;
+  padding: 30rpx;
+  margin: 30rpx 40rpx 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 24rpx;
 
   .stat-item {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 24rpx 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20rpx;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s;
     
     .stat-value {
-      font-size: 34rpx;
+      font-size: 36rpx;
       font-weight: 800;
       color: #ffffff;
-      line-height: 1;
-      margin-bottom: 8rpx;
-      font-family: 'DIN Alternate', 'Inter', sans-serif;
     }
     
     .stat-label {
-      font-size: 22rpx;
-      color: rgba(255, 255, 255, 0.4);
-      font-weight: 500;
+      font-size: 24rpx;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 4rpx;
     }
 
     &:active {
       transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+/* 针对浅色模式的覆盖样式 */
+.theme-light {
+  .stats-container {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+    
+    .stat-item {
+      .stat-value {
+        color: #1a1a1a;
+      }
+      .stat-label {
+        color: #666666;
+      }
+    }
+  }
+
+  .action-buttons-row {
+    .btn-secondary {
+      background: rgba(0, 0, 0, 0.05);
+      color: #333333;
+      border: 1rpx solid rgba(0, 0, 0, 0.1);
     }
   }
 }
@@ -1247,7 +1276,9 @@ const formatStats = (num) => {
   position: sticky;
   top: 88rpx;
   z-index: 90;
-  background-color: #12110a;
+  background-color: var(--nav-bar-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1rpx solid var(--border-main);
 }
 
 .tabs-content {
@@ -1285,11 +1316,11 @@ const formatStats = (num) => {
 }
 
 .post-card {
-  background-color: #1e1b10;
+  background-color: var(--card-bg);
   border-radius: 32rpx;
   padding: 32rpx;
   margin-bottom: 32rpx;
-  border: 1px solid rgba(242, 185, 13, 0.05);
+  border: 1rpx solid var(--border-main);
 }
 
 .post-content-row {

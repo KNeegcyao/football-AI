@@ -1,7 +1,7 @@
 <template>
-  <view class="page-container bg-[#1A1811] text-white min-h-screen flex flex-col font-display">
+  <view class="page-container min-h-screen flex flex-col font-display" :class="themeClass">
     <!-- Header -->
-    <view class="sticky top-0 z-50 bg-[#1A1811]/95 backdrop-blur-md px-4 pt-12 pb-4 flex flex-row items-center border-b border-white/5">
+    <view class="sticky top-0 z-50 px-4 pt-12 pb-4 flex flex-row items-center border-b border-white/5 header-bg">
       <view @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 mr-2">
         <text class="material-icons-round" style="font-size: 24px;">chevron_left</text>
       </view>
@@ -64,7 +64,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useThemeStore } from '@/store/theme'
+
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const feedback = ref('')
 const faqs = ref([
@@ -107,12 +111,42 @@ const submitFeedback = () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .backdrop-blur-md {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 .gold-gradient {
   background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #B8860B 100%);
+}
+
+/* 浅色模式适配 */
+.theme-light {
+  background-color: var(--bg-main);
+  
+  .header-bg {
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-main);
+    .text-white {
+      color: var(--text-main) !important;
+    }
+  }
+  
+  .bg-white\/5 {
+    background-color: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+  }
+  
+  .text-white {
+    color: var(--text-main) !important;
+  }
+  
+  .text-gray-400 {
+    color: var(--text-secondary) !important;
+  }
+  
+  .border-white/5 {
+    border-color: #E5E7EB !important;
+  }
 }
 </style>

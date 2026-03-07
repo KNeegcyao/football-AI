@@ -1,5 +1,8 @@
 package com.soccer.forum.service.security.filter;
 
+import com.soccer.forum.service.security.model.LoginUser;
+import com.soccer.forum.service.service.TeamFollowService;
+import com.soccer.forum.service.service.TeamService;
 import com.soccer.forum.service.utils.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,10 +25,17 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
     private final JwtUtils jwtUtils;
+    private final TeamService teamService;
+    private final TeamFollowService teamFollowService;
 
-    public JwtAuthenticationTokenFilter(UserDetailsService userDetailsService, JwtUtils jwtUtils) {
+    public JwtAuthenticationTokenFilter(UserDetailsService userDetailsService, 
+                                       JwtUtils jwtUtils,
+                                       TeamService teamService,
+                                       TeamFollowService teamFollowService) {
         this.userDetailsService = userDetailsService;
         this.jwtUtils = jwtUtils;
+        this.teamService = teamService;
+        this.teamFollowService = teamFollowService;
     }
 
     @Override
@@ -55,6 +65,22 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    // 异步更新在线人数（续命）
+                    if (userDetails instanceof LoginUser) {
+                        Long userId = ((LoginUser) userDetails).getUser().getId();
+                        // 这里可以考虑频率控制，但目前先简单实现
+                        new Thread(() -> {
+                            try {
+                                java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(userId);
+                                for (Long teamId : followedTeamIds) {
+                                    teamService.updateOnlineCount(teamId, userId, true);
+                                }
+                            } catch (Exception e) {
+                                // 忽略异步执行中的错误
+                            }
+                        }).start();
+                    }
                 }
             }
         } catch (Exception e) {

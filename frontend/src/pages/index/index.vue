@@ -1,20 +1,20 @@
 <template>
-  <view class="container">
+  <view class="container" :class="themeClass">
     <!-- 状态栏占位 -->
     <view class="status-bar"></view>
 
     <!-- 顶部导航栏 -->
-    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+    <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
           <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
         </view>
-        <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
+        <text class="logo-text text-theme-main">PITCH<text class="primary">PULSE</text></text>
       </view>
 
       <view class="nav-actions">
-        <view class="action-btn" @click="goToSearch">
-          <u-icon name="search" color="#fff" size="44rpx"></u-icon>
+        <view class="action-btn bg-theme-secondary" @click="goToSearch">
+          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
         </view>
         <view class="avatar-box" @click="goToProfile">
           <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
@@ -23,12 +23,12 @@
     </view>
 
     <!-- 分类滑动条 -->
-    <scroll-view scroll-x class="category-scroll" show-scrollbar="false">
+    <scroll-view scroll-x class="category-scroll bg-nav-bar" show-scrollbar="false">
       <view class="category-list">
         <view v-for="(item, index) in categories" :key="index" 
               class="category-item" :class="{ active: currentCategory === index }"
               @click="changeCategory(index)">
-          <text class="category-text">{{ item.name }}</text>
+          <text class="category-text" :class="currentCategory === index ? 'text-theme-main' : 'text-theme-secondary'">{{ item.name }}</text>
           <view v-if="currentCategory === index" class="active-line"></view>
         </view>
       </view>
@@ -47,15 +47,15 @@
           <text class="hero-title">{{ heroPost.title }}</text>
           <view class="hero-meta">
               <view class="meta-item">
-                <u-icon name="clock" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <u-icon name="clock" size="28rpx" color="#FFFFFF"></u-icon>
                 <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
-                <u-icon name="star" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <u-icon name="star" size="28rpx" color="#FFFFFF"></u-icon>
                 <text class="meta-text">{{ heroPost.collections || 0 }}</text>
               </view>
               <view class="meta-item">
-                <u-icon name="eye" size="28rpx" color="rgba(255,255,255,0.6)"></u-icon>
+                <u-icon name="eye" size="28rpx" color="#FFFFFF"></u-icon>
                 <text class="meta-text">{{ heroPost.views || 0 }}</text>
               </view>
             </view>
@@ -64,12 +64,12 @@
 
       <!-- 推荐列表 -->
       <view class="section-header">
-        <text class="section-title">为你推荐</text>
+        <text class="section-title text-theme-main">为你推荐</text>
         <text class="view-all" @click="goToSearch">查看全部</text>
       </view>
 
       <view class="post-list">
-        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item" @click="goToDetail(post.id)">
+        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item bg-card" @click="goToDetail(post.id)">
           <view class="post-main">
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
@@ -79,28 +79,28 @@
               </view>
             </view>
             <view class="post-info">
-              <text class="post-title">{{ post.title }}</text>
+              <text class="post-title text-theme-main">{{ post.title }}</text>
               <view class="post-footer">
-                <view class="post-category-tag" v-if="post.category">
+                <view class="post-category-tag bg-theme-secondary text-theme-secondary" v-if="post.category">
                   <text>{{ post.category }}</text>
                 </view>
                 <view class="post-stats">
-                  <text class="post-time">{{ post.time }}</text>
+                  <text class="post-time text-theme-secondary">{{ post.time }}</text>
                   <view class="stat-item">
-                    <u-icon name="star" color="#9CA3AF" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.collections || 0 }}</text>
+                    <u-icon name="star" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#6B7280'" size="28rpx"></u-icon>
+                    <text class="stat-num text-theme-secondary">{{ post.collections || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="eye" color="#9CA3AF" size="28rpx"></u-icon>
-                    <text class="stat-num">{{ post.views || 0 }}</text>
+                    <u-icon name="eye" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#6B7280'" size="28rpx"></u-icon>
+                    <text class="stat-num text-theme-secondary">{{ post.views || 0 }}</text>
                   </view>
                 </view>
-          </view>
+              </view>
             </view>
           </view>
           <!-- AI 摘要 -->
-          <view class="ai-summary" v-if="post.aiSummary">
-            <text class="ai-summary-text">
+          <view class="ai-summary bg-theme-secondary" v-if="post.aiSummary">
+            <text class="ai-summary-text text-theme-secondary">
               <text class="ai-label">AI 摘要：</text>{{ post.aiSummary }}
             </text>
           </view>
@@ -112,22 +112,25 @@
     </scroll-view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar">
+    <view class="tab-bar bg-tab-bar border-theme-main">
       <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
         @tap="handleTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'" size="24"></u-icon>
-        <text class="tab-text">{{ tab.text }}</text>
+        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
+        <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { postApi, newsApi, userApi, fileApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
+import { useThemeStore } from '@/store/theme'
 
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 const userAvatar = ref('/static/soccer-logo.png')
 const navbarPaddingRight = ref(16) // 默认 16px
 
@@ -419,8 +422,8 @@ onMounted(() => {
 <style lang="scss">
 .container {
     min-height: 100vh;
-    background-color: $pitch-pulse-bg-dark;
-    color: #fff;
+    background-color: var(--bg-main);
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -428,6 +431,7 @@ onMounted(() => {
     margin: 0 auto;
     overflow-x: hidden;
     box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
   }
 
 .status-bar {
@@ -442,9 +446,9 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 40rpx;
-  background-color: rgba($pitch-pulse-bg-dark, 0.8);
+  background-color: var(--nav-bar-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1rpx solid var(--border-main);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -514,11 +518,11 @@ onMounted(() => {
 }
 
 .category-scroll {
-    width: 100%;
-    background-color: $pitch-pulse-bg-dark;
-    border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
-    white-space: nowrap;
-  }
+  width: 100%;
+  background-color: var(--bg-nav-bar);
+  border-bottom: 1rpx solid var(--border-main);
+  white-space: nowrap;
+}
 
 .category-list {
   display: flex;
@@ -539,7 +543,7 @@ onMounted(() => {
   
   .category-text {
     font-size: 28rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
     font-weight: 500;
   }
   
@@ -625,6 +629,7 @@ onMounted(() => {
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 20rpx;
+  color: #FFFFFF; /* 强制白色，不受主题影响，因为背景有黑色渐变 */
 }
 
 .hero-meta {
@@ -640,7 +645,7 @@ onMounted(() => {
 
 .meta-text {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7); /* 增强对比度 */
 }
 
 .section-header {

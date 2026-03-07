@@ -1,43 +1,43 @@
 <template>
-  <view class="schedule-container">
+  <view class="schedule-container" :class="themeClass">
     <!-- 状态栏占位 -->
     <view class="status-bar"></view>
 
     <!-- 顶部导航栏 -->
-    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+    <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
           <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
         </view>
-        <text class="logo-text">PITCH<text class="primary">PULSE</text></text>
+        <text class="logo-text text-theme-main">PITCH<text class="primary">PULSE</text></text>
       </view>
 
       <view class="nav-actions">
-        <view class="action-btn" @click="goToSearch">
-          <u-icon name="search" color="#fff" size="44rpx"></u-icon>
+        <view class="action-btn bg-theme-secondary" @click="goToSearch">
+          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
         </view>
-        <view class="avatar-box" @click="goToProfile">
+        <view class="avatar-box bg-theme-secondary" @click="goToProfile">
           <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
         </view>
       </view>
     </view>
 
     <!-- 日期选择器 -->
-    <view class="calendar-header">
-      <text class="current-month">{{ currentYearMonth }}</text>
+    <view class="calendar-header bg-theme-main">
+      <text class="current-month text-theme-main">{{ currentYearMonth }}</text>
       <text class="view-calendar-btn">查看日历</text>
     </view>
-    <scroll-view scroll-x class="date-selector" show-scrollbar="false">
+    <scroll-view scroll-x class="date-selector bg-theme-main" show-scrollbar="false">
       <view class="date-list">
         <view 
           v-for="(item, index) in dates" 
           :key="index"
-          class="date-item"
+          class="date-item bg-card"
           :class="{ active: activeDateIndex === index }"
           @click="selectDate(index)"
         >
-          <text class="date-week">{{ item.week }}</text>
-          <text class="date-day">{{ item.day }}日</text>
+          <text class="date-week" :class="activeDateIndex === index ? 'text-white' : 'text-theme-secondary'">{{ item.week }}</text>
+          <text class="date-day" :class="activeDateIndex === index ? 'text-white' : 'text-theme-main'">{{ item.day }}日</text>
           <view class="date-dot" v-if="activeDateIndex === index"></view>
         </view>
       </view>
@@ -47,23 +47,23 @@
     <view class="content-scroll">
       <!-- 正在直播 -->
       <view class="section" v-if="liveMatches.length > 0">
-        <view class="match-card live-card" v-for="match in liveMatches" :key="match.id">
+        <view class="match-card live-card bg-card border-theme-main" v-for="match in liveMatches" :key="match.id">
           <view class="live-badge">
             <text class="live-text">LIVE {{ match.liveTime || match.matchMinute || "" }}</text>
           </view>
           <view class="card-body">
             <view class="match-info">
-              <text class="competition-text">{{ match.competitionName }} · {{ match.round }}</text>
+              <text class="competition-text text-theme-secondary">{{ match.competitionName }} · {{ match.round }}</text>
             </view>
             <view class="teams-score">
               <view class="team-side">
                 <view class="logo-container">
                   <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
                 </view>
-                <text class="team-name">{{ match.homeTeam?.name }}</text>
+                <text class="team-name text-theme-main">{{ match.homeTeam?.name }}</text>
               </view>
               <view class="score-center">
-                <view class="score-text">
+                <view class="score-text text-theme-main">
                   <text class="num">{{ match.homeScore }}</text>
                   <text class="divider">-</text>
                   <text class="num">{{ match.awayScore }}</text>
@@ -76,17 +76,17 @@
                 <view class="logo-container">
                 <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
-                <text class="team-name">{{ match.awayTeam?.name }}</text>
+                <text class="team-name text-theme-main">{{ match.awayTeam?.name }}</text>
               </view>
             </view>
           </view>
-          <view class="card-footer">
+          <view class="card-footer border-theme-main">
             <view class="footer-left">
               <u-icon name="play-circle" color="#f9d406" size="14"></u-icon>
-              <text class="footer-text">视频直播中</text>
+              <text class="footer-text text-theme-secondary">视频直播中</text>
             </view>
             <view class="footer-right">
-              <text class="ai-label">AI 预测:</text>
+              <text class="ai-label text-theme-secondary">AI 预测:</text>
               <text class="ai-value">主队胜率 65%</text>
             </view>
           </view>
@@ -95,28 +95,28 @@
 
       <!-- 即将开始 -->
       <view class="section" v-if="upcomingMatches.length > 0">
-        <view class="section-title">即将开始</view>
-        <view class="match-card-mini" v-for="match in upcomingMatches" :key="match.id">
+        <view class="section-title text-theme-secondary">即将开始</view>
+        <view class="match-card-mini bg-card border-theme-main" v-for="match in upcomingMatches" :key="match.id">
           <view class="mini-header">
             <view class="header-left">
               <view class="indicator"></view>
-              <text class="match-meta">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
+              <text class="match-meta text-theme-secondary">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
             </view>
-            <u-icon name="bell" color="rgba(255,255,255,0.2)" size="18"></u-icon>
+            <u-icon name="bell" :color="themeStore.theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'" size="18"></u-icon>
           </view>
           <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
                 <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
-              <text class="mini-name">{{ match.homeTeam?.name }}</text>
+              <text class="mini-name text-theme-main">{{ match.homeTeam?.name }}</text>
             </view>
-            <text class="vs-text">VS</text>
+            <text class="vs-text text-theme-secondary">VS</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
                 <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
-              <text class="mini-name">{{ match.awayTeam?.name }}</text>
+              <text class="mini-name text-theme-main">{{ match.awayTeam?.name }}</text>
             </view>
           </view>
         </view>
@@ -124,12 +124,12 @@
 
       <!-- 已完赛 -->
       <view class="section" v-if="finishedMatches.length > 0">
-        <view class="section-title">已完赛</view>
-        <view class="match-card-mini finished" v-for="match in finishedMatches" :key="match.id">
+        <view class="section-title text-theme-secondary">已完赛</view>
+        <view class="match-card-mini finished bg-card border-theme-main" v-for="match in finishedMatches" :key="match.id">
           <view class="mini-header">
             <view class="header-left">
               <view class="indicator"></view>
-              <text class="match-meta">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
+              <text class="match-meta text-theme-secondary">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
             </view>
           </view>
           <view class="mini-body">
@@ -138,18 +138,18 @@
                 <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
               </view>
               <view class="team-info">
-                <text class="mini-name">{{ match.homeTeam?.name }}</text>
-                <text class="finished-score">{{ match.homeScore }}</text>
+                <text class="mini-name text-theme-main">{{ match.homeTeam?.name }}</text>
+                <text class="finished-score text-theme-main">{{ match.homeScore }}</text>
               </view>
             </view>
-            <text class="vs-dash">-</text>
+            <text class="vs-dash text-theme-secondary">-</text>
             <view class="mini-team reverse">
               <view class="mini-logo">
                 <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
               </view>
               <view class="team-info reverse">
-                <text class="mini-name">{{ match.awayTeam?.name }}</text>
-                <text class="finished-score" :class="{ 'muted': match.awayScore < match.homeScore }">{{ match.awayScore }}</text>
+                <text class="mini-name text-theme-main">{{ match.awayTeam?.name }}</text>
+                <text class="finished-score text-theme-main" :class="{ 'muted': match.awayScore < match.homeScore }">{{ match.awayScore }}</text>
               </view>
             </view>
           </view>
@@ -158,8 +158,8 @@
 
       <!-- 无比赛提示 -->
       <view class="no-match" v-if="liveMatches.length === 0 && upcomingMatches.length === 0 && finishedMatches.length === 0">
-        <u-icon name="info-circle" color="rgba(255,255,255,0.3)" size="64"></u-icon>
-        <text class="no-match-text">今日暂无比赛</text>
+        <u-icon name="info-circle" :color="themeStore.theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'" size="64"></u-icon>
+        <text class="no-match-text text-theme-secondary">今日暂无比赛</text>
       </view>
     </view>
 
@@ -167,7 +167,7 @@
     <view class="safe-area-bottom"></view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar">
+    <view class="tab-bar bg-tab-bar border-theme-main">
       <view 
         v-for="(tab, index) in tabs" 
         :key="index"
@@ -175,19 +175,22 @@
         :class="{ active: currentTab === index }"
         @tap="handleTabClick(index)"
       >
-        <u-icon :name="tab.icon" size="24" :color="currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)'"></u-icon>
-        <text class="tab-text">{{ tab.text }}</text>
+        <u-icon :name="tab.icon" size="24" :color="currentTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'"></u-icon>
+        <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { matchApi, userApi, fileApi } from '@/api/index'
 import { BASE_URL } from '@/utils/request'
+import { useThemeStore } from '@/store/theme'
 
+const themeStore = useThemeStore()
+const themeClass = computed(() => `theme-${themeStore.theme}`)
 const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
@@ -457,8 +460,8 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .schedule-container {
   min-height: 100vh;
-  background-color: #1a1811;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -484,7 +487,7 @@ onUnmounted(() => {
   .no-match-text {
     margin-top: 20rpx;
     font-size: 28rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
   }
 }
 
@@ -495,9 +498,9 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 40rpx;
-  background-color: rgba(26, 24, 17, 0.8);
+  background-color: var(--nav-bar-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1rpx solid var(--border-main);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -529,7 +532,7 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: -1rpx;
   .primary {
-    color: #f9d406;
+    color: var(--accent-color);
   }
 }
 
@@ -542,7 +545,7 @@ onUnmounted(() => {
 .action-btn {
   width: 80rpx;
   height: 80rpx;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -554,7 +557,7 @@ onUnmounted(() => {
   height: 80rpx;
   border-radius: 50%;
   overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary);
   
   .avatar {
     width: 100%;
@@ -567,12 +570,12 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 30rpx 40rpx 20rpx;
-  background-color: #1a1811;
+  background-color: var(--bg-main);
 
   .current-month {
     font-size: 36rpx;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-main);
     letter-spacing: 1rpx;
   }
 
@@ -584,7 +587,7 @@ onUnmounted(() => {
 }
 
 .date-selector {
-  background-color: #1a1811;
+  background-color: var(--bg-main);
   padding-bottom: 30rpx;
   margin-bottom: 20rpx;
 
@@ -599,8 +602,8 @@ onUnmounted(() => {
     width: 100rpx;
     height: 140rpx;
     border-radius: 28rpx;
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-main);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -610,7 +613,7 @@ onUnmounted(() => {
 
     .date-week {
       font-size: 22rpx;
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--text-secondary);
       margin-bottom: 12rpx;
       font-weight: 500;
     }
@@ -618,7 +621,7 @@ onUnmounted(() => {
     .date-day {
       font-size: 32rpx;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-main);
       margin-bottom: 4rpx;
     }
 
@@ -643,6 +646,7 @@ onUnmounted(() => {
       
       .date-day {
         font-size: 36rpx;
+        color: #fff;
       }
     }
   }
@@ -658,7 +662,7 @@ onUnmounted(() => {
   .section-title {
     font-size: 28rpx;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-secondary);
     margin-bottom: 24rpx;
     text-transform: uppercase;
     letter-spacing: 2rpx;
@@ -666,9 +670,9 @@ onUnmounted(() => {
 }
 
 .match-card {
-  background-color: #2a2820;
+  background-color: var(--card-bg);
   border-radius: 32rpx;
-  border: 1px solid rgba(249, 212, 6, 0.2);
+  border: 1px solid var(--border-main);
   overflow: hidden;
   position: relative;
   margin-bottom: 24rpx;
@@ -697,7 +701,7 @@ onUnmounted(() => {
       margin-bottom: 32rpx;
       .competition-text {
         font-size: 24rpx;
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--text-secondary);
       }
     }
 
@@ -735,7 +739,7 @@ onUnmounted(() => {
         .team-name {
           font-size: 28rpx;
           font-weight: 800;
-          color: #fff;
+          color: var(--text-main);
           text-align: center;
           white-space: nowrap;
           overflow: hidden;
@@ -763,7 +767,7 @@ onUnmounted(() => {
           .num {
             font-size: 64rpx; /* 稍微缩小字号 */
             font-weight: 900;
-            color: #fff;
+            color: var(--text-main);
             width: 60rpx; /* 缩小容器宽度 */
             text-align: center;
             font-family: 'DIN Alternate', 'PingFang SC', sans-serif;
@@ -771,7 +775,7 @@ onUnmounted(() => {
 
           .divider {
             font-size: 32rpx; /* 缩小分隔符 */
-            color: rgba(255, 255, 255, 0.4);
+            color: var(--text-secondary);
             font-weight: 300;
           }
         }
@@ -791,19 +795,20 @@ onUnmounted(() => {
   }
 
   .card-footer {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.05);
     padding: 24rpx 40rpx;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 24rpx;
+    border-top: 1rpx solid var(--border-main);
 
     .footer-left {
       display: flex;
       align-items: center;
       gap: 16rpx;
       .footer-text {
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--text-secondary);
       }
     }
 
@@ -812,21 +817,21 @@ onUnmounted(() => {
       align-items: center;
       gap: 8rpx;
       .ai-label {
-        color: #f9d406;
+        color: var(--accent-color);
         font-weight: 700;
       }
       .ai-value {
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--text-secondary);
       }
     }
   }
 }
 
 .match-card-mini {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card-bg);
   border-radius: 24rpx;
   padding: 32rpx;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-main);
   margin-bottom: 24rpx;
 
   .mini-header {
@@ -843,13 +848,13 @@ onUnmounted(() => {
       .indicator {
         width: 8rpx;
         height: 32rpx;
-        background-color: #f9d406;
+        background-color: var(--accent-color);
         border-radius: 999rpx;
       }
 
       .match-meta {
         font-size: 24rpx;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--text-secondary);
       }
     }
   }
@@ -886,7 +891,7 @@ onUnmounted(() => {
         .mini-name {
           font-size: 26rpx; /* 减小字号 */
           font-weight: 600;
-          color: #fff;
+          color: var(--text-main);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -901,7 +906,7 @@ onUnmounted(() => {
 
       .vs-text {
         font-size: 24rpx;
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--text-secondary);
         font-family: monospace;
         margin: 0 20rpx; /* 增加左右边距 */
         flex-shrink: 0;
@@ -911,22 +916,22 @@ onUnmounted(() => {
   &.finished {
     opacity: 1;
     .mini-header .header-left .indicator {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: var(--border-main);
     }
     
     .finished-score {
       font-size: 32rpx;
       font-weight: 800;
-      color: #f9d406;
+      color: var(--accent-color);
       
       &.muted {
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--text-secondary);
       }
     }
 
     .vs-dash {
       font-size: 24rpx;
-      color: rgba(255, 255, 255, 0.2);
+      color: var(--text-secondary);
       margin: 0 20rpx;
       flex-shrink: 0;
     }
@@ -965,9 +970,9 @@ onUnmounted(() => {
   /* #endif */
   
   height: 120rpx;
-  background-color: rgba(26, 24, 17, 0.98);
+  background-color: var(--tab-bar-bg);
   backdrop-filter: blur(20px);
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-top: 1rpx solid var(--border-main);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -988,13 +993,13 @@ onUnmounted(() => {
   
   .tab-text {
     font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
     font-weight: 500;
   }
   
   &.active {
     .tab-text {
-      color: #f9d406;
+      color: var(--accent-color);
       font-weight: 700;
     }
   }

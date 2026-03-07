@@ -146,6 +146,13 @@
       }
     },
     {
+      "path": "pages/my/theme",
+      "style": {
+        "navigationBarTitleText": "外观主题",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/my/help",
       "style": {
         "navigationBarTitleText": "帮助与支持",
