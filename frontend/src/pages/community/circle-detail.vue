@@ -196,17 +196,27 @@
 
           <!-- Pagination Buttons -->
           <view class="pagination-box" v-if="!loading && posts.length > 0">
-            <button 
+            <view 
               class="page-btn" 
-              :disabled="page === 1" 
+              :class="{ 'disabled': page === 1 }" 
               @click="handlePrevPage"
-            >上一页</text>
-            <text class="page-num">第 {{ page }} 页</text>
-            <button 
+            >
+              <text class="material-icons btn-icon">chevron_left</text>
+              <text>上一页</text>
+            </view>
+            <view class="page-info">
+              <text class="current-page">{{ page }}</text>
+              <text class="page-divider">/</text>
+              <text class="total-label">页</text>
+            </view>
+            <view 
               class="page-btn" 
-              :disabled="noMore" 
+              :class="{ 'disabled': noMore }" 
               @click="handleNextPage"
-            >下一页</button>
+            >
+              <text>下一页</text>
+              <text class="material-icons btn-icon">chevron_right</text>
+            </view>
           </view>
         </view>
 
@@ -1295,37 +1305,64 @@ const previewImage = (urls, current) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px 0 40px;
-  gap: 20px;
+  padding: 24px 16px 48px;
+  gap: 24px;
 }
 
 .page-btn {
-  background-color: #1c1a11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(242, 185, 13, 0.1);
   color: #f2b90d;
-  border: 1px solid #2d2a1d;
+  padding: 8px 16px;
+  border-radius: 20rpx;
   font-size: 14px;
-  padding: 0 20px;
-  height: 36px;
-  line-height: 34px;
-  border-radius: 18px;
-  margin: 0;
-}
-
-.page-btn[disabled] {
-  background-color: #12110a;
-  color: #4b5563;
-  border-color: #1c1a11;
-}
-
-.page-btn:active:not([disabled]) {
-  background-color: #2d2a1d;
-  transform: scale(0.95);
-}
-
-.page-num {
-  font-size: 14px;
-  color: #9ca3af;
   font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(242, 185, 13, 0.2);
+  min-width: 100rpx;
+}
+
+.page-btn:active:not(.disabled) {
+  transform: scale(0.95);
+  background: rgba(242, 185, 13, 0.2);
+}
+
+.page-btn.disabled {
+  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.05);
+  color: #9ca3af;
+  border-color: transparent;
+}
+
+.btn-icon {
+  font-size: 18px;
+  margin: 0 -4px;
+}
+
+.page-info {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.current-page {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f2b90d;
+  font-family: 'DIN Alternate', sans-serif;
+}
+
+.page-divider {
+  font-size: 12px;
+  color: #4b5563;
+  margin: 0 2px;
+}
+
+.total-label {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 /* Match Card */

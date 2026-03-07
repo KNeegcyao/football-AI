@@ -96,17 +96,27 @@
 
           <!-- Pagination Buttons -->
           <view class="pagination-box" v-if="!searchKey && trendTopics.length > 0">
-            <button 
+            <view 
               class="page-btn" 
-              :disabled="page === 1" 
+              :class="{ 'disabled': page === 1 }" 
               @click="handlePrevPage"
-            >上一页</button>
-            <text class="page-num">第 {{ page }} 页</text>
-            <button 
+            >
+              <text class="material-icons btn-icon">chevron_left</text>
+              <text>上一页</text>
+            </view>
+            <view class="page-info">
+              <text class="current-page">{{ page }}</text>
+              <text class="page-divider">/</text>
+              <text class="total-label">页</text>
+            </view>
+            <view 
               class="page-btn" 
-              :disabled="noMore" 
+              :class="{ 'disabled': noMore }" 
               @click="handleNextPage"
-            >下一页</button>
+            >
+              <text>下一页</text>
+              <text class="material-icons btn-icon">chevron_right</text>
+            </view>
           </view>
         </view>
 
@@ -840,5 +850,69 @@
   ::v-deep input {
     outline: none !important;
     box-shadow: none !important;
+  }
+
+  /* Pagination Styles */
+  .pagination-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40rpx 0;
+    gap: 30rpx;
+  }
+
+  .page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($pitch-pulse-primary, 0.1);
+    color: $pitch-pulse-primary;
+    padding: 16rpx 32rpx;
+    border-radius: 20rpx;
+    font-size: 28rpx;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1rpx solid rgba($pitch-pulse-primary, 0.2);
+    min-width: 180rpx;
+    gap: 8rpx;
+  }
+
+  .page-btn:active:not(.disabled) {
+    transform: scale(0.95);
+    background: rgba($pitch-pulse-primary, 0.2);
+  }
+
+  .page-btn.disabled {
+    opacity: 0.3;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.3);
+    border-color: transparent;
+  }
+
+  .btn-icon {
+    font-size: 32rpx;
+  }
+
+  .page-info {
+    display: flex;
+    align-items: baseline;
+    gap: 8rpx;
+  }
+
+  .current-page {
+    font-size: 36rpx;
+    font-weight: 800;
+    color: $pitch-pulse-primary;
+  }
+
+  .page-divider {
+    font-size: 24rpx;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  .total-label {
+    font-size: 24rpx;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
   }
   </style>
