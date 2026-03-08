@@ -51,4 +51,38 @@ public class ChatController {
                                      @AuthenticationPrincipal LoginUser loginUser) {
         return R.ok(sessionService.getOrCreateSession(loginUser.getUser().getId(), otherUserId).getId());
     }
+
+    @Operation(summary = "获取会话设置")
+    @GetMapping("/settings/{otherUserId}")
+    public R<ChatSessionResp> getSessionSettings(@PathVariable Long otherUserId,
+                                                @AuthenticationPrincipal LoginUser loginUser) {
+        return R.ok(sessionService.getSessionSettings(loginUser.getUser().getId(), otherUserId));
+    }
+
+    @Operation(summary = "设置置顶")
+    @PostMapping("/settings/top/{sessionId}")
+    public R<Void> setTop(@PathVariable Long sessionId,
+                         @RequestParam Boolean isTop,
+                         @AuthenticationPrincipal LoginUser loginUser) {
+        sessionService.setTop(sessionId, loginUser.getUser().getId(), isTop);
+        return R.ok();
+    }
+
+    @Operation(summary = "设置免打扰")
+    @PostMapping("/settings/mute/{sessionId}")
+    public R<Void> setMute(@PathVariable Long sessionId,
+                          @RequestParam Boolean isMute,
+                          @AuthenticationPrincipal LoginUser loginUser) {
+        sessionService.setMute(sessionId, loginUser.getUser().getId(), isMute);
+        return R.ok();
+    }
+
+    @Operation(summary = "设置黑名单")
+    @PostMapping("/settings/blacklist/{otherUserId}")
+    public R<Void> setBlacklist(@PathVariable Long otherUserId,
+                               @RequestParam Boolean isBlacklist,
+                               @AuthenticationPrincipal LoginUser loginUser) {
+        sessionService.setBlacklist(loginUser.getUser().getId(), otherUserId, isBlacklist);
+        return R.ok();
+    }
 }

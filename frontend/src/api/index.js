@@ -330,7 +330,27 @@ export const chatApi = {
   getWsUrl: () => {
     const token = uni.getStorageSync('token')
     return `${BASE_URL.replace('http', 'ws')}/ws/chat?token=${token}`
-  }
+  },
+
+  /**
+   * 获取会话设置
+   */
+  getSessionSettings: (otherUserId) => request.get(`/api/chat/settings/${otherUserId}`),
+
+  /**
+   * 设置置顶
+   */
+  setTop: (sessionId, isTop) => request.post(`/api/chat/settings/top/${sessionId}`, null, { params: { isTop } }),
+
+  /**
+   * 设置免打扰
+   */
+  setMute: (sessionId, isMute) => request.post(`/api/chat/settings/mute/${sessionId}`, null, { params: { isMute } }),
+
+  /**
+   * 设置黑名单
+   */
+  setBlacklist: (otherUserId, isBlacklist) => request.post(`/api/chat/settings/blacklist/${otherUserId}`, null, { params: { isBlacklist } })
 }
 
 /**

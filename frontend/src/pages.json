@@ -214,6 +214,13 @@
         "navigationBarTitleText": "对话",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/message/chat-settings",
+      "style": {
+        "navigationBarTitleText": "聊天详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

@@ -1,17 +1,19 @@
 <template>
   <view class="container" :class="themeClass">
-    <view class="status-bar bg-nav-bar"></view>
-    
-    <!-- Header -->
-    <view class="header bg-nav-bar border-b border-theme-main">
-      <view class="header-left" @click="goBack">
-        <text class="material-icons" style="color: var(--text-main)">arrow_back_ios_new</text>
-      </view>
-      <view class="header-center">
-        <text class="username">{{ otherUserNickname || '对话中' }}</text>
-      </view>
-      <view class="header-right">
-        <text class="material-icons" style="color: var(--text-main)">more_horiz</text>
+    <view class="header-wrapper">
+      <view class="status-bar bg-nav-bar"></view>
+      
+      <!-- Header -->
+      <view class="header bg-nav-bar border-b border-theme-main">
+        <view class="header-left" @click="goBack">
+          <text class="material-icons">arrow_back_ios_new</text>
+        </view>
+        <view class="header-center">
+          <text class="username">{{ otherUserNickname || '对话中' }}</text>
+        </view>
+        <view class="header-right" @click="showActionSheet">
+          <text class="material-icons">more_horiz</text>
+        </view>
       </view>
     </view>
 
@@ -109,6 +111,7 @@ import { useChatStore } from '@/store/chat';
 import { useThemeStore } from '@/store/theme';
 import { chatApi, fileApi, userApi } from '@/api';
 import { BASE_URL } from '@/utils/request';
+import { formatChatMessageTime } from '@/utils/utils';
 
 const chatStore = useChatStore();
 const themeStore = useThemeStore();
@@ -352,28 +355,50 @@ const shouldShowTime = (index) => {
 };
 
 const formatTime = (time) => {
-  if (!time) return '';
-  const date = new Date(time);
-  return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+  return formatChatMessageTime(time);
 };
 
 const goBack = () => {
   uni.navigateBack();
 };
+
+const showActionSheet = () => {
+  uni.navigateTo({
+    url: `/pages/message/chat-settings?userId=${otherUserId.value}`
+  });
+};
 </script>
 
 <style lang="scss" scoped>
+/* 1. 根页面背景适配 */
+:deep(page) {
+  background-color: var(--bg-main);
+  transition: background-color 0.3s;
+}
+
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   background-color: var(--bg-main);
   color: var(--text-main);
   transition: all 0.3s;
 }
 
+/* 2. Header 宽度限制与背景修复 */
+.header-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 .status-bar {
   height: var(--status-bar-height);
+  background-color: var(--bg-nav-bar) !important;
 }
 
 .header {
@@ -382,14 +407,18 @@ const goBack = () => {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  background-color: var(--bg-nav-bar) !important;
+  border-bottom: 1px solid var(--border-main);
   
   .header-left, .header-right {
     width: 40px;
     display: flex;
     align-items: center;
+    justify-content: center;
     
     .material-icons {
-      font-size: 20px;
+      font-size: 24px;
+      color: var(--text-main);
     }
   }
   
@@ -404,10 +433,16 @@ const goBack = () => {
   }
 }
 
+.bg-nav-bar {
+  background-color: var(--bg-nav-bar) !important;
+}
+
 .message-list {
   flex: 1;
   padding: 16px;
+  padding-top: calc(var(--status-bar-height) + 44px + 16px);
   box-sizing: border-box;
+  background-color: transparent;
 }
 
 .time-separator {
@@ -484,6 +519,7 @@ const goBack = () => {
 
 .input-bar-container {
   padding-bottom: env(safe-area-inset-bottom);
+  background-color: var(--bg-nav-bar);
 
   .tool-bar {
     display: flex;
@@ -573,27 +609,56 @@ const goBack = () => {
   }
 }
 
-// 浅色模式微调
+// 浅色模式全局强制匹配
 .theme-light {
+  --bg-main: #f8f9fa;
+  --bg-nav-bar: #ffffff;
+  --text-main: #1a1a1a;
+  --border-main: rgba(0, 0, 0, 0.05);
+  
+  background-color: var(--bg-main) !important;
+  
+  .container {
+    background-color: var(--bg-main) !important;
+  }
+  
+  .status-bar, .header {
+    background-color: var(--bg-nav-bar) !important;
+    border-bottom: 1px solid var(--border-main);
+  }
+
+  .message-list {
+    background-color: var(--bg-main) !important;
+  }
+
   .message-item:not(.message-me) {
     .message-bubble {
-      background-color: var(--border-main);
-      color: var(--text-main);
+      background-color: #f0f0f0;
+      color: #333;
     }
   }
   .time-separator text {
-    background-color: var(--border-main);
-    color: var(--text-secondary);
+    background-color: #f0f0f0;
+    color: #666;
   }
   .input-wrapper {
-    background-color: var(--border-main) !important;
+    background-color: #f5f5f5 !important;
+    .chat-input {
+      color: #333;
+    }
   }
   .send-btn:not(.send-btn-active) {
-    background-color: var(--border-main);
-    color: var(--text-secondary);
+    background-color: #f5f5f5;
+    color: #999;
   }
   .tool-item .material-icons {
-    color: var(--text-secondary);
+    color: #666;
+  }
+  .header .username {
+    color: #1a1a1a;
+  }
+  .header .material-icons {
+    color: #333 !important;
   }
 }
 </style>

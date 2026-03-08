@@ -10,6 +10,8 @@ import com.soccer.forum.domain.entity.ChatSession;
 import com.soccer.forum.service.mapper.ChatMessageMapper;
 import com.soccer.forum.service.service.ChatMessageService;
 import com.soccer.forum.service.service.ChatSessionService;
+import com.soccer.forum.service.service.UserRelationshipService;
+import com.soccer.forum.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +24,17 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     @Autowired
     private ChatSessionService sessionService;
 
+    @Autowired
+    private UserRelationshipService relationshipService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessage sendMessage(Long senderId, Long receiverId, String content, Integer type) {
+        // 检查是否被对方拉黑
+        if (relationshipService.isBlacklisted(receiverId, senderId)) {
+            throw new ServiceException("消息发送失败，您已被对方加入黑名单");
+        }
+        
         ChatSession session = sessionService.getOrCreateSession(senderId, receiverId);
         
         ChatMessage message = new ChatMessage();

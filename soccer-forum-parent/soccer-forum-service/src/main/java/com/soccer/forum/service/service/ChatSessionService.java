@@ -26,4 +26,24 @@ public interface ChatSessionService extends IService<ChatSession> {
      * 重置未读数
      */
     void resetUnreadCount(Long sessionId, Long userId);
+
+    /**
+     * 设置置顶
+     */
+    void setTop(Long sessionId, Long userId, Boolean isTop);
+
+    /**
+     * 设置免打扰
+     */
+    void setMute(Long sessionId, Long userId, Boolean isMute);
+
+    /**
+     * 设置黑名单
+     */
+    void setBlacklist(Long userId, Long otherUserId, Boolean isBlacklist);
+
+    /**
+     * 获取会话详情设置
+     */
+    ChatSessionResp getSessionSettings(Long userId, Long otherUserId);
 }

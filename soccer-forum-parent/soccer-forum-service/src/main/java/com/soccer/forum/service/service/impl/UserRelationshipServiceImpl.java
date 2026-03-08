@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -159,5 +160,32 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
         
         resultPage.setRecords(records);
         return resultPage;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setBlacklist(Long userId, Long otherUserId, Boolean isBlacklist) {
+        UserRelationship relationship = this.getOne(new LambdaQueryWrapper<UserRelationship>()
+                .eq(UserRelationship::getFollowerId, userId)
+                .eq(UserRelationship::getFollowingId, otherUserId));
+
+        if (relationship == null) {
+            relationship = new UserRelationship();
+            relationship.setFollowerId(userId);
+            relationship.setFollowingId(otherUserId);
+            relationship.setIsBlacklisted(isBlacklist ? 1 : 0);
+            this.save(relationship);
+        } else {
+            relationship.setIsBlacklisted(isBlacklist ? 1 : 0);
+            this.updateById(relationship);
+        }
+    }
+
+    @Override
+    public boolean isBlacklisted(Long userId, Long otherUserId) {
+        UserRelationship relationship = this.getOne(new LambdaQueryWrapper<UserRelationship>()
+                .eq(UserRelationship::getFollowerId, userId)
+                .eq(UserRelationship::getFollowingId, otherUserId));
+        return relationship != null && Integer.valueOf(1).equals(relationship.getIsBlacklisted());
     }
 }
