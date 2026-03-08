@@ -41,6 +41,18 @@ public class ChatSession implements Serializable {
     @Schema(description = "参与者2的未读数")
     private Integer unreadCountTwo;
 
+    @Schema(description = "参与者1是否置顶")
+    private Integer isTopOne;
+
+    @Schema(description = "参与者2是否置顶")
+    private Integer isTopTwo;
+
+    @Schema(description = "参与者1是否免打扰")
+    private Integer isMuteOne;
+
+    @Schema(description = "参与者2是否免打扰")
+    private Integer isMuteTwo;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 

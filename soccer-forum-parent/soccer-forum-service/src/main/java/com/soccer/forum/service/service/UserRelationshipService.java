@@ -37,4 +37,14 @@ public interface UserRelationshipService extends IService<UserRelationship> {
      * 获取粉丝列表
      */
     IPage<UserFollowResp> getFollowersList(Long userId, Page<UserRelationship> page, Long currentUserId);
+
+    /**
+     * 设置拉黑状态
+     */
+    void setBlacklist(Long userId, Long otherUserId, Boolean isBlacklist);
+
+    /**
+     * 是否被拉黑
+     */
+    boolean isBlacklisted(Long userId, Long otherUserId);
 }

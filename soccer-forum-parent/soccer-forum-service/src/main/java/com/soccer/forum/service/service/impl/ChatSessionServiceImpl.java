@@ -8,11 +8,14 @@ import com.soccer.forum.service.mapper.ChatSessionMapper;
 import com.soccer.forum.service.model.dto.ChatSessionResp;
 import com.soccer.forum.service.service.ChatSessionService;
 import com.soccer.forum.service.service.UserService;
+import com.soccer.forum.service.service.UserRelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,9 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
     @Autowired
     @Lazy
     private UserService userService;
+
+    @Autowired
+    private UserRelationshipService relationshipService;
 
     @Override
     public ChatSession getOrCreateSession(Long userOneId, Long userTwoId) {
@@ -51,8 +57,7 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
         List<ChatSession> sessions = this.list(new LambdaQueryWrapper<ChatSession>()
                 .eq(ChatSession::getUserOneId, userId)
                 .or()
-                .eq(ChatSession::getUserTwoId, userId)
-                .orderByDesc(ChatSession::getUpdatedAt));
+                .eq(ChatSession::getUserTwoId, userId));
 
         return sessions.stream().map(session -> {
             ChatSessionResp resp = new ChatSessionResp();
@@ -76,10 +81,21 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
             }
             
             // 设置我的未读数
-            resp.setUnreadCount(session.getUserOneId().equals(userId) ? session.getUnreadCountOne() : session.getUnreadCountTwo());
+            if (session.getUserOneId().equals(userId)) {
+                resp.setUnreadCount(session.getUnreadCountOne());
+                resp.setIsTop(Integer.valueOf(1).equals(session.getIsTopOne()));
+                resp.setIsMute(Integer.valueOf(1).equals(session.getIsMuteOne()));
+            } else {
+                resp.setUnreadCount(session.getUnreadCountTwo());
+                resp.setIsTop(Integer.valueOf(1).equals(session.getIsTopTwo()));
+                resp.setIsMute(Integer.valueOf(1).equals(session.getIsMuteTwo()));
+            }
             
             return resp;
-        }).collect(Collectors.toList());
+        })
+        .sorted(Comparator.comparing(ChatSessionResp::getIsTop, Comparator.reverseOrder())
+                .thenComparing(ChatSessionResp::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder())))
+        .collect(Collectors.toList());
     }
 
     @Override
@@ -111,5 +127,58 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
             }
             this.updateById(session);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setTop(Long sessionId, Long userId, Boolean isTop) {
+        ChatSession session = this.getById(sessionId);
+        if (session != null) {
+            if (session.getUserOneId().equals(userId)) {
+                session.setIsTopOne(isTop ? 1 : 0);
+            } else if (session.getUserTwoId().equals(userId)) {
+                session.setIsTopTwo(isTop ? 1 : 0);
+            }
+            this.updateById(session);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setMute(Long sessionId, Long userId, Boolean isMute) {
+        ChatSession session = this.getById(sessionId);
+        if (session != null) {
+            if (session.getUserOneId().equals(userId)) {
+                session.setIsMuteOne(isMute ? 1 : 0);
+            } else if (session.getUserTwoId().equals(userId)) {
+                session.setIsMuteTwo(isMute ? 1 : 0);
+            }
+            this.updateById(session);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setBlacklist(Long userId, Long otherUserId, Boolean isBlacklist) {
+        relationshipService.setBlacklist(userId, otherUserId, isBlacklist);
+    }
+
+    @Override
+    public ChatSessionResp getSessionSettings(Long userId, Long otherUserId) {
+        ChatSession session = this.getOrCreateSession(userId, otherUserId);
+        ChatSessionResp resp = new ChatSessionResp();
+        resp.setId(session.getId());
+        resp.setOtherUserId(otherUserId);
+        
+        if (session.getUserOneId().equals(userId)) {
+            resp.setIsTop(Integer.valueOf(1).equals(session.getIsTopOne()));
+            resp.setIsMute(Integer.valueOf(1).equals(session.getIsMuteOne()));
+        } else {
+            resp.setIsTop(Integer.valueOf(1).equals(session.getIsTopTwo()));
+            resp.setIsMute(Integer.valueOf(1).equals(session.getIsMuteTwo()));
+        }
+        
+        resp.setIsBlacklisted(relationshipService.isBlacklisted(userId, otherUserId));
+        return resp;
     }
 }

@@ -28,4 +28,13 @@ public class ChatSessionResp {
 
     @Schema(description = "我的未读数")
     private Integer unreadCount;
+
+    @Schema(description = "是否置顶")
+    private Boolean isTop;
+
+    @Schema(description = "是否免打扰")
+    private Boolean isMute;
+
+    @Schema(description = "是否被我拉黑")
+    private Boolean isBlacklisted;
 }
