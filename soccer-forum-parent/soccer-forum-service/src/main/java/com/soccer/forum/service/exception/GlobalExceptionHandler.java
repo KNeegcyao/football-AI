@@ -34,12 +34,12 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R<Void> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
-        log.error("不支持 {} 请求, 请求地址: {}", e.getMethod(), request.getRequestURI());
+        log.error("不支持{} 请求, 请求地址: {}", e.getMethod(), request.getRequestURI());
         return R.<Void>fail("不支持该请求方式");
     }
 
     /**
-     * 拦截未知的运行时异常
+     * 处理未知运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
     public R<Void> handleRuntimeException(RuntimeException e, HttpServletRequest request) {
@@ -53,11 +53,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e, HttpServletRequest request) {
         log.error("系统异常: {}, 请求地址: {}", e.getMessage(), request.getRequestURI(), e);
-        return R.<Void>fail("服务器错误，请联系管理员");
+        return R.<Void>fail("系统异常，请联系管理员");
     }
 
     /**
-     * 自定义验证异常
+     * 参数校验异常
      */
     @ExceptionHandler(BindException.class)
     public R<Void> handleBindException(BindException e) {
@@ -67,12 +67,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 自定义验证异常
+     * 参数校验异常
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public R<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error("参数校验异常: {}", e.getMessage());
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
-        return R.<Void>fail(3001, message); // 3001 为 PARAM_ERROR
+        return R.<Void>fail(3001, message); // 3001 对应 PARAM_ERROR
     }
 }

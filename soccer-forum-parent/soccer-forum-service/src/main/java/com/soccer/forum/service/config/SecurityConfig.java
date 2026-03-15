@@ -1,8 +1,8 @@
 package com.soccer.forum.service.config;
 
 import com.soccer.forum.service.security.filter.JwtAuthenticationTokenFilter;
-import com.soccer.forum.service.service.TeamFollowService;
-import com.soccer.forum.service.service.TeamService;
+import com.soccer.forum.service.modules.match.service.TeamFollowService;
+import com.soccer.forum.service.modules.match.service.TeamService;
 import com.soccer.forum.service.utils.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +58,7 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error", "/ws/chat/**").permitAll()
+                .requestMatchers("/api/auth/**", "/error", "/ws/chat/**", "/api/ai/**").permitAll()
                 .requestMatchers("/api/players/sync/**", "/api/players/sync-sportapi/**", "/api/players/sync-scorers").permitAll()
                 // Explicitly allow list endpoints to ensure access
                 .requestMatchers("/api/news/list", "/api/players/list", "/api/teams/list").permitAll()

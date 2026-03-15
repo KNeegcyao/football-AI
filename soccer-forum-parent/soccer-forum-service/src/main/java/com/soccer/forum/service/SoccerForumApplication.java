@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@MapperScan("com.soccer.forum.service.mapper")
+@MapperScan("com.soccer.forum.service.modules.**.mapper")
 public class SoccerForumApplication {
     public static void main(String[] args) {
         System.err.println("DEBUG: Application Starting...");

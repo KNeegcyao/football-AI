@@ -25,10 +25,10 @@ public class JacksonConfig {
     public Jackson2ObjectMapperBuilderCustomizer jackson2ObjectMapperBuilderCustomizer() {
         return builder -> {
             JavaTimeModule javaTimeModule = new JavaTimeModule();
-            // 序列化配置
+            // 序列化器
             javaTimeModule.addSerializer(LocalDateTime.class, 
                 new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
-            // 反序列化配置
+            // 反序列化器
             javaTimeModule.addDeserializer(LocalDateTime.class, 
                 new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
             

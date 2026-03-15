@@ -3,8 +3,8 @@ package com.soccer.forum.service.job;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Post;
-import com.soccer.forum.service.mapper.CommentMapper;
-import com.soccer.forum.service.mapper.PostMapper;
+import com.soccer.forum.service.modules.community.mapper.CommentMapper;
+import com.soccer.forum.service.modules.community.mapper.PostMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -71,7 +71,7 @@ public class LikeSyncJob {
                     
                     log.debug("同步帖子点赞: id={}, count={}", postId, count);
                     
-                    // 从脏集合中移除
+                    // 从集合中移除
                     redisTemplate.opsForSet().remove(dirtyKey, idObj);
                 }
             }
@@ -112,7 +112,7 @@ public class LikeSyncJob {
                     
                     log.debug("同步评论点赞: id={}, count={}", commentId, count);
                     
-                    // 从脏集合中移除
+                    // 从集合中移除
                     redisTemplate.opsForSet().remove(dirtyKey, idObj);
                 }
             }

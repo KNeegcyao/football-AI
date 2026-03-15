@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.io.File;
 
 /**
- * 静态资源映射及跨域配置
+ * 静态资源映射和跨域配置
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -19,13 +19,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 将 /uploads/** 映射到本地磁盘路径
+        // 将 /uploads/** 映射到本地上传目录
         String absolutePath = new File(uploadPath).getAbsolutePath();
         if (!absolutePath.endsWith(File.separator)) {
             absolutePath += File.separator;
         }
         
-        // Windows 路径需要加上 file:///
+        // Windows 路径需要加 file:///
         String resourceLocation = "file:" + absolutePath;
         
         registry.addResourceHandler("/uploads/**")
@@ -38,17 +38,17 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // 设置允许跨域的路径
+        // 允许所有跨域路径
         registry.addMapping("/**")
-                // 设置允许跨域请求的域名
+                // 允许所有来源模式
                 .allowedOriginPatterns("*")
                 // 是否允许证书（cookies）
                 .allowCredentials(true)
-                // 设置允许的方法
+                // 允许的方法
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                // 设置允许的 header
+                // 允许的 header
                 .allowedHeaders("*")
-                // 跨域允许时间
+                // 预检请求时间
                 .maxAge(3600);
     }
 }
