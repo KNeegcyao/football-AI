@@ -1,0 +1,157 @@
+package com.soccer.forum.service.modules.user.controller;
+
+import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.service.modules.user.model.LoginBody;
+import com.soccer.forum.service.modules.user.model.LoginUser;
+import com.soccer.forum.service.modules.user.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+/**
+ * 用户认证接口控制器。
+ * <p>
+ * 提供用户登录、注册以及第三方（微信）登录的功能。
+ * </p>
+ *
+ * @author Soccer Forum Dev Team
+ * @version 1.0
+ */
+@Tag(name = "用户认证", description = "用户认证接口")
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    /**
+     * 用户登录接口
+     * <p>
+     * 接收用户名和密码，验证通过后返回 JWT 令牌。
+     * </p>
+     *
+     * @param loginBody 包含用户名和密码的请求体
+     * @return 包含 token 的响应结果。
+     */
+    @Operation(summary = "登录", description = "用户登录并获取Token")
+    @PostMapping("/login")
+    public R<Map<String, String>> login(@Validated @RequestBody LoginBody loginBody) {
+        log.info("收到用户登录请求: 用户名={}", loginBody.getUsername());
+        String token = authService.login(loginBody);
+        log.info("用户登录成功: 用户名={}", loginBody.getUsername());
+        return R.ok(Map.of("token", token), "登录成功");
+    }
+
+    /**
+     * 用户注册接口
+     * <p>
+     * 注册新用户，用户名不能重复。
+     * </p>
+     *
+     * @param loginBody 包含用户名、密码和昵称的请求体
+     * @return 注册结果
+     */
+    @Operation(summary = "注册", description = "用户注册新账号")
+    @PostMapping("/register")
+    public R<Void> register(@Validated @RequestBody LoginBody loginBody) {
+        log.info("收到用户注册请求: 用户名={}", loginBody.getUsername());
+        authService.register(loginBody);
+        log.info("用户注册成功: 用户名={}", loginBody.getUsername());
+        return R.ok(null, "注册成功");
+    }
+
+    /**
+     * 微信登录接口
+     * <p>
+     * 使用微信小程序返回的 code 进行登录（暂未完全启用）。
+     * </p>
+     *
+     * @param body 包含 code 的 JSON 对象
+     * @return 包含 token 的响应结果。
+     */
+    @Operation(summary = "微信登录", description = "使用微信code登录 (暂未启用)")
+    @PostMapping("/weixin")
+    public R<Map<String, String>> weixinLogin(@RequestBody Map<String, String> body) {
+        String code = body.get("code");
+        log.info("收到微信登录请求: code={}", code);
+        // 暂未实现完整微信登录逻辑
+        return R.fail("微信登录功能暂未启用");
+    }
+
+    /**
+     * 重置密码接口
+     * <p>
+     * 接收用户名和新密码，重置用户密码。
+     * </p>
+     *
+     * @param loginBody 包含用户名和新密码的请求体。
+     * @return 结果
+     */
+    @Operation(summary = "重置密码", description = "通过验证码重置用户密码")
+    @PostMapping("/reset-password")
+    public R<Void> resetPassword(@Validated @RequestBody LoginBody loginBody) {
+        log.info("收到重置密码请求: 用户名={}", loginBody.getUsername());
+        authService.resetPassword(loginBody);
+        log.info("重置密码成功: 用户名={}", loginBody.getUsername());
+        return R.ok(null, "密码重置成功");
+    }
+
+    /**
+     * 发送验证码接口
+     *
+     * @param body 包含 phone 的请求体
+     * @return 结果
+     */
+    @Operation(summary = "发送验证码", description = "发送手机验证码")
+    @PostMapping("/code")
+    public R<Void> sendCode(@RequestBody Map<String, String> body) {
+        String phone = body.get("phone");
+        log.info("收到发送验证码请求: 手机号={}", phone);
+        String code = authService.sendCode(phone);
+        log.info("验证码发送成功: 手机号={}, 验证码={}", phone, code);
+        return R.ok(null, "验证码已发送");
+    }
+
+    /**
+     * 验证码登录接口
+     *
+     * @param loginBody 包含手机号和验证码的请求体
+     * @return 包含 token 的响应结果。
+     */
+    @Operation(summary = "验证码登录", description = "通过手机号和验证码登录")
+    @PostMapping("/login-by-code")
+    public R<Map<String, String>> loginByCode(@RequestBody LoginBody loginBody) {
+        log.info("收到验证码登录请求: 手机号={}", loginBody.getUsername());
+        String token = authService.loginByCode(loginBody);
+        log.info("验证码登录成功: 手机号={}", loginBody.getUsername());
+        return R.ok(Map.of("token", token), "登录成功");
+    }
+
+    /**
+     * 退出登录接口
+     *
+     * @param loginUser 当前登录用户
+     * @return 结果
+     */
+    @Operation(summary = "退出登录", description = "用户退出登录并清理在线状态")
+    @PostMapping("/logout")
+    public R<Void> logout(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        if (loginUser != null) {
+            log.info("收到用户退出登录请求: 用户ID={}", loginUser.getUser().getId());
+            authService.logout(loginUser.getUser().getId());
+        }
+        return R.ok(null, "退出成功");
+    }
+}
