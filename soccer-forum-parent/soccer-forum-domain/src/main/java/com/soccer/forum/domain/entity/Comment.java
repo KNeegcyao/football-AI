@@ -26,9 +26,9 @@ public class Comment implements Serializable {
     private Long replyToUserId;
     @Schema(description = "评论内容")
     private String content;
-    @Schema(description = "点赞数")
+    @Schema(description = "点赞�?)
     private Integer likes;
-    @Schema(description = "状态 (1:正常 0:删除)")
+    @Schema(description = "状�?(1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
 
     @Schema(description = "提到的用户ID列表")

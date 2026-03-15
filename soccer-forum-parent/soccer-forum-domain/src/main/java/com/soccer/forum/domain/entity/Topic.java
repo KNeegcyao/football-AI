@@ -20,10 +20,10 @@ public class Topic {
     @Schema(description = "话题描述")
     private String description;
 
-    @Schema(description = "浏览量")
+    @Schema(description = "浏览�?)
     private Integer viewCount;
 
-    @Schema(description = "帖子数")
+    @Schema(description = "帖子�?)
     private Integer postCount;
 
     @TableField(value = "created_at")

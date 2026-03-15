@@ -17,9 +17,9 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 /**
- * Redis 配置类
+ * Redis 配置�?
  * <p>
- * 配置 RedisTemplate 序列化方式，使用 String 序列化 Key，JSON 序列化 Value。
+ * 配置 RedisTemplate 序列化方式，使用 String 序列�?Key，JSON 序列�?Value�?
  * </p>
  *
  * @author Soccer Forum Dev Team
@@ -33,20 +33,20 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // 使用 String 序列化 Key
+        // 使用 String 序列�?Key
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
         template.setKeySerializer(stringSerializer);
         template.setHashKeySerializer(stringSerializer);
 
-        // 使用 Jackson2JsonRedisSerializer 序列化 Value
+        // 使用 Jackson2JsonRedisSerializer 序列�?Value
         ObjectMapper objectMapper = new ObjectMapper();
         // 注册 Java 8 时间模块
         objectMapper.registerModule(new JavaTimeModule());
-        // 禁用将日期转换为时间戳
+        // 禁用将日期转换为时间�?
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        // 设置可见性
+        // 设置可见�?
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // 开启默认类型信息，以便反序列化时知道具体类型
+        // 开启默认类型信息，以便反序列化时知道具体类�?
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance, 
                 ObjectMapper.DefaultTyping.NON_FINAL

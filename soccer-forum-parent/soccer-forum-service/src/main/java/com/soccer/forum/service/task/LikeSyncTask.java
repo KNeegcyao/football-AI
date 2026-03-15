@@ -28,7 +28,7 @@ public class LikeSyncTask {
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
 
-    public LikeSyncJob(RedisTemplate<String, Object> redisTemplate, PostMapper postMapper, CommentMapper commentMapper) {
+    public LikeSyncTask(RedisTemplate<String, Object> redisTemplate, PostMapper postMapper, CommentMapper commentMapper) {
         this.redisTemplate = redisTemplate;
         this.postMapper = postMapper;
         this.commentMapper = commentMapper;

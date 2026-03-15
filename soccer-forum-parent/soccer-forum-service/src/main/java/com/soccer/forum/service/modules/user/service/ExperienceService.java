@@ -10,18 +10,18 @@ import java.util.List;
 public interface ExperienceService {
     
     /**
-     * 增加经验。    * @param userId 用户ID
+     * 增加经验�?   * @param userId 用户ID
      * @param amount 增加数量
      * @param reason 增加原因
      */
     void addExperience(Long userId, int amount, String reason);
     
     /**
-     * 获取用户的经验流。    */
+     * 获取用户的经验流�?   */
     List<ExperienceRecord> getRecordsByUserId(Long userId);
 
     /**
-     * 分页获取用户的经验流。    */
+     * 分页获取用户的经验流�?   */
     Page<ExperienceRecord> getRecordsPageByUserId(Long userId, int page, int size);
     
     /**

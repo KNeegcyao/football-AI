@@ -11,7 +11,7 @@ import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.user.service.AuthService;
 import com.soccer.forum.service.modules.match.service.TeamFollowService;
 import com.soccer.forum.service.modules.match.service.TeamService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;

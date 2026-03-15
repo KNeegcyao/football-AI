@@ -17,7 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import com.soccer.forum.service.security.handler.AuthenticationEntryPointImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -28,13 +28,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint unauthorizedHandler;
+    private final AuthenticationEntryPointImpl unauthorizedHandler;
     private final JwtUtils jwtUtils;
     private final TeamService teamService;
     private final TeamFollowService teamFollowService;
 
     public SecurityConfig(UserDetailsService userDetailsService, 
-                          AuthenticationEntryPoint unauthorizedHandler,
+                          AuthenticationEntryPointImpl unauthorizedHandler,
                           JwtUtils jwtUtils,
                           TeamService teamService,
                           TeamFollowService teamFollowService) {

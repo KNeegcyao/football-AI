@@ -25,7 +25,7 @@ public class Match {
     private LocalDateTime matchTime;
     @Schema(description = "场馆")
     private String venue;
-    @Schema(description = "状态 (0:未开始, 1:进行中, 2:已结束, 3:延期)")
+    @Schema(description = "状�?(0:未开�? 1:进行�? 2:已结�? 3:延期)")
     private Integer status;
     @Schema(description = "主队得分")
     private Integer homeScore;

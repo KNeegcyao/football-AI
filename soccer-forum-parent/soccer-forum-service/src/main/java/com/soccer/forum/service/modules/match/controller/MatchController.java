@@ -1,7 +1,7 @@
 package com.soccer.forum.service.modules.match.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.domain.entity.Match;
 import com.soccer.forum.service.modules.match.model.MatchVO;
 import com.soccer.forum.service.modules.match.service.MatchService;

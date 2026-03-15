@@ -1,7 +1,7 @@
 package com.soccer.forum.service.modules.user.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.modules.user.model.FavoriteReq;

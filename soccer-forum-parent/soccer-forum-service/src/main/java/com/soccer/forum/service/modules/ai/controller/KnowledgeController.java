@@ -1,6 +1,6 @@
 package com.soccer.forum.service.modules.ai.controller;
 
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.service.modules.ai.rag.RagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.soccer.forum.domain.entity.Player;
 import com.soccer.forum.service.modules.match.mapper.PlayerMapper;
 import com.soccer.forum.service.modules.match.service.PlayerSyncService;
-import com.soccer.forum.service.utils.RapidApiClient;
+import com.soccer.forum.service.modules.match.client.RapidApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.soccer.forum.domain.entity.Team;
@@ -250,15 +250,15 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
     private final PlayerMapper playerMapper;
     private final TeamMapper teamMapper;
     private final RapidApiClient rapidApiClient;
-    private final com.soccer.forum.service.utils.SportApiClient sportApiClient;
-    private final com.soccer.forum.service.utils.FootballDataApiClient footballDataApiClient;
+    private final com.soccer.forum.service.modules.match.client.SportApiClient sportApiClient;
+    private final com.soccer.forum.service.modules.match.client.FootballDataApiClient footballDataApiClient;
     private final ObjectMapper objectMapper;
 
     public PlayerSyncServiceImpl(PlayerMapper playerMapper, 
                                 TeamMapper teamMapper, 
                                 RapidApiClient rapidApiClient,
-                                com.soccer.forum.service.utils.SportApiClient sportApiClient,
-                                com.soccer.forum.service.utils.FootballDataApiClient footballDataApiClient,
+                                com.soccer.forum.service.modules.match.client.SportApiClient sportApiClient,
+                                com.soccer.forum.service.modules.match.client.FootballDataApiClient footballDataApiClient,
                                 ObjectMapper objectMapper) {
         this.playerMapper = playerMapper;
         this.teamMapper = teamMapper;

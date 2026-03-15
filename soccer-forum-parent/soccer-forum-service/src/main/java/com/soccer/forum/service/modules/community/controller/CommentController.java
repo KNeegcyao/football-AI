@@ -1,7 +1,7 @@
 package com.soccer.forum.service.modules.community.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.service.modules.community.model.CommentCreateReq;
 import com.soccer.forum.service.modules.community.model.CommentPageReq;
 import com.soccer.forum.service.modules.community.model.CommentResp;

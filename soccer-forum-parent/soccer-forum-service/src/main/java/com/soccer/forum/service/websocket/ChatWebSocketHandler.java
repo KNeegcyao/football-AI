@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soccer.forum.domain.entity.ChatMessage;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.community.service.ChatMessageService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

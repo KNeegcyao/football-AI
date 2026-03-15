@@ -1,6 +1,6 @@
 package com.soccer.forum.service.modules.user.controller;
 
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.service.modules.user.model.LikeReq;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.user.service.LikeService;

@@ -35,12 +35,12 @@ public class ChatMessage implements Serializable {
     @Schema(description = "消息内容")
     private String content;
 
-    @Schema(description = "消息类型 (0:文字, 1:图片, 2:战术板分享卡片)")
+    @Schema(description = "消息类型 (0:文字, 1:图片, 2:战术板分享卡�?")
     private Integer type;
 
-    @Schema(description = "状态 (0:未读, 1:已读, 2:已撤回)")
+    @Schema(description = "状�?(0:未读, 1:已读, 2:已撤�?")
     private Integer status;
 
-    @Schema(description = "发送时间")
+    @Schema(description = "发送时�?)
     private LocalDateTime createdAt;
 }

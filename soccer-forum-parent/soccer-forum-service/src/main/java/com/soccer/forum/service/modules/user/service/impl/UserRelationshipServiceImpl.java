@@ -36,7 +36,7 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
     @Transactional(rollbackFor = Exception.class)
     public void follow(Long followerId, Long followingId) {
         if (followerId.equals(followingId)) {
-            throw new ServiceException("不能关注自己", ServiceErrorCode.PARAM_ERROR.getCode());
+            throw new ServiceException(ServiceErrorCode.PARAM_ERROR.getCode(), "不能关注自己");
         }
         
         // 检查是否已关注

@@ -44,7 +44,7 @@ public class Player {
     private String photoUrl;
     @Schema(description = "出生日期")
     private LocalDate birthDate;
-    @Schema(description = "出生地")
+    @Schema(description = "出生�?)
     private String birthPlace;
     @Schema(description = "国籍")
     private String nationality;
@@ -58,29 +58,29 @@ public class Player {
     private Integer height;
     @Schema(description = "体重 (kg)")
     private Integer weight;
-    @Schema(description = "惯用脚")
+    @Schema(description = "惯用�?)
     private String preferredFoot;
     @Schema(description = "当前球队ID")
     private Long currentTeamId;
     @Schema(description = "球衣号码")
     private Integer jerseyNumber;
-    @Schema(description = "市场价值")
+    @Schema(description = "市场价�?)
     private BigDecimal marketValue;
 
-    @Schema(description = "状态 (active, injured, suspended)")
+    @Schema(description = "状�?(active, injured, suspended)")
     private String status;
 
-    @Schema(description = "合同到期日")
+    @Schema(description = "合同到期�?)
     private LocalDate contractUntil;
     @Schema(description = "出场次数")
     private Integer appearances;
-    @Schema(description = "进球数")
+    @Schema(description = "进球�?)
     private Integer goals;
-    @Schema(description = "助攻数")
+    @Schema(description = "助攻�?)
     private Integer assists;
-    @Schema(description = "黄牌数")
+    @Schema(description = "黄牌�?)
     private Integer yellowCards;
-    @Schema(description = "红牌数")
+    @Schema(description = "红牌�?)
     private Integer redCards;
 
     @Schema(description = "赛季平均评分")
@@ -133,7 +133,7 @@ public class Player {
     @Schema(description = "出生日期")
     public LocalDate getBirthDate() { return birthDate; }
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
-    @Schema(description = "出生地")
+    @Schema(description = "出生�?)
     public String getBirthPlace() { return birthPlace; }
     public void setBirthPlace(String birthPlace) { this.birthPlace = birthPlace; }
     @Schema(description = "国籍")
@@ -153,7 +153,7 @@ public class Player {
     @Schema(description = "体重 (kg)")
     public Integer getWeight() { return weight; }
     public void setWeight(Integer weight) { this.weight = weight; }
-    @Schema(description = "惯用脚")
+    @Schema(description = "惯用�?)
     public String getPreferredFoot() { return preferredFoot; }
     public void setPreferredFoot(String preferredFoot) { this.preferredFoot = preferredFoot; }
     @Schema(description = "当前球队ID")
@@ -162,30 +162,30 @@ public class Player {
     @Schema(description = "球衣号码")
     public Integer getJerseyNumber() { return jerseyNumber; }
     public void setJerseyNumber(Integer jerseyNumber) { this.jerseyNumber = jerseyNumber; }
-    @Schema(description = "市场价值")
+    @Schema(description = "市场价�?)
     public BigDecimal getMarketValue() { return marketValue; }
     public void setMarketValue(BigDecimal marketValue) { this.marketValue = marketValue; }
 
-    @Schema(description = "状态 (active, injured, suspended)")
+    @Schema(description = "状�?(active, injured, suspended)")
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    @Schema(description = "合同到期日")
+    @Schema(description = "合同到期�?)
     public LocalDate getContractUntil() { return contractUntil; }
     public void setContractUntil(LocalDate contractUntil) { this.contractUntil = contractUntil; }
     @Schema(description = "出场次数")
     public Integer getAppearances() { return appearances; }
     public void setAppearances(Integer appearances) { this.appearances = appearances; }
-    @Schema(description = "进球数")
+    @Schema(description = "进球�?)
     public Integer getGoals() { return goals; }
     public void setGoals(Integer goals) { this.goals = goals; }
-    @Schema(description = "助攻数")
+    @Schema(description = "助攻�?)
     public Integer getAssists() { return assists; }
     public void setAssists(Integer assists) { this.assists = assists; }
-    @Schema(description = "黄牌数")
+    @Schema(description = "黄牌�?)
     public Integer getYellowCards() { return yellowCards; }
     public void setYellowCards(Integer yellowCards) { this.yellowCards = yellowCards; }
-    @Schema(description = "红牌数")
+    @Schema(description = "红牌�?)
     public Integer getRedCards() { return redCards; }
     public void setRedCards(Integer redCards) { this.redCards = redCards; }
 

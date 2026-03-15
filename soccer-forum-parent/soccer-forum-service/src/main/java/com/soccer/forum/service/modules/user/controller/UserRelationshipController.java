@@ -2,7 +2,7 @@ package com.soccer.forum.service.modules.user.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.soccer.forum.common.core.domain.R;
+import com.soccer.forum.common.R;
 import com.soccer.forum.service.modules.user.model.UserFollowResp;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.user.service.UserRelationshipService;

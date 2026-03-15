@@ -4,7 +4,7 @@ import com.soccer.forum.service.modules.user.service.impl.AuthServiceImpl;
 import com.soccer.forum.service.modules.user.model.LoginBody;
 import com.soccer.forum.service.modules.user.mapper.UserMapper;
 import com.soccer.forum.domain.entity.User;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
