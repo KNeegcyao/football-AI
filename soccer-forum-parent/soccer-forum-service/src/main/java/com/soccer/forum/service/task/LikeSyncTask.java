@@ -1,4 +1,4 @@
-package com.soccer.forum.service.job;
+package com.soccer.forum.service.task;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.soccer.forum.domain.entity.Comment;
@@ -20,9 +20,9 @@ import java.util.Set;
  * </p>
  */
 @Component
-public class LikeSyncJob {
+public class LikeSyncTask {
 
-    private static final Logger log = LoggerFactory.getLogger(LikeSyncJob.class);
+    private static final Logger log = LoggerFactory.getLogger(LikeSyncTask.class);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final PostMapper postMapper;

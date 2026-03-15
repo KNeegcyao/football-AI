@@ -3,7 +3,7 @@ package com.soccer.forum.service.config;
 import com.soccer.forum.service.security.filter.JwtAuthenticationTokenFilter;
 import com.soccer.forum.service.modules.match.service.TeamFollowService;
 import com.soccer.forum.service.modules.match.service.TeamService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

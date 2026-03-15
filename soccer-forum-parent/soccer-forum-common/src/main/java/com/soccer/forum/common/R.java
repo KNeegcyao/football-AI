@@ -1,4 +1,4 @@
-package com.soccer.forum.common.core.domain;
+package com.soccer.forum.common;
 
 import java.io.Serializable;
 

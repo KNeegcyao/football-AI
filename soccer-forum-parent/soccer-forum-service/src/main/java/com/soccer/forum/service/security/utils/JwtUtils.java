@@ -1,4 +1,4 @@
-package com.soccer.forum.service.utils;
+package com.soccer.forum.service.security.utils;
 
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import io.jsonwebtoken.Claims;

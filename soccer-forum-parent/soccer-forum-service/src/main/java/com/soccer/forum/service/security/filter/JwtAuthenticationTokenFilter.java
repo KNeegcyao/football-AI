@@ -3,7 +3,7 @@ package com.soccer.forum.service.security.filter;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.match.service.TeamFollowService;
 import com.soccer.forum.service.modules.match.service.TeamService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package com.soccer.forum.service.utils;
+package com.soccer.forum.service.modules.match.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
