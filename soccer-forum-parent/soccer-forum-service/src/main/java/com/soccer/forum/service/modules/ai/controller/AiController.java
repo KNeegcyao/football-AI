@@ -1,9 +1,12 @@
 package com.soccer.forum.service.modules.ai.controller;
 
 import com.soccer.forum.common.R;
+import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.modules.ai.agent.*;
 import com.soccer.forum.service.modules.ai.rag.RagService;
+import com.soccer.forum.service.modules.match.service.NewsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,19 +27,63 @@ public class AiController {
     private final RuleQaAgent ruleQaAgent;
     private final DataQueryAgent dataQueryAgent;
     private final RagService ragService;
+    private final NewsService newsService;
 
     public AiController(NewsSummaryAgent newsSummaryAgent,
                         MatchAnalysisAgent matchAnalysisAgent,
                         CommentAnalysisAgent commentAnalysisAgent,
                         RuleQaAgent ruleQaAgent,
                         DataQueryAgent dataQueryAgent,
-                        RagService ragService) {
+                        RagService ragService,
+                        NewsService newsService) {
         this.newsSummaryAgent = newsSummaryAgent;
         this.matchAnalysisAgent = matchAnalysisAgent;
         this.commentAnalysisAgent = commentAnalysisAgent;
         this.ruleQaAgent = ruleQaAgent;
         this.dataQueryAgent = dataQueryAgent;
         this.ragService = ragService;
+        this.newsService = newsService;
+    }
+
+    @Operation(summary = "资讯内容智能摘要 (Persistence)")
+    @PostMapping("/news/{id}/summary")
+    public R<String> summarizeNewsById(@Parameter(description = "资讯ID") @PathVariable Long id) {
+        System.out.println("Entering summarizeNewsById with id: " + id);
+        // 1. 获取资讯详情
+        News news = newsService.getNewsDetail(id);
+        if (news == null) {
+            return R.fail("资讯不存在");
+        }
+
+        // 2. 如果已有摘要，直接返回
+        if (news.getSummary() != null && !news.getSummary().isEmpty()) {
+            return R.ok(news.getSummary());
+        }
+
+        // 3. 调用 AI 生成摘要
+        String content = news.getContent();
+        if (content == null || content.isEmpty()) {
+            return R.fail("资讯内容为空，无法生成摘要");
+        }
+        
+        String summary;
+        try {
+            System.out.println("Calling newsSummaryAgent.summarize...");
+            summary = newsSummaryAgent.summarize(content);
+            System.out.println("newsSummaryAgent.summarize returned: " + summary);
+        } catch (Throwable e) {
+            System.out.println("Caught exception in AiController: " + e);
+            e.printStackTrace();
+            // AI 服务调用失败时的降级处理 (Mock)
+            org.slf4j.LoggerFactory.getLogger(AiController.class).error("AI 摘要生成失败: {}", e.getMessage());
+            summary = "（系统提示：AI 服务暂未配置 API Key，以下为演示摘要）这是一篇关于足球的精彩报道，详细介绍了比赛的关键时刻和球员的出色表现。请在后端配置文件 application-ai.yml 中填入有效的智谱 AI API Key 以体验真实的智能摘要功能。";
+        }
+
+        // 4. 更新数据库 (异步或同步均可，这里选择同步简单处理)
+        news.setSummary(summary);
+        newsService.updateNews(id, news);
+
+        return R.ok(summary);
     }
 
     @Operation(summary = "智能新闻摘要")

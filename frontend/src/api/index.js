@@ -170,6 +170,16 @@ export const searchApi = {
 }
 
 /**
+ * AI 相关接口
+ */
+export const aiApi = {
+  /**
+   * 获取新闻摘要 (自动生成并持久化)
+   */
+  getNewsSummary: (id) => request.post(`/api/ai/news/${id}/summary`)
+}
+
+/**
  * 赛事相关接口
  */
 export const matchApi = {

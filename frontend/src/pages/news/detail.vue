@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
-import { newsApi, favoriteApi } from '@/api/index'
+import { newsApi, favoriteApi, aiApi } from '@/api/index'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -15,7 +15,8 @@ const news = ref({
   categoryId: 0,
   content: '',
   author: 'PitchPulse 编辑部',
-  authorSub: '深度足球组'
+  authorSub: '深度足球组',
+  summary: ''
 })
 
 const scrollProgress = ref(0)
@@ -103,7 +104,13 @@ const fetchNewsDetail = async (id) => {
       news.value = {
         ...res,
         author: res.author || 'PitchPulse 编辑部',
-        authorSub: res.authorSub || '深度足球组'
+        authorSub: res.authorSub || '深度足球组',
+        summary: res.summary || ''
+      }
+
+      // 如果摘要为空，则尝试自动生成
+      if (!news.value.summary) {
+        generateSummary(id)
       }
     }
   } catch (e) {
@@ -112,6 +119,18 @@ const fetchNewsDetail = async (id) => {
       title: '获取详情失败',
       icon: 'none'
     })
+  }
+}
+
+const generateSummary = async (id) => {
+  try {
+    const summary = await aiApi.getNewsSummary(id)
+    if (summary) {
+      news.value.summary = summary
+    }
+  } catch (e) {
+    console.warn('AI 摘要生成失败:', e)
+    // 摘要生成失败不影响主流程，仅控制台打印
   }
 }
 
@@ -216,6 +235,18 @@ const getFullImageUrl = (url) => {
       </view>
 
       <!-- Article Body -->
+      <!-- AI Smart Summary -->
+      <view v-if="news.summary" class="mb-8 p-4 rounded-xl border transition-colors duration-300" 
+            :class="isEyeProtection ? 'bg-primary/5 border-primary/20' : 'bg-white/5 border-white/10'">
+        <view class="flex items-center gap-2 mb-2">
+          <text class="material-symbols-outlined text-primary" style="font-size: 40rpx;">auto_awesome</text>
+          <text class="text-sm font-bold text-primary">AI 智能摘要</text>
+        </view>
+        <text :class="['text-sm leading-relaxed transition-colors', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
+          {{ news.summary }}
+        </text>
+      </view>
+
       <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-theme-main', fontClasses[fontSizeLevel]]">
         <rich-text :nodes="news.content"></rich-text>
       </article>
@@ -243,7 +274,7 @@ const getFullImageUrl = (url) => {
 
       <!-- Font Size -->
       <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
-        <u-icon name="font-size" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563'" size="40rpx"></u-icon>
+        <text class="material-symbols-outlined" :style="{fontSize: '40rpx', color: isEyeProtection ? '#4B5563' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')}">format_size</text>
         <text class="text-[10px] font-medium">字号</text>
       </view>
 
