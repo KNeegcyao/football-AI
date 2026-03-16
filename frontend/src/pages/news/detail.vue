@@ -21,6 +21,8 @@ const news = ref({
   impact: ''
 })
 
+const isImpactLoading = ref(false)
+
 const isImpactExpanded = ref(false)
 const toggleImpact = () => {
   isImpactExpanded.value = !isImpactExpanded.value
@@ -156,6 +158,8 @@ const generateSummary = async (id) => {
 }
 
 const generateImpact = async (id) => {
+  if (isImpactLoading.value) return
+  isImpactLoading.value = true
   try {
     const impact = await aiApi.getNewsImpact(id)
     if (impact) {
@@ -163,6 +167,8 @@ const generateImpact = async (id) => {
     }
   } catch (e) {
     console.warn('AI 点评生成失败:', e)
+  } finally {
+    isImpactLoading.value = false
   }
 }
 
@@ -268,30 +274,34 @@ const getFullImageUrl = (url) => {
 
       <!-- Article Body -->
       <!-- AI Smart Summary / Impact -->
-      <view v-if="news.summary || news.impact" 
+      <view v-if="news.summary || news.impact || isImpactLoading" 
             class="mb-8 p-4 rounded-xl border transition-all duration-500 overflow-hidden relative" 
             :class="[
               isEyeProtection ? 'bg-primary/5 border-primary/20' : 'bg-white/5 border-white/10',
-              isImpactExpanded ? 'max-h-none pb-12' : 'max-h-[220rpx]'
+              isImpactExpanded || isImpactLoading ? 'max-h-none' : 'max-h-[220rpx]',
+              isImpactExpanded ? 'pb-12' : ''
             ]">
         <view class="flex items-center gap-2 mb-3">
-          <text class="material-symbols-outlined text-primary animate-pulse" style="font-size: 36rpx;">auto_awesome</text>
-          <text class="text-sm font-bold text-primary">AI 深度点评</text>
+          <u-icon v-if="isImpactLoading" name="star-fill" color="#D4AF37" size="32rpx" class="animate-spin"></u-icon>
+          <text v-else class="material-symbols-outlined text-primary animate-pulse" style="font-size: 36rpx;">auto_awesome</text>
+          <text class="text-sm font-bold text-primary">{{ isImpactLoading ? 'AI 正在深度思考...' : 'AI 深度点评' }}</text>
         </view>
         
-        <view v-if="news.impact" class="impact-content-wrapper" :class="{'line-clamp-2 opacity-50': !isImpactExpanded}">
+        <view v-if="isImpactLoading" class="flex flex-col gap-3 py-2">
+          <view class="skeleton-line w-full h-3 rounded bg-white/10 animate-pulse"></view>
+          <view class="skeleton-line w-[90%] h-3 rounded bg-white/10 animate-pulse"></view>
+          <view class="skeleton-line w-[95%] h-3 rounded bg-white/10 animate-pulse"></view>
+        </view>
+
+        <view v-else-if="news.impact" class="impact-content-wrapper" :class="{'line-clamp-2 opacity-50': !isImpactExpanded}">
           <rich-text :nodes="renderedImpact" :class="['text-sm leading-relaxed transition-colors markdown-body', isEyeProtection ? 'text-gray-700' : 'text-gray-300']"></rich-text>
         </view>
         <text v-else-if="news.summary" :class="['text-sm leading-relaxed transition-colors line-clamp-2', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
           {{ news.summary }}
         </text>
-        <view v-else class="flex items-center gap-2 mt-2">
-           <u-loading-icon mode="circle" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'"></u-loading-icon>
-           <text class="text-xs text-gray-500">AI 正在生成点评...</text>
-        </view>
 
         <!-- Gradient Overlay & Expand Button -->
-        <view v-if="news.impact" 
+        <view v-if="news.impact && !isImpactLoading" 
               class="absolute left-0 right-0 bottom-0 flex flex-col items-center justify-end transition-all duration-300"
               :class="[
                 isImpactExpanded ? 'h-14' : 'h-24 bg-gradient-to-t',

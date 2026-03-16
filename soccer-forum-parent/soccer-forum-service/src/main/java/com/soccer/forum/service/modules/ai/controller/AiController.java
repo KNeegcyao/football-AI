@@ -83,8 +83,11 @@ public class AiController {
             summary = "【演示摘要】这是一篇关于足球的精彩报道，详细记录了比赛的关键时刻与球员的出色表现。请配置 API Key 以启用完整功能。";
         }
 
-        // 4. 更新数据库 (异步或同步均可，这里选择同步简单处理)
-        // 确保只保存前 100 个字符作为摘要，或者根据业务需求处理
+        // 4. 更新数据库
+        // 按照用户绝对要求：20 字总结，强制截断 20 字符
+        if (summary != null && summary.length() > 20) {
+            summary = summary.substring(0, 20);
+        }
         news.setSummary(summary);
         newsService.updateNews(id, news);
 

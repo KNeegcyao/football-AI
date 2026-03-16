@@ -43,6 +43,11 @@
           <view class="tag-row">
             <text class="hero-tag">今日要闻</text>
             <text class="hero-subtag" v-if="heroPost.category">{{ heroPost.category }}</text>
+            <!-- 英雄帖 AI 勋章 -->
+            <view class="ai-badge hero-ai-badge" v-if="heroPost.isAi" @click.stop="toggleHeroAiSummary">
+              <u-icon name="star-fill" color="#000" size="20rpx"></u-icon>
+              <text class="ai-text">AI</text>
+            </view>
           </view>
           <text class="hero-title">{{ heroPost.title }}</text>
           <view class="hero-meta">
@@ -59,6 +64,21 @@
                 <text class="meta-text">{{ heroPost.views || 0 }}</text>
               </view>
             </view>
+        </view>
+      </view>
+
+      <!-- 英雄帖 AI 摘要 -->
+      <view class="hero-ai-summary-container" v-if="heroPost.isAi" :class="{'visible': heroPost.showSummary}">
+        <view class="ai-summary no-margin" v-if="heroPost.aiSummary" :class="{'ai-summary-visible': heroPost.showSummary}">
+          <view class="ai-summary-content bg-theme-secondary">
+            <view class="ai-summary-header">
+              <u-icon name="star-fill" :color="themeStore.theme === 'dark' ? '#D4AF37' : '#B8860B'" size="24rpx"></u-icon>
+              <text class="ai-summary-label">AI 智能摘要</text>
+            </view>
+            <text class="ai-summary-text text-theme-secondary">
+              {{ formatAiSummary(heroPost.aiSummary) }}
+            </text>
+          </view>
         </view>
       </view>
 
@@ -99,13 +119,13 @@
             </view>
           </view>
           <!-- AI 摘要 -->
-          <view class="ai-summary" v-if="post.aiSummary" :class="{'ai-summary-visible': post.showSummary}">
-            <view class="ai-summary-content bg-theme-secondary">
+          <view class="ai-summary" v-if="post.isAi" :class="{'ai-summary-visible': post.showSummary}">
+            <view class="ai-summary-content bg-theme-secondary" v-if="post.aiSummary">
               <view class="ai-summary-header">
                 <u-icon name="star-fill" :color="themeStore.theme === 'dark' ? '#D4AF37' : '#B8860B'" size="24rpx"></u-icon>
                 <text class="ai-summary-label">AI 智能摘要</text>
               </view>
-              <text class="ai-summary-text text-theme-secondary line-clamp-3">
+              <text class="ai-summary-text text-theme-secondary">
                 {{ formatAiSummary(post.aiSummary) }}
               </text>
             </view>
@@ -131,7 +151,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { postApi, newsApi, userApi, fileApi } from '@/api'
+import { postApi, newsApi, userApi, fileApi, aiApi } from '@/api'
 import { BASE_URL } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
@@ -224,11 +244,13 @@ const formatTime = (timeStr) => {
 
 const formatAiSummary = (text) => {
   if (!text) return ''
-  // 移除 Markdown 标题标记如 ### 摘要:
+  // 1. 强制前端截断：无论后端存了多少，前端展示绝对不超过 20 字
   let cleaned = text.replace(/#+\s*(摘要|总结)[:：]?\s*/g, '')
-  // 移除开头可能存在的“摘要：”字眼
-  cleaned = cleaned.replace(/^(摘要|总结)[:：]?\s*/g, '')
-  return cleaned.trim()
+    .replace(/^(摘要|总结)[:：]?\s*/g, '')
+    .replace(/【深度点评】/g, '')
+    .trim()
+  
+  return cleaned.length > 20 ? cleaned.substring(0, 20) : cleaned
 }
 
 const changeCategory = (index) => {
@@ -236,9 +258,52 @@ const changeCategory = (index) => {
   loadData()
 }
 
-const toggleAiSummary = (index) => {
-  if (recommendPosts.value[index]) {
-    recommendPosts.value[index].showSummary = !recommendPosts.value[index].showSummary
+const toggleAiSummary = async (index) => {
+  const post = recommendPosts.value[index]
+  if (!post) return
+  
+  // 切换显示状态
+  post.showSummary = !post.showSummary
+  
+  // 如果打开摘要且当前没有摘要内容，则触发生成
+  if (post.showSummary && !post.aiSummary) {
+    try {
+      // 标记正在加载
+      post.aiSummary = 'AI 正在生成精炼摘要...'
+      const summary = await aiApi.getNewsSummary(post.id)
+      if (summary) {
+        post.aiSummary = summary
+      } else {
+        post.aiSummary = '暂无摘要'
+      }
+    } catch (e) {
+      console.error('AI 摘要生成失败:', e)
+      post.aiSummary = '生成失败，请重试'
+    }
+  }
+}
+
+const toggleHeroAiSummary = async () => {
+  if (!heroPost.value) return
+  
+  // 切换显示状态
+  heroPost.value.showSummary = !heroPost.value.showSummary
+  
+  // 如果打开摘要且当前没有摘要内容，则触发生成
+  if (heroPost.value.showSummary && !heroPost.value.aiSummary) {
+    try {
+      // 标记正在加载
+      heroPost.value.aiSummary = 'AI 正在生成精炼摘要...'
+      const summary = await aiApi.getNewsSummary(heroPost.value.id)
+      if (summary) {
+        heroPost.value.aiSummary = summary
+      } else {
+        heroPost.value.aiSummary = '暂无摘要'
+      }
+    } catch (e) {
+      console.error('AI 摘要生成失败:', e)
+      heroPost.value.aiSummary = '生成失败，请重试'
+    }
   }
 }
 
@@ -730,6 +795,19 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4rpx;
+  z-index: 10;
+
+  &.hero-ai-badge {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-left: 12rpx;
+  }
+
+  .ai-text {
+    font-size: 18rpx;
+    font-weight: 800;
+  }
 }
 
 .post-info {
@@ -815,56 +893,71 @@ onMounted(() => {
     transform: translateY(0);
     padding-bottom: 10rpx;
   }
+  
+  &.no-margin {
+    margin-top: 0 !important;
+  }
+}
+
+.hero-ai-summary-container {
+  padding: 0 30rpx;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  
+  &.visible {
+    height: auto;
+    opacity: 1;
+    margin-top: 20rpx;
+    margin-bottom: 10rpx;
+  }
 }
 
 .ai-summary-content {
-  border-radius: 16rpx;
-  padding: 20rpx;
-  background-color: rgba(212, 175, 55, 0.05) !important;
-  border: 1rpx solid rgba(212, 175, 55, 0.15);
+  border-radius: 8rpx;
+  padding: 12rpx 16rpx;
+  background-color: rgba(212, 175, 55, 0.04) !important;
+  border: 1rpx solid rgba(212, 175, 55, 0.12);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 6rpx;
+    width: 4rpx;
     background-color: #D4AF37;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 }
 
 .ai-summary-header {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  margin-bottom: 12rpx;
+  gap: 6rpx;
+  margin-bottom: 6rpx;
 }
 
 .ai-summary-label {
-  font-size: 22rpx;
-  font-weight: 700;
+  font-size: 20rpx;
+  font-weight: 800;
   color: #D4AF37;
-  letter-spacing: 1rpx;
+  text-transform: uppercase;
+  letter-spacing: 0.5rpx;
 }
 
 .ai-summary-text {
   font-size: 24rpx;
-  line-height: 1.6;
-  color: var(--text-secondary);
+  line-height: 1.2;
   font-style: italic;
   display: block;
-  
-  &.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  white-space: nowrap; /* 强制单行显示 */
+  overflow: hidden;
+  text-overflow: ellipsis; /* 溢出显示省略号 */
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .theme-dark .ai-summary-content {
