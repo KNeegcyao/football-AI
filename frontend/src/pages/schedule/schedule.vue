@@ -168,15 +168,16 @@
 
     <!-- 底部导航栏 -->
     <view class="tab-bar bg-tab-bar border-theme-main">
-      <view 
-        v-for="(tab, index) in tabs" 
-        :key="index"
-        class="tab-item"
-        :class="{ active: currentTab === index }"
-        @tap="handleTabClick(index)"
-      >
-        <u-icon :name="tab.icon" size="24" :color="currentTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'"></u-icon>
-        <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
+      <view v-for="(tab, index) in tabs" :key="index" 
+            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
+            @tap="handleTabClick(index)">
+        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
+          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
+        </view>
+        <template v-else>
+          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
+          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
+        </template>
       </view>
     </view>
   </view>
@@ -238,9 +239,10 @@ onShow(() => {
 const currentTab = ref(1)
 const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/community/community' },
-  { text: '我的', icon: 'account', path: 'pages/my/my' }
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
+  { text: '社区', icon: 'forum', path: 'pages/community/community' },
+  { text: '我的', icon: 'person', path: 'pages/my/my' }
 ]
 
 // 初始化日期列表（前后3天）
@@ -401,18 +403,9 @@ const stopAutoRefresh = () => {
 }
 
 const handleTabClick = (index) => {
-  const tab = tabs[index]
-  if (!tab || !tab.path) return
-  
-  if (currentTab.value === index) return
-
-  const url = tab.path.startsWith('/') ? tab.path : '/' + tab.path
-  
+  if (index === currentTab.value) return
   uni.switchTab({
-    url: url,
-    fail: () => {
-      uni.reLaunch({ url })
-    }
+    url: '/' + tabs[index].path
   })
 }
 
@@ -956,7 +949,7 @@ onUnmounted(() => {
   height: 160rpx;
 }
 
-/* 底部导航栏 */
+/* 底部导航栏样式同步自 index.vue */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -969,17 +962,16 @@ onUnmounted(() => {
   max-width: 500px;
   /* #endif */
   
-  height: 120rpx;
-  background-color: var(--tab-bar-bg);
-  backdrop-filter: blur(20px);
-  border-top: 1rpx solid var(--border-main);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 9999;
-  box-sizing: border-box;
+  height: 120rpx; 
+  background-color: rgba(26, 24, 17, 0.98); 
+  backdrop-filter: blur(20px); 
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
+  display: flex; 
+  justify-content: space-around; 
+  align-items: center; 
+  padding-bottom: env(safe-area-inset-bottom); 
+  z-index: 9999; 
+  box-sizing: border-box; 
   pointer-events: auto;
 }
 
@@ -990,24 +982,52 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 8rpx;
+  height: 100%;
+  transition: all 0.3s ease;
+  
+  &.center-item {
+    position: relative;
+    overflow: visible;
+  }
+  
+  .center-icon {
+    position: absolute;
+    top: -40rpx;
+    width: 110rpx;
+    height: 110rpx;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 8rpx solid #1a1811;
+    z-index: 10001;
+    background-color: #8B0000;
+    
+    &.pulse-glow {
+      box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
+    }
+  }
   
   .tab-text {
     font-size: 20rpx;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.4);
     font-weight: 500;
   }
   
   &.active {
     .tab-text {
-      color: var(--accent-color);
+      color: #f9d406;
       font-weight: 700;
     }
   }
 }
 
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .7; transform: scale(0.95); }
 }
 </style>

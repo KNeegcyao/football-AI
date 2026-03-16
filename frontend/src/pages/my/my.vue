@@ -243,15 +243,25 @@
       </view>
     </scroll-view>
 
-    <!-- Bottom Navigation Bar -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in mainTabs" :key="index" class="tab-item" :class="{ active: currentMainTab === index }"
-        @tap="handleMainTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentMainTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
-        <text class="tab-text" :class="currentMainTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
+    <!-- 底部导航栏 -->
+    <view class="tab-bar">
+      <view v-for="(item, index) in tabs" :key="index" 
+            class="tab-item" 
+            :class="{ 'active': currentTab === index, 'center-item': item.isCenter }"
+            @click="handleTabClick(index)">
+        <template v-if="item.isCenter">
+          <view class="center-icon pulse-glow animate-pulse">
+            <text class="material-symbols-outlined" style="font-size: 60rpx; color: #fff;">{{ item.icon }}</text>
+          </view>
+          <text class="tab-text" style="margin-top: 50rpx;">{{ item.text }}</text>
+        </template>
+        <template v-else>
+          <text class="material-symbols-outlined" :style="{ fontSize: '48rpx', color: currentTab === index ? '#f9d406' : 'rgba(255,255,255,0.4)' }">{{ item.icon }}</text>
+          <text class="tab-text">{{ item.text }}</text>
+        </template>
       </view>
     </view>
-    
+
     <!-- Logout Modal -->
     <u-modal
       :show="showLogoutModal"
@@ -276,13 +286,25 @@ const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
-const currentMainTab = ref(3)
-const mainTabs = [
+const currentTab = ref(4)
+const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/community/community' },
-  { text: '我的', icon: 'account', path: 'pages/my/my' }
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
+  { text: '社区', icon: 'forum', path: 'pages/community/community' },
+  { text: '我的', icon: 'person', path: 'pages/my/my' }
 ]
+
+const handleTabClick = (index) => {
+  if (index === currentTab.value) return
+  uni.switchTab({
+    url: '/' + tabs[index].path
+  })
+}
+
+const handleMainTabClick = (index) => {
+  handleTabClick(index)
+}
 
 const currentProfileTab = ref(0)
 const profileTabs = ref([
@@ -421,7 +443,7 @@ onShow(() => {
   }
   
   // 强制刷新主页标识
-  currentMainTab.value = 3
+  currentTab.value = 4
   
   loadUserProfile(options.userId)
 })
@@ -681,12 +703,6 @@ const goToNewsDetail = (id) => {
 
 const goToPlayerDetail = (id) => {
   uni.navigateTo({ url: `/pages/player-detail/player-detail?id=${id}` })
-}
-
-const handleMainTabClick = (index) => {
-  const tab = mainTabs[index]
-  if (currentMainTab.value === index) return
-  uni.switchTab({ url: '/' + tab.path })
 }
 
 const handleFollow = () => {
@@ -1468,6 +1484,8 @@ const formatStats = (num) => {
   text-transform: uppercase;
 }
 
+/* 底部导航栏样式同步自 index.vue */
+/* 底部导航栏样式同步自 index.vue */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -1480,42 +1498,73 @@ const formatStats = (num) => {
   max-width: 500px;
   /* #endif */
   
-  height: 120rpx; /* 统一高度为 120rpx */
-  background-color: rgba(26, 24, 17, 0.98); /* 统一深色背景 */
-  backdrop-filter: blur(20px); /* 开启毛玻璃效果 */
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  
-  /* 适配安全区域 */
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-  
-  z-index: 9999;
-  box-sizing: border-box;
-}
+  height: 120rpx; 
+  background-color: rgba(26, 24, 17, 0.98); 
+  backdrop-filter: blur(20px); 
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
+  display: flex; 
+  justify-content: space-around; 
+  align-items: center; 
+  padding-bottom: env(safe-area-inset-bottom); 
+  z-index: 9999; 
+  box-sizing: border-box; 
+  pointer-events: auto;
 
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    height: 100%;
+    transition: all 0.3s ease;
+    
+    &.center-item {
+      position: relative;
+      overflow: visible;
+    }
+    
+    .center-icon {
+      position: absolute;
+      top: -40rpx;
+      width: 110rpx;
+      height: 110rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 8rpx solid #1a1811;
+      z-index: 10001;
+      background-color: #8B0000;
+      
+      &.pulse-glow {
+        box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
+      }
+    }
+    
     .tab-text {
-      color: #f9d406; /* 选中颜色统一为金黄色 */
-      font-weight: 700;
+      font-size: 20rpx;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+    
+    &.active {
+      .tab-text {
+        color: #f9d406;
+        font-weight: 700;
+      }
     }
   }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .7; transform: scale(0.95); }
 }
 
 /* Material Icons Support */

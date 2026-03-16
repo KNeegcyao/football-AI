@@ -101,11 +101,9 @@
             <view class="post-info">
               <text class="post-title text-theme-main">{{ post.title }}</text>
               <view class="post-footer">
-                <view class="post-category-tag bg-theme-secondary text-theme-secondary" v-if="post.category">
-                  <text>{{ post.category }}</text>
-                </view>
+                <text class="post-category" v-if="post.category">{{ post.category }}</text>
+                <text class="post-time text-theme-secondary">{{ post.time }}</text>
                 <view class="post-stats">
-                  <text class="post-time text-theme-secondary">{{ post.time }}</text>
                   <view class="stat-item">
                     <u-icon name="star" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#6B7280'" size="28rpx"></u-icon>
                     <text class="stat-num text-theme-secondary">{{ post.collections || 0 }}</text>
@@ -139,10 +137,16 @@
 
     <!-- 底部导航栏 -->
     <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ active: currentTab === index }"
-        @tap="handleTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
-        <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
+      <view v-for="(tab, index) in tabs" :key="index" 
+            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
+            @tap="handleTabClick(index)">
+        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
+          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
+        </view>
+        <template v-else>
+          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
+          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
+        </template>
       </view>
     </view>
   </view>
@@ -208,9 +212,10 @@ const categories = [
 const currentTab = ref(0)
 const tabs = [
   { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/community/community' },
-  { text: '我的', icon: 'account', path: 'pages/my/my' }
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
+  { text: '社区', icon: 'forum', path: 'pages/community/community' },
+  { text: '我的', icon: 'person', path: 'pages/my/my' }
 ]
 
 const heroPost = ref({
@@ -237,9 +242,9 @@ const formatTime = (timeStr) => {
   if (diff < 60) return '刚刚'
   if (diff < 3600) return Math.floor(diff / 60) + '分钟前'
   if (diff < 86400) return Math.floor(diff / 3600) + '小时前'
-  if (diff < 2592000) return Math.floor(diff / 86400) + '天前'
   
-  return timeStr.split('T')[0] // 返回日期部分
+  // 统一显示为 xx天前，不再显示具体日期
+  return Math.floor(diff / 86400) + '天前'
 }
 
 const formatAiSummary = (text) => {
@@ -470,18 +475,9 @@ const goToSearch = () => {
 }
 
 const handleTabClick = (index) => {
-  const tab = tabs[index]
-  if (!tab || !tab.path) return
-  
-  if (currentTab.value === index) return
-
-  const url = tab.path.startsWith('/') ? tab.path : '/' + tab.path
-  
+  if (index === currentTab.value) return
   uni.switchTab({
-    url: url,
-    fail: () => {
-      uni.reLaunch({ url })
-    }
+    url: '/' + tabs[index].path
   })
 }
 
@@ -814,7 +810,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .post-title {
@@ -827,42 +823,26 @@ onMounted(() => {
 .post-footer {
   display: flex;
   align-items: center;
-  margin-top: auto;
+  gap: 20rpx;
+  margin-top: 10rpx;
 }
 
-.post-category-tag {
-    background: linear-gradient(135deg, $pitch-pulse-primary, darken($pitch-pulse-primary, 10%));
-    padding: 4rpx 16rpx;
-    border-radius: 20rpx;
-    box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.2);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    
-    text {
-      font-size: 20rpx;
-      color: #000;
-      font-weight: 800;
-    }
-  }
-
-.empty-box {
-  padding: 100rpx 0;
-  display: flex;
-  justify-content: center;
+.post-category {
+  font-size: 22rpx;
+  color: $pitch-pulse-primary;
+  font-weight: 700;
 }
 
 .post-time {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.5);
-  margin-right: 15rpx;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .post-stats {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  margin-left: auto;
+  margin-left: 20rpx;
 }
 
 .stat-item {
@@ -982,7 +962,7 @@ onMounted(() => {
   height: 160rpx;
 }
 
-/* 1. 修正底部导航栏：确保在居中模式下也能对齐 */
+/* 底部导航栏 */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -1006,30 +986,63 @@ onMounted(() => {
   z-index: 9999; 
   box-sizing: border-box; 
   pointer-events: auto;
-} 
+}
 
-/* 3. 修正 tab-item：确保宽度平分 */ 
 .tab-item {
-    flex: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 100%;
+  transition: all 0.3s ease;
+  
+  &.center-item {
+    position: relative;
+    overflow: visible;
+  }
+  
+  .center-icon {
+    position: absolute;
+    top: -40rpx;
+    width: 110rpx;
+    height: 110rpx;
+    border-radius: 50%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8rpx;
+    border: 8rpx solid #1a1811;
+    z-index: 10001;
+    background-color: #8B0000;
     
-    .tab-text {
-      font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.4);
-      font-weight: 500;
-    }
-    
-    &.active {
-      .tab-text {
-        color: #f9d406;
-        font-weight: 700;
-      }
+    &.pulse-glow {
+      box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
     }
   }
+  
+  .tab-text {
+    font-size: 20rpx;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+  }
+  
+  &.active {
+    .tab-text {
+      color: #f9d406;
+      font-weight: 700;
+    }
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .7; transform: scale(0.95); }
+}
 
 .bottom-placeholder {
   height: 160rpx;

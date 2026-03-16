@@ -181,7 +181,12 @@ export const aiApi = {
   /**
    * 获取新闻深度点评 (实时生成)
    */
-  getNewsImpact: (id) => request.post(`/api/ai/news/${id}/impact`)
+  getNewsImpact: (id) => request.post(`/api/ai/news/${id}/impact`),
+
+  /**
+   * 足球规则问答 (RAG)
+   */
+  askRule: (data) => request.post('/api/ai/qa/rule', data)
 }
 
 /**

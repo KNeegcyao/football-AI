@@ -20,6 +20,13 @@
       }
     },
     {
+      "path": "pages/ai/ai",
+      "style": {
+        "navigationBarTitleText": "AI 助手",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/community/community",
       "style": {
         "navigationBarTitleText": "社区",
@@ -245,6 +252,12 @@
       {
         "pagePath": "pages/schedule/schedule",
         "text": "赛程",
+        "iconPath": "static/soccer-logo.png",
+        "selectedIconPath": "static/soccer-logo.png"
+      },
+      {
+        "pagePath": "pages/ai/ai",
+        "text": "AI助手",
         "iconPath": "static/soccer-logo.png",
         "selectedIconPath": "static/soccer-logo.png"
       },
