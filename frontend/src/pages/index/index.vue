@@ -73,8 +73,8 @@
           <view class="post-main">
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
-              <view class="ai-badge" v-if="post.isAi">
-                <u-icon name="star-fill" color="#000" size="20rpx"></u-icon>
+              <view class="ai-badge" v-if="post.isAi" @click.stop="toggleAiSummary(index)">
+                <u-icon name="star-fill" :color="post.showSummary ? '#000' : '#000'" size="20rpx"></u-icon>
                 <text class="ai-text">AI</text>
               </view>
             </view>
@@ -99,10 +99,16 @@
             </view>
           </view>
           <!-- AI 摘要 -->
-          <view class="ai-summary bg-theme-secondary" v-if="post.aiSummary">
-            <text class="ai-summary-text text-theme-secondary">
-              <text class="ai-label">AI 摘要：</text>{{ post.aiSummary }}
-            </text>
+          <view class="ai-summary" v-if="post.aiSummary" :class="{'ai-summary-visible': post.showSummary}">
+            <view class="ai-summary-content bg-theme-secondary">
+              <view class="ai-summary-header">
+                <u-icon name="star-fill" :color="themeStore.theme === 'dark' ? '#D4AF37' : '#B8860B'" size="24rpx"></u-icon>
+                <text class="ai-summary-label">AI 智能摘要</text>
+              </view>
+              <text class="ai-summary-text text-theme-secondary line-clamp-3">
+                {{ formatAiSummary(post.aiSummary) }}
+              </text>
+            </view>
           </view>
         </view>
       </view>
@@ -216,9 +222,24 @@ const formatTime = (timeStr) => {
   return timeStr.split('T')[0] // 返回日期部分
 }
 
+const formatAiSummary = (text) => {
+  if (!text) return ''
+  // 移除 Markdown 标题标记如 ### 摘要:
+  let cleaned = text.replace(/#+\s*(摘要|总结)[:：]?\s*/g, '')
+  // 移除开头可能存在的“摘要：”字眼
+  cleaned = cleaned.replace(/^(摘要|总结)[:：]?\s*/g, '')
+  return cleaned.trim()
+}
+
 const changeCategory = (index) => {
   currentCategory.value = index
   loadData()
+}
+
+const toggleAiSummary = (index) => {
+  if (recommendPosts.value[index]) {
+    recommendPosts.value[index].showSummary = !recommendPosts.value[index].showSummary
+  }
 }
 
 // 加载数据
@@ -282,6 +303,7 @@ const loadData = async () => {
           collections: item.collectCount !== undefined ? item.collectCount : 0,
           isAi: true,
           aiSummary: item.summary,
+          showSummary: false,
           userName: authorName,
           userAvatar: '/static/soccer-logo.png'
         }
@@ -776,24 +798,95 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.4);
 }
 
+/* AI Summary Styles */
 .ai-summary {
-  margin-top: 20rpx;
-  background-color: rgba($pitch-pulse-primary, 0.05);
-  border: 1rpx solid rgba($pitch-pulse-primary, 0.1);
-  padding: 15rpx;
-  border-radius: 12rpx;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(-10rpx);
+  margin-top: 0;
+  padding: 0 4rpx;
+  
+  &.ai-summary-visible {
+    height: auto;
+    opacity: 1;
+    margin-top: 20rpx;
+    transform: translateY(0);
+    padding-bottom: 10rpx;
+  }
+}
+
+.ai-summary-content {
+  border-radius: 16rpx;
+  padding: 20rpx;
+  background-color: rgba(212, 175, 55, 0.05) !important;
+  border: 1rpx solid rgba(212, 175, 55, 0.15);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6rpx;
+    background-color: #D4AF37;
+    opacity: 0.6;
+  }
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 12rpx;
+}
+
+.ai-summary-label {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #D4AF37;
+  letter-spacing: 1rpx;
 }
 
 .ai-summary-text {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
   font-style: italic;
-  line-height: 1.5;
+  display: block;
+  
+  &.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
-.ai-label {
-  color: $pitch-pulse-primary;
-  font-weight: 700;
+.theme-dark .ai-summary-content {
+  background-color: rgba(212, 175, 55, 0.08) !important;
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.theme-light .ai-summary-content {
+  background-color: rgba(184, 134, 11, 0.03) !important;
+  border-color: rgba(184, 134, 11, 0.1);
+  
+  .ai-summary-label {
+    color: #B8860B;
+  }
+  
+  &::before {
+    background-color: #B8860B;
+  }
+}
+
+.bottom-placeholder {
+  height: 160rpx;
 }
 
 /* 1. 修正底部导航栏：确保在居中模式下也能对齐 */

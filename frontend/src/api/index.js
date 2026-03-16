@@ -176,7 +176,12 @@ export const aiApi = {
   /**
    * 获取新闻摘要 (自动生成并持久化)
    */
-  getNewsSummary: (id) => request.post(`/api/ai/news/${id}/summary`)
+  getNewsSummary: (id) => request.post(`/api/ai/news/${id}/summary`),
+  
+  /**
+   * 获取新闻深度点评 (实时生成)
+   */
+  getNewsImpact: (id) => request.post(`/api/ai/news/${id}/impact`)
 }
 
 /**

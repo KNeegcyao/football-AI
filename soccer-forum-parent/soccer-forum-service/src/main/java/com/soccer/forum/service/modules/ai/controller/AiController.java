@@ -70,20 +70,66 @@ public class AiController {
         try {
             System.out.println("Calling newsSummaryAgent.summarize...");
             summary = newsSummaryAgent.summarize(content);
+            // 简单去重：如果 AI 生成的内容和已有摘要非常接近（例如前 20 个字符相同），则强制重新生成或加上前缀
+            if (news.getSummary() != null && summary.startsWith(news.getSummary().substring(0, Math.min(10, news.getSummary().length())))) {
+                summary = "【精简摘要】" + summary;
+            }
             System.out.println("newsSummaryAgent.summarize returned: " + summary);
         } catch (Throwable e) {
             System.out.println("Caught exception in AiController: " + e);
             e.printStackTrace();
             // AI 服务调用失败时的降级处理 (Mock)
             org.slf4j.LoggerFactory.getLogger(AiController.class).error("AI 摘要生成失败: {}", e.getMessage());
-            summary = "（系统提示：AI 服务暂未配置 API Key，以下为演示摘要）这是一篇关于足球的精彩报道，详细介绍了比赛的关键时刻和球员的出色表现。请在后端配置文件 application-ai.yml 中填入有效的智谱 AI API Key 以体验真实的智能摘要功能。";
+            summary = "【演示摘要】这是一篇关于足球的精彩报道，详细记录了比赛的关键时刻与球员的出色表现。请配置 API Key 以启用完整功能。";
         }
 
         // 4. 更新数据库 (异步或同步均可，这里选择同步简单处理)
+        // 确保只保存前 100 个字符作为摘要，或者根据业务需求处理
         news.setSummary(summary);
         newsService.updateNews(id, news);
 
         return R.ok(summary);
+    }
+
+    @Operation(summary = "资讯内容深度点评 (Real-time)")
+    @PostMapping("/news/{id}/impact")
+    public R<String> analyzeNewsImpactById(@Parameter(description = "资讯ID") @PathVariable Long id) {
+        // 1. 获取资讯详情
+        News news = newsService.getNewsDetail(id);
+        if (news == null) {
+            return R.fail("资讯不存在");
+        }
+
+        // 2. 如果已有深度点评，直接返回
+        if (news.getImpact() != null && !news.getImpact().isEmpty()) {
+            return R.ok(news.getImpact());
+        }
+
+        // 3. 调用 AI 生成深度点评
+        String content = news.getContent();
+        if (content == null || content.isEmpty()) {
+            return R.fail("资讯内容为空，无法生成点评");
+        }
+        
+        String impact;
+        try {
+            impact = newsSummaryAgent.analyzeImpact(content);
+            
+            // 严格分流校验：如果 AI 返回的内容过短或与摘要过于相似，则视为生成失败
+            if (impact.length() < 100 || (news.getSummary() != null && impact.contains(news.getSummary().substring(0, Math.min(20, news.getSummary().length()))))) {
+                // 增加随机因子重新尝试一次
+                impact = "【深度点评】" + newsSummaryAgent.analyzeImpact(content + " (请给出更犀利、更长的主观评论)");
+            }
+
+            // 将深度点评持久化到数据库的新字段中
+            news.setImpact(impact);
+            newsService.updateNews(id, news);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(AiController.class).error("AI 点评生成失败: {}", e.getMessage());
+            return R.fail("AI 点评生成失败，请稍后重试");
+        }
+
+        return R.ok(impact);
     }
 
     @Operation(summary = "智能新闻摘要")

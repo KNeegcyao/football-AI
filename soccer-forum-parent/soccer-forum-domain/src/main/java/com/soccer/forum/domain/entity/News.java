@@ -49,6 +49,9 @@ public class News {
     @Schema(description = "评论�?)
     private Integer commentCount;
 
+    @Schema(description = "深度点评")
+    private String impact;
+
     @Schema(description = "收藏�?)
     @TableField("collect_count")
     @com.fasterxml.jackson.annotation.JsonProperty("collectCount")
@@ -92,6 +95,9 @@ public class News {
     public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
     public Integer getCommentCount() { return commentCount; }
     public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
+
+    public String getImpact() { return impact; }
+    public void setImpact(String impact) { this.impact = impact; }
 
     public Integer getCollectCount() { return collectCount; }
     public void setCollectCount(Integer collectCount) { this.collectCount = collectCount; }

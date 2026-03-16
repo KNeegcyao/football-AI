@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { newsApi, favoriteApi, aiApi } from '@/api/index'
 import { useThemeStore } from '@/store/theme'
+import { marked } from 'marked'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -16,7 +17,23 @@ const news = ref({
   content: '',
   author: 'PitchPulse 编辑部',
   authorSub: '深度足球组',
-  summary: ''
+  summary: '',
+  impact: ''
+})
+
+const isImpactExpanded = ref(false)
+const toggleImpact = () => {
+  isImpactExpanded.value = !isImpactExpanded.value
+}
+
+const renderedImpact = computed(() => {
+  if (!news.value.impact) return ''
+  // 去除可能的【深度点评】前缀再渲染，或者保留，取决于视觉需求
+  let content = news.value.impact
+  if (content.startsWith('【深度点评】')) {
+    content = content.replace('【深度点评】', '## 深度点评\n')
+  }
+  return marked(content)
 })
 
 const scrollProgress = ref(0)
@@ -105,10 +122,15 @@ const fetchNewsDetail = async (id) => {
         ...res,
         author: res.author || 'PitchPulse 编辑部',
         authorSub: res.authorSub || '深度足球组',
-        summary: res.summary || ''
+        summary: res.summary || '',
+        impact: res.impact || ''
       }
 
-      // 如果摘要为空，则尝试自动生成
+      // 优先获取深度点评
+      if (!news.value.impact) {
+        generateImpact(id)
+      }
+      // 如果没有摘要，也尝试获取一下（为了首页显示）
       if (!news.value.summary) {
         generateSummary(id)
       }
@@ -130,7 +152,17 @@ const generateSummary = async (id) => {
     }
   } catch (e) {
     console.warn('AI 摘要生成失败:', e)
-    // 摘要生成失败不影响主流程，仅控制台打印
+  }
+}
+
+const generateImpact = async (id) => {
+  try {
+    const impact = await aiApi.getNewsImpact(id)
+    if (impact) {
+      news.value.impact = impact
+    }
+  } catch (e) {
+    console.warn('AI 点评生成失败:', e)
   }
 }
 
@@ -235,16 +267,42 @@ const getFullImageUrl = (url) => {
       </view>
 
       <!-- Article Body -->
-      <!-- AI Smart Summary -->
-      <view v-if="news.summary" class="mb-8 p-4 rounded-xl border transition-colors duration-300" 
-            :class="isEyeProtection ? 'bg-primary/5 border-primary/20' : 'bg-white/5 border-white/10'">
-        <view class="flex items-center gap-2 mb-2">
-          <text class="material-symbols-outlined text-primary" style="font-size: 40rpx;">auto_awesome</text>
-          <text class="text-sm font-bold text-primary">AI 智能摘要</text>
+      <!-- AI Smart Summary / Impact -->
+      <view v-if="news.summary || news.impact" 
+            class="mb-8 p-4 rounded-xl border transition-all duration-500 overflow-hidden relative" 
+            :class="[
+              isEyeProtection ? 'bg-primary/5 border-primary/20' : 'bg-white/5 border-white/10',
+              isImpactExpanded ? 'max-h-none pb-12' : 'max-h-[220rpx]'
+            ]">
+        <view class="flex items-center gap-2 mb-3">
+          <text class="material-symbols-outlined text-primary animate-pulse" style="font-size: 36rpx;">auto_awesome</text>
+          <text class="text-sm font-bold text-primary">AI 深度点评</text>
         </view>
-        <text :class="['text-sm leading-relaxed transition-colors', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
+        
+        <view v-if="news.impact" class="impact-content-wrapper" :class="{'line-clamp-2 opacity-50': !isImpactExpanded}">
+          <rich-text :nodes="renderedImpact" :class="['text-sm leading-relaxed transition-colors markdown-body', isEyeProtection ? 'text-gray-700' : 'text-gray-300']"></rich-text>
+        </view>
+        <text v-else-if="news.summary" :class="['text-sm leading-relaxed transition-colors line-clamp-2', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
           {{ news.summary }}
         </text>
+        <view v-else class="flex items-center gap-2 mt-2">
+           <u-loading-icon mode="circle" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'"></u-loading-icon>
+           <text class="text-xs text-gray-500">AI 正在生成点评...</text>
+        </view>
+
+        <!-- Gradient Overlay & Expand Button -->
+        <view v-if="news.impact" 
+              class="absolute left-0 right-0 bottom-0 flex flex-col items-center justify-end transition-all duration-300"
+              :class="[
+                isImpactExpanded ? 'h-14' : 'h-24 bg-gradient-to-t',
+                isEyeProtection ? (isImpactExpanded ? '' : 'from-[#f0ecd6] via-[#f0ecd6]/60 to-transparent') : (isImpactExpanded ? '' : 'from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent')
+              ]"
+              @click="toggleImpact">
+          <view class="flex items-center gap-1 mb-2 py-1.5 px-4 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 active:scale-95 transition-transform">
+            <text class="text-[20rpx] font-bold text-primary">{{ isImpactExpanded ? '收起全文' : '点击展开深度点评' }}</text>
+            <u-icon :name="isImpactExpanded ? 'arrow-up' : 'arrow-down'" color="#D4AF37" size="20rpx"></u-icon>
+          </view>
+        </view>
       </view>
 
       <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-theme-main', fontClasses[fontSizeLevel]]">
@@ -307,6 +365,24 @@ const getFullImageUrl = (url) => {
 </style>
 
 <style scoped>
+.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3) {
+  font-weight: bold;
+  margin-top: 16rpx;
+  margin-bottom: 8rpx;
+  color: var(--primary-color, #D4AF37);
+}
+.markdown-body :deep(p) {
+  margin-bottom: 12rpx;
+  line-height: 1.6;
+}
+.markdown-body :deep(ul), .markdown-body :deep(ol) {
+  padding-left: 32rpx;
+  margin-bottom: 12rpx;
+}
+.markdown-body :deep(li) {
+  margin-bottom: 4rpx;
+}
+
 .article-content {
   line-height: 1.8;
   letter-spacing: 0.01em;
