@@ -149,7 +149,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { searchApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -336,14 +336,7 @@ const formatTime = (timeStr) => {
   return timeStr.split(' ')[0]
 }
 
-const getFullImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) {
-      return url
-  }
-  if (url.startsWith('http')) return url
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
+
 </script>
 
 <style lang="scss" scoped>

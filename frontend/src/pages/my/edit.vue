@@ -149,6 +149,12 @@ const loadProfile = async () => {
     console.log('用户资料加载成功:', res)
     if (res) {
       // Create a new object to ensure reactivity triggers
+      // Ensure currentAvatarPath stores a relative path if it contains /uploads/
+      let avatarPath = res.avatar || ''
+      if (avatarPath.includes('/uploads/')) {
+        avatarPath = avatarPath.substring(avatarPath.indexOf('/uploads/'))
+      }
+      
       const newData = {
         nickname: res.nickname || '',
         phone: res.phone || res.username || '',
@@ -158,7 +164,7 @@ const loadProfile = async () => {
       }
       console.log('设置表单数据:', newData)
       form.value = newData
-      currentAvatarPath.value = res.avatar || ''
+      currentAvatarPath.value = avatarPath
     } else {
       console.error('用户资料为空')
       uni.showToast({ title: '未获取到用户资料', icon: 'none' })

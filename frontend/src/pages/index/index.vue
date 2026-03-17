@@ -158,7 +158,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { postApi, newsApi, userApi, fileApi, aiApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -228,12 +228,6 @@ const heroPost = ref({
 })
 
 const recommendPosts = ref([])
-
-const getFullImageUrl = (url) => {
-  if (!url) return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'
-  if (url.startsWith('http')) return url
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
 
 const formatTime = (timeStr) => {
   if (!timeStr) return '刚刚'

@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { newsApi, favoriteApi, aiApi } from '@/api/index'
 import { useThemeStore } from '@/store/theme'
-import { BASE_URL } from '@/utils/request'
+import { getFullImageUrl, BASE_URL } from '@/utils/request'
 import { marked } from 'marked'
 
 const themeStore = useThemeStore()
@@ -129,6 +129,9 @@ const fetchNewsDetail = async (id) => {
         impact: res.impact || ''
       }
 
+      // 更新浏览量
+      updateViewCount(id)
+
       // 优先获取深度点评
       if (!news.value.impact) {
         generateImpact(id)
@@ -144,6 +147,14 @@ const fetchNewsDetail = async (id) => {
       title: '获取详情失败',
       icon: 'none'
     })
+  }
+}
+
+const updateViewCount = async (id) => {
+  try {
+    await newsApi.updateViews(id)
+  } catch (e) {
+    console.warn('更新浏览量失败')
   }
 }
 
@@ -218,17 +229,7 @@ onPageScroll((e) => {
   })
 })
 
-const getFullImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) {
-    if (url.includes('/uploads/')) {
-      const relativePath = url.substring(url.indexOf('/uploads/'))
-      return BASE_URL + relativePath
-    }
-    return url
-  }
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
+
 </script>
 
 <template>

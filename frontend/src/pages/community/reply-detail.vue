@@ -156,12 +156,7 @@ const loadData = async (refresh = false) => {
     
     const records = (res.records || []).map(item => {
       if (item.fromUser && item.fromUser.avatar) {
-        // 使用本地工具类处理头像
-        if (item.fromUser.avatar.startsWith('http')) {
-          // 保持原样
-        } else {
-          item.fromUser.avatar = getFullImageUrl(item.fromUser.avatar);
-        }
+        item.fromUser.avatar = getFullImageUrl(item.fromUser.avatar);
       }
       return item;
     });

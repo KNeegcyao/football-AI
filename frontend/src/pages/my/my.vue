@@ -279,7 +279,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi, postApi, favoriteApi, playerApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -448,25 +448,12 @@ onShow(() => {
   loadUserProfile(options.userId)
 })
 
-// 定义一个统一的头像处理函数
-const getAvatarUrl = (avatar, type = 'avatar') => {
-  if (!avatar) {
+// 使用统一的 getFullImageUrl 处理图片 URL
+const getAvatarUrl = (path, type = 'avatar') => {
+  if (!path) {
     return type === 'avatar' ? '/static/soccer-logo.png' : ''
   }
-  
-  // 处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  
-  // 如果已经是完整 URL 且不含 /uploads/，则直接返回
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  
-  // 如果是相对路径
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(path)
 }
 
 const loadUserProfile = async (userId) => {
@@ -547,7 +534,7 @@ const loadPosts = async () => {
         id: item.id,
         title: item.title,
         content: item.content,
-        image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
+        image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
         createTime: item.createTime,
         likes: item.likes || 0,
         commentCount: item.commentCount || 0
@@ -607,7 +594,7 @@ const loadFavorites = async () => {
           id: item.id,
           title: item.title,
           content: stripHtml(item.content),
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
           createTime: item.createTime,
           likes: item.likes || 0,
           commentCount: item.commentCount || 0
@@ -626,7 +613,7 @@ const loadFavorites = async () => {
           id: item.id,
           title: item.title,
           content: stripHtml(item.summary || item.content).substring(0, 100),
-          image: item.image ? fileApi.getFileUrl(item.image) : '',
+          image: item.image ? getFullImageUrl(item.image) : '',
           createTime: item.createTime
         }))
         favoriteNews.value = favPage.value === 1 ? newData : [...favoriteNews.value, ...newData]
@@ -780,8 +767,13 @@ const uploadFile = (path, type) => {
       try {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
         if (data.code === 200 || data.code === 0) {
-          const fileUrl = data.data?.url || data.data || data.url
+          let fileUrl = data.data?.url || data.data || data.url
           if (fileUrl) {
+            // 如果返回的是带 /uploads/ 的完整 URL，提取相对路径保存到数据库，
+            // 这样前端加载时可以通过 getFileUrl 统一拼接最新的 BASE_URL
+            if (typeof fileUrl === 'string' && fileUrl.includes('/uploads/')) {
+              fileUrl = fileUrl.substring(fileUrl.indexOf('/uploads/'))
+            }
             updateProfile({ [type]: fileUrl })
           } else {
             uni.showToast({ title: '返回数据中未找到文件路径', icon: 'none' })

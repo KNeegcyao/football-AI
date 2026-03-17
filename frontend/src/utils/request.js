@@ -13,6 +13,11 @@ export { BASE_URL }
 export const getFullImageUrl = (path) => {
   if (!path) return '';
   
+  // 处理 Uni-App 本地静态资源
+  if (path.startsWith('/static/')) {
+    return path
+  }
+  
   // 如果路径包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
   // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1) 或旧 IP
   if (path.includes('/uploads/')) {

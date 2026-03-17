@@ -25,8 +25,17 @@ public class WebConfig implements WebMvcConfigurer {
             absolutePath += File.separator;
         }
         
-        // Windows 路径需要加 file:///
-        String resourceLocation = "file:" + absolutePath;
+        // Windows 路径需要加 file: 或 file:///，为了更好的兼容性，统一转换为正斜杠并使用 file:///
+        String normalizedPath = absolutePath.replace("\\", "/");
+        if (!normalizedPath.startsWith("/")) {
+            normalizedPath = "/" + normalizedPath;
+        }
+        if (!normalizedPath.endsWith("/")) {
+            normalizedPath += "/";
+        }
+        String resourceLocation = "file:///" + normalizedPath;
+        
+        System.out.println("Static Resource Mapping: /uploads/** -> " + resourceLocation);
         
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(resourceLocation);

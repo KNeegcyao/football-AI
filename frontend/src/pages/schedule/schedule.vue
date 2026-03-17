@@ -186,8 +186,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { matchApi, userApi, fileApi } from '@/api/index'
-import { BASE_URL } from '@/utils/request'
+import { matchApi, userApi, fileApi } from '@/api'
+import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -328,25 +328,9 @@ const formatMatchDate = (timeStr) => {
   return `${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`
 }
 
-const getFullImageUrl = (url) => {
-  if (!url) return '/static/soccer-logo.png'
-  
-  // 外部链接处理 (包含 http, //, 或特定域名)
-  if (url.startsWith('http') || url.startsWith('//') || 
-      url.includes('pstatp.com') || url.includes('zhibo8.cc') ||
-      url.includes('wikimedia.org') || url.includes('premierleague.com') ||
-      url.includes('football-data.org')) {
-    return url
-  }
-  // 本地静态资源 (排除球队logo)
-  if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) return url
-  // 后端资源
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
-
 const handleImageError = (team) => {
   if (team) {
-    team.logoUrl = '/static/soccer-logo.png'
+    team.logoUrl = '/static/teams/generic_logo.png'
   }
 }
 

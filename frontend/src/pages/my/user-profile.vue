@@ -350,7 +350,7 @@ const loadPosts = async () => {
         title: item.title,
         content: item.content,
         image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-        createTime: item.createdAt,
+        createTime: item.createTime || item.createdAt,
         likes: item.likes || 0,
         commentCount: item.commentCount || 0
       }))

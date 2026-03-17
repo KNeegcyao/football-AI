@@ -1,15 +1,6 @@
-import { BASE_URL } from './request'
+import { BASE_URL, getFullImageUrl } from './request'
 
-/**
- * 获取完整图片 URL
- * @param {string} url 
- * @returns {string}
- */
-export const getFullImageUrl = (url) => {
-  if (!url) return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'
-  if (url.startsWith('http')) return url
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
+export { getFullImageUrl }
 
 /**
  * 格式化时间
