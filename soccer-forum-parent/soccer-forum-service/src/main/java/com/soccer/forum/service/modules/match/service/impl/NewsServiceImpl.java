@@ -9,6 +9,7 @@ import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.modules.user.mapper.FavoriteMapper;
 import com.soccer.forum.service.modules.match.mapper.NewsMapper;
 import com.soccer.forum.service.modules.match.service.NewsService;
+import com.soccer.forum.service.modules.ai.rag.RagService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,17 +35,22 @@ public class NewsServiceImpl implements NewsService {
     private final NewsMapper newsMapper;
     private final FavoriteMapper favoriteMapper;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+    private final RagService ragService;
 
-    public NewsServiceImpl(NewsMapper newsMapper, FavoriteMapper favoriteMapper, org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+    public NewsServiceImpl(NewsMapper newsMapper, FavoriteMapper favoriteMapper, 
+                           org.springframework.data.redis.core.StringRedisTemplate redisTemplate,
+                           RagService ragService) {
         this.newsMapper = newsMapper;
         this.favoriteMapper = favoriteMapper;
         this.redisTemplate = redisTemplate;
+        this.ragService = ragService;
     }
 
     /**
      * 创建资讯实现
      * <p>
      * 初始化资讯创建时间、更新时间和发布时间（如果未指定），持久化到数据库。
+     * 同时将其内容同步到 AI 知识库。
      * </p>
      *
      * @param news 资讯实体对象
@@ -61,6 +67,16 @@ public class NewsServiceImpl implements NewsService {
         }
         newsMapper.insert(news);
         log.info("资讯创建成功: id={}", news.getId());
+        
+        // 同步内容到 RAG 知识库
+        try {
+            String ragContent = String.format("【资讯标题】: %s\n【发布时间】: %s\n【资讯内容】: %s", 
+                    news.getTitle(), news.getPublishTime(), news.getContent());
+            ragService.ingestContent(ragContent, "news-" + news.getId());
+        } catch (Exception e) {
+            log.error("资讯同步至 RAG 知识库失败: {}", e.getMessage());
+        }
+        
         return news.getId();
     }
 

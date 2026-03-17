@@ -6,7 +6,9 @@ import com.soccer.forum.domain.entity.Team;
 import com.soccer.forum.service.modules.match.model.MatchVO;
 import com.soccer.forum.service.modules.match.service.MatchService;
 import com.soccer.forum.service.modules.match.service.PlayerService;
+import com.soccer.forum.service.modules.match.service.PlayerSyncService;
 import com.soccer.forum.service.modules.match.service.TeamService;
+import com.fasterxml.jackson.databind.JsonNode;
 import dev.langchain4j.agent.tool.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +28,13 @@ public class SoccerTools {
     private final TeamService teamService;
     private final PlayerService playerService;
     private final MatchService matchService;
+    private final PlayerSyncService playerSyncService;
 
-    public SoccerTools(TeamService teamService, PlayerService playerService, MatchService matchService) {
+    public SoccerTools(TeamService teamService, PlayerService playerService, MatchService matchService, PlayerSyncService playerSyncService) {
         this.teamService = teamService;
         this.playerService = playerService;
         this.matchService = matchService;
+        this.playerSyncService = playerSyncService;
     }
 
     @Tool("查询球队基本信息和近期表现")
@@ -72,6 +76,8 @@ public class SoccerTools {
             else if ("C罗".equalsIgnoreCase(playerName) || "罗纳尔多".equals(playerName)) processedName = "Ronaldo";
             else if ("内马尔".equals(playerName)) processedName = "Neymar";
             else if ("姆巴佩".equals(playerName)) processedName = "Mbappe";
+            else if ("哈兰德".equals(playerName)) processedName = "Haaland";
+            else if ("孙兴慜".equals(playerName)) processedName = "Son Heung-Min";
             
             if (!processedName.equals(playerName)) {
                 log.info("尝试使用处理后的名称查询: {}", processedName);
@@ -85,7 +91,34 @@ public class SoccerTools {
         }
         
         Player player = playerPage.getRecords().get(0);
-        return String.format("【球员数据】姓名: %s; 国籍: %s; 位置: %s; 身高: %dcm; 体重: %dkg; 出场: %d; 进球: %d; 助攻: %d", 
+        
+        // 3. 使用 PlayerSyncService 获取最新的统计数据（这会自动触发数据同步）
+        try {
+            JsonNode detailJson = playerSyncService.getPlayerDetailJson(player.getId());
+            if (detailJson != null && detailJson.has("player")) {
+                JsonNode pNode = detailJson.get("player");
+                JsonNode stats = detailJson.get("statistics").get(0);
+                
+                return String.format("【实时球员数据】姓名: %s; 国籍: %s; 俱乐部: %s; 位置: %s; 年龄: %d; 身高: %s; 体重: %s; " +
+                        "本赛季数据: 出场 %d, 进球 %d, 助攻 %d, 评分 %s", 
+                        pNode.path("displayName").asText(pNode.path("name").asText()),
+                        pNode.path("nationality").asText("未知"),
+                        pNode.path("teamName").asText("未知"),
+                        pNode.path("position").asText("未知"),
+                        pNode.path("age").asInt(0),
+                        pNode.path("height").asText("未知") + "cm",
+                        pNode.path("weight").asText("未知") + "kg",
+                        stats.path("games").path("appearences").asInt(0),
+                        stats.path("goals").path("total").asInt(0),
+                        stats.path("goals").path("assists").asInt(0),
+                        stats.path("games").path("rating").asText("0.0"));
+            }
+        } catch (Exception e) {
+            log.error("获取球员实时数据失败", e);
+        }
+        
+        // 兜底返回本地数据库记录
+        return String.format("【球员数据(本地)】姓名: %s; 国籍: %s; 位置: %s; 身高: %dcm; 体重: %dkg; 出场: %d; 进球: %d; 助攻: %d", 
                 player.getDisplayName() != null ? player.getDisplayName() : player.getName(), 
                 player.getNationality(), player.getPosition(), 
                 player.getHeight(), player.getWeight(), 

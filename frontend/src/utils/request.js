@@ -3,7 +3,9 @@
  * 封装 uni.request，支持拦截器、BaseURL 及 Promise 异步处理
  */
 
-const BASE_URL = 'http://192.168.5.29:8080' // 模拟器测试使用本机实际 IP，真机测试确保在同一局域网
+// 开发环境服务器地址 (请根据实际 IP 或域名修改)
+const BASE_URL = 'http://192.168.5.29:8080' 
+
 export { BASE_URL }
 
 /**

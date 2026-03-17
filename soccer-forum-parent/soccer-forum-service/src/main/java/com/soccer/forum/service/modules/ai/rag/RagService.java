@@ -125,6 +125,17 @@ public class RagService {
         log.info("接收到新文档: {}", originalFilename);
         ingestFile(targetPath.toFile());
     }
+
+    /**
+     * 嵌入并存储纯文本内容 (如资讯、帖子)
+     */
+    public void ingestContent(String content, String source) {
+        if (content == null || content.trim().isEmpty()) return;
+        
+        log.info("正在将内容入库 RAG: {}", source);
+        dev.langchain4j.data.document.Document document = dev.langchain4j.data.document.Document.from(content, dev.langchain4j.data.document.Metadata.from("source", source));
+        ingestDocument(document);
+    }
     
     /**
      * 处理本地文件
