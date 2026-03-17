@@ -97,7 +97,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { favoriteApi, fileApi, playerApi } from '@/api';
+import { favoriteApi, playerApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request.js';
 import { useThemeStore } from '@/store/theme';
 
 const themeStore = useThemeStore();
@@ -184,8 +185,8 @@ const loadData = async () => {
           id: item.id,
           title: item.title,
           content: item.content,
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-          userAvatar: item.userAvatar ? fileApi.getFileUrl(item.userAvatar) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '',
           userName: item.userName,
           createTime: item.createTime,
           likes: item.likes,
@@ -212,7 +213,7 @@ const loadData = async () => {
         const newNews = res.records.map(item => ({
           id: item.id,
           title: item.title,
-          coverUrl: item.coverUrl ? fileApi.getFileUrl(item.coverUrl) : '',
+          coverUrl: item.coverUrl ? getFullImageUrl(item.coverUrl) : '',
           category: getCategoryName(item.categoryId),
           createTime: item.createTime || item.publishTime
         }));
@@ -253,7 +254,7 @@ const loadData = async () => {
               return {
                 id: p.id,
                 name: p.name,
-                photo: fileApi.getFileUrl(p.photo) || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+                photo: getFullImageUrl(p.photo) || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
                 teamName: p.teamName || '未知球队'
               };
             }

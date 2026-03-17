@@ -200,7 +200,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { communityApi, fileApi, postApi } from '@/api';
+import { communityApi, postApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -489,14 +490,14 @@ const loadPosts = async (title) => {
           userId: post.userId,
           title: post.title,
           content: post.content,
-          images: postImages.map(img => fileApi.getFileUrl(img)),
+          images: postImages.map(img => getFullImageUrl(img)),
           likes: post.likes || 0,
           isLiked: post.isLiked || false,
           isFollowing: post.isFollowing || false,
           comments: post.commentCount || 0,
           shares: 0,
           userName: post.userName || '未知用户',
-          userAvatar: post.userAvatar ? fileApi.getFileUrl(post.userAvatar) : '/static/default-avatar.png',
+          userAvatar: post.userAvatar ? getFullImageUrl(post.userAvatar) : '/static/default-avatar.png',
           createTime: post.createdAt || post.createTime
         }
       })

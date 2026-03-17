@@ -78,7 +78,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useChatStore } from '@/store/chat';
 import { useThemeStore } from '@/store/theme';
-import { fileApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request.js';
 import { onPullDownRefresh, onLoad } from '@dcloudio/uni-app';
 
 const chatStore = useChatStore();
@@ -142,7 +142,7 @@ const filterByType = (type) => {
 };
 
 const getAvatarUrl = (url) => {
-  return fileApi.getFileUrl(url) || '/static/default-avatar.png';
+  return getFullImageUrl(url) || '/static/default-avatar.png';
 };
 
 const formatMessage = (content) => {
