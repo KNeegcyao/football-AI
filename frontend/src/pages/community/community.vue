@@ -153,8 +153,8 @@
   <script setup>
   import { ref, onMounted, getCurrentInstance, computed } from 'vue';
   import { onShow } from '@dcloudio/uni-app';
-  import { communityApi, fileApi, notificationApi } from '@/api';
-  import { BASE_URL } from '@/utils/request.js';
+  import { communityApi, notificationApi } from '@/api';
+  import { BASE_URL, getFullImageUrl } from '@/utils/request.js';
   import { useThemeStore } from '@/store/theme';
 
   const themeStore = useThemeStore();
@@ -262,7 +262,7 @@
   // 获取头像 URL
   const getAvatarUrl = (url) => {
     if (!url) return '/static/soccer-logo.png';
-    return fileApi.getFileUrl(url);
+    return getFullImageUrl(url);
   };
 
   const navigateToCircleList = () => {

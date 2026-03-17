@@ -103,7 +103,7 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -159,7 +159,7 @@ const loadProfile = async () => {
         nickname: res.nickname || '',
         phone: res.phone || res.username || '',
         email: res.email || '',
-        avatar: res.avatar ? fileApi.getFileUrl(res.avatar) : '',
+        avatar: res.avatar ? getFullImageUrl(res.avatar) : '',
         bio: res.bio || ''
       }
       console.log('设置表单数据:', newData)
@@ -210,7 +210,7 @@ const uploadAvatar = (filePath) => {
           if (data.code === 200) {
             const newAvatarUrl = data.data
             // Update form immediately for preview
-            const fullUrl = fileApi.getFileUrl(newAvatarUrl)
+            const fullUrl = getFullImageUrl(newAvatarUrl)
             form.value.avatar = fullUrl
             currentAvatarPath.value = newAvatarUrl 
             uni.showToast({ title: '头像上传成功', icon: 'success' })

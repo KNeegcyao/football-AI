@@ -162,7 +162,7 @@ import { ref, computed } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
 import { postApi, communityApi, userApi, fileApi } from '@/api';
-import { BASE_URL } from '@/utils/request';
+import { BASE_URL, getFullImageUrl } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -193,7 +193,7 @@ const loadUserProfile = async () => {
       userInfo.value = {
         ...userInfo.value,
         nickname: profileRes.nickname || profileRes.username,
-        avatar: profileRes.avatar ? fileApi.getFileUrl(profileRes.avatar) : '/static/default-team.png'
+        avatar: profileRes.avatar ? getFullImageUrl(profileRes.avatar) : '/static/default-team.png'
       };
     }
   } catch (e) {
@@ -230,7 +230,7 @@ onLoad((options) => {
     userInfo.value = storedUserInfo;
     // Ensure avatar URL is complete if it exists in storage
     if (userInfo.value.avatar && !userInfo.value.avatar.startsWith('http') && !userInfo.value.avatar.startsWith('/static')) {
-      userInfo.value.avatar = fileApi.getFileUrl(userInfo.value.avatar);
+      userInfo.value.avatar = getFullImageUrl(userInfo.value.avatar);
     }
   }
   

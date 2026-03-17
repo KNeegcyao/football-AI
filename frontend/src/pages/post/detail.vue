@@ -245,6 +245,7 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi, favoriteApi } from '@/api';
 import { useThemeStore } from '@/store/theme';
+import { getFullImageUrl } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -319,15 +320,15 @@ const loadPostDetail = async (id) => {
       }
       
       // Process image URLs
-      const processedImages = images.map(img => fileApi.getFileUrl(img));
+      const processedImages = images.map(img => getFullImageUrl(img));
       
       // Process avatar URL
-      const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/soccer-logo.png';
+      const avatarUrl = data.userAvatar ? getFullImageUrl(data.userAvatar) : '/static/soccer-logo.png';
 
       // Process recent likes avatars
       const processedRecentLikes = (data.recentLikes || []).map(liker => ({
         ...liker,
-        avatar: liker.avatar ? fileApi.getFileUrl(liker.avatar) : '/static/soccer-logo.png'
+        avatar: liker.avatar ? getFullImageUrl(liker.avatar) : '/static/soccer-logo.png'
       }));
 
       post.value = {
@@ -371,13 +372,13 @@ const loadComments = async (id) => {
       comments.value = records.map(c => ({
         ...c,
         userName: c.nickname || 'Unknown User',
-        userAvatar: c.avatar ? fileApi.getFileUrl(c.avatar) : '/static/soccer-logo.png',
+        userAvatar: c.avatar ? getFullImageUrl(c.avatar) : '/static/soccer-logo.png',
         likes: c.likes || 0,
         // Map replies recursively if needed, but for now flat list or simple structure
         replies: (c.replies || []).map(r => ({
             ...r,
             userName: r.nickname || 'Unknown User',
-            userAvatar: r.avatar ? fileApi.getFileUrl(r.avatar) : '/static/soccer-logo.png',
+            userAvatar: r.avatar ? getFullImageUrl(r.avatar) : '/static/soccer-logo.png',
             likes: r.likes || 0,
             replyToUserName: r.replyToNickname // 映射后端字段
         }))

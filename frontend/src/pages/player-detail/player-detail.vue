@@ -131,7 +131,8 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { playerApi, fileApi, favoriteApi } from '@/api/index';
+import { playerApi, favoriteApi } from '@/api/index';
+import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -280,7 +281,7 @@ const loadPlayerDetail = async (id) => {
         marketValue: p.proposedMarketValue ? ('€' + (p.proposedMarketValue / 1000000).toFixed(1) + 'M') : '--',
         photo: p.photo || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
         teamName: formatTeamName(stats.team?.name || p.teamName || p.team?.name),
-        teamLogo: fileApi.getFileUrl(stats.team?.logo || p.teamLogo) || '/static/default-team.png',
+        teamLogo: getFullImageUrl(stats.team?.logo || p.teamLogo) || '/static/default-team.png',
         position: stats.games?.position || p.position || '未知',
         number: stats.games?.number || p.jerseyNumber || '--',
         appearences: stats.games?.appearences || 0,

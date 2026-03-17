@@ -56,10 +56,10 @@ public class FileController {
             File dest = new File(dir, fileName);
             file.transferTo(dest);
 
-            // 返回访问 URL
-            String fileUrl = accessPath + fileName;
-            log.info("文件上传成功: {}", fileUrl);
-            return R.ok(fileUrl, "上传成功");
+            // 返回相对路径，由前端根据 BASE_URL 拼接完整地址
+            String relativePath = "/uploads/" + fileName;
+            log.info("文件上传成功: {}", relativePath);
+            return R.ok(relativePath, "上传成功");
 
         } catch (IOException e) {
             log.error("文件上传失败", e);

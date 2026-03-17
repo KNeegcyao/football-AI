@@ -235,8 +235,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { fileApi, userApi } from '@/api'
+import { userApi } from '@/api'
 import { useThemeStore } from '@/store/theme'
+import { getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -245,25 +246,12 @@ const statusBarHeight = ref(0)
 const contentHeight = ref(0)
 const userInfo = ref({})
 
-// 定义一个统一的头像处理函数 (同步自 my.vue)
+// 定义一个统一的头像处理函数
 const getAvatarUrl = (avatar, type = 'avatar') => {
   if (!avatar) {
     return type === 'avatar' ? '/static/soccer-logo.png' : ''
   }
-  
-  // 处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  
-  // 如果已经是完整 URL 且不含 /uploads/，则直接返回
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  
-  // 如果是相对路径
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(avatar)
 }
 
 const levelTitles = {

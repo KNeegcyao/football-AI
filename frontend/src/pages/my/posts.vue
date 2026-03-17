@@ -60,7 +60,8 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { postApi, fileApi } from '@/api';
+import { postApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -146,8 +147,8 @@ const loadPosts = async () => {
           id: item.id,
           title: item.title,
           content: item.content,
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-          userAvatar: item.userAvatar ? fileApi.getFileUrl(item.userAvatar) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '',
           userName: item.userName,
           createTime: item.createTime,
           likes: item.likes,

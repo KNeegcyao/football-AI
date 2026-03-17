@@ -215,7 +215,7 @@ const getUserProfile = async () => {
     }
     const res = await userApi.getProfile()
     if (res && res.avatar) {
-      userAvatar.value = fileApi.getFileUrl(res.avatar)
+      userAvatar.value = getFullImageUrl(res.avatar)
     } else {
       userAvatar.value = '/static/soccer-logo.png'
     }

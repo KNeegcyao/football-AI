@@ -95,7 +95,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
-import { userApi, postApi, fileApi, relationshipApi } from '@/api'
+import { userApi, postApi, relationshipApi } from '@/api'
+import { getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -172,7 +173,7 @@ const loadData = async () => {
       const newList = res.records.map(item => ({
         id: item.id,
         nickname: item.nickname || item.username,
-        avatar: fileApi.getFileUrl(item.avatar),
+        avatar: getFullImageUrl(item.avatar),
         bio: item.bio,
         isVerified: item.isVerified || false,
         isFollowing: item.isFollowing || false,

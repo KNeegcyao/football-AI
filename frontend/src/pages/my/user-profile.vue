@@ -172,7 +172,7 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi, postApi, favoriteApi, playerApi, relationshipApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -269,14 +269,7 @@ const getAvatarUrl = (avatar, type = 'avatar') => {
   if (!avatar) {
     return type === 'avatar' ? '/static/soccer-logo.png' : ''
   }
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(avatar)
 }
 
 const loadUserProfile = async (userId) => {
@@ -349,7 +342,7 @@ const loadPosts = async () => {
         id: item.id,
         title: item.title,
         content: item.content,
-        image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
+        image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
         createTime: item.createTime || item.createdAt,
         likes: item.likes || 0,
         commentCount: item.commentCount || 0
