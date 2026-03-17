@@ -19,7 +19,7 @@ public class News {
 
     @Schema(description = "标题")
     @NotBlank(message = "资讯标题不能为空")
-    @Size(min = 2, max = 200, message = "标题长度必须�?-200个字符之�?)
+    @Size(min = 2, max = 200, message = "标题长度必须在2-200个字符之间")
     private String title;
 
     @Schema(description = "摘要")
@@ -30,11 +30,11 @@ public class News {
     private String content;
     @Schema(description = "封面图URL")
     private String coverUrl;
-    @Schema(description = "作�?)
+    @Schema(description = "作者")
     private String author;
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;
-    @Schema(description = "浏览�?)
+    @Schema(description = "浏览量")
     private Integer viewCount;
     @Schema(description = "标签")
     private String tags;
@@ -44,15 +44,15 @@ public class News {
     @Schema(description = "分类ID")
     private Integer categoryId;
 
-    @Schema(description = "点赞�?)
+    @Schema(description = "点赞数")
     private Integer likeCount;
-    @Schema(description = "评论�?)
+    @Schema(description = "评论数")
     private Integer commentCount;
 
     @Schema(description = "深度点评")
     private String impact;
 
-    @Schema(description = "收藏�?)
+    @Schema(description = "收藏数")
     @TableField("collect_count")
     @com.fasterxml.jackson.annotation.JsonProperty("collectCount")
     private Integer collectCount;

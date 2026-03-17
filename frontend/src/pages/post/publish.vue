@@ -162,11 +162,12 @@ import { ref, computed } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
 import { postApi, communityApi, userApi, fileApi } from '@/api';
+import { BASE_URL } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
 
-const API_BASE_URL = 'http://192.168.5.6:8080';
+const API_BASE_URL = BASE_URL;
 
 const form = ref({
   title: '',

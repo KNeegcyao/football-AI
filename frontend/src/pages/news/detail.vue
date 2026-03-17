@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { newsApi, favoriteApi, aiApi } from '@/api/index'
 import { useThemeStore } from '@/store/theme'
+import { BASE_URL } from '@/utils/request'
 import { marked } from 'marked'
 
 const themeStore = useThemeStore()
@@ -101,7 +102,7 @@ const handleShare = () => {
     provider: "weixin",
     scene: "WXSceneSession",
     type: 0,
-    href: "http://192.168.5.6:8080/#/pages/news/detail?id=" + newsId.value,
+    href: BASE_URL + "/#/pages/news/detail?id=" + newsId.value,
     title: news.value.title,
     summary: news.value.content.substring(0, 50),
     imageUrl: news.value.coverUrl,
@@ -219,8 +220,14 @@ onPageScroll((e) => {
 
 const getFullImageUrl = (url) => {
   if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://192.168.5.6:8080${url}`
+  if (url.startsWith('http')) {
+    if (url.includes('/uploads/')) {
+      const relativePath = url.substring(url.indexOf('/uploads/'))
+      return BASE_URL + relativePath
+    }
+    return url
+  }
+  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 </script>
 

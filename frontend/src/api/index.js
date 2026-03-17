@@ -186,7 +186,37 @@ export const aiApi = {
   /**
    * 足球规则问答 (RAG)
    */
-  askRule: (data) => request.post('/api/ai/qa/rule', data)
+  askRule: (data) => request.post('/api/ai/qa/rule', data),
+
+  /**
+   * 通用智能对话 (RAG)
+   */
+  chat: (data) => request.post('/api/ai/chat', data),
+
+  /**
+   * 生成机智回复
+   */
+  generateComment: (data) => request.post('/api/ai/comment/generate', data),
+
+  /**
+   * 战术深度分析
+   */
+  analyzeTactics: (data) => request.post('/api/ai/tactics/analyze', data),
+
+  /**
+   * 球队/球星数据智能查询 (Tool)
+   */
+  queryData: (data) => request.post('/api/ai/query/data', data),
+
+  /**
+   * 胜率预测
+   */
+  predictMatch: (data) => request.post('/api/ai/match/predict', data),
+
+  /**
+   * 赛后战报生成
+   */
+  generateMatchReport: (data) => request.post('/api/ai/match/report', data)
 }
 
 /**

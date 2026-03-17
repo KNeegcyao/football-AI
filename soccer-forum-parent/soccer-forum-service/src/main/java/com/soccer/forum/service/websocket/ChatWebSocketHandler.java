@@ -94,11 +94,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 从 query string 获取 token
         String query = session.getUri().getQuery();
         if (query != null && query.contains("token=")) {
-            String token = query.split("token=")[1].split("&")[0];
-            try {
-                return jwtUtils.getUserIdFromToken(token);
-            } catch (Exception e) {
-                return null;
+            String[] parts = query.split("token=");
+            if (parts.length > 1) {
+                String token = parts[1].split("&")[0];
+                if (token != null && !token.isEmpty()) {
+                    try {
+                        return jwtUtils.getUserIdFromToken(token);
+                    } catch (Exception e) {
+                        log.error("WebSocket 获取用户ID失败: {}", e.getMessage());
+                        return null;
+                    }
+                }
             }
         }
         return null;

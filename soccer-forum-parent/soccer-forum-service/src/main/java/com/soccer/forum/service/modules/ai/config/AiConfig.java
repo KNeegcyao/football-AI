@@ -1,5 +1,6 @@
 package com.soccer.forum.service.modules.ai.config;
 
+import com.soccer.forum.service.modules.ai.agent.AssistantAgent;
 import com.soccer.forum.service.modules.ai.agent.DataQueryAgent;
 import com.soccer.forum.service.modules.ai.agent.MatchAnalysisAgent;
 import com.soccer.forum.service.modules.ai.tool.SoccerTools;
@@ -12,9 +13,15 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel;
+import java.time.Duration;
 import java.util.List;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.model.output.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
@@ -30,6 +37,8 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class AiConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(AiConfig.class);
+
     @Value("${langchain4j.zhipu-ai.chat-model.api-key}")
     private String zhipuApiKey;
 
@@ -44,23 +53,23 @@ public class AiConfig {
     @Primary
     public ChatLanguageModel chatLanguageModel() {
         if (zhipuApiKey == null || zhipuApiKey.trim().isEmpty() || "your-key-here".equals(zhipuApiKey)) {
-            System.err.println("警告: 智谱 AI API Key 未配置或为默认值，AI 功能将不可用！");
+            log.warn("智谱 AI API Key 未配置或为默认值，AI 功能将不可用！");
             return new ChatLanguageModel() {
                 @Override
                 public String generate(String userMessage) {
-                    return "AI 功能未启用，请配置 API Key。";
+                    return "AI 功能未启用，请配置有效的 API Key。";
                 }
                 @Override
                 public Response<AiMessage> generate(List<ChatMessage> messages) {
-                    return Response.from(AiMessage.from("AI 功能未启用，请配置 API Key。"));
+                    return Response.from(AiMessage.from("AI 功能未启用，请配置有效的 API Key。"));
                 }
                 @Override
                 public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-                    return Response.from(AiMessage.from("AI 功能未启用，请配置 API Key。"));
+                    return Response.from(AiMessage.from("AI 功能未启用，请配置有效的 API Key。"));
                 }
                 @Override
                 public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-                    return Response.from(AiMessage.from("AI 功能未启用，请配置 API Key。"));
+                    return Response.from(AiMessage.from("AI 功能未启用，请配置有效的 API Key。"));
                 }
             };
         }
@@ -83,11 +92,35 @@ public class AiConfig {
 
     /**
      * 配置嵌入模型
-     * 使用本地轻量级模型 all-minilm-l6-v2，无需 API Key，适合演示和简单 RAG
+     * 使用本地轻量级模型 all-minilm-l6-v2
+     * 增加异常捕获，如果本地模型加载失败，返回一个 Mock 实现，避免整个系统启动失败或崩溃
      */
     @Bean
     public EmbeddingModel embeddingModel() {
-        return new AllMiniLmL6V2EmbeddingModel();
+        try {
+            log.info("正在加载本地嵌入模型 all-minilm-l6-v2...");
+            return new AllMiniLmL6V2EmbeddingModel();
+        } catch (Exception e) {
+            log.error("本地嵌入模型加载失败，切换到 Mock 模式: {}", e.getMessage());
+            return new EmbeddingModel() {
+                @Override
+                public Response<Embedding> embed(String text) {
+                    return Response.from(Embedding.from(new float[384])); // 返回全 0 向量
+                }
+
+                @Override
+                public Response<Embedding> embed(TextSegment textSegment) {
+                    return Response.from(Embedding.from(new float[384]));
+                }
+
+                @Override
+                public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
+                    return Response.from(textSegments.stream()
+                            .map(s -> Embedding.from(new float[384]))
+                            .toList());
+                }
+            };
+        }
     }
 
     /**
@@ -103,11 +136,23 @@ public class AiConfig {
      * 手动构建 DataQueryAgent，绑定 Tools
      */
     @Bean
-    public DataQueryAgent dataQueryAgent(ChatLanguageModel chatLanguageModel, SoccerTools soccerTools) {
+    public DataQueryAgent dataQueryAgent(ChatLanguageModel chatLanguageModel, SoccerTools soccerTools, ChatMemoryProvider chatMemoryProvider) {
         return AiServices.builder(DataQueryAgent.class)
                 .chatLanguageModel(chatLanguageModel)
                 .tools(soccerTools)
-                .chatMemoryProvider(chatMemoryProvider())
+                .chatMemoryProvider(chatMemoryProvider)
+                .build();
+    }
+
+    /**
+     * 手动构建 AssistantAgent (RAG + Tools)
+     */
+    @Bean
+    public AssistantAgent assistantAgent(ChatLanguageModel chatLanguageModel, SoccerTools soccerTools, ChatMemoryProvider chatMemoryProvider) {
+        return AiServices.builder(AssistantAgent.class)
+                .chatLanguageModel(chatLanguageModel)
+                .tools(soccerTools)
+                .chatMemoryProvider(chatMemoryProvider)
                 .build();
     }
 
@@ -115,11 +160,11 @@ public class AiConfig {
      * 手动构建 MatchAnalysisAgent，绑定 Tools
      */
     @Bean
-    public MatchAnalysisAgent matchAnalysisAgent(ChatLanguageModel chatLanguageModel, SoccerTools soccerTools) {
+    public MatchAnalysisAgent matchAnalysisAgent(ChatLanguageModel chatLanguageModel, SoccerTools soccerTools, ChatMemoryProvider chatMemoryProvider) {
         return AiServices.builder(MatchAnalysisAgent.class)
                 .chatLanguageModel(chatLanguageModel)
                 .tools(soccerTools)
-                .chatMemoryProvider(chatMemoryProvider())
+                .chatMemoryProvider(chatMemoryProvider)
                 .build();
     }
 }

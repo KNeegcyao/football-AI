@@ -831,6 +831,12 @@ const formatStats = (num) => {
   display: flex;
   flex-direction: column;
   background-color: #12110a;
+  margin: 0 auto;
+  width: 100%;
+  
+  /* #ifdef H5 */
+  max-width: 500px;
+  /* #endif */
 }
 
 .header-sticky {

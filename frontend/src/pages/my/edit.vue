@@ -103,6 +103,7 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi } from '@/api'
+import { BASE_URL } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -190,7 +191,7 @@ const uploadAvatar = (filePath) => {
   const token = uni.getStorageSync('token')
   
   uni.uploadFile({
-    url: 'http://192.168.5.6:8080/api/files/upload',
+    url: BASE_URL + (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl),
     filePath: filePath,
     name: 'file',
     header: {

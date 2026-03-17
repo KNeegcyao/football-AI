@@ -4,45 +4,186 @@ import com.soccer.forum.common.R;
 import com.soccer.forum.domain.entity.News;
 import com.soccer.forum.service.modules.ai.agent.*;
 import com.soccer.forum.service.modules.ai.rag.RagService;
+import com.soccer.forum.service.modules.ai.service.FootballAiService;
+import com.soccer.forum.service.modules.ai.service.SttService;
 import com.soccer.forum.service.modules.match.service.NewsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
 
+import com.soccer.forum.service.modules.user.model.LoginUser;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 /**
- * AI 智能服务控制器
+ * AI 控制层
  */
-@Tag(name = "AI 智能服务", description = "提供新闻摘要、战报生成、评论分析和规则问答等 AI 能力")
+@Tag(name = "AI 助手接口")
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
+
+    private static final Logger log = LoggerFactory.getLogger(AiController.class);
 
     private final NewsSummaryAgent newsSummaryAgent;
     private final MatchAnalysisAgent matchAnalysisAgent;
     private final CommentAnalysisAgent commentAnalysisAgent;
     private final RuleQaAgent ruleQaAgent;
     private final DataQueryAgent dataQueryAgent;
+    private final AssistantAgent assistantAgent;
+    private final FootballAiService footballAiService;
     private final RagService ragService;
     private final NewsService newsService;
+    private final SttService sttService;
 
     public AiController(NewsSummaryAgent newsSummaryAgent,
                         MatchAnalysisAgent matchAnalysisAgent,
                         CommentAnalysisAgent commentAnalysisAgent,
                         RuleQaAgent ruleQaAgent,
                         DataQueryAgent dataQueryAgent,
+                        AssistantAgent assistantAgent,
+                        FootballAiService footballAiService,
                         RagService ragService,
-                        NewsService newsService) {
+                        NewsService newsService,
+                        SttService sttService) {
         this.newsSummaryAgent = newsSummaryAgent;
         this.matchAnalysisAgent = matchAnalysisAgent;
         this.commentAnalysisAgent = commentAnalysisAgent;
         this.ruleQaAgent = ruleQaAgent;
         this.dataQueryAgent = dataQueryAgent;
+        this.assistantAgent = assistantAgent;
+        this.footballAiService = footballAiService;
         this.ragService = ragService;
         this.newsService = newsService;
+        this.sttService = sttService;
+    }
+
+    @Operation(summary = "语音转文字 (STT)")
+    @PostMapping(value = "/stt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public R<String> transcribe(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) return R.fail("文件不能为空");
+        log.info("收到语音文件: {}, 大小: {} bytes", file.getOriginalFilename(), file.getSize());
+        String text = sttService.transcribe(file);
+        return R.ok(text);
+    }
+
+    @Operation(summary = "通用智能对话 (RAG)")
+    @PostMapping("/chat")
+    public R<String> chat(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest request) {
+        String question = body.get("question");
+        if (question == null) return R.fail("问题不能为空");
+        
+        // 获取当前用户ID或会话ID作为记忆ID
+        String memoryIdStr = getMemoryId(request);
+        // 如果是数字ID，转为 Long；否则转为 Hash 值（Long）
+        Long memoryId = parseMemoryId(memoryIdStr);
+        
+        log.info("用户 {} 发起 AI 对话: {}", memoryId, question);
+
+        try {
+            // 1. RAG 流程：检索相关知识
+            String context = "";
+            // 增加 RAG 触发阈值：只有问题长度 > 3 且不是简单的确认性词汇时才触发
+            if (shouldTriggerRag(question)) {
+                try {
+                    context = ragService.retrieveAsString(question);
+                } catch (Throwable t) {
+                    log.error("RAG 检索异常: {}", t.getMessage());
+                }
+            } else {
+                log.info("问题过短或为确认词，跳过 RAG 检索: {}", question);
+            }
+            
+            // 2. 调用 AI 助手（传递 memoryId 以启用记忆功能）
+            log.info("开始调用 AssistantAgent.chat, memoryId: {}, question: {}, context length: {}", memoryId, question, context.length());
+            String response = assistantAgent.chat(memoryId, question, context);
+            log.info("AssistantAgent.chat 调用成功, response length: {}", response != null ? response.length() : 0);
+            return R.ok(response);
+        } catch (Throwable e) {
+            log.error("AI 对话失败, 异常类型: {}, 错误消息: {}", e.getClass().getName(), e.getMessage(), e);
+            
+            // 3. 容错处理：尝试使用基础的百科问答 Agent 兜底
+             try {
+                 log.info("尝试使用 FootballAiService 兜底回答, question: {}", question);
+                 String fallbackResponse = footballAiService.answerQuestion(question);
+                 log.info("FootballAiService 兜底回答成功");
+                 return R.ok(fallbackResponse);
+             } catch (Throwable ex) {
+                 log.error("兜底回答也失败了, 异常类型: {}, 错误消息: {}", ex.getClass().getName(), ex.getMessage(), ex);
+                 return R.fail("抱歉，我现在遇到了一点问题，请稍后再试。详细原因: " + e.getMessage());
+             }
+        }
+    }
+
+    /**
+     * 获取记忆ID，优先使用用户ID，未登录则使用 Session ID
+     */
+    private String getMemoryId(jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof LoginUser) {
+                return ((LoginUser) auth.getPrincipal()).getUser().getId().toString();
+            }
+        } catch (Exception e) {
+            log.warn("获取登录用户ID失败，回退到 Session ID: {}", e.getMessage());
+        }
+        // 使用 Session ID 保证未登录用户也有独立的对话记忆
+        return request.getSession().getId();
+    }
+
+    /**
+     * 将 String 类型的 memoryId 转换为 Long
+     */
+    private Long parseMemoryId(String id) {
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            // 如果不是纯数字（如 Session ID），使用其 hashCode 作为 Long ID
+            return (long) id.hashCode();
+        }
+    }
+
+    /**
+     * 判断是否应该触发 RAG 检索
+     * 避免“是的”、“好”、“谢谢”等短句触发无关的背景知识检索导致 AI 分心
+     */
+    private boolean shouldTriggerRag(String question) {
+        if (question == null || question.trim().length() < 3) return false;
+
+        // 排除常见的确认性词汇
+        String lowerQ = question.trim().toLowerCase();
+        List<String> skipWords = java.util.Arrays.asList("是的", "是的。", "对", "对的", "好的", "好的。", "ok", "确认", "谢谢", "不客气", "再见", "你好");
+        if (skipWords.contains(lowerQ)) return false;
+
+        return true;
+    }
+
+    @Operation(summary = "生成机智回复")
+    @PostMapping("/comment/generate")
+    public R<String> generateComment(@RequestBody Map<String, String> body) {
+        String content = body.get("content");
+        if (content == null || content.isEmpty()) {
+            content = "这是一场非常精彩的比赛！";
+        }
+        return R.ok(footballAiService.generateComment(content));
+    }
+
+    @Operation(summary = "战术深度分析")
+    @PostMapping("/tactics/analyze")
+    public R<String> analyzeTactics(@RequestBody Map<String, String> body) {
+        String info = body.get("info");
+        if (info == null) return R.fail("战术信息不能为空");
+        return R.ok(footballAiService.analyzeTactics(info));
     }
 
     @Operation(summary = "资讯内容智能摘要 (Persistence)")

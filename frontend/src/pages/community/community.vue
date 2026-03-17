@@ -392,6 +392,10 @@
     overflow-x: hidden;
     box-sizing: border-box;
     transition: all 0.3s;
+    
+    /* #ifdef H5 */
+    max-width: 500px;
+    /* #endif */
   }
 
   .status-bar {

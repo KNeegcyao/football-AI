@@ -26,16 +26,16 @@ public class Post implements Serializable {
     @Schema(description = "发布者ID")
     private Long userId;
 
-    @Schema(description = "浏览�?)
+    @Schema(description = "浏览量")
     private Integer views;
 
-    @Schema(description = "点赞�?)
+    @Schema(description = "点赞数")
     private Integer likes;
 
-    @Schema(description = "评论�?)
+    @Schema(description = "评论数")
     private Integer commentCount;
 
-    @Schema(description = "状�?(1:正常 0:删除)")
+    @Schema(description = "状态 (1:正常 0:删除)")
     private Integer status; // 1:正常 0:删除
 
     @Schema(description = "图片列表")

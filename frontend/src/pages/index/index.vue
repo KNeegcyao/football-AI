@@ -101,16 +101,18 @@
             <view class="post-info">
               <text class="post-title text-theme-main">{{ post.title }}</text>
               <view class="post-footer">
-                <text class="post-category" v-if="post.category">{{ post.category }}</text>
-                <text class="post-time text-theme-secondary">{{ post.time }}</text>
+                <view class="post-meta-left">
+                  <text class="post-category" v-if="post.category">{{ post.category }}</text>
+                  <text class="post-time">{{ post.time }}</text>
+                </view>
                 <view class="post-stats">
                   <view class="stat-item">
-                    <u-icon name="star" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#6B7280'" size="28rpx"></u-icon>
-                    <text class="stat-num text-theme-secondary">{{ post.collections || 0 }}</text>
+                    <u-icon name="star" color="rgba(255, 255, 255, 0.5)" size="24rpx"></u-icon>
+                    <text class="stat-num">{{ post.collections || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="eye" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#6B7280'" size="28rpx"></u-icon>
-                    <text class="stat-num text-theme-secondary">{{ post.views || 0 }}</text>
+                    <u-icon name="eye" color="rgba(255, 255, 255, 0.5)" size="24rpx"></u-icon>
+                    <text class="stat-num">{{ post.views || 0 }}</text>
                   </view>
                 </view>
               </view>
@@ -235,16 +237,19 @@ const getFullImageUrl = (url) => {
 
 const formatTime = (timeStr) => {
   if (!timeStr) return '刚刚'
-  const date = new Date(timeStr)
+  const date = new Date(timeStr.replace(/-/g, '/')) // 兼容 iOS
   const now = new Date()
   const diff = (now - date) / 1000 // 秒
   
+  if (diff < 0) return '刚刚'
   if (diff < 60) return '刚刚'
   if (diff < 3600) return Math.floor(diff / 60) + '分钟前'
   if (diff < 86400) return Math.floor(diff / 3600) + '小时前'
   
-  // 统一显示为 xx天前，不再显示具体日期
-  return Math.floor(diff / 86400) + '天前'
+  const days = Math.floor(diff / 86400)
+  if (days < 30) return days + '天前'
+  if (days < 365) return Math.floor(days / 30) + '个月前'
+  return Math.floor(days / 365) + '年前'
 }
 
 const formatAiSummary = (text) => {
@@ -515,6 +520,10 @@ onMounted(() => {
     overflow-x: hidden;
     box-sizing: border-box;
     transition: background-color 0.3s, color 0.3s;
+    
+    /* #ifdef H5 */
+    max-width: 500px;
+    /* #endif */
   }
 
 .status-bar {
@@ -758,40 +767,52 @@ onMounted(() => {
 .post-item {
   display: flex;
   flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 24rpx;
+  padding: 20rpx;
+  transition: all 0.3s ease;
+  border: 1rpx solid rgba(255, 255, 255, 0.05);
+
+  &:active {
+    background-color: rgba(255, 255, 255, 0.06);
+    transform: scale(0.98);
+  }
 }
 
 .post-main {
   display: flex;
-  gap: 30rpx;
+  gap: 24rpx;
 }
 
 .post-img-box {
   position: relative;
-  width: 240rpx;
-  height: 180rpx;
+  width: 220rpx;
+  height: 160rpx;
   flex-shrink: 0;
+  border-radius: 16rpx;
+  overflow: hidden;
 }
 
 .post-img {
   width: 100%;
   height: 100%;
-  border-radius: 16rpx;
 }
 
 .ai-badge {
   position: absolute;
-  top: 10rpx;
-  left: 10rpx;
-  background-color: $pitch-pulse-primary;
+  top: 12rpx;
+  left: 12rpx;
+  background: linear-gradient(135deg, $pitch-pulse-primary, #ffeb3b);
   color: #000;
   font-size: 18rpx;
-  font-weight: 800;
-  padding: 2rpx 10rpx;
-  border-radius: 4rpx;
+  font-weight: 900;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
   display: flex;
   align-items: center;
   gap: 4rpx;
   z-index: 10;
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.3);
 
   &.hero-ai-badge {
     position: relative;
@@ -802,7 +823,7 @@ onMounted(() => {
 
   .ai-text {
     font-size: 18rpx;
-    font-weight: 800;
+    font-weight: 900;
   }
 }
 
@@ -810,50 +831,65 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
+  padding: 4rpx 0;
 }
 
 .post-title {
   font-size: 28rpx;
-  font-weight: 700;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.95);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .post-footer {
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  margin-top: 10rpx;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .post-category {
-  font-size: 22rpx;
-  color: $pitch-pulse-primary;
-  font-weight: 700;
+  font-size: 20rpx;
+  color: #000;
+  font-weight: 800;
+  background-color: $pitch-pulse-primary;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  text-transform: uppercase;
 }
 
 .post-time {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .post-stats {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  margin-left: 20rpx;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 8rpx;
 }
 
 .stat-num {
-  font-size: 20rpx;
+  font-size: 22rpx;
   color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
 }
 
 /* AI Summary Styles */

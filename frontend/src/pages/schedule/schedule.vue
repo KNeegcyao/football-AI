@@ -463,6 +463,10 @@ onUnmounted(() => {
   overflow-x: hidden;
   box-sizing: border-box;
   background-image: radial-gradient(circle at top right, rgba(74, 4, 4, 0.4) 0%, transparent 70%);
+  
+  /* #ifdef H5 */
+  max-width: 500px;
+  /* #endif */
 }
 
 .status-bar {

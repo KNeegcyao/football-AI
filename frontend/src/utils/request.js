@@ -8,9 +8,18 @@ export { BASE_URL }
 
 /**
  * 获取完整图片 URL
+ * 增强版：处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
  */
 export const getFullImageUrl = (path) => {
   if (!path) return '';
+  
+  // 如果路径包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
+  // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1) 或旧 IP
+  if (path.includes('/uploads/')) {
+    const relativePath = path.substring(path.indexOf('/uploads/'))
+    return BASE_URL + relativePath
+  }
+
   if (path.startsWith('http')) return path;
   return BASE_URL + (path.startsWith('/') ? path : '/' + path);
 };
