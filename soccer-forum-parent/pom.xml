@@ -27,6 +27,7 @@
         <lombok.version>1.18.42</lombok.version>
         <wx-java.version>4.7.0</wx-java.version>
         <knife4j.version>4.5.0</knife4j.version>
+        <aliyun-oss.version>3.17.4</aliyun-oss.version>
     </properties>
 
     <repositories>
@@ -90,6 +91,11 @@
             </dependency>
 
             <!-- Project Modules -->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${aliyun-oss.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.soccer.forum</groupId>
                 <artifactId>soccer-forum-common</artifactId>

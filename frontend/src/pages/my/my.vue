@@ -4,14 +4,14 @@
     <view class="header-sticky bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="header-content">
         <view class="header-left" v-if="isOthersProfile" @click="goBack">
-          <text class="material-symbols-outlined text-2xl text-theme-main">arrow_back</text>
+          <image :src="getFullImageUrl('/static/icons/actions/arrow_back.svg')" style="width: 48rpx; height: 48rpx; filter: brightness(0) invert(1);"></image>
         </view>
         <view class="header-center">
           <text class="text-lg font-bold text-theme-main">{{ userInfo.nickname }}的战术板</text>
         </view>
         <view class="header-right" v-if="!isOthersProfile">
           <button class="action-icon-btn bg-theme-secondary" @click="goToSettings">
-            <text class="material-symbols-outlined text-2xl text-theme-main">settings</text>
+            <image :src="getFullImageUrl('/static/icons/actions/settings.svg')" style="width: 44rpx; height: 44rpx; filter: brightness(0) invert(1);"></image>
           </button>
         </view>
         <view class="header-right" v-else>
@@ -26,7 +26,7 @@
       <view class="profile-header">
         <view class="cover-image-container" @click="chooseCover">
           <view class="cover-overlay"></view>
-          <image v-if="userInfo.cover" class="cover-image" :src="userInfo.cover" mode="aspectFill"></image>
+          <image v-if="userInfo.cover" class="cover-image" :src="getFullImageUrl(userInfo.cover)" mode="aspectFill"></image>
           <view v-else class="cover-placeholder bg-theme-secondary"></view>
         </view>
         
@@ -43,27 +43,28 @@
               <view v-if="Number(userInfo.level) === 5" class="frame-glow-lv5-bg"></view>
 
               <view class="avatar-wrapper border-2 border-white/20">
-                <image class="avatar-img" :src="userInfo.avatar" mode="aspectFill" @click="chooseAvatar"></image>
+                <image class="avatar-img" :src="getFullImageUrl(userInfo.avatar)" mode="aspectFill" @click="chooseAvatar"></image>
               </view>
 
               <!-- 头像框装饰层 -->
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="Number(userInfo.level) === 2">
-                  <text class="material-symbols-outlined frame-deco deco-tl">sports_soccer</text>
-                  <text class="material-symbols-outlined frame-deco deco-bl">sports_soccer</text>
+                  <image :src="getFullImageUrl('/static/icons/sports/sports_soccer.svg')" class="frame-deco deco-tl" style="width: 32rpx; height: 32rpx;"></image>
+                  <image :src="getFullImageUrl('/static/icons/sports/sports_soccer.svg')" class="frame-deco deco-bl" style="width: 32rpx; height: 32rpx;"></image>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 4" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <image v-if="Number(userInfo.level) === 4" :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="top-crown" style="width: 40rpx; height: 40rpx;"></image>
                 
                 <!-- Lv.5 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 5" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <image v-if="Number(userInfo.level) === 5" :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="top-crown" style="width: 44rpx; height: 44rpx;"></image>
               </view>
               
-              <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + userInfo.level">
-                <text class="material-symbols-outlined badge-icon">workspace_premium</text>
-                <text class="badge-text">LV.{{ userInfo.level }}</text>
+              <!-- 等级标识 -->
+              <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + (userInfo.level || 1)">
+                <image :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="badge-icon" style="width: 24rpx; height: 24rpx; margin-right: 4rpx;"></image>
+                <text class="badge-text">LV.{{ userInfo.level || 1 }}</text>
               </view>
             </view>
           </view>
@@ -71,7 +72,7 @@
           <view class="identity-info">
             <view class="name-row">
               <text class="nickname">{{ userInfo.nickname }}</text>
-              <text class="material-symbols-outlined text-primary text-xl">verified</text>
+              <image :src="getFullImageUrl('/static/icons/actions/verified.svg')" style="width: 40rpx; height: 40rpx; margin-left: 8rpx;"></image>
             </view>
             
             <!-- 层次感称号标签 -->
@@ -96,7 +97,7 @@
         <template v-else>
           <button class="btn-primary" @click="handleFollow">关注</button>
           <button class="btn-secondary" @click="handleMessage">
-            <text class="material-symbols-outlined" style="font-size: 32rpx; margin-right: 8rpx;">chat_bubble</text>
+            <image :src="getFullImageUrl('/static/icons/actions/chat_bubble.svg')" style="width: 32rpx; height: 32rpx; margin-right: 8rpx; filter: invert(var(--is-dark));"></image>
             <text>私信</text>
           </button>
         </template>
@@ -244,19 +245,19 @@
     </scroll-view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar">
+    <view class="tab-bar bg-tab-bar border-theme-main">
       <view v-for="(item, index) in tabs" :key="index" 
             class="tab-item" 
             :class="{ 'active': currentTab === index, 'center-item': item.isCenter }"
             @click="handleTabClick(index)">
         <template v-if="item.isCenter">
           <view class="center-icon pulse-glow animate-pulse">
-            <text class="material-symbols-outlined" style="font-size: 60rpx; color: #fff;">{{ item.icon }}</text>
+            <image :src="getFullImageUrl(item.ossIcon)" style="width: 60rpx; height: 60rpx; filter: brightness(0) saturate(100%) invert(1);"></image>
           </view>
           <text class="tab-text" style="margin-top: 50rpx;">{{ item.text }}</text>
         </template>
         <template v-else>
-          <text class="material-symbols-outlined" :style="{ fontSize: '48rpx', color: currentTab === index ? '#f9d406' : 'rgba(255,255,255,0.4)' }">{{ item.icon }}</text>
+          <image :src="getFullImageUrl(item.ossIcon)" :style="{ width: '48rpx', height: '48rpx', opacity: currentTab === index ? 1 : 0.4, filter: currentTab === index ? 'none' : 'grayscale(1)' }"></image>
           <text class="tab-text">{{ item.text }}</text>
         </template>
       </view>
@@ -288,11 +289,11 @@ const themeClass = computed(() => `theme-${themeStore.theme}`)
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const currentTab = ref(4)
 const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
+  { text: '首页', icon: 'home', path: 'pages/index/index', ossIcon: '/static/icons/menu/home.svg' },
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule', ossIcon: '/static/icons/menu/calendar_month.svg' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true, ossIcon: '/static/icons/menu/psychology.svg' },
+  { text: '社区', icon: 'forum', path: 'pages/community/community', ossIcon: '/static/icons/menu/forum.svg' },
+  { text: '我的', icon: 'person', path: 'pages/my/my', ossIcon: '/static/icons/menu/person.svg' }
 ]
 
 const handleTabClick = (index) => {
@@ -451,7 +452,7 @@ onShow(() => {
 // 使用统一的 getFullImageUrl 处理图片 URL
 const getAvatarUrl = (path, type = 'avatar') => {
   if (!path) {
-    return type === 'avatar' ? '/static/soccer-logo.png' : ''
+    return getFullImageUrl(type === 'avatar' ? '/static/soccer-logo.png' : '')
   }
   return getFullImageUrl(path)
 }
@@ -746,10 +747,17 @@ const chooseCover = () => {
 const uploadFile = (path, type) => {
   uni.showLoading({ title: '上传中...' })
   console.log('开始上传文件:', path, '类型:', type)
+  
+  // 如果是头像上传，使用专门的用户头像上传接口，该接口会自动更新数据库
+  const uploadUrl = type === 'avatar' 
+    ? (userApi.uploadAvatarUrl.startsWith('/') ? userApi.uploadAvatarUrl : '/' + userApi.uploadAvatarUrl)
+    : (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl)
+
   uni.uploadFile({
-    url: BASE_URL + (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl),
+    url: BASE_URL + uploadUrl,
     filePath: path,
     name: 'file',
+    formData: { type }, // 保持原有 formData 兼容性
     header: { 
       'Authorization': 'Bearer ' + uni.getStorageSync('token'),
       'Accept': 'application/json'
@@ -766,31 +774,32 @@ const uploadFile = (path, type) => {
       }
       try {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
-        if (data.code === 200 || data.code === 0) {
-          let fileUrl = data.data?.url || data.data || data.url
-          if (fileUrl) {
-            // 如果返回的是带 /uploads/ 的完整 URL，提取相对路径保存到数据库，
-            // 这样前端加载时可以通过 getFileUrl 统一拼接最新的 BASE_URL
-            if (typeof fileUrl === 'string' && fileUrl.includes('/uploads/')) {
-              fileUrl = fileUrl.substring(fileUrl.indexOf('/uploads/'))
-            }
-            updateProfile({ [type]: fileUrl })
-          } else {
-            uni.showToast({ title: '返回数据中未找到文件路径', icon: 'none' })
+        if (data.code === 200) {
+          const url = data.data
+          if (type === 'avatar') {
+            userInfo.value.avatar = getFullImageUrl(url)
+            uni.showToast({ title: '头像更新成功', icon: 'success' })
+          } else if (type === 'cover') {
+            userInfo.value.cover = getFullImageUrl(url)
+            // 如果封面也需要同步更新到数据库，后续可以添加专门接口
+            // 目前假设 cover 只是上传并返回 URL，由保存按钮统一提交
+            uni.showToast({ title: '封面上传成功', icon: 'success' })
           }
         } else {
           uni.showToast({ title: data.msg || '上传失败', icon: 'none' })
         }
       } catch (e) {
-        console.error('解析上传响应失败:', e, '原始数据:', res.data)
-        uni.showToast({ title: '服务器响应格式错误', icon: 'none' })
+        console.error('解析上传响应失败:', e)
+        uni.showToast({ title: '解析响应失败', icon: 'none' })
       }
     },
     fail: (err) => {
       console.error('上传文件失败:', err)
-      uni.showToast({ title: '上传失败: ' + (err.errMsg || '网络错误'), icon: 'none' })
+      uni.showToast({ title: '网络请求失败', icon: 'none' })
     },
-    complete: () => uni.hideLoading()
+    complete: () => {
+      uni.hideLoading()
+    }
   })
 }
 
@@ -918,7 +927,7 @@ const formatStats = (num) => {
         align-items: center;
         justify-content: center;
         overflow: visible;
-        z-index: 10;
+        z-index: 50;
         width: 224rpx;
         height: 224rpx;
         border-radius: 50%;
@@ -1020,12 +1029,68 @@ const formatStats = (num) => {
 
 .progress-ring-box {
   position: relative;
-  width: 224rpx;
-  height: 224rpx;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
+  z-index: 50;
+}
+
+.level-badge {
+  position: absolute;
+  bottom: 0;
+  right: -10rpx;
+  z-index: 100;
+
+  /* 1. 放弃 min-width，直接给固定宽度 */
+  width: 100rpx; /* 稍微增加宽度，确保内容不溢出 */
+  height: 36rpx; /* 稍微增加高度，视觉比例更好 */
+
+  /* 2. 确保背景和边框正确 */
+  background-color: #f2b90d; /* 兜底背景色 */
+  background: linear-gradient(135deg, #f2b90d, #f9d406);
+  border: 4rpx solid #1a1a1a;
+  border-radius: 100rpx;
+
+  /* 3. 强制内部内容水平垂直居中 */
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0;
+  white-space: nowrap;
+  pointer-events: auto;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+  overflow: visible !important;
+
+  .badge-icon {
+    font-size: 24rpx !important;
+    font-weight: normal !important;
+    color: #000000 !important;
+    margin: 0 2rpx 0 0 !important;
+    line-height: 1;
+    position: relative; /* 启用 z-index */
+    transform: translateY(1rpx);
+    z-index: 110;
+  }
+
+  .badge-text {
+    font-size: 18rpx !important;
+    font-weight: 900 !important;
+    color: #000000 !important;
+    line-height: 1;
+    margin: 0 !important;
+    position: relative; /* 启用 z-index */
+    transform: translateY(2rpx);
+    z-index: 110;
+  }
+
+  &.lv-badge-5 {
+    background: linear-gradient(90deg, #f2b90d, #fff) !important;
+    box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6) !important;
+  }
 }
 
 .progress-ring {
@@ -1175,40 +1240,6 @@ const formatStats = (num) => {
   box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.4);
 }
 
-.level-badge {
-  position: absolute;
-  bottom: -4rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
-  color: #000000;
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
-  z-index: 40;
-  white-space: nowrap;
-  border: 2rpx solid #1e293b;
-
-  .badge-icon {
-    font-size: 22rpx !important;
-    font-weight: bold;
-  }
-
-  .badge-text {
-    font-size: 20rpx;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  &.lv-badge-5 {
-    background: linear-gradient(90deg, #f2b90d, #fff);
-    box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6);
-  }
-}
 
 .stats-container {
   display: flex;
@@ -1484,39 +1515,39 @@ const formatStats = (num) => {
 
 /* 底部导航栏样式同步自 index.vue */
 /* 底部导航栏样式同步自 index.vue */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx; 
-  background-color: rgba(26, 24, 17, 0.98); 
-  backdrop-filter: blur(20px); 
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-  display: flex; 
-  justify-content: space-around; 
-  align-items: center; 
-  padding-bottom: env(safe-area-inset-bottom); 
-  z-index: 9999; 
-  box-sizing: border-box; 
-  pointer-events: auto;
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 100%;
+    
+    /* #ifdef H5 */
+    max-width: 500px;
+    /* #endif */
+    
+    height: 120rpx; 
+    background-color: rgba(26, 24, 17, 0.98); 
+    backdrop-filter: blur(20px); 
+    border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center; 
+    padding-bottom: env(safe-area-inset-bottom); 
+    z-index: 9999; 
+    box-sizing: border-box; 
+    pointer-events: auto;
 
-  .tab-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8rpx;
-    height: 100%;
-    transition: all 0.3s ease;
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8rpx;
+      height: 100%;
+      transition: all 0.3s ease;
     
     &.center-item {
       position: relative;
@@ -1563,23 +1594,6 @@ const formatStats = (num) => {
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .7; transform: scale(0.95); }
-}
-
-/* Material Icons Support */
-.material-symbols-outlined {
-  font-family: 'MaterialIcons' !important;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  direction: ltr;
 }
 
 @keyframes rotate {

@@ -4,31 +4,61 @@
  */
 
 // 开发环境服务器地址 (请根据实际 IP 或域名修改)
-const BASE_URL = 'http://192.168.5.29:8080' 
+const BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'http://192.168.5.29:8080' 
 
-export { BASE_URL }
+// 阿里云 OSS 基础地址 (请根据实际 Bucket 域名修改)
+const OSS_BASE_URL = import.meta.env.VITE_APP_OSS_BASE_URL || 'https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com'
+
+export { BASE_URL, OSS_BASE_URL }
 
 /**
  * 获取完整图片 URL
- * 增强版：处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
+ * 增强版：优先处理 OSS 路径，兼容本地 /uploads/ 路径
  */
 export const getFullImageUrl = (path) => {
   if (!path) return '';
   
-  // 处理 Uni-App 本地静态资源
-  if (path.startsWith('/static/')) {
-    return path
-  }
-  
-  // 如果路径包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
-  // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1) 或旧 IP
-  if (path.includes('/uploads/')) {
-    const relativePath = path.substring(path.indexOf('/uploads/'))
-    return BASE_URL + relativePath
+  // 1. 如果已经是完整 HTTP 路径，直接返回 (OSS 上传后的 URL 属于此类)
+  if (path.startsWith('http')) {
+    // console.log('Full URL (direct):', path);
+    return path;
   }
 
-  if (path.startsWith('http')) return path;
-  return BASE_URL + (path.startsWith('/') ? path : '/' + path);
+  // 2. 处理静态资源：如果以 /static/ 开头，走 OSS
+  if (path.startsWith('/static/')) {
+    const url = OSS_BASE_URL + path;
+    console.log('Static Resource URL:', url);
+    return url;
+  }
+  
+  // 3. 处理旧的上传资源：如果以 /uploads/ 开头，将其映射到 OSS 对应的业务目录
+  if (path.startsWith('/uploads/')) {
+    const subPath = path.substring('/uploads/'.length);
+    const url = OSS_BASE_URL + '/' + subPath;
+    console.log('Uploads Resource URL:', url);
+    return url;
+  }
+
+  // 4. 处理 OSS 中的业务目录 (avatar/, posts/, covers/ 等)
+  const ossDirectories = ['avatar/', 'posts/', 'covers/'];
+  if (ossDirectories.some(dir => path.startsWith(dir))) {
+    const url = OSS_BASE_URL + '/' + path;
+    console.log('OSS Directory URL:', url);
+    return url;
+  }
+  
+  // 5. 兼容处理包含 /uploads/ 的路径 (兜底逻辑)
+  if (path.includes('/uploads/')) {
+    const relativePath = path.substring(path.indexOf('/uploads/') + '/uploads/'.length)
+    const url = OSS_BASE_URL + '/' + relativePath;
+    console.log('Fallback Uploads URL:', url);
+    return url;
+  }
+
+  // 6. 其他相对路径拼接 BASE_URL
+  const finalUrl = BASE_URL + (path.startsWith('/') ? path : '/' + path);
+  // console.log('Default URL:', finalUrl);
+  return finalUrl;
 };
 
 const request = (options = {}) => {
@@ -36,6 +66,10 @@ const request = (options = {}) => {
   options.url = BASE_URL + (options.url.startsWith('/') ? options.url : '/' + options.url)
   options.method = options.method || 'GET'
   
+  // 增加默认超时时间，uni.request 默认是 60000 (60秒)
+  // 如果 options 中没有设置 timeout，则默认设置为 60秒
+  options.timeout = options.timeout || 60000;
+
   // 对于 GET 请求，手动将 data 拼接到 URL 后面，确保参数传递
   if (options.method.toUpperCase() === 'GET' && options.data) {
     const params = Object.keys(options.data)
@@ -138,10 +172,10 @@ const request = (options = {}) => {
 }
 
 // 挂载常用的请求方法
-request.get = (url, data, header) => request({ url, method: 'GET', data, header })
-request.post = (url, data, header) => request({ url, method: 'POST', data, header })
-request.put = (url, data, header) => request({ url, method: 'PUT', data, header })
-request.delete = (url, data, header) => request({ url, method: 'DELETE', data, header })
+request.get = (url, data, header, options = {}) => request({ url, method: 'GET', data, header, ...options })
+request.post = (url, data, header, options = {}) => request({ url, method: 'POST', data, header, ...options })
+request.put = (url, data, header, options = {}) => request({ url, method: 'PUT', data, header, ...options })
+request.delete = (url, data, header, options = {}) => request({ url, method: 'DELETE', data, header, ...options })
 
 export default request
 

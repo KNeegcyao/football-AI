@@ -196,8 +196,9 @@ const uploadAvatar = (filePath) => {
   uni.showLoading({ title: '上传头像...' })
   const token = uni.getStorageSync('token')
   
+  // 使用专门的用户头像上传接口，该接口会自动更新数据库
   uni.uploadFile({
-    url: BASE_URL + (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl),
+    url: BASE_URL + (userApi.uploadAvatarUrl.startsWith('/') ? userApi.uploadAvatarUrl : '/' + userApi.uploadAvatarUrl),
     filePath: filePath,
     name: 'file',
     header: {
@@ -209,11 +210,10 @@ const uploadAvatar = (filePath) => {
           const data = JSON.parse(res.data)
           if (data.code === 200) {
             const newAvatarUrl = data.data
-            // Update form immediately for preview
-            const fullUrl = getFullImageUrl(newAvatarUrl)
-            form.value.avatar = fullUrl
+            // 更新预览
+            form.value.avatar = getFullImageUrl(newAvatarUrl)
             currentAvatarPath.value = newAvatarUrl 
-            uni.showToast({ title: '头像上传成功', icon: 'success' })
+            uni.showToast({ title: '头像上传并同步成功', icon: 'success' })
           } else {
             uni.showToast({ title: data.msg || '上传失败', icon: 'none' })
           }

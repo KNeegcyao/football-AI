@@ -109,12 +109,24 @@
              <text class="material-icons">{{ isCodeLogin ? 'password' : 'sms' }}</text>
           </view>
           <!-- WeChat -->
-          <view class="social-btn">
-            <text class="material-icons">chat</text>
+          <view class="social-btn" @click="handleSocialLogin('wechat')">
+            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/wechat.svg')" mode="aspectFit"></image>
           </view>
           <!-- Apple -->
-          <view class="social-btn">
-            <text class="material-icons">apple</text>
+          <view class="social-btn" @click="handleSocialLogin('apple')">
+            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/apple.svg')" mode="aspectFit"></image>
+          </view>
+          <!-- Google -->
+          <view class="social-btn" @click="handleSocialLogin('google')">
+            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/google.svg')" mode="aspectFit"></image>
+          </view>
+          <!-- Facebook -->
+          <view class="social-btn" @click="handleSocialLogin('facebook')">
+            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/facebook.svg')" mode="aspectFit"></image>
+          </view>
+          <!-- Twitter -->
+          <view class="social-btn" @click="handleSocialLogin('twitter')">
+            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/twitter.svg')" mode="aspectFit"></image>
           </view>
         </view>
 
@@ -179,8 +191,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { authApi, userApi } from '@/api'
+import { getFullImageUrl } from '@/utils/request'
+
+onMounted(() => {
+  console.log('--- OSS URL 调试 ---')
+  console.log('OSS_BASE_URL:', getFullImageUrl('/static/test').replace('/static/test', ''))
+  console.log('WeChat Icon URL:', getFullImageUrl('/static/icons/social/wechat.svg'))
+  console.log('Facebook Icon URL:', getFullImageUrl('/static/icons/social/facebook.svg'))
+  console.log('Avatar URL test:', getFullImageUrl('avatar/default.png'))
+  console.log('--------------------')
+})
 
 const isMobile = (phone) => {
   return /^1[3-9]\d{9}$/.test(phone)
@@ -337,6 +359,13 @@ const handleResetPassword = async () => {
     uni.hideLoading()
     // 错误信息由 request.js 统一处理
   }
+}
+
+const handleSocialLogin = (platform) => {
+  uni.showToast({
+    title: `${platform} 登录正在开发中`,
+    icon: 'none'
+  })
 }
 
 const togglePasswordVisibility = () => {
@@ -678,16 +707,28 @@ const handleLogin = async () => {
     .social-btn {
       width: 96rpx;
       height: 96rpx;
+      background-color: rgba(26, 13, 15, 0.6);
+      backdrop-filter: blur(20rpx);
+      border: 2rpx solid rgba(242, 13, 51, 0.2);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
-      background-color: #1a0d0f;
-      border: 2rpx solid rgba(242, 13, 51, 0.1);
-      color: #cbd5e1;
+      transition: all 0.3s;
+
+      &:active {
+        transform: scale(0.9);
+        background-color: rgba(242, 13, 51, 0.1);
+      }
 
       .material-icons {
-        font-size: 48rpx;
+        color: #94a3b8;
+        font-size: 44rpx;
+      }
+
+      .social-icon-img {
+        width: 48rpx;
+        height: 48rpx;
       }
     }
   }

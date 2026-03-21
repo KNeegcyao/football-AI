@@ -7,14 +7,14 @@
     <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
-          <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
+          <image class="logo-img" :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit"></image>
         </view>
         <text class="logo-text text-theme-main">PITCH<text class="primary">PULSE</text></text>
       </view>
 
       <view class="nav-actions">
         <view class="action-btn bg-theme-secondary" @click="goToSearch">
-          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
+          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
         </view>
         <view class="avatar-box" @click="goToProfile">
           <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
@@ -45,22 +45,22 @@
             <text class="hero-subtag" v-if="heroPost.category">{{ heroPost.category }}</text>
             <!-- 英雄帖 AI 勋章 -->
             <view class="ai-badge hero-ai-badge" v-if="heroPost.isAi" @click.stop="toggleHeroAiSummary">
-              <u-icon name="star-fill" color="#000" size="20rpx"></u-icon>
+              <image :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" style="width: 20rpx; height: 20rpx;"></image>
               <text class="ai-text">AI</text>
             </view>
           </view>
           <text class="hero-title">{{ heroPost.title }}</text>
           <view class="hero-meta">
               <view class="meta-item">
-                <u-icon name="clock" size="28rpx" color="#FFFFFF"></u-icon>
+                <image :src="getFullImageUrl('/static/icons/actions/schedule.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
                 <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
-                <u-icon name="star" size="28rpx" color="#FFFFFF"></u-icon>
+                <image :src="getFullImageUrl('/static/icons/actions/star.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
                 <text class="meta-text">{{ heroPost.collections || 0 }}</text>
               </view>
               <view class="meta-item">
-                <u-icon name="eye" size="28rpx" color="#FFFFFF"></u-icon>
+                <image :src="getFullImageUrl('/static/icons/actions/visibility.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
                 <text class="meta-text">{{ heroPost.views || 0 }}</text>
               </view>
             </view>
@@ -94,7 +94,7 @@
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
               <view class="ai-badge" v-if="post.isAi" @click.stop="toggleAiSummary(index)">
-                <u-icon name="star-fill" :color="post.showSummary ? '#000' : '#000'" size="20rpx"></u-icon>
+                <image :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" style="width: 20rpx; height: 20rpx;"></image>
                 <text class="ai-text">AI</text>
               </view>
             </view>
@@ -143,10 +143,10 @@
             :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
             @tap="handleTabClick(index)">
         <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
+          <image :src="getFullImageUrl(tab.ossIcon)" class="center-icon-img animate-pulse" style="width: 56rpx; height: 56rpx; filter: brightness(0) saturate(100%) invert(1);"></image>
         </view>
         <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
+          <image :src="getFullImageUrl(tab.ossIcon)" :style="{ width: '48rpx', height: '48rpx', opacity: currentTab === index ? 1 : 0.4, filter: currentTab === index ? 'none' : 'grayscale(1)' }"></image>
           <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
         </template>
       </view>
@@ -213,11 +213,11 @@ const categories = [
 
 const currentTab = ref(0)
 const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
+  { text: '首页', icon: 'home', path: 'pages/index/index', ossIcon: '/static/icons/menu/home.svg' },
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule', ossIcon: '/static/icons/menu/calendar_month.svg' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true, ossIcon: '/static/icons/menu/psychology.svg' },
+  { text: '社区', icon: 'forum', path: 'pages/community/community', ossIcon: '/static/icons/menu/forum.svg' },
+  { text: '我的', icon: 'person', path: 'pages/my/my', ossIcon: '/static/icons/menu/person.svg' }
 ]
 
 const heroPost = ref({

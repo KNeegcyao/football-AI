@@ -13,6 +13,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.soccer.forum</groupId>
             <artifactId>soccer-forum-domain</artifactId>
         </dependency>

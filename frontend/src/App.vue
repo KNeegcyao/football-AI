@@ -107,6 +107,22 @@ export default {
   direction: ltr;
 }
 
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  direction: ltr;
+}
+
 /* 主题变量定义 */
 :root, .theme-dark {
   --bg-main: #1A1811;
@@ -323,6 +339,7 @@ input, textarea, select, uni-input, uni-textarea {
   border-top-color: transparent !important;
 }
 
+/* #ifdef H5 */
 /* 优化 uni.showModal 样式 (H5) */
 .uni-modal {
   background-color: #1a1811 !important;

@@ -17,7 +17,7 @@
       <!-- User Info -->
       <view class="user-info">
         <view class="avatar-container">
-          <image class="avatar-img" :src="userInfo.avatar || '/static/default-team.png'" mode="aspectFill"></image>
+          <image class="avatar-img" :src="getFullImageUrl(userInfo.avatar) || getFullImageUrl('/static/default-team.png')" mode="aspectFill"></image>
         </view>
         <view class="user-meta">
           <text class="user-name">{{ userInfo.nickname || '用户' }}</text>
@@ -71,7 +71,7 @@
         <text class="section-label">已选圈子</text>
         <view class="circle-badge">
           <view class="circle-icon">
-            <image src="/static/soccer-logo.png" mode="aspectFit" class="badge-img"></image>
+            <image :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit" class="badge-img"></image>
           </view>
           <text class="circle-name">{{ circleName }}</text>
           <text class="material-icons arrow-right">chevron_right</text>
@@ -158,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
 import { postApi, communityApi, userApi, fileApi } from '@/api';
@@ -379,11 +379,14 @@ const handlePublish = async () => {
           // H5环境下可以使用相对路径，App/小程序需要完整路径
           // 这里假设是H5或已配置好代理
           uni.uploadFile({
-            url: `${API_BASE_URL}/api/files/upload`,
+            url: `${BASE_URL}/api/files/upload`,
             filePath: filePath,
             name: 'file',
+            formData: {
+              type: 'posts'
+            },
             header: {
-              'Authorization': `Bearer ${uni.getStorageSync('token')}` // 添加 Bearer 前缀
+              'Authorization': `Bearer ${uni.getStorageSync('token')}` 
             },
             success: (uploadRes) => {
               if (uploadRes.statusCode === 200) {

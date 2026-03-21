@@ -7,14 +7,14 @@
     <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
-          <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
+          <image class="logo-img" :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit"></image>
         </view>
         <text class="logo-text text-theme-main">PITCH<text class="primary">PULSE</text></text>
       </view>
 
       <view class="nav-actions">
         <view class="action-btn bg-theme-secondary" @click="goToSearch">
-          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
+          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
         </view>
         <view class="avatar-box bg-theme-secondary" @click="goToProfile">
           <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
@@ -82,7 +82,7 @@
           </view>
           <view class="card-footer border-theme-main">
             <view class="footer-left">
-              <u-icon name="play-circle" color="#f9d406" size="14"></u-icon>
+              <image :src="getFullImageUrl('/static/icons/actions/play_circle.svg')" style="width: 28rpx; height: 28rpx; margin-right: 8rpx;"></image>
               <text class="footer-text text-theme-secondary">视频直播中</text>
             </view>
             <view class="footer-right">
@@ -102,9 +102,9 @@
               <view class="indicator"></view>
               <text class="match-meta text-theme-secondary">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
             </view>
-            <u-icon name="bell" :color="themeStore.theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'" size="18"></u-icon>
-          </view>
-          <view class="mini-body">
+            <image :src="getFullImageUrl('/static/icons/actions/bell.svg')" style="width: 36rpx; height: 36rpx; opacity: 0.2; filter: invert(var(--is-dark));"></image>
+        </view>
+        <view class="mini-body">
             <view class="mini-team">
               <view class="mini-logo">
                 <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
@@ -158,7 +158,7 @@
 
       <!-- 无比赛提示 -->
       <view class="no-match" v-if="liveMatches.length === 0 && upcomingMatches.length === 0 && finishedMatches.length === 0">
-        <u-icon name="info-circle" :color="themeStore.theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'" size="64"></u-icon>
+        <image :src="getFullImageUrl('/static/icons/actions/info.svg')" style="width: 128rpx; height: 128rpx; opacity: 0.1; filter: invert(var(--is-dark));"></image>
         <text class="no-match-text text-theme-secondary">今日暂无比赛</text>
       </view>
     </view>
@@ -172,10 +172,10 @@
             :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
             @tap="handleTabClick(index)">
         <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
+          <image :src="getFullImageUrl(tab.ossIcon)" class="center-icon-img animate-pulse" style="width: 56rpx; height: 56rpx; filter: brightness(0) saturate(100%) invert(1);"></image>
         </view>
         <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
+          <image :src="getFullImageUrl(tab.ossIcon)" :style="{ width: '48rpx', height: '48rpx', opacity: currentTab === index ? 1 : 0.4, filter: currentTab === index ? 'none' : 'grayscale(1)' }"></image>
           <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
         </template>
       </view>
@@ -238,11 +238,11 @@ onShow(() => {
 
 const currentTab = ref(1)
 const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
+  { text: '首页', icon: 'home', path: 'pages/index/index', ossIcon: '/static/icons/menu/home.svg' },
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule', ossIcon: '/static/icons/menu/calendar_month.svg' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true, ossIcon: '/static/icons/menu/psychology.svg' },
+  { text: '社区', icon: 'forum', path: 'pages/community/community', ossIcon: '/static/icons/menu/forum.svg' },
+  { text: '我的', icon: 'person', path: 'pages/my/my', ossIcon: '/static/icons/menu/person.svg' }
 ]
 
 // 初始化日期列表（前后3天）

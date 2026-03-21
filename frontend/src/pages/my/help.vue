@@ -145,7 +145,7 @@ const submitFeedback = () => {
     color: var(--text-secondary) !important;
   }
   
-  .border-white/5 {
+  .border-white\/5 {
     border-color: #E5E7EB !important;
   }
 }

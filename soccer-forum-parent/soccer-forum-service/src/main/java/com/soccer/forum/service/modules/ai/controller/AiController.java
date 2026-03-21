@@ -28,9 +28,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 /**
  * AI 控制层
  */
-@Tag(name = "AI 助手接口")
+@Tag(name = "AI 助手接口 (V1)")
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/api/ai-v1")
 public class AiController {
 
     private static final Logger log = LoggerFactory.getLogger(AiController.class);

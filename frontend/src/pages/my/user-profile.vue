@@ -55,8 +55,9 @@
                 <text v-if="Number(userInfo.level) === 5" class="material-icons top-crown">workspace_premium</text>
               </view>
               
+              <!-- 等级标识 -->
               <view class="level-badge" :class="'lv-badge-' + userInfo.level">
-                <text class="material-icons badge-icon">workspace_premium</text>
+                <text class="material-symbols-outlined badge-icon">workspace_premium</text>
                 <text class="badge-text">LV.{{ userInfo.level }}</text>
               </view>
             </view>
@@ -773,36 +774,50 @@ const formatStats = (num) => {
 
   .level-badge {
     position: absolute;
-    bottom: -4rpx;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
-    color: #000000;
-    padding: 4rpx 16rpx;
-    border-radius: 999rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
-    z-index: 40;
+    bottom: 0;
+    right: -10rpx;
+    z-index: 100;
+    width: 100rpx;
+    height: 36rpx;
+    background-color: #f2b90d;
+    background: linear-gradient(135deg, #f2b90d, #f9d406);
+    border: 4rpx solid #1a1a1a;
+    border-radius: 100rpx;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0;
     white-space: nowrap;
-    border: 2rpx solid #1e293b;
+    pointer-events: auto;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+    overflow: visible !important;
 
     .badge-icon {
-      font-size: 22rpx !important;
-      font-weight: bold;
+      font-size: 24rpx !important;
+      font-weight: normal !important;
+      color: #000000 !important;
+      margin: 0 2rpx 0 0 !important;
+      line-height: 1;
+      position: relative;
+      transform: translateY(1rpx);
+      z-index: 110;
     }
 
     .badge-text {
-      font-size: 20rpx;
-      font-weight: 800;
+      font-size: 18rpx !important;
+      font-weight: 900 !important;
+      color: #000000 !important;
       line-height: 1;
+      margin: 0 !important;
+      position: relative;
+      transform: translateY(2rpx);
+      z-index: 110;
     }
 
     &.lv-badge-5 {
-      background: linear-gradient(90deg, #f2b90d, #fff);
-      box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6);
+      background: linear-gradient(90deg, #f2b90d, #fff) !important;
+      box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6) !important;
     }
   }
 

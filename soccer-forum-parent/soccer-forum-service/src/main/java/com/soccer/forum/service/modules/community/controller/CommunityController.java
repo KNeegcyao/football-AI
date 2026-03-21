@@ -300,13 +300,7 @@ public class CommunityController {
                 if (u != null) {
                     String av = u.getAvatar();
                     if (av != null && !av.isEmpty()) {
-                        if (av.startsWith("http://localhost:8080/")) {
-                            realAvatars.add(av.replace("http://localhost:8080", ""));
-                        } else if (av.startsWith("http")) {
-                            realAvatars.add(av);
-                        } else {
-                            realAvatars.add("/uploads/" + av);
-                        }
+                        realAvatars.add(av);
                     } else {
                         realAvatars.add("/static/default-team.png");
                     }

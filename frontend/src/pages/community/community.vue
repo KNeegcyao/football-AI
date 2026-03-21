@@ -7,14 +7,14 @@
       <view class="nav-bar bg-nav-bar border-b border-theme-main" :style="{ paddingRight: navbarPaddingRight + 'px' }">
         <view class="logo-area">
           <view class="logo-icon">
-            <image class="logo-img" src="/static/soccer-logo.png" mode="aspectFit"></image>
+            <image class="logo-img" :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit"></image>
           </view>
           <text class="logo-text text-theme-main">PULSE<text class="primary">DISCOVERY</text></text>
         </view>
 
         <view class="nav-actions">
           <view class="action-btn bg-theme-secondary" @click="navigateToNotification">
-            <u-icon name="bell" :color="themeStore.theme === 'dark' ? '#fff' : '#111827'" size="44rpx"></u-icon>
+            <image :src="getFullImageUrl('/static/icons/actions/bell.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
             <view class="notification-badge" v-if="unreadCount > 0">
               {{ unreadCount > 99 ? '99+' : unreadCount }}
             </view>
@@ -27,7 +27,7 @@
         <!-- Search Bar (Integrated into main content) -->
         <view class="search-section">
           <view class="search-bar bg-theme-secondary border border-theme-main">
-            <u-icon name="search" size="40rpx" color="rgba(249, 212, 6, 0.4)" class="search-icon"></u-icon>
+            <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 40rpx; height: 40rpx; margin-right: 16rpx; opacity: 0.4; filter: invert(var(--is-dark));"></image>
             <input class="search-input text-theme-main" v-model="searchKey" placeholder="搜索圈子、话题" :placeholder-style="themeStore.theme === 'dark' ? 'color: rgba(255, 255, 255, 0.2)' : 'color: rgba(0, 0, 0, 0.2)'" />
           </view>
         </view>
@@ -59,7 +59,7 @@
           <view class="section-header">
             <text class="section-title text-theme-main">趋势话题</text>
             <view class="trending-badge bg-[#f9d406]/10">
-              <u-icon name="level" size="32rpx" color="#f9d406"></u-icon>
+              <image :src="getFullImageUrl('/static/icons/actions/trending_up.svg')" style="width: 32rpx; height: 32rpx; margin-right: 8rpx;"></image>
               <text class="trending-text">正在热议</text>
             </view>
           </view>
@@ -67,7 +67,7 @@
           <view class="trends-list">
             <view class="trend-item bg-card border border-theme-main" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
               <view class="trend-bg-icon">
-                <u-icon name="tags" size="96rpx" color="#f9d406" style="opacity: 0.1;"></u-icon>
+                <image :src="getFullImageUrl('/static/icons/actions/tag.svg')" style="width: 96rpx; height: 96rpx; opacity: 0.1;"></image>
               </view>
               <view class="trend-content">
                 <text class="trend-title text-theme-main">{{ topic.title }}</text>
@@ -122,7 +122,7 @@
 
         <!-- Empty State -->
         <view class="empty-state" v-if="searchKey && filteredHotCircles.length === 0 && filteredTrendTopics.length === 0">
-          <u-icon name="search" size="120rpx" color="rgba(249, 212, 6, 0.2)" class="empty-icon"></u-icon>
+          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 120rpx; height: 120rpx; opacity: 0.1; filter: invert(var(--is-dark));"></image>
           <text class="empty-text">未找到与“{{ searchKey }}”相关的结果</text>
           <text class="empty-sub">换个关键词试试吧</text>
         </view>

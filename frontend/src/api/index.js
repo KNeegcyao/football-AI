@@ -220,6 +220,97 @@ export const aiApi = {
 }
 
 /**
+ * Dify AI 原生接口 (文件/任务管理)
+ */
+export const difyApi = {
+  /**
+   * 上传文件 (目前仅支持图片)
+   * @param {String} filePath 文件临时路径
+   * @param {String} user 用户标识
+   */
+  uploadFile: (filePath, user) => {
+    return new Promise((resolve, reject) => {
+      const token = uni.getStorageSync('token')
+      uni.uploadFile({
+        url: `${BASE_URL}/api/ai/files/upload`,
+        filePath: filePath,
+        name: 'file',
+        formData: { user },
+        header: {
+          'Authorization': token ? (token.startsWith('Bearer ') ? token : `Bearer ${token}`) : ''
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            try {
+              const data = JSON.parse(res.data)
+              resolve(data.code === 200 || data.code === 0 ? data.data : data)
+            } catch (e) {
+              resolve(res.data)
+            }
+          } else {
+            reject(new Error('上传失败'))
+          }
+        },
+        fail: reject
+      })
+    })
+  },
+
+  /**
+   * 获取文件预览 URL
+   * @param {String} fileId 文件 ID
+   */
+  getFilePreviewUrl: (fileId) => `${BASE_URL}/api/ai/files/${fileId}/preview`,
+
+  /**
+   * 停止响应
+   * @param {String} taskId 任务 ID
+   * @param {String} user 用户标识
+   */
+  stopResponse: (taskId, user) => request.post(`/api/ai/chat-messages/${taskId}/stop`, { user }),
+
+  /**
+   * 获取会话历史消息
+   * @param {String} conversationId 会话 ID
+   * @param {String} user 用户标识
+   * @param {String} firstId 当前页第一条聊天记录的 ID
+   * @param {Number} limit 一次请求返回多少条聊天记录
+   */
+  getMessages: (conversationId, user, firstId = null, limit = 20) => {
+    const params = {
+      conversation_id: conversationId,
+      user,
+      limit
+    }
+    if (firstId && firstId !== 'null') params.first_id = firstId
+    return request.get('/api/ai/messages', params)
+  },
+
+  /**
+   * 获取会话列表
+   * @param {String} user 用户标识
+   * @param {String} lastId 当前页最后面一条记录的 ID
+   * @param {Number} limit 一次请求返回多少条记录
+   */
+  getConversations: (user, lastId = null, limit = 20) => {
+    return request.get('/api/ai/conversations', {
+      user,
+      last_id: lastId,
+      limit
+    })
+  },
+
+  /**
+   * 删除会话
+   * @param {String} conversationId 会话 ID
+   * @param {String} user 用户标识
+   */
+  deleteConversation: (conversationId, user) => {
+    return request.delete(`/api/ai/conversations/${conversationId}`, { user })
+  }
+}
+
+/**
  * 赛事相关接口
  */
 export const matchApi = {
@@ -322,6 +413,11 @@ export const userApi = {
   updateProfile: (data) => request.put('/api/users/profile', data),
 
   /**
+   * 上传头像 (直接更新到数据库)
+   */
+  uploadAvatarUrl: '/api/user/avatar/upload',
+
+  /**
    * 修改密码
    * @param {Object} data { oldPassword, newPassword }
    */
@@ -415,19 +511,7 @@ export const fileApi = {
   /**
    * 获取完整的文件访问路径
    */
-  getFileUrl: (url) => {
-    if (!url) return ''
-    if (url.startsWith('http')) {
-      // 如果 URL 包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
-      // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1)
-      if (url.includes('/uploads/')) {
-        const relativePath = url.substring(url.indexOf('/uploads/'))
-        return BASE_URL + relativePath
-      }
-      return url
-    }
-    return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-  }
+  getFileUrl: (url) => getFullImageUrl(url)
 }
 
 /**
