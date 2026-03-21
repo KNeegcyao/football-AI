@@ -49,28 +49,31 @@ public class RagService {
      */
     @PostConstruct
     public void initKnowledgeBase() {
-        log.info("初始化知识库，路径: {}", knowledgeBasePath);
-        try {
-            // 无论如何，都先加载默认规则到内存存储中（因为存储是内存非持久化的）
-            initDefaultRules();
-            
-            Path path = Paths.get(knowledgeBasePath);
-            if (!Files.exists(path)) {
-                Files.createDirectories(path);
-            } else {
-                // 加载已有文件
-                File[] files = path.toFile().listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isFile() && !file.getName().startsWith(".")) {
-                            ingestFile(file);
+        log.info("异步初始化知识库，路径: {}", knowledgeBasePath);
+        new Thread(() -> {
+            try {
+                // 无论如何，都先加载默认规则到内存存储中（因为存储是内存非持久化的）
+                initDefaultRules();
+                
+                Path path = Paths.get(knowledgeBasePath);
+                if (!Files.exists(path)) {
+                    Files.createDirectories(path);
+                } else {
+                    // 加载已有文件
+                    File[] files = path.toFile().listFiles();
+                    if (files != null) {
+                        for (File file : files) {
+                            if (file.isFile() && !file.getName().startsWith(".")) {
+                                ingestFile(file);
+                            }
                         }
                     }
                 }
+                log.info("知识库初始化完成");
+            } catch (Exception e) {
+                log.error("初始化知识库失败", e);
             }
-        } catch (Exception e) {
-            log.error("初始化知识库失败", e);
-        }
+        }).start();
     }
     
     /**

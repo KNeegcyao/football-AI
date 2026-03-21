@@ -50,8 +50,8 @@
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="Number(userInfo.level) === 2">
-                  <image :src="getFullImageUrl('/static/icons/sports/sports_soccer.svg')" class="frame-deco deco-tl" style="width: 32rpx; height: 32rpx;"></image>
-                  <image :src="getFullImageUrl('/static/icons/sports/sports_soccer.svg')" class="frame-deco deco-bl" style="width: 32rpx; height: 32rpx;"></image>
+                  <image :src="getFullImageUrl('/static/icons/menu/sports_soccer.svg')" class="frame-deco deco-tl" style="width: 32rpx; height: 32rpx;"></image>
+                  <image :src="getFullImageUrl('/static/icons/menu/sports_soccer.svg')" class="frame-deco deco-bl" style="width: 32rpx; height: 32rpx;"></image>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
@@ -246,19 +246,15 @@
 
     <!-- 底部导航栏 -->
     <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(item, index) in tabs" :key="index" 
-            class="tab-item" 
-            :class="{ 'active': currentTab === index, 'center-item': item.isCenter }"
-            @click="handleTabClick(index)">
-        <template v-if="item.isCenter">
-          <view class="center-icon pulse-glow animate-pulse">
-            <image :src="getFullImageUrl(item.ossIcon)" style="width: 60rpx; height: 60rpx; filter: brightness(0) saturate(100%) invert(1);"></image>
-          </view>
-          <text class="tab-text" style="margin-top: 50rpx;">{{ item.text }}</text>
-        </template>
+      <view v-for="(tab, index) in tabs" :key="index" 
+            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
+            @tap="handleTabClick(index)">
+        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
+          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
+        </view>
         <template v-else>
-          <image :src="getFullImageUrl(item.ossIcon)" :style="{ width: '48rpx', height: '48rpx', opacity: currentTab === index ? 1 : 0.4, filter: currentTab === index ? 'none' : 'grayscale(1)' }"></image>
-          <text class="tab-text">{{ item.text }}</text>
+          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
+          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
         </template>
       </view>
     </view>
@@ -289,11 +285,11 @@ const themeClass = computed(() => `theme-${themeStore.theme}`)
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const currentTab = ref(4)
 const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index', ossIcon: '/static/icons/menu/home.svg' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule', ossIcon: '/static/icons/menu/calendar_month.svg' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true, ossIcon: '/static/icons/menu/psychology.svg' },
-  { text: '社区', icon: 'forum', path: 'pages/community/community', ossIcon: '/static/icons/menu/forum.svg' },
-  { text: '我的', icon: 'person', path: 'pages/my/my', ossIcon: '/static/icons/menu/person.svg' }
+  { text: '首页', icon: 'home', path: 'pages/index/index' },
+  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
+  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
+  { text: '社区', icon: 'forum', path: 'pages/community/community' },
+  { text: '我的', icon: 'person', path: 'pages/my/my' }
 ]
 
 const handleTabClick = (index) => {

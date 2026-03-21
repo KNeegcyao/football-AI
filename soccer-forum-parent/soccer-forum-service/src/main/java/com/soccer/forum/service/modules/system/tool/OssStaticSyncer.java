@@ -140,19 +140,11 @@ public class OssStaticSyncer implements CommandLineRunner {
                 String objectName = fullPath.substring(index);
                 String fileName = objectName.substring(objectName.lastIndexOf("/") + 1);
                 
-                // 检查 OSS 是否已存在 (如果是 SVG，强制重传以修复 Content-Type)
-                boolean exists = ossClient.doesObjectExist(ossConfig.getBucketName(), objectName);
-                boolean isSvg = objectName.toLowerCase().endsWith(".svg");
-                
+                // 强制同步以确保权限和 Content-Type 正确
+                log.info("同步文件到 OSS: {}", objectName);
                 String url;
-                if (!exists || isSvg) {
-                    log.info("同步文件到 OSS ({}): {}", isSvg ? "强制更新 SVG" : "新增", objectName);
-                    try (InputStream is = resource.getInputStream()) {
-                        url = ossService.uploadFile(is, objectName);
-                    }
-                } else {
-                    // 如果已存在且非 SVG，直接获取 URL
-                    url = ossService.getFileUrl(objectName);
+                try (InputStream is = resource.getInputStream()) {
+                    url = ossService.uploadFile(is, objectName);
                 }
                 
                 // 缓存：支持通过全路径或仅文件名获取（如果文件名唯一）

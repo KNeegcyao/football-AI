@@ -143,10 +143,10 @@
             :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
             @tap="handleTabClick(index)">
         <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <image :src="getFullImageUrl(tab.ossIcon)" class="center-icon-img animate-pulse" style="width: 56rpx; height: 56rpx; filter: brightness(0) saturate(100%) invert(1);"></image>
+          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
         </view>
         <template v-else>
-          <image :src="getFullImageUrl(tab.ossIcon)" :style="{ width: '48rpx', height: '48rpx', opacity: currentTab === index ? 1 : 0.4, filter: currentTab === index ? 'none' : 'grayscale(1)' }"></image>
+          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
           <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
         </template>
       </view>
@@ -212,13 +212,13 @@ const categories = [
 ]
 
 const currentTab = ref(0)
-const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index', ossIcon: '/static/icons/menu/home.svg' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule', ossIcon: '/static/icons/menu/calendar_month.svg' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true, ossIcon: '/static/icons/menu/psychology.svg' },
-  { text: '社区', icon: 'forum', path: 'pages/community/community', ossIcon: '/static/icons/menu/forum.svg' },
-  { text: '我的', icon: 'person', path: 'pages/my/my', ossIcon: '/static/icons/menu/person.svg' }
-]
+  const tabs = [
+    { text: '首页', icon: 'home', path: 'pages/index/index' },
+    { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
+    { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
+    { text: '社区', icon: 'forum', path: 'pages/community/community' },
+    { text: '我的', icon: 'person', path: 'pages/my/my' }
+  ]
 
 const heroPost = ref({
   id: 1,

@@ -34,30 +34,30 @@ public class OssServiceImpl implements OssService {
             String contentType = "application/octet-stream";
             
             // 根据后缀设置 Content-Type
-            if (objectName.endsWith(".svg")) {
+            String lowerName = objectName.toLowerCase();
+            if (lowerName.endsWith(".svg")) {
                 contentType = "image/svg+xml";
-            } else if (objectName.endsWith(".png")) {
+            } else if (lowerName.endsWith(".png")) {
                 contentType = "image/png";
-            } else if (objectName.endsWith(".jpg") || objectName.endsWith(".jpeg")) {
+            } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
                 contentType = "image/jpeg";
-            } else if (objectName.endsWith(".gif")) {
+            } else if (lowerName.endsWith(".gif")) {
                 contentType = "image/gif";
-            } else if (objectName.endsWith(".webp")) {
+            } else if (lowerName.endsWith(".webp")) {
                 contentType = "image/webp";
             }
             metadata.setContentType(contentType);
             
+            // 先执行普通上传
+            PutObjectRequest putObjectRequest = new PutObjectRequest(ossConfig.getBucketName(), objectName, inputStream, metadata);
+            ossClient.putObject(putObjectRequest);
+            
+            // 上传成功后，尝试异步设置公共读权限 (如果设置失败，不影响上传结果)
             try {
-                // 尝试设置公共读权限
-                metadata.setHeader("x-oss-object-acl", CannedAccessControlList.PublicRead.toString());
-                PutObjectRequest putObjectRequest = new PutObjectRequest(ossConfig.getBucketName(), objectName, inputStream, metadata);
-                ossClient.putObject(putObjectRequest);
+                ossClient.setObjectAcl(ossConfig.getBucketName(), objectName, CannedAccessControlList.PublicRead);
+                log.info("成功为对象 {} 设置公共读权限", objectName);
             } catch (Exception aclEx) {
-                log.warn("为对象 {} 设置公共读权限失败，尝试普通上传: {}", objectName, aclEx.getMessage());
-                // 重置输入流（如果有必要，但 InputStream 通常不能重置，这里我们可能需要重新获取流，
-                // 但在 syncIcons 中我们用的是 resource.getInputStream()，每次调用都是新的流）
-                // 这里的异常通常发生在 ossClient.putObject 内部，所以如果失败，我们需要在外层处理重试
-                throw aclEx; 
+                log.warn("为对象 {} 设置公共读权限失败 (可能子账号权限不足，请确保 Bucket 开启了公共读): {}", objectName, aclEx.getMessage());
             }
             
             log.info("上传文件到 OSS 成功, objectName: {}", objectName);

@@ -18,46 +18,47 @@ export { BASE_URL, OSS_BASE_URL }
 export const getFullImageUrl = (path) => {
   if (!path) return '';
   
-  // 1. 如果已经是完整 HTTP 路径，直接返回 (OSS 上传后的 URL 属于此类)
+  // 1. 如果已经是完整 HTTP 路径，直接返回
   if (path.startsWith('http')) {
-    // console.log('Full URL (direct):', path);
     return path;
   }
 
+  // 规范化路径：确保 path 不以 / 开头，用于拼接 OSS_BASE_URL
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+
   // 2. 处理静态资源：如果以 /static/ 开头，走 OSS
   if (path.startsWith('/static/')) {
-    const url = OSS_BASE_URL + path;
-    console.log('Static Resource URL:', url);
+    const url = `${OSS_BASE_URL}/${cleanPath}`;
+    // console.log('Static Resource URL:', url);
     return url;
   }
   
   // 3. 处理旧的上传资源：如果以 /uploads/ 开头，将其映射到 OSS 对应的业务目录
   if (path.startsWith('/uploads/')) {
     const subPath = path.substring('/uploads/'.length);
-    const url = OSS_BASE_URL + '/' + subPath;
-    console.log('Uploads Resource URL:', url);
+    const url = `${OSS_BASE_URL}/${subPath}`;
+    // console.log('Uploads Resource URL:', url);
     return url;
   }
 
   // 4. 处理 OSS 中的业务目录 (avatar/, posts/, covers/ 等)
   const ossDirectories = ['avatar/', 'posts/', 'covers/'];
   if (ossDirectories.some(dir => path.startsWith(dir))) {
-    const url = OSS_BASE_URL + '/' + path;
-    console.log('OSS Directory URL:', url);
+    const url = `${OSS_BASE_URL}/${path}`;
+    // console.log('OSS Directory URL:', url);
     return url;
   }
   
-  // 5. 兼容处理包含 /uploads/ 的路径 (兜底逻辑)
+  // 5. 兼容处理包含 /uploads/ 的路径
   if (path.includes('/uploads/')) {
     const relativePath = path.substring(path.indexOf('/uploads/') + '/uploads/'.length)
-    const url = OSS_BASE_URL + '/' + relativePath;
-    console.log('Fallback Uploads URL:', url);
+    const url = `${OSS_BASE_URL}/${relativePath}`;
+    // console.log('Fallback Uploads URL:', url);
     return url;
   }
 
   // 6. 其他相对路径拼接 BASE_URL
   const finalUrl = BASE_URL + (path.startsWith('/') ? path : '/' + path);
-  // console.log('Default URL:', finalUrl);
   return finalUrl;
 };
 
