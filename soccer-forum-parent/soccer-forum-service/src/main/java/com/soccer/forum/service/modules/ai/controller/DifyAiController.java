@@ -32,9 +32,9 @@ public class DifyAiController {
     @Operation(summary = "Dify 智能对话转发")
     @PostMapping("/chat")
     public R<DifyChatResponse> chat(@RequestBody Map<String, Object> body) {
-        String message = (String) body.get("message");
-        String conversationId = (String) body.get("conversationId");
-        String userId = (String) body.get("userId");
+        String message = body.get("message") != null ? body.get("message").toString() : null;
+        String conversationId = body.get("conversationId") != null ? body.get("conversationId").toString() : null;
+        String userId = body.get("userId") != null ? body.get("userId").toString() : null;
         List<Map<String, Object>> files = (List<Map<String, Object>>) body.get("files");
 
         if ((message == null || message.trim().isEmpty()) && (files == null || files.isEmpty())) {
@@ -63,8 +63,8 @@ public class DifyAiController {
 
     @Operation(summary = "停止 Dify 响应")
     @PostMapping("/chat-messages/{taskId}/stop")
-    public R<Object> stopResponse(@PathVariable("taskId") String taskId, @RequestBody Map<String, String> body) {
-        String user = body.get("user");
+    public R<Object> stopResponse(@PathVariable("taskId") String taskId, @RequestBody Map<String, Object> body) {
+        String user = body.get("user") != null ? body.get("user").toString() : null;
         log.info("收到 Dify 停止响应请求, taskId: {}, user: {}", taskId, user);
         try {
             Object result = difyAiService.stopResponse(taskId, user);

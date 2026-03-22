@@ -14,10 +14,19 @@ public class OssConfig {
     private String accessKeySecret;
     private String bucketName;
     private String cdnDomain;
+    private boolean syncOnStartup = true;
 
     @Bean
     public OSS ossClient() {
         return new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+    }
+
+    public boolean isSyncOnStartup() {
+        return syncOnStartup;
+    }
+
+    public void setSyncOnStartup(boolean syncOnStartup) {
+        this.syncOnStartup = syncOnStartup;
     }
 
     public String getEndpoint() {

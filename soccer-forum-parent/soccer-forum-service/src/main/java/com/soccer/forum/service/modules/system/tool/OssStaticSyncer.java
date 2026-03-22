@@ -42,6 +42,10 @@ public class OssStaticSyncer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        if (!ossConfig.isSyncOnStartup()) {
+            log.info("OSS Static Syncer 已禁用 (sync-on-startup=false)，跳过资源同步。");
+            return;
+        }
         log.info("====================================================");
         log.info("OSS Static Syncer 启动中...");
         log.info("Bucket Name: {}", ossConfig.getBucketName());
@@ -79,7 +83,6 @@ public class OssStaticSyncer implements CommandLineRunner {
             String uploadPath = "D:/project/football/soccer-forum-parent/soccer-forum-service/uploads";
             java.io.File uploadDir = new java.io.File(uploadPath);
             if (!uploadDir.exists() || !uploadDir.isDirectory()) {
-                log.warn("本地 uploads 目录不存在: {}", uploadPath);
                 return;
             }
 
@@ -109,15 +112,16 @@ public class OssStaticSyncer implements CommandLineRunner {
                 objectName = objectName.substring(1);
             }
 
-            // 检查 OSS 是否已存在 (如果是 SVG，强制重传以修复 Content-Type)
+            // 检查 OSS 是否已存在 (如果是 SVG 且配置为强制刷新，才重传)
             try {
                 boolean exists = ossClient.doesObjectExist(ossConfig.getBucketName(), objectName);
-                boolean isSvg = objectName.toLowerCase().endsWith(".svg");
-                if (!exists || isSvg) {
-                    log.info("同步旧文件到 OSS ({}): {}", isSvg ? "强制更新 SVG" : "新增", objectName);
+                if (!exists) {
+                    log.info("同步旧文件到 OSS (新增): {}", objectName);
                     try (java.io.InputStream is = new java.io.FileInputStream(file)) {
                         ossService.uploadFile(is, objectName);
                     }
+                } else {
+                    log.debug("文件已存在，跳过同步: {}", objectName);
                 }
             } catch (Exception e) {
                 log.error("上传文件 {} 失败", objectName, e);
@@ -129,32 +133,61 @@ public class OssStaticSyncer implements CommandLineRunner {
         try {
             log.info("开始扫描本地图标并同步到 OSS...");
             ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            // 递归扫描 static 下的所有文件 (包括图标、上传的封面、新闻图片等)
-            Resource[] resources = resolver.getResources("classpath:static/**/*.*");
+            // 1. 扫描后端 static 下的所有文件 (包括图标、上传的封面、新闻图片等)
+            Resource[] backendResources = resolver.getResources("classpath:static/**/*.*");
+            syncResources(backendResources, "classpath:static/");
+
+            // 2. 扫描前端 src/static 下的文件
+            try {
+                // 注意：在 IDE 环境中可能需要使用 file: 协议
+                String frontendStaticPath = "file:D:/project/football/frontend/src/static/**/*.*";
+                Resource[] frontendResources = resolver.getResources(frontendStaticPath);
+                syncResources(frontendResources, "file:D:/project/football/frontend/src/static/");
+            } catch (Exception e) {
+                log.warn("扫描前端静态资源失败，请检查路径是否正确: {}", e.getMessage());
+            }
+
+            log.info("本地图标扫描完成，缓存了 {} 个文件的 URL", iconUrlCache.size());
+        } catch (Exception e) {
+            log.error("同步图标到 OSS 失败", e);
+        }
+    }
+
+    private void syncResources(Resource[] resources, String rootPath) throws Exception {
+        for (Resource resource : resources) {
+            String fullPath = resource.getURL().getPath();
+            String objectName;
             
-            for (Resource resource : resources) {
-                String fullPath = resource.getURL().getPath();
-                // 提取相对路径，例如 static/icons/menu/home.png 或 static/uploads/news/xxx.jpg
+            if (rootPath.startsWith("classpath:")) {
                 int index = fullPath.indexOf("static/");
                 if (index == -1) continue;
-                String objectName = fullPath.substring(index);
-                String fileName = objectName.substring(objectName.lastIndexOf("/") + 1);
-                
-                // 强制同步以确保权限和 Content-Type 正确
+                objectName = fullPath.substring(index);
+            } else {
+                // 处理前端路径，保持 static/ 结构
+                String marker = "src/static/";
+                int index = fullPath.indexOf(marker);
+                if (index == -1) continue;
+                objectName = fullPath.substring(index + "src/".length());
+            }
+
+            String fileName = objectName.substring(objectName.lastIndexOf("/") + 1);
+            
+            // 检查 OSS 是否已存在
+            boolean exists = ossClient.doesObjectExist(ossConfig.getBucketName(), objectName);
+            String url;
+            if (!exists) {
                 log.info("同步文件到 OSS: {}", objectName);
-                String url;
                 try (InputStream is = resource.getInputStream()) {
                     url = ossService.uploadFile(is, objectName);
                 }
-                
-                // 缓存：支持通过全路径或仅文件名获取（如果文件名唯一）
-                iconUrlCache.put(objectName, url);
-                iconUrlCache.put(fileName, url);
-                log.info("图标同步完成: {} -> {}", objectName, url);
+            } else {
+                log.debug("文件已在 OSS 存在: {}", objectName);
+                url = ossService.getFileUrl(objectName);
             }
-            log.info("本地图标同步完成，共同步 {} 个文件", iconUrlCache.size());
-        } catch (Exception e) {
-            log.error("同步图标到 OSS 失败", e);
+            
+            // 缓存
+            iconUrlCache.put(objectName, url);
+            iconUrlCache.put(fileName, url);
         }
     }
 

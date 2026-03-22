@@ -61,6 +61,11 @@ desktop.ini
 # Local configuration
 application-local.yml
 .env
+
+# Uploads
+uploads/
+soccer-forum-service/uploads/
+soccer-forum-parent/soccer-forum-service/uploads/
 # Ignore accidental dependency extraction
 /soccer-forum-parent/ch/
 /soccer-forum-parent/com/

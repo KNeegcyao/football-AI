@@ -241,6 +241,12 @@ const loadHistory = async (isLoadMore = false) => {
     }
   } catch (error) {
     console.error('加载历史记录失败:', error)
+    // 如果是因为会话不存在导致的加载失败，清除本地会话 ID
+    if (error.message && (error.message.includes('404') || error.message.includes('Conversation Not Exists'))) {
+      console.warn('检测到历史会话 ID 已失效，清除本地缓存')
+      conversationId.value = ''
+      uni.removeStorageSync('last_conversation_id')
+    }
   } finally {
     isHistoryLoading.value = false
   }
@@ -414,6 +420,15 @@ const sendMessage = async () => {
     if (res && (res.answer || res.data)) {
       const difyRes = res.answer ? res : { answer: res.data, ...res }
       console.log('AI 对话响应:', difyRes)
+      
+      // 处理会话不存在的特殊错误
+      if (difyRes.answer && difyRes.answer.includes('Conversation Not Exists')) {
+        console.warn('检测到会话 ID 已失效，清除本地缓存')
+        conversationId.value = ''
+        uni.removeStorageSync('last_conversation_id')
+        throw new Error('会话已失效，请重试')
+      }
+
       if (difyRes && difyRes.answer) {
         // 保存任务 ID 以便停止响应
         currentTaskId.value = difyRes.task_id || ''
@@ -455,7 +470,7 @@ const sendMessage = async () => {
     console.error('AI 对话失败:', error)
     messageList.value.push({
       role: 'ai',
-      content: '抱歉，系统繁忙，请稍后再试。'
+      content: error.message || '抱歉，系统繁忙，请稍后再试。'
     })
   } finally {
     isLoading.value = false

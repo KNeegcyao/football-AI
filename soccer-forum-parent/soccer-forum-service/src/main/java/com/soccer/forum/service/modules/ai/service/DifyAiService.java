@@ -51,7 +51,10 @@ public class DifyAiService {
             request.setInputs(new HashMap<>());
             request.setQuery(message != null && !message.trim().isEmpty() ? message : "分析这张图片");
             request.setUser(userId != null ? userId : "guest-unknown");
-            request.setConversation_id(conversationId);
+            // 只有当 conversationId 不为空且不为 "null" 时才设置
+            if (conversationId != null && !conversationId.trim().isEmpty() && !"null".equals(conversationId)) {
+                request.setConversation_id(conversationId);
+            }
             request.setFiles(files);
 
             HttpHeaders headers = new HttpHeaders();
@@ -159,8 +162,16 @@ public class DifyAiService {
 
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             log.error("Dify API 调用客户端异常 (HTTP {}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            
+            // 如果是会话不存在，尝试清除会话 ID 并重新发起一次请求（不带会话 ID）
+            String responseBody = e.getResponseBodyAsString();
+            if (e.getStatusCode().value() == 404 && responseBody.contains("Conversation Not Exists") && conversationId != null) {
+                log.warn("检测到会话 ID 已失效，尝试重新发起请求（不带会话 ID）");
+                return chat(message, null, userId, files);
+            }
+            
             DifyChatResponse errorResponse = new DifyChatResponse();
-            errorResponse.setAnswer("抱歉，AI 助手目前认证或参数有误，请检查配置。");
+            errorResponse.setAnswer("抱歉，AI 助手目前认证或参数有误。详细错误: " + responseBody);
             return errorResponse;
         } catch (org.springframework.web.client.HttpServerErrorException e) {
             log.error("Dify API 调用服务端异常 (HTTP {}): {}", e.getStatusCode(), e.getResponseBodyAsString());

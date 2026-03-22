@@ -26,38 +26,53 @@ export const getFullImageUrl = (path) => {
   // 规范化路径：确保 path 不以 / 开头，用于拼接 OSS_BASE_URL
   const cleanPath = path.startsWith('/') ? path.substring(1) : path;
 
-  // 2. 处理静态资源：如果以 /static/ 开头，走 OSS
+  // 2. 处理静态资源：如果以 static/uploads/ 开头，走 OSS
+  if (path.startsWith('static/uploads/') || path.startsWith('/static/uploads/')) {
+    // 提取业务目录和文件名，例如 static/uploads/posts/xxx.jpg -> posts/xxx.jpg
+    const parts = path.split('/');
+    // 找到 uploads 后的部分
+    const uploadsIndex = parts.indexOf('uploads');
+    if (uploadsIndex !== -1 && uploadsIndex < parts.length - 1) {
+      const subPath = parts.slice(uploadsIndex + 1).join('/');
+      return `${OSS_BASE_URL}/${subPath}`;
+    }
+  }
+
+  // 3. 处理以 /static/ 开头的其他静态资源（如图标、Logo）
   if (path.startsWith('/static/')) {
-    const url = `${OSS_BASE_URL}/${cleanPath}`;
-    // console.log('Static Resource URL:', url);
+    const subPath = path.substring('/static/'.length);
+    const url = `${OSS_BASE_URL}/static/${subPath}`;
     return url;
   }
   
-  // 3. 处理旧的上传资源：如果以 /uploads/ 开头，将其映射到 OSS 对应的业务目录
+  // 4. 处理直接以 static/ 开头的非上传路径
+  if (path.startsWith('static/') && !path.startsWith('static/uploads/')) {
+    const url = `${OSS_BASE_URL}/${path}`;
+    return url;
+  }
+  
+  // 4. 处理旧的上传资源：如果以 /uploads/ 开头，将其映射到 OSS 对应的业务目录
   if (path.startsWith('/uploads/')) {
     const subPath = path.substring('/uploads/'.length);
     const url = `${OSS_BASE_URL}/${subPath}`;
-    // console.log('Uploads Resource URL:', url);
     return url;
   }
 
-  // 4. 处理 OSS 中的业务目录 (avatar/, posts/, covers/ 等)
+  // 5. 处理 OSS 中的业务目录 (avatar/, posts/, covers/ 等)
   const ossDirectories = ['avatar/', 'posts/', 'covers/'];
   if (ossDirectories.some(dir => path.startsWith(dir))) {
     const url = `${OSS_BASE_URL}/${path}`;
-    // console.log('OSS Directory URL:', url);
     return url;
   }
   
-  // 5. 兼容处理包含 /uploads/ 的路径
+  // 6. 兼容处理包含 /uploads/ 的路径
   if (path.includes('/uploads/')) {
     const relativePath = path.substring(path.indexOf('/uploads/') + '/uploads/'.length)
     const url = `${OSS_BASE_URL}/${relativePath}`;
-    // console.log('Fallback Uploads URL:', url);
     return url;
   }
 
-  // 6. 其他相对路径拼接 BASE_URL
+  // 7. 其他相对路径拼接 BASE_URL
   const finalUrl = BASE_URL + (path.startsWith('/') ? path : '/' + path);
   return finalUrl;
 };
