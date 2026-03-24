@@ -16,7 +16,7 @@ const news = ref({
   publishTime: '',
   categoryId: 0,
   content: '',
-  author: 'PitchPulse 编辑部',
+  author: 'SoccaHub 编辑部',
   authorSub: '深度足球组',
   summary: '',
   impact: ''
@@ -273,7 +273,7 @@ onPageScroll((e) => {
               <u-icon name="edit-pen" color="#f9d406" size="32rpx"></u-icon>
             </view>
             <view>
-              <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">{{ news.author }}</text>
+              <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">{{ news.author || 'Football AI' }}</text>
               <text :class="['text-xs block transition-colors text-theme-secondary']">{{ news.authorSub }}</text>
             </view>
           </view>
@@ -331,7 +331,7 @@ onPageScroll((e) => {
       <view class="mt-20 flex flex-col items-center">
         <view :class="['w-12 h-px mb-6 transition-colors', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
         <view class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mb-2">
-          <text class="text-primary font-bold text-sm tracking-tighter">PP</text>
+          <text class="text-primary font-bold text-sm tracking-tighter">AI</text>
         </view>
         <text :class="['text-xs tracking-widest uppercase transition-colors', isEyeProtection ? 'text-gray-500' : 'text-theme-secondary']">END OF ARTICLE</text>
       </view>

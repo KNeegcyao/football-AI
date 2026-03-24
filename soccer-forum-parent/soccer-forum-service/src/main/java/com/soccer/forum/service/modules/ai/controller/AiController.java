@@ -30,7 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 @Tag(name = "AI 助手接口 (V1)")
 @RestController
-@RequestMapping("/api/ai-v1")
+@RequestMapping("/api/ai")
 public class AiController {
 
     private static final Logger log = LoggerFactory.getLogger(AiController.class);
@@ -78,7 +78,7 @@ public class AiController {
     }
 
     @Operation(summary = "通用智能对话 (RAG)")
-    @PostMapping("/chat")
+    @PostMapping("/chat-rag")
     public R<String> chat(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest request) {
         String question = body.get("question");
         if (question == null) return R.fail("问题不能为空");

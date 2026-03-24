@@ -1,8 +1,12 @@
 package com.soccer.forum.service.modules.ai.config;
 
 import com.soccer.forum.service.modules.ai.agent.AssistantAgent;
+import com.soccer.forum.service.modules.ai.agent.CommentAnalysisAgent;
 import com.soccer.forum.service.modules.ai.agent.DataQueryAgent;
 import com.soccer.forum.service.modules.ai.agent.MatchAnalysisAgent;
+import com.soccer.forum.service.modules.ai.agent.NewsSummaryAgent;
+import com.soccer.forum.service.modules.ai.agent.RuleQaAgent;
+import com.soccer.forum.service.modules.ai.service.FootballAiService;
 import com.soccer.forum.service.modules.ai.tool.SoccerTools;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -17,9 +21,7 @@ import java.time.Duration;
 import java.util.List;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.model.output.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import dev.langchain4j.service.AiServices;
@@ -165,6 +167,46 @@ public class AiConfig {
                 .chatLanguageModel(chatLanguageModel)
                 .tools(soccerTools)
                 .chatMemoryProvider(chatMemoryProvider)
+                .build();
+    }
+
+    /**
+     * 手动构建 NewsSummaryAgent
+     */
+    @Bean
+    public NewsSummaryAgent newsSummaryAgent(ChatLanguageModel chatLanguageModel) {
+        return AiServices.builder(NewsSummaryAgent.class)
+                .chatLanguageModel(chatLanguageModel)
+                .build();
+    }
+
+    /**
+     * 手动构建 FootballAiService
+     */
+    @Bean
+    public FootballAiService footballAiService(ChatLanguageModel chatLanguageModel) {
+        return AiServices.builder(FootballAiService.class)
+                .chatLanguageModel(chatLanguageModel)
+                .build();
+    }
+
+    /**
+     * 手动构建 CommentAnalysisAgent
+     */
+    @Bean
+    public CommentAnalysisAgent commentAnalysisAgent(ChatLanguageModel chatLanguageModel) {
+        return AiServices.builder(CommentAnalysisAgent.class)
+                .chatLanguageModel(chatLanguageModel)
+                .build();
+    }
+
+    /**
+     * 手动构建 RuleQaAgent
+     */
+    @Bean
+    public RuleQaAgent ruleQaAgent(ChatLanguageModel chatLanguageModel) {
+        return AiServices.builder(RuleQaAgent.class)
+                .chatLanguageModel(chatLanguageModel)
                 .build();
     }
 }

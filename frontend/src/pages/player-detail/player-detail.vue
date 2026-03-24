@@ -8,7 +8,7 @@
       <!-- Header Navigation -->
       <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
         <view class="nav-btn-glass" @click="goBack">
-          <text class="material-icons nav-icon">arrow_back_ios_new</text>
+          <text class="material-icons nav-icon">arrow_back</text>
         </view>
         <view class="nav-actions">
           <view class="nav-btn-glass" @click="toggleFavorite">
@@ -51,21 +51,35 @@
       </view>
 
       <!-- Quick Info Strips -->
-      <view class="quick-info-grid">
-        <view class="info-box">
-          <text class="material-icons info-icon">straighten</text>
-          <text class="info-value">{{ player.height || '--' }}</text>
-          <text class="info-label">身高</text>
+      <view class="quick-info-row glass-card">
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <view class="material-icons info-icon">straighten</view>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">身高</text>
+            <text class="info-value">{{ player.height || '--' }}</text>
+          </view>
         </view>
-        <view class="info-box">
-          <text class="material-icons info-icon">monitor_weight</text>
-          <text class="info-value">{{ player.weight || '--' }}</text>
-          <text class="info-label">体重</text>
+        <view class="info-divider"></view>
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <view class="material-icons info-icon">monitor_weight</view>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">体重</text>
+            <text class="info-value">{{ player.weight || '--' }}</text>
+          </view>
         </view>
-        <view class="info-box">
-          <text class="material-icons info-icon">cake</text>
-          <text class="info-value">{{ player.age || '--' }}岁</text>
-          <text class="info-label">年龄</text>
+        <view class="info-divider"></view>
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <view class="material-icons info-icon">cake</view>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">年龄</text>
+            <text class="info-value">{{ player.age || '--' }}岁</text>
+          </view>
         </view>
       </view>
 
@@ -552,42 +566,84 @@ $text-gray: #9ca3af;
   }
 }
 
-/* Quick Info Grid */
-.quick-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 24px 16px 0;
-}
-
-.info-box {
-  background: var(--bg-main);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--border-main);
+/* Quick Info Row */
+.quick-info-row {
+  margin: 24rpx 32rpx 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 16rpx;
+  box-sizing: border-box;
 }
 
-.info-icon {
-  color: $primary;
-  font-size: 24px;
-  margin-bottom: 4px;
+.info-item-flat {
+  flex: 1;
+  display: flex;
+  flex-direction: row; /* 强制水平排列 */
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.info-value {
-  color: var(--text-main);
-  font-weight: bold;
-  font-size: 16px;
+.info-icon-wrapper {
+  width: 64rpx;
+  height: 64rpx;
+  background: rgba($primary, 0.1);
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  
+  .info-icon {
+    color: $primary;
+    font-size: 36rpx;
+    width: 36rpx;
+    height: 36rpx;
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.info-content-flat {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 0;
+  gap: 8rpx;
 }
 
 .info-label {
   color: var(--text-secondary);
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: bold;
-  margin-top: 2px;
+  font-size: 22rpx;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.info-value {
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 28rpx;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.info-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: var(--border-main);
+  opacity: 0.5;
 }
 
 /* Section Common */

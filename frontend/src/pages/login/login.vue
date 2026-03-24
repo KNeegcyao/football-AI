@@ -15,12 +15,16 @@
       <!-- Header Section: Logo & Branding -->
       <view class="header-section">
         <view class="logo-box">
-          <text class="material-icons logo-icon">sports_soccer</text>
+          <image 
+            class="logo-image" 
+            src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" 
+            mode="aspectFit"
+          ></image>
         </view>
         <view class="branding-box">
-          <text class="brand-name italic">PITCHPULSE</text>
-          <text class="brand-tagline">AI Football Community</text>
-        </view>
+        <text class="brand-name italic">Socca<text class="highlight">Hub</text></text>
+        <text class="brand-tagline">AI Powered Football Community</text>
+      </view>
       </view>
 
       <!-- Login Form Section -->
@@ -108,25 +112,9 @@
           <view class="social-btn" @click="isCodeLogin = !isCodeLogin">
              <text class="material-icons">{{ isCodeLogin ? 'password' : 'sms' }}</text>
           </view>
-          <!-- WeChat -->
+          <!-- WeChat (Placeholder with Material Icon) -->
           <view class="social-btn" @click="handleSocialLogin('wechat')">
-            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/wechat.svg')" mode="aspectFit"></image>
-          </view>
-          <!-- Apple -->
-          <view class="social-btn" @click="handleSocialLogin('apple')">
-            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/apple.svg')" mode="aspectFit"></image>
-          </view>
-          <!-- Google -->
-          <view class="social-btn" @click="handleSocialLogin('google')">
-            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/google.svg')" mode="aspectFit"></image>
-          </view>
-          <!-- Facebook -->
-          <view class="social-btn" @click="handleSocialLogin('facebook')">
-            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/facebook.svg')" mode="aspectFit"></image>
-          </view>
-          <!-- Twitter -->
-          <view class="social-btn" @click="handleSocialLogin('twitter')">
-            <image class="social-icon-img" :src="getFullImageUrl('/static/icons/social/twitter.svg')" mode="aspectFit"></image>
+            <text class="material-icons">chat</text>
           </view>
         </view>
 
@@ -508,19 +496,22 @@ const handleLogin = async () => {
   width: 100%;
 
   .logo-box {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 128rpx;
-    height: 128rpx;
-    background-color: rgba(242, 13, 51, 0.1);
-    border-radius: 24rpx;
-    border: 2rpx solid rgba(242, 13, 51, 0.2);
-    margin-bottom: 32rpx;
+    width: 200rpx;
+    height: 200rpx;
+    margin-bottom: 20rpx;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
 
-    .logo-icon {
-      color: #f20d33;
-      font-size: 72rpx;
+    .logo-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      filter: drop-shadow(0 15rpx 30rpx rgba(0,0,0,0.8));
     }
   }
 
@@ -528,22 +519,43 @@ const handleLogin = async () => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    margin-top: -10rpx;
 
     .brand-name {
-      font-size: 60rpx;
-      font-weight: 800;
+      text-align: center;
+      font-size: 72rpx;
+      font-weight: 900;
       color: #d4af37;
       letter-spacing: -2rpx;
-      margin-bottom: 8rpx;
-      text-shadow: 0 0 20rpx rgba(212, 175, 55, 0.3);
+      margin-bottom: 12rpx;
+      text-shadow: 0 4rpx 15rpx rgba(0,0,0,0.8);
+
+      .highlight {
+        color: #fff;
+        margin-left: 12rpx;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -4rpx;
+          left: 0;
+          width: 100%;
+          height: 4rpx;
+          background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+      }
     }
 
     .brand-tagline {
-      font-size: 20rpx;
+      text-align: center;
+      font-size: 24rpx;
       text-transform: uppercase;
-      letter-spacing: 0.3em;
-      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.4em;
+      color: rgba(255, 255, 255, 0.8);
       font-weight: 600;
+      opacity: 0.9;
     }
   }
 }
@@ -701,15 +713,15 @@ const handleLogin = async () => {
   .social-icons {
     display: flex;
     justify-content: center;
-    gap: 64rpx;
+    gap: 120rpx;
     margin-top: 48rpx;
 
     .social-btn {
-      width: 96rpx;
-      height: 96rpx;
-      background-color: rgba(26, 13, 15, 0.6);
+      width: 100rpx;
+      height: 100rpx;
+      background-color: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(20rpx);
-      border: 2rpx solid rgba(242, 13, 51, 0.2);
+      border: 2rpx solid rgba(255, 255, 255, 0.1);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -718,17 +730,13 @@ const handleLogin = async () => {
 
       &:active {
         transform: scale(0.9);
-        background-color: rgba(242, 13, 51, 0.1);
+        background-color: rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
       }
 
       .material-icons {
-        color: #94a3b8;
-        font-size: 44rpx;
-      }
-
-      .social-icon-img {
-        width: 48rpx;
-        height: 48rpx;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 48rpx;
       }
     }
   }

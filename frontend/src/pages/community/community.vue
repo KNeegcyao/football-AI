@@ -5,12 +5,12 @@
 
       <!-- Header (Aligned with index.vue) -->
       <view class="nav-bar bg-nav-bar border-b border-theme-main" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-        <view class="logo-area">
-          <view class="logo-icon">
-            <image class="logo-img" :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit"></image>
-          </view>
-          <text class="logo-text text-theme-main">PULSE<text class="primary">DISCOVERY</text></text>
+      <view class="logo-area">
+        <view class="logo-icon">
+          <image class="logo-img" src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" mode="aspectFit"></image>
         </view>
+        <text class="logo-text italic">Socca<text class="highlight">Hub</text></text>
+      </view>
 
         <view class="nav-actions">
           <view class="action-btn bg-theme-secondary" @click="navigateToNotification">
@@ -424,27 +424,50 @@
   }
 
   .logo-icon {
-    width: 60rpx;
-    height: 60rpx;
+    width: 80rpx;
+    height: 80rpx;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10rpx;
     
     .logo-img {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.3));
+      filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.6));
     }
   }
 
   .logo-text {
-    font-size: 36rpx;
-    font-weight: 800;
+    font-size: 38rpx;
+    font-weight: 900;
     letter-spacing: -1rpx;
-    color: var(--text-main);
+    color: #d4af37;
+    text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
+    margin-left: -5rpx;
+    
+    &.italic {
+      font-style: italic;
+    }
+    
+    .highlight {
+      color: #fff;
+      margin-left: 6rpx;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2rpx;
+        left: 0;
+        width: 100%;
+        height: 2rpx;
+        background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      }
+    }
+
     .primary {
-      color: $pitch-pulse-primary;
+      color: #fff;
+      margin-left: 6rpx;
     }
   }
 

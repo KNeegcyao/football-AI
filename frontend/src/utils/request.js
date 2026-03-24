@@ -40,6 +40,10 @@ export const getFullImageUrl = (path) => {
 
   // 3. 处理以 /static/ 开头的其他静态资源（如图标、Logo）
   if (path.startsWith('/static/')) {
+    // 特殊处理 Logo，确保映射到正确的 OSS 路径
+    if (path === '/static/soccer-logo.png' || path === '/static/logo.png') {
+      return `${OSS_BASE_URL}/logo/logo.png`;
+    }
     const subPath = path.substring('/static/'.length);
     const url = `${OSS_BASE_URL}/static/${subPath}`;
     return url;

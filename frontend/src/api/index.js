@@ -327,7 +327,12 @@ export const matchApi = {
   /**
    * 获取指定球队的赛事
    */
-  getByTeam: (teamId) => request.get(`/api/matches/team/${teamId}`)
+  getByTeam: (teamId) => request.get(`/api/matches/team/${teamId}`),
+
+  /**
+   * AI 胜率预测
+   */
+  predict: (data) => request.post('/api/ai/match/predict', data)
 }
 
 /**

@@ -40,6 +40,13 @@ public class Match {
     @Schema(description = "实时比赛时间")
     private String liveTime;
 
+    @Schema(description = "AI预测主胜率")
+    private Double homeWinProb;
+    @Schema(description = "AI预测平局率")
+    private Double drawProb;
+    @Schema(description = "AI预测客胜率")
+    private Double awayWinProb;
+
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -74,6 +81,14 @@ public class Match {
     public void setLiveTextId(Long liveTextId) { this.liveTextId = liveTextId; }
     public String getLiveTime() { return liveTime; }
     public void setLiveTime(String liveTime) { this.liveTime = liveTime; }
+
+    public Double getHomeWinProb() { return homeWinProb; }
+    public void setHomeWinProb(Double homeWinProb) { this.homeWinProb = homeWinProb; }
+    public Double getDrawProb() { return drawProb; }
+    public void setDrawProb(Double drawProb) { this.drawProb = drawProb; }
+    public Double getAwayWinProb() { return awayWinProb; }
+    public void setAwayWinProb(Double awayWinProb) { this.awayWinProb = awayWinProb; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

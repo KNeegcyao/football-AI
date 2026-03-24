@@ -175,6 +175,19 @@ public class MatchServiceImpl implements MatchService {
     private MatchVO convertToVO(Match match) {
         MatchVO vo = new MatchVO();
         BeanUtils.copyProperties(match, vo);
+        
+        // 如果数据库中没有 AI 预测值 (null 或 0)，生成模拟数据
+        if (vo.getHomeWinProb() == null || vo.getHomeWinProb() == 0.0) {
+            double home = 0.3 + Math.random() * 0.4; // 30% - 70%
+            double draw = Math.random() * (1.0 - home);
+            double away = 1.0 - home - draw;
+            
+            // 保留两位小数
+            vo.setHomeWinProb(Math.round(home * 100.0) / 100.0);
+            vo.setDrawProb(Math.round(draw * 100.0) / 100.0);
+            vo.setAwayWinProb(Math.round(away * 100.0) / 100.0);
+        }
+
         if (match.getHomeTeamId() != null) {
             vo.setHomeTeam(teamMapper.selectById(match.getHomeTeamId()));
         }

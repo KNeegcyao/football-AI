@@ -233,7 +233,7 @@
   "globalStyle": {
     "navigationStyle": "custom",
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "Soccer Forum",
+    "navigationBarTitleText": "SoccaHub",
     "navigationBarBackgroundColor": "#1A1811",
     "backgroundColor": "#1A1811"
   },

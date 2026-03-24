@@ -7,9 +7,9 @@
     <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
       <view class="logo-area">
         <view class="logo-icon">
-          <image class="logo-img" :src="getFullImageUrl('/static/soccer-logo.png')" mode="aspectFit"></image>
+          <image class="logo-img" src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" mode="aspectFit"></image>
         </view>
-        <text class="logo-text text-theme-main">PITCH<text class="primary">PULSE</text></text>
+        <text class="logo-text italic">Socca<text class="highlight">Hub</text></text>
       </view>
 
       <view class="nav-actions">
@@ -355,9 +355,9 @@ const loadData = async () => {
         categoryName = categoryName || '足球'
 
         // 处理作者显示，屏蔽“直播吧”
-        let authorName = item.author || 'PitchPulse'
+        let authorName = item.author || 'SoccaHub'
         if (authorName.includes('直播吧')) {
-          authorName = 'PitchPulse'
+          authorName = 'SoccaHub'
         }
 
         return {
@@ -374,7 +374,7 @@ const loadData = async () => {
           aiSummary: item.summary,
           showSummary: false,
           userName: authorName,
-          userAvatar: '/static/soccer-logo.png'
+          userAvatar: getFullImageUrl('/static/soccer-logo.png')
         }
       })
       
@@ -547,28 +547,50 @@ onMounted(() => {
 }
 
 .logo-icon {
-  width: 60rpx;
-  height: 60rpx;
-  background-color: transparent; /* 移除原有背景色 */
+  width: 80rpx;
+  height: 80rpx;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10rpx; /* 增加留白 */
   
   .logo-img {
-    width: 100%; /* 配合 padding 自动缩放 */
+    width: 100%;
     height: 100%;
-    /* 应用色彩滤镜，使其偏向金黄色并增加立体感 */
-    filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.3));
+    filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.6));
   }
 }
 
 .logo-text {
-  font-size: 36rpx;
-  font-weight: 800;
+  font-size: 38rpx;
+  font-weight: 900;
   letter-spacing: -1rpx;
+  color: #d4af37;
+  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
+  margin-left: -5rpx;
+  
+  &.italic {
+    font-style: italic;
+  }
+  
+  .highlight {
+    color: #fff;
+    margin-left: 6rpx;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2rpx;
+      left: 0;
+      width: 100%;
+      height: 2rpx;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    }
+  }
+
   .primary {
-    color: $pitch-pulse-primary;
+    color: #fff;
+    margin-left: 6rpx;
   }
 }
 

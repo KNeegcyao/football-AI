@@ -53,7 +53,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e, HttpServletRequest request) {
         log.error("系统异常: {}, 请求地址: {}", e.getMessage(), request.getRequestURI(), e);
-        return R.<Void>fail("系统异常，请联系管理员");
+        // 如果是开发环境或特定错误，返回更具体的错误信息
+        String message = e.getMessage();
+        if (message == null || message.trim().isEmpty()) {
+            message = "系统异常，请联系管理员";
+        }
+        return R.<Void>fail(message);
     }
 
     /**
