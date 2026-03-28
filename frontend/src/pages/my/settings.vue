@@ -1,9 +1,9 @@
 <template>
   <view class="page-container min-h-screen flex flex-col font-display" :class="themeClass">
     <!-- Header -->
-    <view class="sticky top-0 z-50 backdrop-blur-md px-4 pt-12 pb-4 flex flex-row items-center border-b border-theme-main bg-theme-main/95">
+    <view class="sticky top-0 z-50 backdrop-blur-md px-4 pb-4 flex flex-row items-center border-b border-theme-main bg-theme-main/95" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full bg-theme-secondary mr-2">
-        <text class="material-icons-round text-theme-main" style="font-size: 24px;">chevron_left</text>
+        <text class="material-icons text-theme-main" :style="{ fontSize: '48rpx' }">arrow_back</text>
       </view>
       <text class="text-xl font-bold tracking-tight text-theme-main">设置</text>
     </view>
@@ -15,7 +15,7 @@
         <view class="space-y-1">
           <view @click="showPasswordModal = true" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
             <text class="font-medium text-theme-main">修改密码</text>
-            <text class="material-icons-round text-theme-secondary" style="font-size: 20px;">chevron_right</text>
+            <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">chevron_right</text>
           </view>
           <view @click="showDeleteAccountModal = true" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
             <text class="font-medium text-theme-main">注销账号</text>
@@ -32,7 +32,7 @@
             <text class="font-medium text-theme-main">外观主题</text>
             <view class="flex flex-row items-center">
               <text class="text-xs text-theme-secondary mr-2">{{ themeName }}</text>
-              <text class="material-icons-round text-theme-secondary" style="font-size: 20px;">chevron_right</text>
+              <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">chevron_right</text>
             </view>
           </view>
           <view class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main">
@@ -56,11 +56,11 @@
           </view>
           <view @click="goToProtocol('privacy')" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
             <text class="font-medium text-theme-main">隐私协议</text>
-            <text class="material-icons-round text-theme-secondary" style="font-size: 20px;">open_in_new</text>
+            <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">open_in_new</text>
           </view>
           <view @click="goToProtocol('user')" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
             <text class="font-medium text-theme-main">用户协议</text>
-            <text class="material-icons-round text-theme-secondary" style="font-size: 20px;">open_in_new</text>
+            <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">open_in_new</text>
           </view>
         </view>
       </view>
@@ -104,7 +104,7 @@
       <view class="relative w-full bg-theme-main border border-theme-main rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         <view class="p-6">
           <view class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <text class="material-icons-round text-red-500" style="font-size: 32px;">warning</text>
+            <text class="material-icons text-red-500" style="font-size: 64rpx;">warning</text>
           </view>
           <text class="text-xl font-bold text-center block text-theme-main mb-2">注销账号</text>
           <text class="text-sm text-theme-secondary text-center block mb-8 px-4">账号注销后，所有数据将无法找回。请确认您已备份重要信息。</text>
@@ -130,6 +130,8 @@ import { useThemeStore } from '@/store/theme';
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
 const themeName = computed(() => themeStore.theme === 'dark' ? '深色模式' : '浅色模式');
+
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 
 const showPasswordModal = ref(false)
 const showDeleteAccountModal = ref(false)

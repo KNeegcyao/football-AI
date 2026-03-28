@@ -1,5 +1,5 @@
 <template>
-  <view class="container" :class="themeClass">
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <!-- Header Image & Overlay -->
     <view class="header-image-container">
       <image 
@@ -12,14 +12,14 @@
       <!-- Top Navigation Bar -->
       <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
         <view class="icon-btn" @click="goBack">
-          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#12110a', fontSize: '48rpx' }">arrow_back</text>
         </view>
         <view class="nav-actions">
           <view class="icon-btn" @click="handleSearch">
-            <u-icon name="search" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
+            <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#12110a', fontSize: '48rpx' }">search</text>
           </view>
           <view class="icon-btn" @click="handleShare">
-            <u-icon name="share" :color="themeStore.theme === 'dark' ? '#fff' : '#12110a'" size="24"></u-icon>
+            <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#12110a', fontSize: '48rpx' }">share</text>
           </view>
         </view>
       </view>
@@ -29,7 +29,7 @@
         <view class="topic-badge-row">
           <view class="badge">Trending</view>
           <view class="ai-label">
-            <u-icon name="star-fill" color="#fff" size="14"></u-icon>
+            <text class="material-icons" style="color: #fff; font-size: 28rpx;">auto_awesome</text>
             <text class="ai-text">PitchPulse AI 热门话题</text>
           </view>
         </view>
@@ -60,7 +60,7 @@
         </text>
         <view class="expand-btn">
           <text>{{ isExpanded ? '收起背景' : '查看完整背景' }}</text>
-          <u-icon :name="isExpanded ? 'arrow-up' : 'arrow-down'" color="#f20d33" size="12"></u-icon>
+          <text class="material-icons" style="color: #f20d33; font-size: 32rpx;">{{ isExpanded ? 'expand_less' : 'expand_more' }}</text>
         </view>
       </view>
     </view>
@@ -93,13 +93,13 @@
             <view class="avatar-container">
               <image class="user-avatar-rich" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
               <view class="verified-badge">
-                <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
+                <text class="material-icons" style="font-size: 24rpx; color: #fff;">bolt</text>
               </view>
             </view>
             <view class="author-details">
               <view class="author-name-row">
                 <text class="author-name">{{ post.userName || '未知用户' }}</text>
-                <text class="material-icons verified-icon">verified</text>
+                <text class="material-icons verified-icon" style="font-size: 32rpx; color: #f2b90d;">verified</text>
               </view>
               <view class="author-meta-row">
                 <text class="author-role">社区成员</text>
@@ -135,17 +135,17 @@
         
         <view class="post-footer">
           <view class="interaction-item" @click.stop="handleLike(post)">
-            <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">
+            <text class="material-icons footer-icon" :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af', fontSize: '44rpx' }">
               {{ post.isLiked ? 'favorite' : 'favorite_border' }}
             </text>
             <text :style="{ color: post.isLiked ? '#f2b90d' : '#9ca3af' }">{{ post.likes || 0 }}</text>
           </view>
           <view class="interaction-item">
-            <text class="material-icons footer-icon">chat_bubble_outline</text>
+            <text class="material-icons footer-icon" style="font-size: 44rpx;">chat_bubble_outline</text>
             <text>{{ post.comments || 0 }}</text>
           </view>
           <view class="interaction-item">
-            <text class="material-icons footer-icon">share</text>
+            <text class="material-icons footer-icon" style="font-size: 44rpx;">share</text>
             <text>{{ post.shares || 0 }}</text>
           </view>
         </view>
@@ -162,12 +162,11 @@
 
       <!-- Pagination Buttons -->
       <view class="pagination-box" v-if="!loading && postList.length > 0">
-        <view 
-          class="page-btn" 
+        <view class="page-btn" 
           :class="{ 'disabled': page === 1 }" 
           @click="handlePrevPage"
         >
-          <text class="material-icons btn-icon">chevron_left</text>
+          <text class="material-icons btn-icon" style="font-size: 44rpx;">chevron_left</text>
           <text>上一页</text>
         </view>
         <view class="page-info">
@@ -181,7 +180,7 @@
           @click="handleNextPage"
         >
           <text>下一页</text>
-          <text class="material-icons btn-icon">chevron_right</text>
+          <text class="material-icons btn-icon" style="font-size: 44rpx;">chevron_right</text>
         </view>
       </view>
     </view>
@@ -189,7 +188,7 @@
     <!-- Floating Action Button -->
     <view class="fab-container">
       <button class="fab-btn" @click="handleParticipate">
-        <u-icon name="plus" color="#fff" size="20"></u-icon>
+        <text class="material-icons" style="color: #fff; font-size: 40rpx; margin-right: 8rpx;">add</text>
         <text class="fab-text">参与讨论</text>
       </button>
     </view>
@@ -228,6 +227,7 @@ const isExpanded = ref(false);
 const currentTab = ref('hot'); // hot, new, media
 
 const isNavigating = ref(false);
+const statusBarHeight = ref(0);
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
@@ -330,6 +330,10 @@ const handleShare = () => {
 };
 
 onLoad((options) => {
+  // 获取状态栏高度
+  const systemInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = systemInfo.statusBarHeight || 0;
+
   // 基础占位信息
   topicInfo.value = {
     image: 'https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/image-20260219223955621.png',
@@ -594,7 +598,6 @@ const previewImage = (images, current) => {
   min-height: 100vh;
   background-color: var(--bg-main);
   color: var(--text-main);
-  padding-bottom: 100rpx;
   transition: all 0.3s;
 }
 
@@ -622,7 +625,7 @@ const previewImage = (images, current) => {
 
 .nav-bar {
   position: absolute;
-  top: 40rpx;
+  top: var(--status-bar-height);
   left: 0;
   width: 100%;
   display: flex;
@@ -630,10 +633,7 @@ const previewImage = (images, current) => {
   align-items: center;
   padding: 0 32rpx;
   z-index: 10;
-  
-  /* #ifdef MP-WEIXIN */
-  padding-top: var(--status-bar-height);
-  /* #endif */
+  height: 100rpx;
 }
 
 .nav-actions {
@@ -776,7 +776,7 @@ const previewImage = (images, current) => {
 /* Tabs */
 .sticky-header {
   position: sticky;
-  top: 0;
+  top: var(--status-bar-height);
   z-index: 100;
   background-color: var(--bg-main);
 }
@@ -884,7 +884,7 @@ const previewImage = (images, current) => {
 
 .verified-icon {
   color: #f2b90d;
-  font-size: 14px;
+  font-size: 44rpx;
 }
 
 .author-meta-row {
@@ -981,8 +981,8 @@ const previewImage = (images, current) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 24px 16px 48px;
-  gap: 24px;
+  padding: 48rpx 32rpx calc(180rpx + env(safe-area-inset-bottom));
+  gap: 48rpx;
 }
 
 .page-btn {

@@ -1,449 +1,410 @@
-  <template>
-    <view class="container" :class="themeClass">
-      <!-- Status Bar Placeholder -->
-      <view class="status-bar"></view>
-
-      <!-- Header (Aligned with index.vue) -->
-      <view class="nav-bar bg-nav-bar border-b border-theme-main" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-      <view class="logo-area">
-        <view class="logo-icon">
-          <image class="logo-img" src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" mode="aspectFit"></image>
+<template>
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 固定顶部容器 -->
+    <view class="fixed-header">
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
+        <view class="logo-area">
+          <view class="logo-icon">
+            <image src="/static/soccer-logo.png" mode="aspectFit" class="logo-img"></image>
+          </view>
+          <view class="logo-text italic">
+            PITCH<text class="highlight text-theme-main">PULSE</text>
+          </view>
         </view>
-        <text class="logo-text italic">Socca<text class="highlight">Hub</text></text>
-      </view>
-
         <view class="nav-actions">
-          <view class="action-btn bg-theme-secondary" @click="navigateToNotification">
-            <image :src="getFullImageUrl('/static/icons/actions/bell.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
-            <view class="notification-badge" v-if="unreadCount > 0">
-              {{ unreadCount > 99 ? '99+' : unreadCount }}
-            </view>
+          <view class="action-btn" @click="handleSearch">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">search</text>
           </view>
-        </view>
-      </view>
-
-      <!-- Main Content -->
-      <view class="main-content">
-        <!-- Search Bar (Integrated into main content) -->
-        <view class="search-section">
-          <view class="search-bar bg-theme-secondary border border-theme-main">
-            <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 40rpx; height: 40rpx; margin-right: 16rpx; opacity: 0.4; filter: invert(var(--is-dark));"></image>
-            <input class="search-input text-theme-main" v-model="searchKey" placeholder="搜索圈子、话题" :placeholder-style="themeStore.theme === 'dark' ? 'color: rgba(255, 255, 255, 0.2)' : 'color: rgba(0, 0, 0, 0.2)'" />
+          <view class="action-btn" @click="handleNotification">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">notifications</text>
+            <view class="notification-badge" v-if="unreadCount > 0">{{ unreadCount }}</view>
           </view>
-        </view>
-
-        <!-- Hot Circles -->
-        <view class="section" v-if="filteredHotCircles.length > 0">
-          <view class="section-header">
-            <text class="section-title text-theme-main">热门圈子</text>
-            <text class="view-all" @click="navigateToCircleList">查看全部</text>
-          </view>
-          
-          <scroll-view scroll-x class="circles-scroll" show-scrollbar="false">
-            <view class="circles-container">
-              <view class="circle-item" v-for="(circle, index) in filteredHotCircles" :key="index" @click="navigateToCircle(circle)">
-                <view class="circle-avatar-wrapper" :class="{'highlight': index === 0}">
-                  <view class="circle-avatar-inner border border-theme-main bg-theme-secondary">
-                    <image class="circle-avatar" :src="circle.image || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
-                  </view>
-                </view>
-                <text class="circle-name text-theme-main">{{ circle.name }}</text>
-                <text class="circle-members text-theme-secondary">{{ circle.members }} 成员</text>
-              </view>
-            </view>
-          </scroll-view>
-        </view>
-
-        <!-- Trend Topics -->
-        <view class="section" v-if="filteredTrendTopics.length > 0">
-          <view class="section-header">
-            <text class="section-title text-theme-main">趋势话题</text>
-            <view class="trending-badge bg-[#f9d406]/10">
-              <image :src="getFullImageUrl('/static/icons/actions/trending_up.svg')" style="width: 32rpx; height: 32rpx; margin-right: 8rpx;"></image>
-              <text class="trending-text">正在热议</text>
-            </view>
-          </view>
-
-          <view class="trends-list">
-            <view class="trend-item bg-card border border-theme-main" v-for="(topic, index) in filteredTrendTopics" :key="index" @click="navigateToPost(topic)">
-              <view class="trend-bg-icon">
-                <image :src="getFullImageUrl('/static/icons/actions/tag.svg')" style="width: 96rpx; height: 96rpx; opacity: 0.1;"></image>
-              </view>
-              <view class="trend-content">
-                <text class="trend-title text-theme-main">{{ topic.title }}</text>
-                <text class="trend-stats text-theme-secondary">{{ topic.stats }}</text>
-                
-                <view class="trend-avatars" v-if="topic.avatars">
-                  <view class="avatar-group">
-                    <image v-for="(avatar, i) in topic.avatars" :key="i" :src="getAvatarUrl(avatar)" class="mini-avatar border border-theme-main" mode="aspectFill"></image>
-                    <view class="mini-avatar-count bg-theme-secondary border border-theme-main" v-if="topic.extraCount">
-                      <text class="count-text text-theme-secondary">+{{ topic.extraCount }}</text>
-                    </view>
-                  </view>
-                </view>
-                
-                <view class="trend-meta" v-if="topic.tags">
-                  <text class="meta-tag bg-theme-secondary text-theme-secondary">{{ topic.tags[0] }}</text>
-                  <text class="meta-time text-theme-secondary">{{ topic.time }}</text>
-                </view>
-              </view>
-              
-              <button class="action-btn" :class="{'btn-join': topic.action === '加入', 'btn-explore': topic.action === '探索'}">
-                {{ topic.action }}
-              </button>
-            </view>
-          </view>
-
-          <!-- Pagination Buttons -->
-          <view class="pagination-box" v-if="!searchKey && trendTopics.length > 0">
-            <view 
-              class="page-btn" 
-              :class="{ 'disabled': page === 1 }" 
-              @click="handlePrevPage"
-            >
-              <text class="material-icons btn-icon">chevron_left</text>
-              <text>上一页</text>
-            </view>
-            <view class="page-info">
-              <text class="current-page">{{ page }}</text>
-              <text class="page-divider">/</text>
-              <text class="total-label">页</text>
-            </view>
-            <view 
-              class="page-btn" 
-              :class="{ 'disabled': noMore }" 
-              @click="handleNextPage"
-            >
-              <text>下一页</text>
-              <text class="material-icons btn-icon">chevron_right</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- Empty State -->
-        <view class="empty-state" v-if="searchKey && filteredHotCircles.length === 0 && filteredTrendTopics.length === 0">
-          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 120rpx; height: 120rpx; opacity: 0.1; filter: invert(var(--is-dark));"></image>
-          <text class="empty-text">未找到与“{{ searchKey }}”相关的结果</text>
-          <text class="empty-sub">换个关键词试试吧</text>
-        </view>
-        
-        <!-- Bottom Padding for TabBar -->
-        <view class="safe-area-bottom"></view>
-      </view>
-
-
-
-      <!-- 底部导航栏 -->
-      <view class="tab-bar bg-tab-bar border-theme-main">
-        <view v-for="(tab, index) in tabs" :key="index" 
-              :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
-              @tap="handleTabClick(index)">
-          <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-            <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
-          </view>
-          <template v-else>
-            <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
-            <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-          </template>
         </view>
       </view>
     </view>
-  </template>
 
-  <script setup>
-  import { ref, onMounted, getCurrentInstance, computed } from 'vue';
-  import { onShow } from '@dcloudio/uni-app';
-  import { communityApi, notificationApi } from '@/api';
-  import { BASE_URL, getFullImageUrl } from '@/utils/request.js';
-  import { useThemeStore } from '@/store/theme';
+    <!-- 顶部占位 -->
+    <view class="header-placeholder"></view>
 
-  const themeStore = useThemeStore();
-  const themeClass = computed(() => `theme-${themeStore.theme}`);
-  const unreadCount = ref(0);
-  const navbarPaddingRight = ref(0);
-  const searchKey = ref('');
-  const { proxy } = getCurrentInstance();
+    <!-- 主体内容滚动 -->
+    <scroll-view scroll-y class="main-content-scroll" @scrolltolower="loadMore">
+      <!-- 搜索栏 -->
+      <view class="search-section">
+        <view class="search-bar" @click="handleSearch">
+          <text class="material-icons" style="font-size: 44rpx; color: var(--text-secondary); margin-right: 16rpx;">search</text>
+          <input type="text" class="search-input" placeholder="搜索话题、圈子或用户..." disabled />
+        </view>
+      </view>
 
-  const hotCircles = ref([]);
-  const trendTopics = ref([]);
-  const page = ref(1);
-  const noMore = ref(false);
-  const searchResults = ref({
-    teams: [],
-    posts: []
-  });
+      <!-- 热门圈子 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">热门圈子</text>
+          <text class="view-all" @click="viewAllCircles">查看全部</text>
+        </view>
+        <view class="circles-grid">
+          <view class="circle-item" v-for="(circle, index) in hotCircles.slice(0, 4)" :key="circle.id" @click="navigateToCircle(circle)">
+            <view class="circle-avatar-wrapper" :class="{ 
+              'rank-1': index === 0,
+              'rank-2': index === 1,
+              'rank-3': index === 2 
+            }">
+              <view class="circle-avatar-inner">
+                <image :src="getFullImageUrl(circle.image) || '/static/soccer-logo.png'" mode="aspectFill" class="circle-avatar"></image>
+              </view>
+            </view>
+            <text class="circle-name text-ellipsis">{{ circle.name }}</text>
+            <text class="circle-members">{{ circle.members }} 成员</text>
+          </view>
+        </view>
+      </view>
 
-  // 过滤后的热门圈子
-  const filteredHotCircles = computed(() => {
-    if (!searchKey.value) return hotCircles.value;
-    const key = searchKey.value.toLowerCase();
-    return hotCircles.value.filter(circle => 
-      circle.name.toLowerCase().includes(key)
-    );
-  });
+      <!-- 热门话题 -->
+      <view class="section">
+        <view class="section-header">
+          <view class="trending-badge">
+            <text class="material-icons" style="font-size: 28rpx; color: #f9d406;">trending_up</text>
+            <text class="trending-text">热门话题</text>
+          </view>
+        </view>
 
-  // 过滤后的趋势话题
-  const filteredTrendTopics = computed(() => {
-    if (!searchKey.value) return trendTopics.value;
-    const key = searchKey.value.toLowerCase();
-    return trendTopics.value.filter(topic => 
-      topic.title.toLowerCase().includes(key)
-    );
-  });
+        <view class="trends-list">
+          <!-- 加载状态 -->
+          <view v-if="loading && page === 1" class="loading-state">
+            <view class="loading-spinner"></view>
+            <text class="loading-text">正在发现新鲜事...</text>
+          </view>
 
-  const currentTab = ref(3); // 社区在 5 标签中排第 4，索引 3
-  const tabs = [
-    { text: '首页', icon: 'home', path: 'pages/index/index' },
-    { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-    { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-    { text: '社区', icon: 'forum', path: 'pages/community/community' },
-    { text: '我的', icon: 'person', path: 'pages/my/my' }
-  ];
+          <!-- 空状态 -->
+          <view v-else-if="trends.length === 0" class="empty-state">
+            <text class="material-icons" style="font-size: 120rpx; color: var(--text-secondary); opacity: 0.2;">forum</text>
+            <text class="empty-text">暂无热门话题</text>
+            <text class="empty-sub">去其他圈子看看吧</text>
+          </view>
 
-  const handleTabClick = (index) => {
-    if (index === currentTab.value) return
-    uni.switchTab({
-      url: '/' + tabs[index].path
-    })
+          <!-- 话题列表 -->
+          <template v-else>
+            <view class="trend-item" v-for="trend in trends" :key="trend.id" @click="navigateToTopic(trend)">
+              <view class="trend-bg-icon">
+                <text class="material-icons" style="font-size: 160rpx; color: var(--text-main); opacity: 0.03;">{{ trend.icon || 'topic' }}</text>
+              </view>
+              
+              <view class="trend-content">
+                <text class="trend-title">{{ trend.title }}</text>
+                <text class="trend-stats">{{ trend.postsCount }}</text>
+                
+                <view class="trend-avatars" v-if="trend.activeUsers && trend.activeUsers.length > 0">
+                  <view class="avatar-group">
+                    <image v-for="(user, idx) in trend.activeUsers.slice(0, 3)" :key="idx" :src="getFullImageUrl(user.avatar) || '/static/soccer-logo.png'" class="mini-avatar" mode="aspectFill"></image>
+                    <view class="mini-avatar-count" v-if="trend.activeUsers.length > 3">
+                      <text class="count-text">+{{ trend.activeUsers.length - 3 }}</text>
+                    </view>
+                  </view>
+                </view>
+
+                <view class="trend-meta">
+                  <text class="meta-tag"># {{ trend.tagName || '热门' }}</text>
+                  <text class="meta-time">{{ formatTime(trend.createTime) }}</text>
+                </view>
+              </view>
+
+              <button class="btn-join" v-if="!trend.isJoined" @click.stop="joinTopic(trend)">加入</button>
+              <button class="btn-explore" v-else @click.stop="navigateToTopic(trend)">查看</button>
+            </view>
+          </template>
+        </view>
+
+        <!-- 分页 -->
+        <view class="pagination-box" v-if="totalPages > 1">
+          <view class="page-btn" :class="{ disabled: page <= 1 }" @click="prevPage">
+            <text class="material-icons btn-icon">chevron_left</text>
+            <text>上一页</text>
+          </view>
+          
+          <view class="page-info">
+            <text class="current-page">{{ page }}</text>
+            <text class="page-divider">/</text>
+            <text class="total-label">{{ totalPages }}</text>
+          </view>
+
+          <view class="page-btn" :class="{ disabled: page >= totalPages }" @click="nextPage">
+            <text>下一页</text>
+            <text class="material-icons btn-icon">chevron_right</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部占位 -->
+      <view class="bottom-placeholder"></view>
+    </scroll-view>
+
+    <!-- 底部导航栏 -->
+    <CustomTabBar :currentTab="3" />
+  </view>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
+import { useThemeStore } from '@/store/theme';
+import request from '@/utils/request';
+import { getFullImageUrl } from '@/utils/request.js';
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue';
+
+const themeStore = useThemeStore();
+const themeClass = computed(() => `theme-${themeStore.theme}`);
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight);
+
+// 数据状态
+const hotCircles = ref([]);
+const trends = ref([]);
+const unreadCount = ref(0);
+const loading = ref(false);
+const page = ref(1);
+const totalPages = ref(1);
+const pageSize = ref(10);
+
+// 获取热门圈子
+const fetchHotCircles = async () => {
+  try {
+    const res = await request.get('/api/community/circles/hot');
+    if (res) {
+      hotCircles.value = res;
+    }
+  } catch (e) {
+    console.error('获取热门圈子失败:', e);
   }
+};
 
-
-
-  const isNavigating = ref(false);
-
-  const navigateToNotification = () => {
-    uni.navigateTo({
-      url: '/pages/community/notification'
+// 获取热门话题
+const fetchTrends = async () => {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    const res = await request.get('/api/community/topics/trending', { 
+      page: page.value, 
+      size: pageSize.value 
     });
-  };
-
-  const navigateToCircle = (circle) => {
-    if (isNavigating.value) return;
-    isNavigating.value = true;
-    
-    uni.navigateTo({
-      url: `/pages/community/circle-detail?id=${circle.id || ''}&name=${encodeURIComponent(circle.name)}&members=${encodeURIComponent(circle.members)}&image=${encodeURIComponent(circle.image)}`,
-      complete: () => {
-        setTimeout(() => {
-          isNavigating.value = false;
-        }, 500);
-      },
-      fail: () => {
-        isNavigating.value = false;
-        uni.showToast({
-          title: '圈子详情页加载失败',
-          icon: 'none'
-        });
-      }
-    });
-  };
-
-  const navigateToPost = (topic) => {
-    if (isNavigating.value) return;
-    isNavigating.value = true;
-
-    uni.navigateTo({
-      url: `/pages/community/topic-detail?id=${topic.id || 0}&title=${encodeURIComponent(topic.title)}`,
-      complete: () => {
-        setTimeout(() => {
-          isNavigating.value = false;
-        }, 500);
-      },
-      fail: () => {
-        isNavigating.value = false;
-        uni.showToast({
-          title: '话题详情页加载失败',
-          icon: 'none'
-        });
-      }
-    });
-  };
-
-  // 获取头像 URL
-  const getAvatarUrl = (url) => {
-    if (!url) return '/static/soccer-logo.png';
-    return getFullImageUrl(url);
-  };
-
-  const navigateToCircleList = () => {
-    uni.navigateTo({
-      url: '/pages/community/circle-list',
-      fail: () => {
-        uni.showToast({
-          title: '列表页加载失败',
-          icon: 'none'
-        });
-      }
-    });
-  };
-
-  const handlePrevPage = () => {
-    if (page.value > 1) {
-      page.value--;
-      noMore.value = false;
-      loadData();
-      uni.pageScrollTo({
-        scrollTop: 0,
-        duration: 300
-      });
+    if (res && res.records) {
+      // 适配后端返回的 trending 接口数据结构
+      trends.value = res.records.map(item => ({
+        id: item.id,
+        title: item.title,
+        postsCount: item.stats, // 后端已格式化好的字符串，如 "每小时100 帖子"
+        viewCount: item.viewCount || 0,
+        tagName: item.tags ? item.tags[0] : '热门',
+        createTime: item.createTime || item.time || new Date().toISOString(),
+        activeUsers: item.avatars ? item.avatars.map(av => ({ avatar: av })) : [],
+        isJoined: item.action === '查看'
+      }));
+      totalPages.value = res.pages || 1;
     }
-  };
+  } catch (e) {
+    console.error('获取热门话题失败:', e);
+  } finally {
+    loading.value = false;
+  }
+};
 
-  const handleNextPage = () => {
-    if (!noMore.value) {
-      page.value++;
-      loadData();
-      uni.pageScrollTo({
-        scrollTop: 0,
-        duration: 300
-      });
-    }
-  };
+// 分页处理
+const prevPage = () => {
+  if (page.value > 1) {
+    page.value--;
+    fetchTrends();
+    scrollToTop();
+  }
+};
 
-  const loadUnreadCount = async () => {
-    try {
-      const res = await notificationApi.getUnreadCount();
-      if (res.code === 200) {
-        unreadCount.value = res.data;
-      }
-    } catch (e) {
-      console.error('Failed to load unread count:', e);
-    }
-  };
+const nextPage = () => {
+  if (page.value < totalPages.value) {
+    page.value++;
+    fetchTrends();
+    scrollToTop();
+  }
+};
 
-  onShow(async () => {
-    uni.hideTabBar();
-    const token = uni.getStorageSync('token');
-    if (token) {
-      loadUnreadCount();
-    }
-    loadData();
+const scrollToTop = () => {
+  // 滚动到顶部的逻辑，如果需要的话
+};
+
+// 事件处理
+const handleSearch = () => {
+  uni.navigateTo({ url: '/pages/community/circle-search' });
+};
+
+const handleNotification = () => {
+  uni.navigateTo({ url: '/pages/community/notification' });
+};
+
+const viewAllCircles = () => {
+  uni.navigateTo({ url: '/pages/community/circle-list' });
+};
+
+const navigateToCircle = (circle) => {
+  uni.navigateTo({
+    url: `/pages/community/circle-detail?id=${circle.id}&name=${encodeURIComponent(circle.name)}`
   });
+};
 
-  const loadData = async () => {
-    try {
-      // 尝试从 API 获取数据
-      const [circlesRes, topicsRes] = await Promise.allSettled([
-        communityApi.getHotCircles(),
-        communityApi.getTrendTopics({ page: page.value, size: 4 })
-      ]);
-
-      if (circlesRes.status === 'fulfilled' && circlesRes.value) {
-        hotCircles.value = circlesRes.value.map(circle => ({
-          ...circle,
-          image: getAvatarUrl(circle.image),
-          memberCount: circle.members || 0
-        }));
-      }
-
-      if (topicsRes.status === 'fulfilled' && topicsRes.value) {
-        const resData = topicsRes.value;
-        // 如果返回的是分页对象 (包含 records)
-        if (resData.records) {
-          trendTopics.value = resData.records.map(topic => ({
-            ...topic,
-            avatars: topic.avatars ? topic.avatars.map(avatar => getAvatarUrl(avatar)) : []
-          }));
-          noMore.value = page.value >= resData.pages;
-        } else if (Array.isArray(resData)) {
-          // 兼容旧版本
-          trendTopics.value = resData.slice(0, 4).map(topic => ({
-            ...topic,
-            avatars: topic.avatars ? topic.avatars.map(avatar => getAvatarUrl(avatar)) : []
-          }));
-          noMore.value = true;
-        }
-      }
-    } catch (e) {
-      console.error('Error loading community data:', e);
-    }
-  };
-
-
-  onMounted(() => {
-    // #ifdef MP-WEIXIN
-    // 适配小程序胶囊按钮，防止遮挡右上角功能键
-    try {
-      const menuButton = uni.getMenuButtonBoundingClientRect();
-      const systemInfo = uni.getSystemInfoSync();
-      // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
-      navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
-    } catch (e) {
-      console.error('获取胶囊按钮信息失败:', e);
-      navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
-    }
-    // #endif
-
-    loadData();
+const navigateToTopic = (topic) => {
+  uni.navigateTo({
+    url: `/pages/community/topic-detail?id=${topic.id}`
   });
-  </script>
+};
 
-  <style lang="scss" scoped>
-  /* Colors & Base */
-  .container {
-    background-color: var(--bg-main);
-    min-height: 100vh;
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    width: 100%;
-    margin: 0 auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-    transition: all 0.3s;
-    
-    /* #ifdef H5 */
-    max-width: 500px;
-    /* #endif */
+const joinTopic = async (topic) => {
+  try {
+    const res = await request.post(`/api/community/topics/${topic.id}/join`);
+    if (res) {
+      uni.showToast({ title: '加入成功', icon: 'success' });
+      topic.isJoined = true;
+    }
+  } catch (e) {
+    console.error('加入话题失败:', e);
+    uni.showToast({ title: '加入失败', icon: 'none' });
   }
+};
 
-  .status-bar {
-    height: var(--status-bar-height);
-    width: 100%;
+const formatTime = (time) => {
+  if (!time) return '';
+  // 如果已经是格式化好的时间描述，直接返回
+  if (typeof time === 'string' && (time.includes('前') || time.includes('刚刚'))) {
+    return time;
   }
+  
+  const date = new Date(time);
+  // 检查无效日期
+  if (isNaN(date.getTime())) {
+    return time; // 返回原样，可能是后端返回的描述
+  }
+  
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
+};
 
-  .nav-bar {
-    display: flex;
-    width: 100%;
-    box-sizing: border-box;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20rpx 40rpx;
-    background-color: var(--bg-nav-bar);
-    backdrop-filter: blur(20px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+// 生命周期
+onShow(() => {
+  uni.hideTabBar();
+  // 更新未读消息数
+  fetchUnreadCount();
+});
 
-  .logo-area {
-    display: flex;
-    align-items: center;
-    gap: 15rpx;
+const fetchUnreadCount = async () => {
+  try {
+    const res = await request.get('/api/community/notifications/unread-count');
+    unreadCount.value = res || 0;
+  } catch (e) {
+    console.error('获取未读消息失败:', e);
+    // 如果是 404 错误，通常是后端接口还没实现或路径不对，静默处理
+    unreadCount.value = 0;
   }
+};
+
+onMounted(() => {
+  fetchHotCircles();
+  fetchTrends();
+});
+</script>
+
+<style lang="scss" scoped>
+/* Colors & Base */
+.container {
+  background-color: var(--bg-main);
+  height: 100vh;
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  
+  /* #ifdef H5 */
+  max-width: 500px;
+  /* #endif */
+}
+
+.status-bar {
+  width: 100%;
+}
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background-color: #1a1811;
+  
+  /* #ifdef H5 */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 500px;
+  /* #endif */
+}
+
+.header-placeholder {
+  height: calc(var(--status-bar-height) + 100rpx);
+  width: 100%;
+}
+
+.nav-bar {
+  width: 100%;
+  height: 100rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+  background-color: #1a1811;
+  border-bottom: 1rpx solid var(--border-main);
+}
+
+.main-content-scroll {
+  flex: 1;
+  height: 0; /* 必须：强制 flex 计算生效 */
+  width: 100%;
+}
+
+.bottom-placeholder {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+  width: 100%;
+}
+
+.logo-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
 
   .logo-icon {
-    width: 80rpx;
-    height: 80rpx;
+    width: 56rpx;
+    height: 56rpx;
+    margin-right: 12rpx;
     display: flex;
-    justify-content: center;
     align-items: center;
-    
+
     .logo-img {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.6));
     }
   }
 
   .logo-text {
-    font-size: 38rpx;
-    font-weight: 900;
-    letter-spacing: -1rpx;
+    font-size: 32rpx;
+    font-weight: 800;
+    letter-spacing: 2rpx;
+    line-height: 1;
     color: #d4af37;
-    text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
-    margin-left: -5rpx;
     
     &.italic {
       font-style: italic;
@@ -452,526 +413,462 @@
     .highlight {
       color: #fff;
       margin-left: 6rpx;
-      position: relative;
-      
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: -2rpx;
-        left: 0;
-        width: 100%;
-        height: 2rpx;
-        background: linear-gradient(90deg, transparent, #d4af37, transparent);
-      }
-    }
-
-    .primary {
-      color: #fff;
-      margin-left: 6rpx;
     }
   }
+}
 
-  .nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 30rpx;
-  }
+.nav-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24rpx;
+  flex-shrink: 0;
 
   .action-btn {
-    width: 80rpx;
-    height: 80rpx;
-    background-color: var(--bg-secondary);
-    border-radius: 20rpx;
     display: flex;
+    align-items: center;
     justify-content: center;
-    align-items: center;
-    position: relative;
-  }
-
-  .notification-badge {
-    position: absolute;
-    top: -6rpx;
-    right: -6rpx;
-    background-color: #f20d33;
-    color: white;
-    font-size: 20rpx;
-    padding: 4rpx 10rpx;
-    border-radius: 8rpx;
-    min-width: 32rpx;
-    text-align: center;
-    line-height: 24rpx;
-    border: 4rpx solid var(--bg-main);
-    font-weight: 700;
-  }
-
-  .search-section {
-    padding: 0 40rpx;
-    margin-bottom: 40rpx;
-  }
-
-  .search-bar {
-    position: relative;
-    background-color: var(--bg-secondary);
-    border-radius: 30rpx;
-    display: flex;
-    align-items: center;
-    padding: 20rpx 32rpx;
-    transition: all 0.3s ease;
-  }
-
-  .search-bar:focus-within {
-    border-color: rgba($pitch-pulse-primary, 0.4);
-    box-shadow: 0 0 20rpx rgba($pitch-pulse-primary, 0.1);
-  }
-
-  .search-icon {
-    margin-right: 20rpx;
-  }
-
-  .search-input {
-    flex: 1;
-    color: var(--text-main);
-    font-size: 28rpx;
-  }
-
-  .main-content {
-    flex: 1;
-    padding: 30rpx 0;
-  }
-
-  /* Sections */
-  .section {
-    margin-bottom: 50rpx;
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 40rpx;
-    margin-bottom: 30rpx;
-  }
-
-  .section-title {
-    font-size: 36rpx;
-    font-weight: 700;
-    color: var(--text-main);
-  }
-
-  .view-all {
-    color: $pitch-pulse-primary;
-    font-size: 24rpx;
-    font-weight: 600;
-  }
-
-  /* Hot Circles */
-  .circles-scroll {
-    white-space: nowrap;
-    width: 100%;
-  }
-
-  .circles-container {
-    display: flex;
-    padding: 10rpx 40rpx;
-  }
-
-  .circle-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-right: 40rpx;
-    transition: all 0.3s ease;
-  }
-
-  .circle-item:active {
-    transform: scale(0.95);
-  }
-
-  .circle-avatar-wrapper {
-    width: 140rpx;
-    height: 140rpx;
-    border-radius: 24rpx;
-    padding: 6rpx;
-    border: 2rpx solid var(--border-main);
-    margin-bottom: 16rpx;
-  }
-
-  .circle-avatar-wrapper.highlight {
-    background: linear-gradient(135deg, $pitch-pulse-primary, #ff8a00);
-    border: none;
-    box-shadow: 0 10rpx 20rpx rgba($pitch-pulse-primary, 0.2);
-  }
-
-  .circle-avatar-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 20rpx;
-    background-color: var(--bg-main);
-    overflow: hidden;
-    border: 4rpx solid var(--bg-main);
-  }
-
-  .circle-avatar {
-    width: 100%;
-    height: 100%;
+    width: 60rpx;
+    height: 60rpx;
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 16rpx;
-  }
-
-  .circle-name {
-    font-size: 24rpx;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 4rpx;
-  }
-
-  .circle-members {
-    font-size: 20rpx;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  /* Trending */
-  .trending-badge {
-    display: flex;
-    align-items: center;
-    gap: 10rpx;
-    background-color: rgba($pitch-pulse-primary, 0.1);
-    padding: 8rpx 20rpx;
-    border-radius: 30rpx;
-    border: 1rpx solid rgba($pitch-pulse-primary, 0.1);
-  }
-
-  .trending-text {
-    font-size: 22rpx;
-    font-weight: 800;
-    color: $pitch-pulse-primary;
-    text-transform: uppercase;
-    letter-spacing: 1rpx;
-  }
-
-  .trends-list {
-    padding: 0 40rpx;
-    display: flex;
-    flex-direction: column;
-    gap: 30rpx;
-  }
-
-  .trend-item {
-    padding: 32rpx;
-    border-radius: 30rpx;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
   }
+}
 
-  .trend-bg-icon {
-    position: absolute;
-    top: -20rpx;
-    right: -20rpx;
-    z-index: 0;
-    pointer-events: none;
-  }
+.notification-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  background-color: #f20d33;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+  min-width: 32rpx;
+  text-align: center;
+  line-height: 24rpx;
+  border: 4rpx solid var(--nav-bar-bg);
+  font-weight: 700;
+}
 
-  .trend-content {
-    position: relative;
-    z-index: 1;
-    flex: 1;
-    padding-right: 20rpx;
-  }
+.search-section {
+  padding: 30rpx 32rpx;
+}
 
-  .trend-title {
-    font-size: 32rpx;
-    font-weight: 800;
-    color: var(--text-main);
-    margin-bottom: 12rpx;
-    display: block;
-  }
+.search-bar {
+  position: relative;
+  background-color: var(--bg-secondary);
+  border-radius: 30rpx;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  transition: all 0.3s ease;
+}
 
-  .trend-stats {
-    font-size: 22rpx;
-    color: $pitch-pulse-primary;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2rpx;
-    display: block;
-    margin-bottom: 20rpx;
-    opacity: 0.8;
-    transition: all 0.3s;
-  }
+.search-input {
+  flex: 1;
+  color: var(--text-main);
+  font-size: 28rpx;
+}
 
-  .trend-avatars {
-    display: flex;
-    margin-bottom: 24rpx;
-  }
+/* Sections */
+.section {
+  margin-bottom: 50rpx;
+}
 
-  .avatar-group {
-    display: flex;
-  }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32rpx;
+  margin-bottom: 30rpx;
+}
 
-  .mini-avatar {
-    width: 48rpx;
-    height: 48rpx;
-    border-radius: 8rpx;
-    border: 2rpx solid var(--bg-main);
-    margin-left: -16rpx;
-  }
+.section-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-main);
+}
 
-  .mini-avatar:first-child {
-    margin-left: 0;
-  }
+.view-all {
+  color: #f9d406;
+  font-size: 24rpx;
+  font-weight: 600;
+}
 
-  .mini-avatar-count {
-    width: 48rpx;
-    height: 48rpx;
-    border-radius: 12rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: -16rpx;
-  }
+/* Hot Circles */
+.circles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0 32rpx;
+  gap: 20rpx;
+}
 
-  .count-text {
-    font-size: 16rpx;
-    font-weight: 800;
-    color: var(--text-main);
-  }
+.circle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  width: 100%;
+}
 
-  .trend-meta {
-    display: flex;
-    gap: 20rpx;
-    align-items: center;
-  }
+.circle-avatar-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 24rpx;
+  padding: 6rpx;
+  border: 2rpx solid var(--border-color);
+  margin-bottom: 12rpx;
+}
 
-  .meta-tag {
-    background-color: rgba($pitch-pulse-primary, 0.1);
-    color: $pitch-pulse-primary;
-    font-size: 20rpx;
-    font-weight: 800;
-    padding: 6rpx 16rpx;
-    border-radius: 8rpx;
-  }
+.circle-avatar-wrapper.rank-1 {
+  background: linear-gradient(135deg, #f9d406, #ff8a00); /* 金色/黄橙渐变 */
+  border: none;
+}
 
-  .meta-time {
-    font-size: 20rpx;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
+.circle-avatar-wrapper.rank-2 {
+  background: linear-gradient(135deg, #e5e7eb, #9ca3af); /* 银色渐变 */
+  border: none;
+}
 
-  .action-btn {
-    position: relative;
-    z-index: 1;
-    font-size: 24rpx;
-    font-weight: 800;
-    padding: 16rpx 32rpx;
-    border-radius: 20rpx;
-    line-height: 1;
-    margin: 0;
-    border: none;
-    min-width: 120rpx;
-  }
+.circle-avatar-wrapper.rank-3 {
+  background: linear-gradient(135deg, #fb923c, #b45309); /* 铜色渐变 */
+  border: none;
+}
 
-  .btn-join {
-    background-color: $pitch-pulse-primary;
-    color: #1a1811;
-    box-shadow: 0 8rpx 16rpx rgba($pitch-pulse-primary, 0.2);
-  }
+.circle-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+  background-color: var(--bg-main);
+  overflow: hidden;
+  border: 4rpx solid var(--bg-main);
+}
 
-  .btn-explore {
-    background-color: var(--bg-secondary);
-    border: 1rpx solid var(--border-main);
-    color: var(--text-main);
-  }
+.circle-avatar {
+  width: 100%;
+  height: 100%;
+}
 
-  /* Empty State */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 120rpx 40rpx;
-    text-align: center;
-  }
+.circle-name {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4rpx;
+  width: 100%;
+  text-align: center;
+}
 
-  .empty-icon {
-    margin-bottom: 40rpx;
-    opacity: 0.5;
-  }
+.circle-members {
+  font-size: 18rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+  opacity: 0.6;
+}
 
-  .empty-text {
-    font-size: 32rpx;
-    color: var(--text-main);
-    font-weight: 700;
-    margin-bottom: 16rpx;
-  }
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .empty-sub {
-    font-size: 26rpx;
-    color: var(--text-secondary);
-  }
+/* Trending */
+.trending-badge {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  background-color: rgba(249, 212, 6, 0.1);
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid rgba(249, 212, 6, 0.2);
+}
 
-  /* TabBar Styles */
-  .safe-area-bottom {
-    height: 160rpx;
-  }
+.trending-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #f9d406;
+  text-transform: uppercase;
+  letter-spacing: 1rpx;
+}
 
-  /* 底部导航栏样式同步自 index.vue */
-  .tab-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    width: 100%;
-    
-    /* #ifdef H5 */
-    max-width: 500px;
-    /* #endif */
-    
-    height: 120rpx; 
-    background-color: rgba(26, 24, 17, 0.98); 
-    backdrop-filter: blur(20px); 
-    border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: center; 
-    padding-bottom: env(safe-area-inset-bottom); 
-    z-index: 9999; 
-    box-sizing: border-box; 
-    pointer-events: auto;
-  }
+.trends-list {
+  padding: 0 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
 
-  .tab-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8rpx;
-    height: 100%;
-    transition: all 0.3s ease;
-    
-    &.center-item {
-      position: relative;
-      overflow: visible;
-    }
-    
-    .center-icon {
-      position: absolute;
-      top: -40rpx;
-      width: 110rpx;
-      height: 110rpx;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 8rpx solid #1a1811;
-      z-index: 10001;
-      background-color: #8B0000;
-      
-      &.pulse-glow {
-        box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
-      }
-    }
-    
-    .tab-text {
-      font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.4);
-      font-weight: 500;
-    }
-    
-    &.active {
-      .tab-text {
-        color: #f9d406;
-        font-weight: 700;
-      }
-    }
-  }
+.trend-item {
+  padding: 32rpx;
+  position: relative;
+  border-radius: 30rpx;
+  background-color: var(--bg-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  border: 1rpx solid var(--border-main);
+  transition: all 0.3s ease;
+}
 
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+.trend-bg-icon {
+  position: absolute;
+  right: -20rpx;
+  bottom: -20rpx;
+  transform: rotate(-15deg);
+  pointer-events: none;
+  z-index: 0;
+}
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: .7; transform: scale(0.95); }
-  }
+.trend-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  z-index: 1;
+  padding-right: 20rpx;
+}
 
-  /* Utils */
-  ::v-deep .uni-input-input {
-    outline: none !important;
-    box-shadow: none !important;
-  }
+.trend-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4rpx;
+}
 
-  ::v-deep input {
-    outline: none !important;
-    box-shadow: none !important;
-  }
+.trend-stats {
+  font-size: 22rpx;
+  color: #f9d406;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  opacity: 0.8;
+}
 
-  /* Pagination Styles */
-  .pagination-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40rpx 0;
-    gap: 30rpx;
-  }
+.trend-avatars {
+  margin: 16rpx 0;
+}
 
-  .page-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba($pitch-pulse-primary, 0.1);
-    color: $pitch-pulse-primary;
-    padding: 16rpx 32rpx;
-    border-radius: 20rpx;
-    font-size: 28rpx;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    border: 1rpx solid rgba($pitch-pulse-primary, 0.2);
-    min-width: 180rpx;
-    gap: 8rpx;
-  }
+.avatar-group {
+  display: flex;
+  align-items: center;
+}
 
-  .page-btn:active:not(.disabled) {
-    transform: scale(0.95);
-    background: rgba($pitch-pulse-primary, 0.2);
-  }
+.mini-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid var(--bg-secondary);
+  margin-left: -16rpx;
+  background-color: var(--bg-main);
+}
 
-  .page-btn.disabled {
+.mini-avatar:first-child {
+  margin-left: 0;
+}
+
+.mini-avatar-count {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-main);
+  border: 2rpx solid var(--bg-secondary);
+  margin-left: -16rpx;
+  z-index: 1;
+}
+
+.count-text {
+  font-size: 16rpx;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.trend-meta {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 10rpx;
+}
+
+.meta-tag {
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 6rpx 16rpx;
+  background-color: rgba(249, 212, 6, 0.1);
+  border-radius: 8rpx;
+  color: #f9d406;
+}
+
+.meta-time {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.btn-join {
+  position: relative;
+  z-index: 1;
+  padding: 16rpx 32rpx;
+  background-color: #f9d406;
+  color: #1a1811;
+  font-size: 24rpx;
+  font-weight: 800;
+  border-radius: 20rpx;
+  border: none;
+  box-shadow: 0 8rpx 16rpx rgba(249, 212, 6, 0.2);
+  min-width: 120rpx;
+  line-height: 1;
+  margin: 0;
+}
+
+.btn-explore {
+  position: relative;
+  z-index: 1;
+  padding: 16rpx 32rpx;
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+  font-size: 24rpx;
+  font-weight: 800;
+  border-radius: 20rpx;
+  border: 1rpx solid var(--border-main);
+  min-width: 120rpx;
+  line-height: 1;
+  margin: 0;
+}
+
+/* Pagination */
+.pagination-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+  gap: 30rpx;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249, 212, 6, 0.1);
+  color: #f9d406;
+  padding: 16rpx 32rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 1rpx solid rgba(249, 212, 6, 0.2);
+  min-width: 180rpx;
+  gap: 8rpx;
+  
+  &.disabled {
     opacity: 0.3;
     background: var(--bg-secondary);
     color: var(--text-secondary);
     border-color: transparent;
+    pointer-events: none;
   }
 
-  .btn-icon {
-    font-size: 32rpx;
+  &:active:not(.disabled) {
+    transform: scale(0.95);
+    background: rgba(249, 212, 6, 0.2);
   }
+}
 
-  .page-info {
-    display: flex;
-    align-items: baseline;
-    gap: 8rpx;
-  }
+.btn-icon {
+  font-size: 32rpx;
+}
 
-  .current-page {
-    font-size: 36rpx;
-    font-weight: 800;
-    color: $pitch-pulse-primary;
-  }
+.page-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
 
-  .page-divider {
-    font-size: 24rpx;
-    color: var(--text-secondary);
-    opacity: 0.3;
-  }
+.current-page {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #f9d406;
+}
 
-  .total-label {
-    font-size: 24rpx;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-  </style>
+.page-divider {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  opacity: 0.3;
+}
+
+.total-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 30rpx;
+  margin-bottom: 16rpx;
+}
+
+.empty-sub {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(249, 212, 6, 0.1);
+  border-top: 4rpx solid #f9d406;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24rpx;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utils */
+::v-deep .uni-input-input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+::v-deep input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+</style>

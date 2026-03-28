@@ -22,27 +22,26 @@ export default {
     }
     
     // #ifdef MP-WEIXIN
-    // 仅在微信小程序中使用 uni.loadFontFace 加载远程字体
-    // 注意：微信小程序必须使用 HTTPS 链接，且域名需在小程序后台配置
+    // 微信小程序仍保留 OSS 加载方式（或可考虑分包/本地引入，此处先保持 OSS 以兼容小程序包体积限制，但可增加容错）
+    const ossBaseUrl = 'https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/static/'
+    
     uni.loadFontFace({
       family: 'MaterialIcons',
       global: true,
-      source: 'url("https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2")',
-      success: () => console.log('Material Icons font loaded successfully'),
+      source: `url("${ossBaseUrl}MaterialIcons-Regular.ttf")`,
+      success: () => console.log('Material Icons font loaded from OSS successfully'),
       fail: (err) => {
-        console.warn('Failed to load remote Material Icons font, fallback to local', err)
+        console.warn('Failed to load remote Material Icons font from OSS, trying local...', err)
+        // 如果 OSS 失败，尝试本地（前提是小程序包体积允许）
+        uni.loadFontFace({
+          family: 'MaterialIcons',
+          global: true,
+          source: 'url("/static/MaterialIcons-Regular.ttf")',
+          success: () => console.log('Material Icons font loaded from local successfully')
+        })
       }
     })
     
-    uni.loadFontFace({
-      family: 'MaterialIconsRound',
-      global: true,
-      source: 'url("https://fonts.gstatic.com/s/materialiconsround/v108/L0kndfmuz1N97JlQD1E1n5uyyjWCcQebAnpG9663.woff2")',
-      success: () => console.log('Material Icons Round loaded successfully'),
-      fail: (err) => {
-        console.warn('Failed to load remote Material Icons Round font, fallback to local', err)
-      }
-    })
     // #endif
 
     // #ifdef H5
@@ -75,10 +74,6 @@ export default {
   font-family: 'MaterialIcons';
   src: url('~@/static/MaterialIcons-Regular.ttf') format('truetype');
 }
-@font-face {
-  font-family: 'MaterialIconsRound';
-  src: url('~@/static/MaterialIconsRound-Regular.otf') format('opentype');
-}
 /* #endif */
 
 .material-icons {
@@ -92,6 +87,7 @@ export default {
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
+  font-size: 44rpx; /* 统一默认大小 */
 }
 
 .material-icons-round {
@@ -105,35 +101,22 @@ export default {
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
-}
-
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined' !important;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  direction: ltr;
+  font-size: 44rpx; /* 统一默认大小 */
 }
 
 /* 主题变量定义 */
 :root, .theme-dark {
   --bg-main: #1A1811;
-  --bg-secondary: rgba(255, 255, 255, 0.05);
+  --bg-secondary: #25231A;
   --text-main: #FFFFFF;
   --text-secondary: #9CA3AF;
-  --border-main: rgba(255, 255, 255, 0.05);
+  --border-main: rgba(255, 255, 255, 0.08);
   --accent-color: #f9d406;
-  --tab-bar-bg: rgba(26, 24, 17, 0.95);
-  --nav-bar-bg: rgba(26, 24, 17, 0.8);
-  --card-bg: rgba(255, 255, 255, 0.03);
+  --tab-bar-bg: #1A1811;
+  --nav-bar-bg: #1A1811;
+  --card-bg: #222018;
+  --is-dark: 1;
+  --icon-filter: invert(1) brightness(2);
 }
 
 .theme-light {
@@ -143,9 +126,11 @@ export default {
   --text-secondary: #4B5563;
   --border-main: #E5E7EB;
   --accent-color: #D4AF37;
-  --tab-bar-bg: rgba(255, 255, 255, 0.95);
-  --nav-bar-bg: rgba(249, 250, 251, 0.8);
+  --tab-bar-bg: #FFFFFF;
+  --nav-bar-bg: #F9FAFB;
   --card-bg: #FFFFFF;
+  --is-dark: 0;
+  --icon-filter: none;
 }
 
 /* 全局主题样式应用 */

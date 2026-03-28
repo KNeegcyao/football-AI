@@ -1,18 +1,18 @@
 <template>
   <view class="page-container min-h-screen font-display pb-12 max-w-[500px] mx-auto shadow-2xl relative" :class="themeClass">
     <!-- Header -->
-    <view class="fixed top-0 left-0 right-0 z-[999] px-4 pt-12 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix header-bg">
-      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white active:bg-white/10" @click="goBack">
-        <text class="material-icons-round" style="font-size: 24px;">arrow_back</text>
+    <view class="fixed top-0 left-0 right-0 z-[999] px-4 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix header-bg" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-theme-main active:bg-white/10" @click="goBack">
+        <text class="material-icons" style="font-size: 48rpx;">arrow_back</text>
       </view>
-      <text class="text-xl font-bold tracking-tight text-white">编辑资料</text>
-      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white active:bg-white/10" @click="loadProfile">
-        <text class="material-icons-round" style="font-size: 20px;">refresh</text>
+      <text class="text-xl font-bold tracking-tight text-theme-main">编辑资料</text>
+      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-theme-main active:bg-white/10" @click="loadProfile">
+        <text class="material-icons" style="font-size: 44rpx;">refresh</text>
       </view>
     </view>
 
     <!-- Content -->
-    <view class="px-6 pt-[120px]">
+    <view class="px-6" :style="{ paddingTop: 'calc(' + statusBarHeight + 'px + 120rpx)' }">
       <!-- Avatar Section -->
       <view class="flex flex-col items-center mb-8">
         <view class="w-24 h-24 rounded-full border-2 border-[#f9d406] overflow-hidden bg-[#2C2C2C] mb-4 relative active:opacity-80" @click="chooseAvatar">
@@ -108,6 +108,7 @@ import { BASE_URL, getFullImageUrl } from '@/utils/request'
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 const isEmail = (email) => {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
 }

@@ -1,17 +1,21 @@
 <template>
-  <view class="page-container min-h-screen font-display" :class="themeClass">
-    <!-- Top Navigation Header -->
-    <view class="header-sticky bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="header-content">
+  <view class="page-container font-display" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 顶部导航栏 -->
+    <view class="header-container">
+      <!-- Status Bar Placeholder -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+      <!-- Header (Aligned with index.vue) -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
         <view class="header-left" v-if="isOthersProfile" @click="goBack">
-          <image :src="getFullImageUrl('/static/icons/actions/arrow_back.svg')" style="width: 48rpx; height: 48rpx; filter: brightness(0) invert(1);"></image>
+          <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">arrow_back</text>
         </view>
-        <view class="header-center">
-          <text class="text-lg font-bold text-theme-main">{{ userInfo.nickname }}的战术板</text>
+        <view class="header-center" :class="{ 'center-with-back': isOthersProfile }">
+          <text class="logo-text text-theme-main">{{ userInfo.nickname }}的战术板</text>
         </view>
         <view class="header-right" v-if="!isOthersProfile">
-          <button class="action-icon-btn bg-theme-secondary" @click="goToSettings">
-            <image :src="getFullImageUrl('/static/icons/actions/settings.svg')" style="width: 44rpx; height: 44rpx; filter: brightness(0) invert(1);"></image>
+          <button class="action-btn" @click="goToSettings">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">settings</text>
           </button>
         </view>
         <view class="header-right" v-else>
@@ -21,7 +25,9 @@
       </view>
     </view>
 
-    <scroll-view scroll-y class="main-content" @scrolltolower="loadMore">
+    <view class="main-content">
+      <!-- 移除 header-placeholder，因为 header-container 已经占位 -->
+      
       <!-- Profile Header Section -->
       <view class="profile-header">
         <view class="cover-image-container" @click="chooseCover">
@@ -50,20 +56,20 @@
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="Number(userInfo.level) === 2">
-                  <image :src="getFullImageUrl('/static/icons/menu/sports_soccer.svg')" class="frame-deco deco-tl" style="width: 32rpx; height: 32rpx;"></image>
-                  <image :src="getFullImageUrl('/static/icons/menu/sports_soccer.svg')" class="frame-deco deco-bl" style="width: 32rpx; height: 32rpx;"></image>
+                  <text class="material-icons frame-deco deco-tl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-bl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
-                <image v-if="Number(userInfo.level) === 4" :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="top-crown" style="width: 40rpx; height: 40rpx;"></image>
+                <text v-if="Number(userInfo.level) === 4" class="material-icons top-crown" style="font-size: 48rpx; color: #FACC15;">verified</text>
                 
                 <!-- Lv.5 皇冠装饰 (正上方) -->
-                <image v-if="Number(userInfo.level) === 5" :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="top-crown" style="width: 44rpx; height: 44rpx;"></image>
+                <text v-if="Number(userInfo.level) === 5" class="material-icons top-crown" style="font-size: 48rpx; color: #f2b90d;">verified</text>
               </view>
               
               <!-- 等级标识 -->
               <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + (userInfo.level || 1)">
-                <image :src="getFullImageUrl('/static/icons/actions/verified.svg')" class="badge-icon" style="width: 24rpx; height: 24rpx; margin-right: 4rpx;"></image>
+                <text class="material-icons badge-icon" style="font-size: 32rpx; margin-right: 4rpx; color: white;">verified</text>
                 <text class="badge-text">LV.{{ userInfo.level || 1 }}</text>
               </view>
             </view>
@@ -72,7 +78,7 @@
           <view class="identity-info">
             <view class="name-row">
               <text class="nickname">{{ userInfo.nickname }}</text>
-              <image :src="getFullImageUrl('/static/icons/actions/verified.svg')" style="width: 40rpx; height: 40rpx; margin-left: 8rpx;"></image>
+              <text class="material-icons" style="font-size: 44rpx; margin-left: 8rpx; color: #f2b90d;">verified</text>
             </view>
             
             <!-- 层次感称号标签 -->
@@ -97,7 +103,7 @@
         <template v-else>
           <button class="btn-primary" @click="handleFollow">关注</button>
           <button class="btn-secondary" @click="handleMessage">
-            <image :src="getFullImageUrl('/static/icons/actions/chat_bubble.svg')" style="width: 32rpx; height: 32rpx; margin-right: 8rpx; filter: invert(var(--is-dark));"></image>
+            <text class="material-icons" style="font-size: 44rpx; margin-right: 8rpx; color: var(--text-main);">chat_bubble</text>
             <text>私信</text>
           </button>
         </template>
@@ -141,13 +147,13 @@
               <view class="post-text-side">
                 <text class="post-title text-theme-main">{{ post.title }}</text>
                 <text class="post-excerpt text-theme-secondary">{{ post.content }}</text>
-                <view class="post-meta">
+      <view class="post-meta">
                   <view class="meta-item text-theme-secondary">
-                    <text class="material-symbols-outlined text-sm">favorite</text>
+                    <text class="material-icons" style="font-size: 44rpx;">favorite</text>
                     <text>{{ formatStats(post.likes) }}</text>
                   </view>
                   <view class="meta-item text-theme-secondary">
-                    <text class="material-symbols-outlined text-sm">chat_bubble</text>
+                    <text class="material-icons" style="font-size: 44rpx;">chat_bubble</text>
                     <text>{{ post.commentCount }}</text>
                   </view>
                   <text class="post-time text-theme-secondary">{{ formatTime(post.createTime) }}</text>
@@ -159,7 +165,7 @@
           
           <u-loadmore :status="loadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="posts.length > 0" />
           <view class="empty-state" v-if="posts.length === 0 && !loading">
-            <text class="material-symbols-outlined empty-icon text-theme-secondary">description</text>
+            <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">description</text>
             <text class="text-theme-secondary">暂无动态</text>
           </view>
         </view>
@@ -185,11 +191,11 @@
                   <text class="post-excerpt text-theme-secondary">{{ item.content }}</text>
                   <view class="post-meta">
                     <view class="meta-item text-theme-secondary">
-                      <text class="material-symbols-outlined text-sm">favorite</text>
+                      <text class="material-icons" style="font-size: 44rpx;">favorite</text>
                       <text>{{ formatStats(item.likes) }}</text>
                     </view>
                     <view class="meta-item text-theme-secondary">
-                      <text class="material-symbols-outlined text-sm">chat_bubble</text>
+                      <text class="material-icons" style="font-size: 44rpx;">chat_bubble</text>
                       <text>{{ item.commentCount }}</text>
                     </view>
                     <text class="post-time text-theme-secondary">{{ formatTime(item.createTime) }}</text>
@@ -227,14 +233,14 @@
           
           <u-loadmore :status="favLoadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="getCurrentFavList().length > 0" />
           <view class="empty-state" v-if="getCurrentFavList().length === 0 && !favLoading">
-            <text class="material-symbols-outlined empty-icon text-theme-secondary">bookmark</text>
+            <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">bookmark</text>
             <text class="text-theme-secondary">暂无{{ favSubTabs[currentFavSubTab] }}收藏</text>
           </view>
         </view>
         
         <!-- 相册 (Tab 2) -->
         <view v-else-if="currentProfileTab === 2" class="empty-state">
-          <text class="material-symbols-outlined empty-icon text-theme-secondary">photo_library</text>
+          <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">photo_library</text>
           <text class="text-theme-secondary">暂无相册</text>
         </view>
       </view>
@@ -242,22 +248,13 @@
       <view class="footer-info">
         <text class="version-text text-theme-secondary">PitchPulse v2.4.0 (Build 503)</text>
       </view>
-    </scroll-view>
+      
+      <!-- 底部占位：适配底部导航栏，避免内容被遮挡。高度与 CustomTabBar.vue 中的 .tab-bar 保持一致 -->
+      <view class="bottom-placeholder" :style="{ height: isOthersProfile ? 'env(safe-area-inset-bottom)' : 'calc(110rpx + env(safe-area-inset-bottom))' }"></view>
+    </view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in tabs" :key="index" 
-            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
-            @tap="handleTabClick(index)">
-        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
-        </view>
-        <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
-          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-        </template>
-      </view>
-    </view>
+    <CustomTabBar v-if="!isOthersProfile" :currentTab="4" />
 
     <!-- Logout Modal -->
     <u-modal
@@ -278,30 +275,13 @@ import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi, postApi, favoriteApi, playerApi } from '@/api'
 import { BASE_URL, getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
-const currentTab = ref(4)
-const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
-]
 
-const handleTabClick = (index) => {
-  if (index === currentTab.value) return
-  uni.switchTab({
-    url: '/' + tabs[index].path
-  })
-}
-
-const handleMainTabClick = (index) => {
-  handleTabClick(index)
-}
 
 const currentProfileTab = ref(0)
 const profileTabs = ref([
@@ -439,8 +419,7 @@ onShow(() => {
     return
   }
   
-  // 强制刷新主页标识
-  currentTab.value = 4
+
   
   loadUserProfile(options.userId)
 })
@@ -827,50 +806,87 @@ const formatStats = (num) => {
 .page-container {
   display: flex;
   flex-direction: column;
-  background-color: #12110a;
+  background-color: var(--bg-main);
   margin: 0 auto;
   width: 100%;
+  min-height: 100vh;
   
   /* #ifdef H5 */
   max-width: 500px;
   /* #endif */
 }
 
-.header-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: rgba(18, 17, 10, 0.8);
+.header-container {
+  background-color: var(--nav-bar-bg);
   backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+  width: 100%;
 }
 
-.header-content {
-  height: 120rpx;
+.status-bar {
+  height: var(--status-bar-height);
+  width: 100%;
+}
+
+.nav-bar {
+  height: 100rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40rpx;
+  padding: 0 32rpx;
+  width: 100%;
 }
 
-.action-icon-btn {
+.header-left, .header-right {
+  width: 100rpx;
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  &.center-with-back {
+    margin-right: 0;
+  }
+}
+
+.logo-text {
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+
+.action-btn {
   background: none;
   border: none;
   padding: 0;
   margin: 0;
-  color: #f2b90d;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
   &::after { border: none; }
 }
 
 .main-content {
-  flex: 1;
-  height: 0;
+  width: 100%;
 }
 
-  .profile-header {
+.bottom-placeholder {
+  width: 100%;
+  pointer-events: none;
+}
+
+.profile-header {
     position: relative;
     overflow: hidden;
 
@@ -1315,7 +1331,7 @@ const formatStats = (num) => {
 
 .tabs-sticky {
   position: sticky;
-  top: 88rpx;
+  top: 0;
   z-index: 90;
   background-color: var(--nav-bar-bg);
   backdrop-filter: blur(20px);
@@ -1325,7 +1341,7 @@ const formatStats = (num) => {
 .tabs-content {
   display: flex;
   padding: 0 32rpx;
-  border-bottom: 1px solid rgba(242, 185, 13, 0.1);
+  border-bottom: 1rpx solid var(--border-main);
 }
 
 .tab-item {
@@ -1419,7 +1435,7 @@ const formatStats = (num) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 128rpx 0;
+  padding: 40rpx 0;
   color: #64748b;
   gap: 16rpx;
 }
@@ -1427,23 +1443,29 @@ const formatStats = (num) => {
 .empty-icon {
   font-size: 96rpx;
   opacity: 0.2;
-}.footer-info {
-    padding: 64rpx 0 160rpx; /* 确保内容不被 120rpx 的导航栏遮挡 */
-    text-align: center;
-  }
+}
+
+.footer-info {
+  padding: 20rpx 0 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
 
   /* 收藏二级分类样式 */
   .fav-sub-tabs {
     display: flex;
     padding: 20rpx 32rpx;
     gap: 20rpx;
-    background-color: #12110a;
+    background-color: var(--bg-main);
     
     .sub-tab-item {
       padding: 12rpx 32rpx;
       border-radius: 30rpx;
-      background-color: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.6);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
       font-size: 24rpx;
       transition: all 0.3s;
       
@@ -1463,13 +1485,14 @@ const formatStats = (num) => {
     padding: 20rpx 32rpx;
     
     .player-card {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: var(--card-bg);
       border-radius: 16rpx;
       padding: 24rpx 16rpx;
       display: flex;
       flex-direction: column;
       align-items: center;
       transition: all 0.3s;
+      border: 1rpx solid var(--border-main);
       
       &:active {
         background-color: rgba(255, 255, 255, 0.1);
@@ -1502,110 +1525,10 @@ const formatStats = (num) => {
     }
   }
 
-  .version-text {
+.version-text {
   font-size: 20rpx;
-  color: #334155;
-  letter-spacing: 4rpx;
-  text-transform: uppercase;
-}
-
-/* 底部导航栏样式同步自 index.vue */
-/* 底部导航栏样式同步自 index.vue */
-  .tab-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    width: 100%;
-    
-    /* #ifdef H5 */
-    max-width: 500px;
-    /* #endif */
-    
-    height: 120rpx; 
-    background-color: rgba(26, 24, 17, 0.98); 
-    backdrop-filter: blur(20px); 
-    border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: center; 
-    padding-bottom: env(safe-area-inset-bottom); 
-    z-index: 9999; 
-    box-sizing: border-box; 
-    pointer-events: auto;
-
-    .tab-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8rpx;
-      height: 100%;
-      transition: all 0.3s ease;
-    
-    &.center-item {
-      position: relative;
-      overflow: visible;
-    }
-    
-    .center-icon {
-      position: absolute;
-      top: -40rpx;
-      width: 110rpx;
-      height: 110rpx;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 8rpx solid #1a1811;
-      z-index: 10001;
-      background-color: #8B0000;
-      
-      &.pulse-glow {
-        box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
-      }
-    }
-    
-    .tab-text {
-      font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.4);
-      font-weight: 500;
-    }
-    
-    &.active {
-      .tab-text {
-        color: #f9d406;
-        font-weight: 700;
-      }
-    }
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .7; transform: scale(0.95); }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes gold-pulse {
-  0% { transform: scale(1); border-color: #FACC15; }
-  50% { transform: scale(1.02); border-color: #FFF176; box-shadow: 0 0 20rpx #FACC15; }
-  100% { transform: scale(1); border-color: #FACC15; }
-}
-
-@keyframes frame-breath {
-  0% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
-  50% { box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.5); }
-  100% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
+  color: #64748b;
+  letter-spacing: 2rpx;
+  opacity: 0.6;
 }
 </style>

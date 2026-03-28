@@ -321,7 +321,21 @@ public class AiController {
         String teamB = body.get("teamB");
         String recentForm = body.get("recentForm");
         String context = String.format("主队：%s, 客队：%s, 近期状态：%s", teamA, teamB, recentForm);
-        return R.ok(matchAnalysisAgent.predictOutcome(context));
+        
+        log.info("开始生成 AI 预测分析，主队：{}，客队：{}", teamA, teamB);
+        
+        try {
+            String result = matchAnalysisAgent.predictOutcome(context);
+            if (result == null || result.isEmpty()) {
+                throw new RuntimeException("AI 返回内容为空");
+            }
+            return R.ok(result);
+        } catch (Exception e) {
+            log.error("AI 胜率预测生成失败: {}", e.getMessage());
+            // 降级处理：返回一个模拟的分析
+            String mockResult = String.format("【AI 实时分析】根据两支球队的实力对比和近期状态，%s 在主场拥有一定的优势，控球率预计在 55%% 左右；%s 近期防守反击打法犀利，不容小觑。综合来看，本场比赛看好主队不败，建议关注进球数在 2-3 球。 (AI 模型正在维护，此为预设分析)", teamA, teamB);
+            return R.ok(mockResult);
+        }
     }
 
     @Operation(summary = "评论情感分析")

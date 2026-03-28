@@ -1,41 +1,49 @@
 <template>
-  <view class="container" :class="themeClass">
-    <!-- 状态栏占位 -->
-    <view class="status-bar"></view>
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 固定顶部容器 -->
+    <view class="fixed-header">
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 顶部导航栏 -->
-    <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-      <view class="logo-area">
-        <view class="logo-icon">
-          <image class="logo-img" src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" mode="aspectFit"></image>
+      <!-- 顶部导航栏 -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
+        <view class="logo-area">
+          <view class="logo-icon">
+            <image src="/static/soccer-logo.png" mode="aspectFit" class="logo-img"></image>
+          </view>
+          <view class="logo-text italic">
+            PITCH<text class="highlight text-theme-main">PULSE</text>
+          </view>
         </view>
-        <text class="logo-text italic">Socca<text class="highlight">Hub</text></text>
+
+        <view class="nav-actions">
+          <view class="action-btn" @click="goToSearch">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">search</text>
+          </view>
+          <view class="avatar-box" @click="goToProfile">
+            <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
+          </view>
+        </view>
       </view>
 
-      <view class="nav-actions">
-        <view class="action-btn bg-theme-secondary" @click="goToSearch">
-          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
+      <!-- 分类滑动条 -->
+      <scroll-view scroll-x class="category-scroll bg-nav-bar" :show-scrollbar="false">
+        <view class="category-list">
+          <view v-for="(item, index) in categories" :key="index" 
+                class="category-item" :class="{ active: currentCategory === index }"
+                @click="changeCategory(index)">
+            <text class="category-text" :class="currentCategory === index ? 'text-theme-main' : 'text-theme-secondary'">{{ item.name }}</text>
+            <view v-if="currentCategory === index" class="active-line"></view>
+          </view>
         </view>
-        <view class="avatar-box" @click="goToProfile">
-          <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
-        </view>
-      </view>
+      </scroll-view>
     </view>
-
-    <!-- 分类滑动条 -->
-    <scroll-view scroll-x class="category-scroll bg-nav-bar" show-scrollbar="false">
-      <view class="category-list">
-        <view v-for="(item, index) in categories" :key="index" 
-              class="category-item" :class="{ active: currentCategory === index }"
-              @click="changeCategory(index)">
-          <text class="category-text" :class="currentCategory === index ? 'text-theme-main' : 'text-theme-secondary'">{{ item.name }}</text>
-          <view v-if="currentCategory === index" class="active-line"></view>
-        </view>
-      </view>
-    </scroll-view>
 
     <!-- 主内容区 -->
     <scroll-view scroll-y class="main-content">
+      <!-- 顶部占位，防止内容被固定的 header 遮挡 -->
+      <view class="header-placeholder"></view>
+      
       <!-- 英雄帖子卡片 -->
       <view class="hero-card" @click="goToDetail(heroPost.id)">
         <image class="hero-img" :src="heroPost.image" mode="aspectFill"></image>
@@ -45,22 +53,22 @@
             <text class="hero-subtag" v-if="heroPost.category">{{ heroPost.category }}</text>
             <!-- 英雄帖 AI 勋章 -->
             <view class="ai-badge hero-ai-badge" v-if="heroPost.isAi" @click.stop="toggleHeroAiSummary">
-              <image :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" style="width: 20rpx; height: 20rpx;"></image>
+              <text class="material-icons" style="font-size: 20rpx; color: #f9d406;">auto_awesome</text>
               <text class="ai-text">AI</text>
             </view>
           </view>
           <text class="hero-title">{{ heroPost.title }}</text>
           <view class="hero-meta">
               <view class="meta-item">
-                <image :src="getFullImageUrl('/static/icons/actions/schedule.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
+                <text class="material-icons" style="font-size: 28rpx; color: #fff; opacity: 0.8;">schedule</text>
                 <text class="meta-text">{{ heroPost.time }}</text>
               </view>
               <view class="meta-item">
-                <image :src="getFullImageUrl('/static/icons/actions/star.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
+                <text class="material-icons" style="font-size: 28rpx; color: #fff; opacity: 0.8;">star</text>
                 <text class="meta-text">{{ heroPost.collections || 0 }}</text>
               </view>
               <view class="meta-item">
-                <image :src="getFullImageUrl('/static/icons/actions/visibility.svg')" style="width: 28rpx; height: 28rpx; filter: brightness(0) invert(1);"></image>
+                <text class="material-icons" style="font-size: 28rpx; color: #fff; opacity: 0.8;">visibility</text>
                 <text class="meta-text">{{ heroPost.views || 0 }}</text>
               </view>
             </view>
@@ -72,7 +80,7 @@
         <view class="ai-summary no-margin" v-if="heroPost.aiSummary" :class="{'ai-summary-visible': heroPost.showSummary}">
           <view class="ai-summary-content bg-theme-secondary">
             <view class="ai-summary-header">
-              <u-icon name="star-fill" :color="themeStore.theme === 'dark' ? '#D4AF37' : '#B8860B'" size="24rpx"></u-icon>
+              <text class="material-icons" style="font-size: 24rpx; color: #f9d406;">auto_awesome</text>
               <text class="ai-summary-label">AI 智能摘要</text>
             </view>
             <text class="ai-summary-text text-theme-secondary">
@@ -94,7 +102,7 @@
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>
               <view class="ai-badge" v-if="post.isAi" @click.stop="toggleAiSummary(index)">
-                <image :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" style="width: 20rpx; height: 20rpx;"></image>
+                <text class="material-icons" style="font-size: 20rpx; color: #f9d406;">auto_awesome</text>
                 <text class="ai-text">AI</text>
               </view>
             </view>
@@ -107,11 +115,11 @@
                 </view>
                 <view class="post-stats">
                   <view class="stat-item">
-                    <u-icon name="star" color="rgba(255, 255, 255, 0.5)" size="24rpx"></u-icon>
+                    <text class="material-icons" style="font-size: 24rpx; color: var(--text-main); opacity: 0.5;">star</text>
                     <text class="stat-num">{{ post.collections || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="eye" color="rgba(255, 255, 255, 0.5)" size="24rpx"></u-icon>
+                    <text class="material-icons" style="font-size: 24rpx; color: var(--text-main); opacity: 0.5;">visibility</text>
                     <text class="stat-num">{{ post.views || 0 }}</text>
                   </view>
                 </view>
@@ -122,7 +130,7 @@
           <view class="ai-summary" v-if="post.isAi" :class="{'ai-summary-visible': post.showSummary}">
             <view class="ai-summary-content bg-theme-secondary" v-if="post.aiSummary">
               <view class="ai-summary-header">
-                <u-icon name="star-fill" :color="themeStore.theme === 'dark' ? '#D4AF37' : '#B8860B'" size="24rpx"></u-icon>
+                <text class="material-icons" style="font-size: 24rpx; color: #f9d406;">auto_awesome</text>
                 <text class="ai-summary-label">AI 智能摘要</text>
               </view>
               <text class="ai-summary-text text-theme-secondary">
@@ -138,19 +146,7 @@
     </scroll-view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in tabs" :key="index" 
-            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
-            @tap="handleTabClick(index)">
-        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
-        </view>
-        <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
-          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-        </template>
-      </view>
-    </view>
+    <CustomTabBar :currentTab="0" />
   </view>
 </template>
 
@@ -160,11 +156,36 @@ import { onShow } from '@dcloudio/uni-app'
 import { postApi, newsApi, userApi, fileApi, aiApi } from '@/api'
 import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight)
 const userAvatar = ref('/static/soccer-logo.png')
 const navbarPaddingRight = ref(16) // 默认 16px
+const fontLoaded = ref(false)
+
+// 检查字体加载状态
+const checkFontLoaded = () => {
+  // #ifdef MP-WEIXIN
+  // 微信小程序可以通过一些 hack 方式或者定时器，但最稳妥是直接给一个极短的延迟
+  setTimeout(() => {
+    fontLoaded.value = true
+  }, 1000)
+  // #endif
+  
+  // #ifdef H5 || APP-PLUS
+  if (document.fonts) {
+    document.fonts.ready.then(() => {
+      fontLoaded.value = true
+    })
+  } else {
+    setTimeout(() => {
+      fontLoaded.value = true
+    }, 1000)
+  }
+  // #endif
+}
 
 const handleAvatarError = () => {
   userAvatar.value = '/static/soccer-logo.png'
@@ -210,15 +231,6 @@ const categories = [
   { name: '欧冠', id: 5 },
   { name: '西甲', id: 6 }
 ]
-
-const currentTab = ref(0)
-  const tabs = [
-    { text: '首页', icon: 'home', path: 'pages/index/index' },
-    { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-    { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-    { text: '社区', icon: 'forum', path: 'pages/community/community' },
-    { text: '我的', icon: 'person', path: 'pages/my/my' }
-  ]
 
 const heroPost = ref({
   id: 1,
@@ -473,37 +485,16 @@ const goToSearch = () => {
   })
 }
 
-const handleTabClick = (index) => {
-  if (index === currentTab.value) return
-  uni.switchTab({
-    url: '/' + tabs[index].path
-  })
-}
-
-const switchTab = (index) => {
-  // 保持向后兼容性
-  handleTabClick(index)
-}
-
-// 页面挂载时修正当前 Tab 索引
+// 页面挂载时
 onMounted(() => {
-  const pages = getCurrentPages()
-  const currentPage = pages[pages.length - 1]
-  if (currentPage) {
-    const route = '/' + currentPage.route
-    // 兼容路径前缀比较
-    const index = tabs.findIndex(tab => ('/' + tab.path) === route)
-    if (index !== -1) {
-      currentTab.value = index
-    }
-  }
+  checkFontLoaded()
 })
 
 </script>
 
 <style lang="scss">
 .container {
-    min-height: 100vh;
+    height: 100vh; /* 固定高度为视口高度 */
     background-color: var(--bg-main);
     color: var(--text-main);
     display: flex;
@@ -511,7 +502,7 @@ onMounted(() => {
     position: relative;
     width: 100%;
     margin: 0 auto;
-    overflow-x: hidden;
+    overflow: hidden; /* 防止容器本身滚动 */
     box-sizing: border-box;
     transition: background-color 0.3s, color 0.3s;
     
@@ -521,113 +512,106 @@ onMounted(() => {
   }
 
 .status-bar {
-  height: var(--status-bar-height);
   width: 100%;
 }
 
-.nav-bar {
-  display: flex;
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 40rpx;
-  background-color: var(--nav-bar-bg);
-  backdrop-filter: blur(10px);
-  border-bottom: 1rpx solid var(--border-main);
-  position: sticky;
+.fixed-header {
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background-color: #1a1811;
+  
+  /* #ifdef H5 */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 500px;
+  /* #endif */
+}
+
+.nav-bar {
+  width: 100%;
+  height: 100rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+  background-color: #1a1811;
+  border-bottom: 1rpx solid var(--border-main);
 }
 
 .logo-area {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 15rpx;
-}
+  flex-shrink: 0;
 
-.logo-icon {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  .logo-img {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.6));
-  }
-}
+  .logo-icon {
+    width: 56rpx;
+    height: 56rpx;
+    margin-right: 12rpx;
+    display: flex;
+    align-items: center;
 
-.logo-text {
-  font-size: 38rpx;
-  font-weight: 900;
-  letter-spacing: -1rpx;
-  color: #d4af37;
-  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
-  margin-left: -5rpx;
-  
-  &.italic {
-    font-style: italic;
-  }
-  
-  .highlight {
-    color: #fff;
-    margin-left: 6rpx;
-    position: relative;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2rpx;
-      left: 0;
+    .logo-img {
       width: 100%;
-      height: 2rpx;
-      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      height: 100%;
     }
   }
 
-  .primary {
-    color: #fff;
-    margin-left: 6rpx;
+  .logo-text {
+    font-size: 32rpx;
+    font-weight: 800;
+    letter-spacing: 2rpx;
+    line-height: 1;
+    color: #d4af37;
+    
+    &.italic {
+      font-style: italic;
+    }
+    
+    .highlight {
+      color: #fff;
+      margin-left: 6rpx;
+    }
   }
 }
 
 .nav-actions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 30rpx;
-}
+  gap: 24rpx;
+  flex-shrink: 0;
 
-.action-btn {
-  width: 80rpx;
-  height: 80rpx;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 20rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60rpx;
+    height: 60rpx;
+  }
 
-.avatar-box {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.05);
-}
+  .avatar-box {
+    width: 64rpx;
+    height: 64rpx;
+    border-radius: 50%;
+    border: 2rpx solid rgba(249, 212, 6, 0.3);
+    overflow: hidden;
 
-.avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 12rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
+    .avatar {
+      width: 100%;
+      height: 100%;
+    }
+  }
 }
 
 .category-scroll {
   width: 100%;
-  background-color: var(--bg-nav-bar);
+  background-color: var(--nav-bar-bg);
   border-bottom: 1rpx solid var(--border-main);
   white-space: nowrap;
 }
@@ -675,9 +659,15 @@ onMounted(() => {
 
 .main-content {
   flex: 1;
+  height: 0; /* 必须：强制 flex 计算生效，否则 scroll-view 会自适应高度导致滚动失效 */
   width: 100%;
-  padding: 30rpx 40rpx;
+  padding: 0 32rpx 30rpx; /* 顶部 padding 移到 placeholder */
   box-sizing: border-box;
+}
+
+.header-placeholder {
+  height: calc(var(--status-bar-height) + 100rpx + 80rpx); /* statusBarHeight + nav-bar(100rpx) + category-scroll(80rpx) */
+  width: 100%;
 }
 
 .hero-card {
@@ -1011,92 +1001,6 @@ onMounted(() => {
 }
 
 .bottom-placeholder {
-  height: 160rpx;
-}
-
-/* 底部导航栏 */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx; 
-  background-color: rgba(26, 24, 17, 0.98); 
-  backdrop-filter: blur(20px); 
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-  display: flex; 
-  justify-content: space-around; 
-  align-items: center; 
-  padding-bottom: env(safe-area-inset-bottom); 
-  z-index: 9999; 
-  box-sizing: border-box; 
-  pointer-events: auto;
-}
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  height: 100%;
-  transition: all 0.3s ease;
-  
-  &.center-item {
-    position: relative;
-    overflow: visible;
-  }
-  
-  .center-icon {
-    position: absolute;
-    top: -40rpx;
-    width: 110rpx;
-    height: 110rpx;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 8rpx solid #1a1811;
-    z-index: 10001;
-    background-color: #8B0000;
-    
-    &.pulse-glow {
-      box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
-    }
-  }
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
-    .tab-text {
-      color: #f9d406;
-      font-weight: 700;
-    }
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .7; transform: scale(0.95); }
-}
-
-.bottom-placeholder {
-  height: 160rpx;
+  height: calc(110rpx + env(safe-area-inset-bottom));
 }
 </style>

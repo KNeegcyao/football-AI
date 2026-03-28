@@ -582,7 +582,7 @@ const handleLogin = async () => {
     .input-icon {
       color: #94a3b8;
       margin-right: 24rpx;
-      font-size: 40rpx;
+      font-size: 44rpx;
     }
 
     .input-field {
@@ -631,7 +631,7 @@ const handleLogin = async () => {
 
     .toggle-icon {
       color: #94a3b8;
-      font-size: 40rpx;
+      font-size: 44rpx;
     }
   }
 
@@ -676,7 +676,7 @@ const handleLogin = async () => {
     }
 
     .btn-icon {
-      font-size: 32rpx;
+      font-size: 44rpx;
     }
   }
 }

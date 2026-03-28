@@ -47,7 +47,7 @@ export const communityApi = {
   /**
    * 获取趋势话题
    */
-  getTrendTopics: () => request.get('/api/community/topics/trending'),
+  getTrendTopics: (params) => request.get('/api/community/topics/trending', params),
 
   /**
    * 获取圈子详情

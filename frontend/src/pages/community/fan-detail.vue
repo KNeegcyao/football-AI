@@ -1,17 +1,15 @@
 <template>
   <view class="container" :class="themeClass">
-    <view class="custom-navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="navbar-inner">
-        <view class="left" @click="goBack">
-          <u-icon name="arrow-left" color="var(--text-main)" size="22"></u-icon>
-        </view>
-        <view class="center">
-          <text class="title text-theme-main">新增粉丝</text>
-        </view>
-        <view class="right" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-          <view class="icon-btn bg-theme-secondary" @click="showSettings = true" title="设置">
-            <u-icon name="setting" :color="themeStore.theme === 'dark' ? '#fff' : '#000'" size="24"></u-icon>
-          </view>
+    <view class="navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
+      <view class="nav-left" @click="goBack">
+        <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '48rpx' }">arrow_back</text>
+      </view>
+      <view class="nav-center">
+        <text class="nav-title text-theme-main">新增粉丝</text>
+      </view>
+      <view class="nav-right">
+        <view class="action-btn bg-theme-secondary" @click="showSettings = true">
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '44rpx' }">settings</text>
         </view>
       </view>
     </view>
@@ -22,7 +20,7 @@
         <view class="settings-header border-b border-theme-main">
           <text class="settings-title text-theme-main">新增粉丝消息提醒</text>
           <view class="close-btn" @click="showSettings = false">
-            <u-icon name="close" color="var(--text-secondary)" size="20"></u-icon>
+            <text class="material-icons" :style="{ color: 'var(--text-secondary)', fontSize: '40rpx' }">close</text>
           </view>
         </view>
         <view class="settings-list">
@@ -198,54 +196,54 @@ $pitch-pulse-primary: #f2b90d;
   transition: all 0.3s;
 }
 
-.custom-navbar {
+.navbar {
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 100rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32rpx;
   backdrop-filter: blur(10px);
 
-  .navbar-inner {
-    height: 60px;
+  .nav-left {
     display: flex;
     align-items: center;
-    padding: 0 24rpx 0 32rpx;
+    justify-content: flex-start;
+    flex: 1;
+  }
 
-    .left {
-      display: flex;
-      align-items: center;
-      min-width: 80rpx;
-    }
-
-    .center {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      
-      .title {
-        font-size: 34rpx;
-        font-weight: 800;
-        letter-spacing: 2rpx;
-      }
-    }
-
-    .right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12rpx;
-      min-width: 180rpx;
-    }
+  .nav-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 2;
     
-    .icon-btn {
-      width: 80rpx;
-      height: 80rpx;
-      border-radius: 20rpx;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      &:active {
-        opacity: 0.7;
-      }
+    .nav-title {
+      font-size: 34rpx;
+      font-weight: 800;
+      letter-spacing: 2rpx;
+    }
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    gap: 24rpx;
+  }
+  
+  .action-btn {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 20rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &:active {
+      opacity: 0.7;
     }
   }
 }

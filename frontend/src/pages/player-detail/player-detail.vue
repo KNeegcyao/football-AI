@@ -8,11 +8,11 @@
       <!-- Header Navigation -->
       <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
         <view class="nav-btn-glass" @click="goBack">
-          <text class="material-icons nav-icon">arrow_back</text>
+          <text class="material-icons nav-icon" style="font-size: 44rpx;">arrow_back</text>
         </view>
         <view class="nav-actions">
           <view class="nav-btn-glass" @click="toggleFavorite">
-            <text class="material-icons nav-icon" :class="{ active: isFavorited }">
+            <text class="material-icons nav-icon" :class="{ active: isFavorited }" style="font-size: 48rpx;">
               {{ isFavorited ? 'favorite' : 'favorite_border' }}
             </text>
           </view>
@@ -54,7 +54,7 @@
       <view class="quick-info-row glass-card">
         <view class="info-item-flat">
           <view class="info-icon-wrapper">
-            <view class="material-icons info-icon">straighten</view>
+            <text class="material-icons info-icon" style="font-size: 44rpx;">straighten</text>
           </view>
           <view class="info-content-flat">
             <text class="info-label">身高</text>
@@ -64,7 +64,7 @@
         <view class="info-divider"></view>
         <view class="info-item-flat">
           <view class="info-icon-wrapper">
-            <view class="material-icons info-icon">monitor_weight</view>
+            <text class="material-icons info-icon" style="font-size: 44rpx;">monitor_weight</text>
           </view>
           <view class="info-content-flat">
             <text class="info-label">体重</text>
@@ -74,7 +74,7 @@
         <view class="info-divider"></view>
         <view class="info-item-flat">
           <view class="info-icon-wrapper">
-            <view class="material-icons info-icon">cake</view>
+            <text class="material-icons info-icon" style="font-size: 44rpx;">cake</text>
           </view>
           <view class="info-content-flat">
             <text class="info-label">年龄</text>
@@ -579,54 +579,44 @@ $text-gray: #9ca3af;
 .info-item-flat {
   flex: 1;
   display: flex;
-  flex-direction: row; /* 强制水平排列 */
+  flex-direction: row; 
   align-items: center;
   justify-content: center;
-  gap: 16rpx;
+  gap: 12rpx;
   min-width: 0;
+  padding: 10rpx;
   box-sizing: border-box;
 }
 
 .info-icon-wrapper {
   width: 64rpx;
   height: 64rpx;
-  background: rgba($primary, 0.1);
+  background: rgba(242, 13, 51, 0.1); /* 使用 #f20d33 的透明背景 */
   border-radius: 16rpx;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  
-  .info-icon {
-    color: $primary;
-    font-size: 36rpx;
-    width: 36rpx;
-    height: 36rpx;
-    line-height: 1;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-  }
+}
+
+.info-icon {
+  color: #f20d33;
+  font-size: 44rpx !important;
+  line-height: 1;
 }
 
 .info-content-flat {
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
+  flex-direction: column; 
+  align-items: flex-start;
   justify-content: center;
   min-width: 0;
-  gap: 8rpx;
+  gap: 4rpx;
 }
 
 .info-label {
   color: var(--text-secondary);
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 500;
   line-height: 1;
 }
@@ -634,7 +624,7 @@ $text-gray: #9ca3af;
 .info-value {
   color: var(--text-main);
   font-weight: 700;
-  font-size: 28rpx;
+  font-size: 26rpx;
   line-height: 1;
   white-space: nowrap;
 }
@@ -643,7 +633,7 @@ $text-gray: #9ca3af;
   width: 1rpx;
   height: 40rpx;
   background: var(--border-main);
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 /* Section Common */

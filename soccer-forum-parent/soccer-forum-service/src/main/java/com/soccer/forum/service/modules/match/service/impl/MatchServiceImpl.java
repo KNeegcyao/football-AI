@@ -13,6 +13,7 @@ import com.soccer.forum.service.modules.match.service.MatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -44,6 +45,7 @@ public class MatchServiceImpl implements MatchService {
     private final MatchMapper matchMapper;
     private final TeamMapper teamMapper;
 
+    @Autowired
     public MatchServiceImpl(MatchMapper matchMapper, TeamMapper teamMapper) {
         this.matchMapper = matchMapper;
         this.teamMapper = teamMapper;
@@ -176,10 +178,14 @@ public class MatchServiceImpl implements MatchService {
         MatchVO vo = new MatchVO();
         BeanUtils.copyProperties(match, vo);
         
-        // 如果数据库中没有 AI 预测值 (null 或 0)，生成模拟数据
+        // 如果数据库中没有 AI 预测值 (null 或 0)，生成基于 Match ID 的稳定伪随机数据
+        // 这样可以确保同一场比赛显示的预测值是固定的，增强“真实感”
         if (vo.getHomeWinProb() == null || vo.getHomeWinProb() == 0.0) {
-            double home = 0.3 + Math.random() * 0.4; // 30% - 70%
-            double draw = Math.random() * (1.0 - home);
+            long seed = match.getId() != null ? match.getId() : System.currentTimeMillis();
+            java.util.Random random = new java.util.Random(seed);
+            
+            double home = 0.3 + random.nextDouble() * 0.4; // 30% - 70%
+            double draw = random.nextDouble() * (1.0 - home);
             double away = 1.0 - home - draw;
             
             // 保留两位小数

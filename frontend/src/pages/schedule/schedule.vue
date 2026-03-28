@@ -1,50 +1,62 @@
 <template>
-  <view class="schedule-container" :class="themeClass">
-    <!-- 状态栏占位 -->
-    <view class="status-bar"></view>
+  <view class="schedule-container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 固定顶部容器 -->
+    <view class="fixed-header">
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 顶部导航栏 -->
-    <view class="nav-bar bg-nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-      <view class="logo-area">
-        <view class="logo-icon">
-          <image class="logo-img" src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" mode="aspectFit"></image>
+      <!-- 顶部导航栏 -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
+        <view class="logo-area">
+          <view class="logo-icon">
+            <image src="/static/soccer-logo.png" mode="aspectFit" class="logo-img"></image>
+          </view>
+          <view class="logo-text italic">
+            PITCH<text class="highlight text-theme-main">PULSE</text>
+          </view>
         </view>
-        <text class="logo-text italic">Socca<text class="highlight">Hub</text></text>
+
+        <view class="nav-actions">
+          <view class="action-btn" @click="goToSearch">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">search</text>
+          </view>
+          <view class="avatar-box" @click="goToProfile">
+            <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
+          </view>
+        </view>
       </view>
 
-      <view class="nav-actions">
-        <view class="action-btn bg-theme-secondary" @click="goToSearch">
-          <image :src="getFullImageUrl('/static/icons/actions/search.svg')" style="width: 44rpx; height: 44rpx; filter: invert(var(--is-dark)); opacity: 0.8;"></image>
+      <!-- 日期选择器容器 -->
+      <view class="calendar-fixed-area bg-theme-main">
+        <!-- 日期选择器标题 -->
+        <view class="calendar-header">
+          <text class="current-month text-theme-main">{{ currentYearMonth }}</text>
+          <text class="view-calendar-btn">查看日历</text>
         </view>
-        <view class="avatar-box bg-theme-secondary" @click="goToProfile">
-          <image class="avatar" :src="userAvatar" mode="aspectFill" @error="handleAvatarError"></image>
-        </view>
+        <!-- 日期选择器滚动条 -->
+        <scroll-view scroll-x class="date-selector" show-scrollbar="false">
+          <view class="date-list">
+            <view 
+              v-for="(item, index) in dates" 
+              :key="index"
+              class="date-item bg-card"
+              :class="{ active: activeDateIndex === index }"
+              @click="selectDate(index)"
+            >
+              <text class="date-week" :class="activeDateIndex === index ? 'text-white' : 'text-theme-secondary'">{{ item.week }}</text>
+              <text class="date-day" :class="activeDateIndex === index ? 'text-white' : 'text-theme-main'">{{ item.day }}日</text>
+              <view class="date-dot" v-if="activeDateIndex === index"></view>
+            </view>
+          </view>
+        </scroll-view>
       </view>
     </view>
-
-    <!-- 日期选择器 -->
-    <view class="calendar-header bg-theme-main">
-      <text class="current-month text-theme-main">{{ currentYearMonth }}</text>
-      <text class="view-calendar-btn">查看日历</text>
-    </view>
-    <scroll-view scroll-x class="date-selector bg-theme-main" show-scrollbar="false">
-      <view class="date-list">
-        <view 
-          v-for="(item, index) in dates" 
-          :key="index"
-          class="date-item bg-card"
-          :class="{ active: activeDateIndex === index }"
-          @click="selectDate(index)"
-        >
-          <text class="date-week" :class="activeDateIndex === index ? 'text-white' : 'text-theme-secondary'">{{ item.week }}</text>
-          <text class="date-day" :class="activeDateIndex === index ? 'text-white' : 'text-theme-main'">{{ item.day }}日</text>
-          <view class="date-dot" v-if="activeDateIndex === index"></view>
-        </view>
-      </view>
-    </scroll-view>
 
     <!-- 赛事列表内容 -->
-    <view class="content-scroll">
+    <scroll-view scroll-y class="content-scroll">
+      <!-- 顶部占位 -->
+      <view class="header-placeholder"></view>
+      
       <!-- 正在直播 -->
       <view class="section" v-if="liveMatches.length > 0">
         <view class="match-card live-card bg-card border-theme-main" v-for="match in liveMatches" :key="match.id">
@@ -82,7 +94,7 @@
           </view>
           <view class="card-footer border-theme-main">
             <view class="footer-left">
-              <image :src="getFullImageUrl('/static/icons/actions/play_circle.svg')" style="width: 28rpx; height: 28rpx; margin-right: 8rpx;"></image>
+              <text class="material-icons" style="font-size: 28rpx; margin-right: 8rpx; color: #4caf50;">play_circle</text>
               <text class="footer-text text-theme-secondary">视频直播中</text>
             </view>
             <view class="footer-right" @click.stop="openAiAnalysis(match)">
@@ -147,7 +159,7 @@
               <view class="indicator"></view>
               <text class="match-meta text-theme-secondary">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
             </view>
-            <image :src="getFullImageUrl('/static/icons/actions/bell.svg')" style="width: 36rpx; height: 36rpx; opacity: 0.2; filter: invert(var(--is-dark));"></image>
+            <text class="material-icons" style="font-size: 44rpx; opacity: 0.2; color: var(--text-main);">notifications</text>
         </view>
         <view class="mini-body">
             <view class="mini-team">
@@ -223,40 +235,33 @@
 
       <!-- 无比赛提示 -->
       <view class="no-match" v-if="liveMatches.length === 0 && upcomingMatches.length === 0 && finishedMatches.length === 0">
-        <image :src="getFullImageUrl('/static/icons/actions/info.svg')" style="width: 128rpx; height: 128rpx; opacity: 0.1; filter: invert(var(--is-dark));"></image>
+        <text class="material-icons" style="font-size: 128rpx; opacity: 0.1; color: var(--text-main);">info</text>
         <text class="no-match-text text-theme-secondary">今日暂无比赛</text>
       </view>
-    </view>
+      
+      <!-- 底部占位 -->
+      <view class="bottom-placeholder"></view>
+    </scroll-view>
 
     <!-- 底部导航占位 -->
     <view class="safe-area-bottom"></view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in tabs" :key="index" 
-            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
-            @tap="handleTabClick(index)">
-        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
-        </view>
-        <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
-          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-        </template>
-      </view>
-    </view>
+    <CustomTabBar :currentTab="1" />
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import { matchApi, userApi, fileApi } from '@/api'
+import { ref, onMounted, computed, watch } from 'vue'
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
+import { matchApi, userApi } from '@/api'
 import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight)
 const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
@@ -279,8 +284,8 @@ const openAiAnalysis = async (match) => {
       recentForm: `${match.homeTeam?.name} 近期状态良好，${match.awayTeam?.name} 略有起伏。`
     })
     
-    if (res.code === 200) {
-      aiAnalysisResult.value = res.data
+    if (res) {
+      aiAnalysisResult.value = res
     } else {
       aiAnalysisResult.value = 'AI 分析暂时不可用，请稍后再试。'
     }
@@ -309,8 +314,10 @@ const getUserProfile = async () => {
       return
     }
     const res = await userApi.getProfile()
-    if (res && res.avatar) {
-      userAvatar.value = getFullImageUrl(res.avatar)
+    // 兼容：res 直接是数据，或者是包含 data 属性的对象
+    const userData = res?.data || res
+    if (userData && userData.avatar) {
+      userAvatar.value = getFullImageUrl(userData.avatar)
     } else {
       userAvatar.value = '/static/soccer-logo.png'
     }
@@ -331,14 +338,21 @@ onShow(() => {
   getUserProfile()
 })
 
-const currentTab = ref(1)
-const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
-]
+const leagues = ref([
+  { id: 0, name: '全部', icon: 'sports_soccer' },
+  { id: 1, name: '中超', icon: 'flag' },
+  { id: 2, name: '英超', icon: 'military_tech' },
+  { id: 3, name: '西甲', icon: 'emoji_events' },
+  { id: 4, name: '德甲', icon: 'workspace_premium' },
+  { id: 5, name: '意甲', icon: 'stars' },
+  { id: 6, name: '法甲', icon: 'workspace_premium' },
+  { id: 7, name: '欧冠', icon: 'trophy' }
+])
+
+const currentLeague = ref(0)
+const selectedDate = ref(new Date().toISOString().split('T')[0])
+const matches = ref([])
+const loading = ref(false)
 
 // 初始化日期列表（前后3天）
 const initDates = () => {
@@ -441,11 +455,21 @@ const fetchMatches = async () => {
     const dateItem = dates.value[activeDateIndex.value]
     if (!dateItem) return
     
-    const matches = await matchApi.getByDate(dateItem.fullDate)
-    if (matches) {
-      liveMatches.value = matches.filter(m => m.status === 1)
-      upcomingMatches.value = matches.filter(m => m.status === 0)
-      finishedMatches.value = matches.filter(m => m.status === 2)
+    console.log('Fetching matches for date:', dateItem.fullDate)
+    const res = await matchApi.getByDate(dateItem.fullDate)
+    
+    // 兼容：res 直接是数组，或者是包含 records/data 的对象
+    const actualMatches = Array.isArray(res) 
+      ? res 
+      : (res?.records || res?.data || [])
+    
+    console.log('Fetched matches:', actualMatches.length)
+    
+    if (Array.isArray(actualMatches) && actualMatches.length > 0) {
+      // 状态码兼容：0:未开始, 1:进行中, 2:已结束 (请根据后端实际情况调整)
+      liveMatches.value = actualMatches.filter(m => m.status === 1 || m.status === '1')
+      upcomingMatches.value = actualMatches.filter(m => m.status === 0 || m.status === '0')
+      finishedMatches.value = actualMatches.filter(m => m.status === 2 || m.status === '2')
     } else {
       liveMatches.value = []
       upcomingMatches.value = []
@@ -453,7 +477,10 @@ const fetchMatches = async () => {
     }
   } catch (e) {
     console.error('获取赛程失败:', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    // 只有在非自动刷新时才弹出 Toast，避免干扰
+    if (!refreshTimer) {
+      uni.showToast({ title: '赛程加载失败', icon: 'none' })
+    }
   }
 }
 
@@ -481,57 +508,16 @@ const stopAutoRefresh = () => {
   }
 }
 
-const handleTabClick = (index) => {
-  if (index === currentTab.value) return
-  uni.switchTab({
-    url: '/' + tabs[index].path
-  })
-}
-
-const switchTab = (index) => {
-  handleTabClick(index)
-}
-
-// 页面挂载时修正当前 Tab 索引
+// 页面加载
 onMounted(() => {
-  // #ifdef MP-WEIXIN
-  // 适配小程序胶囊按钮，防止遮挡右上角功能键
-  try {
-    const menuButton = uni.getMenuButtonBoundingClientRect();
-    const systemInfo = uni.getSystemInfoSync();
-    // 胶囊到右边的距离 + 胶囊宽度 + 额外间距 (8px)
-    navbarPaddingRight.value = (systemInfo.screenWidth - menuButton.right) + menuButton.width + 8;
-  } catch (e) {
-    console.error('获取胶囊按钮信息失败:', e);
-    navbarPaddingRight.value = 94; // 微信小程序默认胶囊区域宽度约为 94px
-  }
-  // #endif
-
-  const pages = getCurrentPages()
-  const currentPage = pages[pages.length - 1]
-  if (currentPage) {
-    const route = '/' + currentPage.route
-    // 兼容路径前缀比较
-    const index = tabs.findIndex(tab => ('/' + tab.path) === route)
-    if (index !== -1) {
-      currentTab.value = index
-    }
-  }
-  
   initDates()
   fetchMatches()
-  getUserProfile()
-  startAutoRefresh()
-})
-
-onUnmounted(() => {
-  stopAutoRefresh()
 })
 </script>
 
 <style lang="scss" scoped>
 .schedule-container {
-  min-height: 100vh;
+  height: 100vh; /* 固定高度为视口高度 */
   background-color: var(--bg-main);
   color: var(--text-main);
   display: flex;
@@ -539,17 +525,48 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   margin: 0 auto;
-  overflow-x: hidden;
+  overflow: hidden; /* 防止容器本身滚动 */
   box-sizing: border-box;
-  background-image: radial-gradient(circle at top right, rgba(74, 4, 4, 0.4) 0%, transparent 70%);
+  transition: background-color 0.3s, color 0.3s;
   
   /* #ifdef H5 */
   max-width: 500px;
   /* #endif */
 }
 
+.content-scroll {
+  flex: 1;
+  height: 0; /* 必须：强制 flex 计算生效 */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bottom-placeholder {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+  width: 100%;
+}
+
 .status-bar {
-  height: var(--status-bar-height);
+  width: 100%;
+}
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background-color: #1a1811;
+  
+  /* #ifdef H5 */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 500px;
+  /* #endif */
+}
+
+.header-placeholder {
+  height: calc(var(--status-bar-height) + 100rpx + 260rpx); /* statusBarHeight + nav-bar(100rpx) + calendar(260rpx) */
   width: 100%;
 }
 
@@ -595,7 +612,7 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   max-width: 600rpx;
-  background-color: var(--bg-card);
+  background-color: var(--card-bg);
   border-radius: 40rpx;
   border: 1px solid var(--border-main);
   display: flex;
@@ -664,6 +681,7 @@ onUnmounted(() => {
     .loading-text {
       font-size: 26rpx;
       color: var(--text-secondary);
+      text-align: center;
     }
   }
 
@@ -703,100 +721,87 @@ onUnmounted(() => {
 }
 
 .nav-bar {
-  display: flex;
   width: 100%;
-  box-sizing: border-box;
-  justify-content: space-between;
+  height: 100rpx;
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  padding: 20rpx 40rpx;
-  background-color: var(--nav-bar-bg);
-  backdrop-filter: blur(10px);
+  justify-content: space-between;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+  background-color: #1a1811;
   border-bottom: 1rpx solid var(--border-main);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+}
+
+.calendar-fixed-area {
+  width: 100%;
+  border-bottom: 1rpx solid var(--border-main);
+  background-color: #1a1811;
 }
 
 .logo-area {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 15rpx;
-}
+  flex-shrink: 0;
 
-.logo-icon {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  .logo-img {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.6));
-  }
-}
+  .logo-icon {
+    width: 56rpx;
+    height: 56rpx;
+    margin-right: 12rpx;
+    display: flex;
+    align-items: center;
 
-.logo-text {
-  font-size: 38rpx;
-  font-weight: 900;
-  letter-spacing: -1rpx;
-  color: #d4af37;
-  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
-  margin-left: -5rpx;
-  
-  &.italic {
-    font-style: italic;
-  }
-  
-  .highlight {
-    color: #fff;
-    margin-left: 6rpx;
-    position: relative;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2rpx;
-      left: 0;
+    .logo-img {
       width: 100%;
-      height: 2rpx;
-      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      height: 100%;
     }
   }
 
-  .primary {
-    color: #fff;
-    margin-left: 6rpx;
+  .logo-text {
+    font-size: 32rpx;
+    font-weight: 800;
+    letter-spacing: 2rpx;
+    line-height: 1;
+    color: #d4af37;
+    
+    &.italic {
+      font-style: italic;
+    }
+    
+    .highlight {
+      color: #fff;
+      margin-left: 6rpx;
+    }
   }
 }
 
 .nav-actions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 30rpx;
-}
+  gap: 24rpx;
+  flex-shrink: 0;
 
-.action-btn {
-  width: 80rpx;
-  height: 80rpx;
-  background-color: var(--bg-secondary);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60rpx;
+    height: 60rpx;
+  }
 
-.avatar-box {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: var(--bg-secondary);
-  
-  .avatar {
-    width: 100%;
-    height: 100%;
+  .avatar-box {
+    width: 64rpx;
+    height: 64rpx;
+    border-radius: 50%;
+    border: 2rpx solid rgba(249, 212, 6, 0.3);
+    overflow: hidden;
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
@@ -828,7 +833,7 @@ onUnmounted(() => {
 
   .date-list {
     display: flex;
-    padding: 0 40rpx;
+    padding: 0 32rpx;
     gap: 24rpx;
   }
 
@@ -888,7 +893,7 @@ onUnmounted(() => {
 }
 
 .content-scroll {
-  padding: 40rpx 40rpx 0;
+  padding: 40rpx 32rpx 0;
 }
 
 .section {
@@ -1139,53 +1144,53 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
 
-      .mini-team {
+    .mini-team {
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
+      flex: 1;
+      overflow: hidden;
+
+      .mini-logo {
+        width: 80rpx;
+        height: 80rpx;
+        background-color: #fff;
+        border-radius: 50%;
+        padding: 6rpx;
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 16rpx; /* 减小间距 */
-        flex: 1;
-        overflow: hidden; /* 必须溢出隐藏 */
-
-        .mini-logo {
-          width: 80rpx; /* 减小尺寸 */
-          height: 80rpx;
-          background-color: #fff;
-          border-radius: 50%;
-          padding: 6rpx;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-shrink: 0;
-
-          image {
-            width: 60rpx;
-            height: 60rpx;
-          }
-        }
-
-        .mini-name {
-          font-size: 26rpx; /* 减小字号 */
-          font-weight: 600;
-          color: var(--text-main);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          flex: 1; /* 让名字占据剩余空间 */
-        }
-
-        &.reverse {
-          flex-direction: row-reverse;
-          text-align: right;
-        }
-      }
-
-      .vs-text {
-        font-size: 24rpx;
-        color: var(--text-secondary);
-        font-family: monospace;
-        margin: 0 20rpx; /* 增加左右边距 */
         flex-shrink: 0;
+
+        image {
+          width: 60rpx;
+          height: 60rpx;
+        }
       }
+
+      .mini-name {
+        font-size: 26rpx;
+        font-weight: 600;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+      }
+
+      &.reverse {
+        flex-direction: row-reverse;
+        text-align: right;
+      }
+    }
+
+    .vs-text {
+      font-size: 24rpx;
+      color: var(--text-secondary);
+      font-family: monospace;
+      margin: 0 20rpx;
+      flex-shrink: 0;
+    }
   }
 
   &.finished {
@@ -1211,7 +1216,6 @@ onUnmounted(() => {
       flex-shrink: 0;
     }
 
-    /* 在完赛卡片中，mini-team 内包含 team-info 容器 */
     .team-info {
       display: flex;
       flex-direction: column;
@@ -1229,87 +1233,5 @@ onUnmounted(() => {
 /* 底部导航占位 */
 .safe-area-bottom {
   height: 160rpx;
-}
-
-/* 底部导航栏样式同步自 index.vue */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx; 
-  background-color: rgba(26, 24, 17, 0.98); 
-  backdrop-filter: blur(20px); 
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-  display: flex; 
-  justify-content: space-around; 
-  align-items: center; 
-  padding-bottom: env(safe-area-inset-bottom); 
-  z-index: 9999; 
-  box-sizing: border-box; 
-  pointer-events: auto;
-}
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  height: 100%;
-  transition: all 0.3s ease;
-  
-  &.center-item {
-    position: relative;
-    overflow: visible;
-  }
-  
-  .center-icon {
-    position: absolute;
-    top: -40rpx;
-    width: 110rpx;
-    height: 110rpx;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 8rpx solid #1a1811;
-    z-index: 10001;
-    background-color: #8B0000;
-    
-    &.pulse-glow {
-      box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
-    }
-  }
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
-    .tab-text {
-      color: #f9d406;
-      font-weight: 700;
-    }
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .7; transform: scale(0.95); }
 }
 </style>

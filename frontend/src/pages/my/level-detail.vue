@@ -13,11 +13,11 @@
     <!-- 导航栏 -->
     <view class="nav-header" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <text class="material-symbols-outlined nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333' }">chevron_left</text>
+        <text class="material-icons nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333', fontSize: '48rpx' }">arrow_back</text>
       </view>
       <text class="nav-title">等级详情</text>
       <view class="nav-right" @click="handleShare">
-        <text class="material-symbols-outlined nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333' }">share</text>
+        <text class="material-icons nav-icon" :style="{ color: themeStore.theme === 'dark' ? '#FFFFFF' : '#333333', fontSize: '48rpx' }">share</text>
       </view>
     </view>
 
@@ -49,7 +49,7 @@
           </view>
           <view class="poster-footer">
             <view class="qr-code">
-              <text class="material-symbols-outlined qr-icon">qr_code_2</text>
+              <text class="material-icons qr-icon" style="font-size: 64rpx;">qr_code_2</text>
             </view>
             <view class="app-info">
               <text class="app-name">足球社区</text>
@@ -87,18 +87,18 @@
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="userInfo.level === 2">
-                  <text class="material-symbols-outlined frame-deco deco-tl">sports_soccer</text>
-                  <text class="material-symbols-outlined frame-deco deco-bl">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-tl" style="font-size: 44rpx;">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-bl" style="font-size: 44rpx;">sports_soccer</text>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
-                <text v-if="userInfo.level === 4" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <text v-if="userInfo.level === 4" class="material-icons top-crown" style="font-size: 48rpx;">verified</text>
                 
                 <!-- Lv.5 皇冠装饰 (正上方) -->
-                <text v-if="userInfo.level === 5" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <text v-if="userInfo.level === 5" class="material-icons top-crown" style="font-size: 48rpx;">verified</text>
               </view>
               <view class="level-badge" :class="'lv-badge-' + userInfo.level">
-                <text class="material-symbols-outlined badge-icon">workspace_premium</text>
+                <text class="material-icons badge-icon" style="font-size: 44rpx;">workspace_premium</text>
                 <text class="badge-text">LV.{{ userInfo.level }}</text>
               </view>
             </view>
@@ -107,7 +107,7 @@
           <view class="user-info-text">
             <view class="name-row">
               <text class="user-name">{{ userInfo.nickname || userInfo.username }}</text>
-              <text class="material-symbols-outlined verified-icon">verified</text>
+              <text class="material-icons verified-icon" style="font-size: 44rpx; color: #3b82f6; margin-left: 8rpx;">verified</text>
             </view>
             <view class="tag-row">
               <text class="level-tag">{{ userLevelTitle.split('|')[0] }}</text>
@@ -145,19 +145,19 @@
           <view class="privilege-grid">
             <view class="privilege-item">
               <view class="icon-box medal">
-                <text class="material-symbols-outlined">military_tech</text>
+                <text class="material-icons" style="font-size: 48rpx;">military_tech</text>
               </view>
               <text class="item-name">专属勋章</text>
             </view>
             <view class="privilege-item">
               <view class="icon-box emoji">
-                <text class="material-symbols-outlined">add_reaction</text>
+                <text class="material-icons" style="font-size: 48rpx;">add_reaction</text>
               </view>
               <text class="item-name">评论表情</text>
             </view>
             <view class="privilege-item">
               <view class="icon-box top">
-                <text class="material-symbols-outlined">vertical_align_top</text>
+                <text class="material-icons" style="font-size: 48rpx;">vertical_align_top</text>
               </view>
               <text class="item-name">发帖置顶</text>
             </view>
@@ -171,7 +171,7 @@
             <view class="rule-item">
               <view class="rule-left">
                 <view class="rule-icon post">
-                  <text class="material-symbols-outlined">edit_note</text>
+                  <text class="material-icons" style="font-size: 44rpx;">edit_note</text>
                 </view>
                 <text class="rule-name">发布动态/文章</text>
               </view>
@@ -180,7 +180,7 @@
             <view class="rule-item">
               <view class="rule-left">
                 <view class="rule-icon like">
-                  <text class="material-symbols-outlined">favorite</text>
+                  <text class="material-icons" style="font-size: 44rpx;">favorite</text>
                 </view>
                 <text class="rule-name">获得点赞</text>
               </view>
@@ -189,7 +189,7 @@
             <view class="rule-item">
               <view class="rule-left">
                 <view class="rule-icon comment">
-                  <text class="material-symbols-outlined">forum</text>
+                  <text class="material-icons" style="font-size: 44rpx;">forum</text>
                 </view>
                 <text class="rule-name">发表评论</text>
               </view>
@@ -206,7 +206,7 @@
             <view class="record-item" v-for="(item, index) in expRecords" :key="index">
               <view class="record-left">
                 <view class="record-icon" :class="item.type">
-                  <text class="material-symbols-outlined">{{ item.icon }}</text>
+                  <text class="material-icons" style="font-size: 40rpx;">{{ item.icon }}</text>
                 </view>
                 <view class="record-text">
                   <text class="record-name">{{ item.name }}</text>
@@ -220,11 +220,11 @@
           <!-- 分页控制器 -->
           <view v-if="totalPages > 1" class="pagination-box">
             <view class="page-btn" :class="{ disabled: currentPage === 1 }" @tap="changePage(currentPage - 1)">
-              <text class="material-symbols-outlined">chevron_left</text>
+              <text class="material-icons" style="font-size: 44rpx;">chevron_left</text>
             </view>
             <text class="page-info">{{ currentPage }} / {{ totalPages }}</text>
             <view class="page-btn" :class="{ disabled: currentPage === totalPages }" @tap="changePage(currentPage + 1)">
-              <text class="material-symbols-outlined">chevron_right</text>
+              <text class="material-icons" style="font-size: 44rpx;">chevron_right</text>
             </view>
           </view>
         </view>

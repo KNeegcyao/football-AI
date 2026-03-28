@@ -279,6 +279,7 @@ public class CommunityController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", topic.getId());
             map.put("title", topic.getTitle());
+            map.put("createTime", topic.getCreatedAt());
             
             // 格式化统计数
             String stats;

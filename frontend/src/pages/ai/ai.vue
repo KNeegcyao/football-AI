@@ -1,27 +1,33 @@
 <template>
-  <view class="container" :class="themeClass">
-    <!-- 顶部状态栏占位 -->
-    <view class="status-bar"></view>
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 固定顶部容器 -->
+    <view class="fixed-header">
+      <!-- Status Bar Placeholder -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 顶部导航 -->
-    <view class="header sticky-header glass-effect">
-      <view class="header-content">
-        <view class="header-left">
-          <view class="ai-status">
-            <view class="status-dot animate-pulse"></view>
-            <text class="status-text text-theme-secondary">Pulse AI 在线</text>
+      <!-- Header (Aligned with index.vue) -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
+        <view class="header-content">
+          <view class="header-left">
+            <view class="ai-status">
+              <view class="status-dot animate-pulse"></view>
+              <text class="status-text text-theme-secondary">Pulse AI 在线</text>
+            </view>
           </view>
-        </view>
-        <view class="header-center">
-          <text class="title text-theme-main">AI 智能助手</text>
-        </view>
-        <view class="header-right">
-          <view class="clear-btn" @tap="clearChat">
-            <text class="material-symbols-outlined">delete</text>
+          <view class="header-center">
+            <text class="title text-theme-main">AI 智能助手</text>
+          </view>
+          <view class="header-right">
+            <view class="clear-btn" @tap="clearChat">
+              <text class="material-icons" style="font-size: 48rpx;">delete</text>
+            </view>
           </view>
         </view>
       </view>
     </view>
+
+    <!-- 顶部占位 -->
+    <view class="header-placeholder"></view>
 
     <!-- 聊天记录区域 -->
     <scroll-view 
@@ -40,9 +46,9 @@
           <view class="loading-spinner small"></view>
           <text class="loading-text">正在加载历史记录...</text>
         </view>
-        <view v-for="(msg, index) in messageList" :key="index" :id="'msg-' + index" :class="['message-item', msg.role]">
+        <view v-for="(msg, index) in messageList" :key="msg.id || index" :id="'msg-' + index" :class="['message-item', msg.role]">
           <view class="avatar" v-if="msg.role === 'ai'">
-            <text class="material-symbols-outlined">psychology</text>
+            <text class="material-icons" style="font-size: 48rpx; color: #f9d406;">smart_toy</text>
           </view>
           <view class="bubble-container">
             <view class="bubble">
@@ -51,18 +57,18 @@
                 <image :src="msg.image" mode="widthFix" class="msg-image" style="max-width: 100%; border-radius: 12rpx; margin-bottom: 10rpx; display: block;"></image>
               </view>
               <rich-text v-if="msg.role === 'ai'" :nodes="renderMarkdown(msg.content)" class="markdown-content"></rich-text>
-              <text v-else class="text">{{ msg.content }}</text>
+              <text v-else-if="msg.content" class="text">{{ msg.content }}</text>
             </view>
           </view>
           <view class="avatar" v-if="msg.role === 'user'">
-            <text class="material-symbols-outlined">person</text>
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main); opacity: 0.6;">person</text>
           </view>
         </view>
         
         <!-- Loading 状态 -->
         <view v-if="isLoading" id="loading-msg" class="message-item ai">
           <view class="avatar">
-            <text class="material-symbols-outlined">psychology</text>
+            <text class="material-icons" style="font-size: 48rpx; color: #f9d406;">smart_toy</text>
           </view>
           <view class="bubble-container">
             <view class="bubble loading-bubble">
@@ -87,7 +93,7 @@
         <view class="preview-item">
           <image :src="selectedImage" mode="aspectFill" class="preview-img" @tap="previewSelectedImage"></image>
           <view class="remove-btn" @tap="removeSelectedImage">
-            <text class="material-symbols-outlined">close</text>
+            <text class="material-icons" style="font-size: 44rpx;">close</text>
           </view>
           <view v-if="isUploading" class="upload-mask">
             <view class="loading-spinner"></view>
@@ -98,7 +104,7 @@
       <view class="input-wrapper">
         <!-- 上传图片按钮 -->
         <view class="action-btn" @tap="chooseImage">
-          <image :src="getFullImageUrl('/static/icons/actions/image.svg')" style="width: 48rpx; height: 48rpx; filter: invert(1); opacity: 0.8;"></image>
+          <text class="material-icons" style="font-size: 48rpx; color: var(--text-main); opacity: 0.8;">image</text>
         </view>
 
         <textarea
@@ -113,39 +119,28 @@
         
         <!-- 停止生成按钮 -->
         <view v-if="isLoading" class="stop-btn" @tap="stopAiResponse">
-          <image :src="getFullImageUrl('/static/icons/actions/close.svg')" style="width: 56rpx; height: 56rpx;"></image>
+          <text class="material-icons" style="font-size: 56rpx; color: #ff2e63;">close</text>
         </view>
         
         <!-- 发送按钮 -->
         <view v-else :class="['send-btn', !inputValue.trim() && !selectedImage ? 'disabled' : '']" @tap="sendMessage">
-          <image :src="getFullImageUrl('/static/icons/actions/send.svg')" :style="{ width: '48rpx', height: '48rpx', filter: !inputValue.trim() && !selectedImage ? 'grayscale(1)' : 'none' }"></image>
+          <text class="material-icons" :style="{ fontSize: '48rpx', color: !inputValue.trim() && !selectedImage ? '#ccc' : '#f9d406' }">send</text>
         </view>
       </view>
     </view>
 
     <!-- 底部导航栏 -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in tabs" :key="index" 
-            :class="['tab-item', tab.isCenter ? 'center-item' : '', currentTab === index ? 'active' : '']"
-            @tap="handleTabClick(index)">
-        <view v-if="tab.isCenter" class="center-icon bg-primary pulse-glow">
-          <text class="material-symbols-outlined text-accent animate-pulse" style="font-size: 56rpx;">{{ tab.icon }}</text>
-        </view>
-        <template v-else>
-          <text class="material-symbols-outlined" :style="{ color: currentTab === index ? '#f9d406' : 'rgba(255, 255, 255, 0.4)', fontSize: '48rpx' }">{{ tab.icon }}</text>
-          <text class="tab-text" :class="currentTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-        </template>
-      </view>
-    </view>
+    <CustomTabBar :currentTab="2" />
   </view>
 </template>
 
 <script setup>
-import request, { BASE_URL, getFullImageUrl } from '@/utils/request'
-import { difyApi, aiApi } from '@/api'
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { aiApi } from '@/api'
+import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 import { marked } from 'marked'
 
 // 配置 marked
@@ -164,7 +159,11 @@ const renderMarkdown = (content) => {
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
-const currentTab = ref(2)
+const statusBarHeight = ref(0)
+onMounted(() => {
+  statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 0
+})
+
 const inputValue = ref('')
 const messageList = ref([
   { role: 'ai', content: '您好！我是足球智能助手，您可以问我关于赛程、球员或者是战术分析的问题。' }
@@ -258,20 +257,7 @@ const onScrollToUpper = () => {
   }
 }
 
-const tabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar_month', path: 'pages/schedule/schedule' },
-  { text: 'AI助手', icon: 'psychology', path: 'pages/ai/ai', isCenter: true },
-  { text: '社区', icon: 'forum', path: 'pages/community/community' },
-  { text: '我的', icon: 'person', path: 'pages/my/my' }
-]
 
-const handleTabClick = (index) => {
-  if (index === currentTab.value) return
-  uni.switchTab({
-    url: '/' + tabs[index].path
-  })
-}
 
 // 选择图片
 const chooseImage = () => {
@@ -493,6 +479,17 @@ onMounted(() => {
     uni.setStorageSync('guest_id', 'guest-' + Math.random().toString(36).substring(2, 15))
   }
   
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  if (currentPage) {
+    const route = '/' + currentPage.route
+    // 兼容路径前缀比较
+    const index = tabs.value.findIndex(tab => ('/' + tab.path) === route)
+    if (index !== -1) {
+      currentTab.value = index
+    }
+  }
+
   if (conversationId.value) {
     loadHistory()
   } else {
@@ -502,6 +499,35 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+/* 固定顶部容器 */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: var(--nav-bar-bg);
+  
+  /* #ifdef H5 */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 500px;
+  /* #endif */
+}
+
+.header-placeholder {
+  height: calc(var(--status-bar-height) + 100rpx);
+  width: 100%;
+}
+
+.nav-bar {
+  height: 100rpx;
+  width: 100%;
+  background-color: var(--nav-bar-bg);
+  display: flex;
+  align-items: center;
+}
+
 /* 历史加载状态 */
 .history-loading {
   display: flex;
@@ -512,7 +538,8 @@ onMounted(() => {
   
   .loading-text {
     font-size: 24rpx;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-secondary);
+    opacity: 0.6;
   }
 }
 
@@ -540,7 +567,7 @@ onMounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #1a1a1a; // 纯粹竞技暗黑
+  background-color: var(--bg-main);
   margin: 0 auto;
   width: 100%;
   overflow: hidden;
@@ -553,20 +580,10 @@ onMounted(() => {
 .status-bar {
   height: var(--status-bar-height);
   width: 100%;
-  flex-shrink: 0;
-}
-
-.sticky-header {
-  flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glass-effect {
-  background: rgba(26, 26, 26, 0.95);
-  backdrop-filter: blur(20px);
 }
 
 .header-content {
+  width: 100%;
   height: 100rpx;
   padding: 0 32rpx;
   display: flex;
@@ -602,13 +619,14 @@ onMounted(() => {
   font-size: 32rpx;
   font-weight: 700;
   letter-spacing: 2rpx;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .clear-btn {
-  color: rgba(255, 255, 255, 0.4);
-  .material-symbols-outlined {
-    font-size: 40rpx;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  .material-icons {
+    font-size: 44rpx;
   }
 }
 
@@ -616,7 +634,7 @@ onMounted(() => {
 .chat-content {
   flex: 1;
   width: 100%;
-  background-color: #1a1a1a; // 统一背景
+  background-color: var(--bg-main);
   overflow: hidden;
 }
 
@@ -638,12 +656,12 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     
-    .material-symbols-outlined {
-      font-size: 48rpx;
-      color: rgba(255, 255, 255, 0.6);
+    image {
+      width: 48rpx;
+      height: 48rpx;
     }
   }
 
@@ -654,7 +672,7 @@ onMounted(() => {
   }
 
   .bubble {
-    padding: 24rpx 28rpx; // 增加内边距
+    padding: 24rpx 28rpx;
     border-radius: 28rpx;
     font-size: 28rpx;
     line-height: 1.6;
@@ -673,7 +691,7 @@ onMounted(() => {
       :deep(h1), :deep(h2), :deep(h3), :deep(h4) {
         margin: 16rpx 0 8rpx;
         font-weight: bold;
-        color: #f9d406; // 标题使用金黄色
+        color: #f9d406;
       }
       
       :deep(h1) { font-size: 34rpx; }
@@ -721,7 +739,8 @@ onMounted(() => {
         border-left: 4px solid #f9d406;
         padding-left: 20rpx;
         margin: 12rpx 0;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--text-secondary);
+        opacity: 0.7;
       }
     }
   }
@@ -731,19 +750,15 @@ onMounted(() => {
     gap: 20rpx;
     
     .bubble {
-      background: rgba(255, 255, 255, 0.05);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
       border-top-left-radius: 4rpx;
-      backdrop-filter: blur(10px); // 增强玻璃拟态
     }
     
     .avatar {
       background: rgba(249, 212, 6, 0.1);
       border: 1px solid rgba(249, 212, 6, 0.2);
-      .material-symbols-outlined {
-        color: #f9d406;
-      }
     }
   }
 
@@ -752,18 +767,15 @@ onMounted(() => {
     gap: 20rpx;
     
     .bubble {
-      background: #f9d406; // 金黄色背景
-      color: #000000; // 黑色文字
-      font-weight: 600; // 稍微加粗
+      background: #f9d406;
+      color: #000000;
+      font-weight: 600;
       border-top-right-radius: 4rpx;
-      box-shadow: 0 4rpx 20rpx rgba(249, 212, 6, 0.3); // 增强发光感
+      box-shadow: 0 4rpx 20rpx rgba(249, 212, 6, 0.3);
     }
     
     .avatar {
-      background: rgba(255, 255, 255, 0.1);
-      .material-symbols-outlined {
-        color: #fff;
-      }
+      background: var(--bg-secondary);
     }
   }
 }
@@ -797,7 +809,8 @@ onMounted(() => {
 /* 底部输入框 */
 .input-area-container {
   padding: 20rpx 30rpx calc(20rpx + 140rpx); // 留出底部导航栏位置
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--nav-bar-bg);
+  border-top: 1px solid var(--border-color);
   
   .image-preview-bar {
     display: flex;
@@ -809,7 +822,7 @@ onMounted(() => {
       height: 120rpx;
       border-radius: 12rpx;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
       
       .preview-img {
         width: 100%;
@@ -828,8 +841,8 @@ onMounted(() => {
         align-items: center;
         justify-content: center;
         
-        .material-symbols-outlined {
-          font-size: 24rpx;
+        .material-icons {
+          font-size: 44rpx;
           color: #fff;
         }
       }
@@ -858,8 +871,8 @@ onMounted(() => {
   }
 
   .input-wrapper {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 40rpx;
     padding: 12rpx 24rpx;
     display: flex;
@@ -871,57 +884,64 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: rgba(255, 255, 255, 0.6);
-      
-      .material-symbols-outlined {
-        font-size: 44rpx;
-      }
+      color: var(--text-main);
+      opacity: 0.6;
       
       &:active {
         color: #f9d406;
+        opacity: 1;
       }
     }
 
     .chat-input {
       flex: 1;
-      min-height: 44rpx;
+      min-height: 40rpx;
       max-height: 200rpx;
-      background: transparent;
-      border: none;
-      padding: 12rpx 0;
-      color: #ffffff;
+      background-color: var(--bg-secondary);
+      border-radius: 12rpx;
+      padding: 18rpx 24rpx;
       font-size: 28rpx;
-      line-height: 1.5;
+      line-height: 1.4;
+      border: 1px solid var(--border-color);
     }
 
     .stop-btn {
-      width: 64rpx;
-      height: 64rpx;
+      width: 80rpx;
+      height: 80rpx;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ff4d4f;
+      border-radius: 16rpx;
+      background: rgba(255, 46, 99, 0.1);
+      transition: all 0.2s;
       
-      .material-symbols-outlined {
-        font-size: 52rpx;
+      &:active {
+        transform: scale(0.95);
+        background: rgba(255, 46, 99, 0.2);
       }
     }
 
     .send-btn {
-      width: 64rpx;
-      height: 64rpx;
+      width: 80rpx;
+      height: 80rpx;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #f9d406;
+      border-radius: 16rpx;
+      background: rgba(249, 212, 6, 0.1);
       transition: all 0.2s;
-
-      .material-symbols-outlined {
-        font-size: 52rpx;
+      
+      &:active:not(.disabled) {
+        transform: scale(0.95);
+        background: rgba(249, 212, 6, 0.2);
       }
-
+      
       &.disabled {
-        color: rgba(255, 255, 255, 0.1);
+        opacity: 0.5;
+      }
+      
+      .material-icons {
+        font-size: 44rpx;
       }
     }
   }
@@ -933,94 +953,6 @@ onMounted(() => {
 
 /* 底部导航占位 */
 .bottom-placeholder {
-  height: 40rpx;
-}
-
-/* 底部导航栏 */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx; 
-  background-color: rgba(26, 24, 17, 0.98); 
-  backdrop-filter: blur(20px); 
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1); 
-  display: flex; 
-  justify-content: space-around; 
-  align-items: center; 
-  padding-bottom: env(safe-area-inset-bottom); 
-  z-index: 9999; 
-  box-sizing: border-box; 
-  pointer-events: auto;
-}
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  height: 100%;
-  transition: all 0.3s ease;
-  
-  &.center-item {
-    position: relative;
-    overflow: visible;
-  }
-  
-  .center-icon {
-    position: absolute;
-    top: -40rpx;
-    width: 110rpx;
-    height: 110rpx;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 8rpx solid #1a1811;
-    z-index: 10001;
-    background-color: #8B0000;
-    
-    &.pulse-glow {
-      box-shadow: 0 0 20rpx rgba(139, 0, 0, 0.6);
-    }
-  }
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
-    .tab-text {
-      color: #f9d406;
-      font-weight: 700;
-    }
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .7; transform: scale(0.95); }
-}
-
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 0 0 rgba(139, 0, 0, 0.4); }
-  70% { box-shadow: 0 0 0 20rpx rgba(139, 0, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(139, 0, 0, 0); }
+  height: calc(120rpx + env(safe-area-inset-bottom));
 }
 </style>

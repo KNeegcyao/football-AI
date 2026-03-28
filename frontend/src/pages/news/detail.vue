@@ -45,6 +45,12 @@ const fontSizeLevel = ref(0)
 const isEyeProtection = ref(false)
 const fontClasses = ['text-base', 'text-lg', 'text-xl']
 
+const iconFilter = computed(() => {
+  // 在护眼模式下总是保持图标原始色（黑色），在深色背景下反色为白色
+  if (isEyeProtection.value) return 'none'
+  return themeStore.theme === 'dark' ? 'invert(1) brightness(2)' : 'none'
+})
+
 onLoad((options) => {
   if (options.id) {
     newsId.value = options.id
@@ -238,7 +244,7 @@ onPageScroll((e) => {
     <header :class="['fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b h5-header-fix transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/80 border-black/5' : 'bg-nav-bar border-theme-main']">
       <view class="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
-          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="44rpx"></u-icon>
+          <image :src="getFullImageUrl('/static/icons/actions/arrow_left.svg')" :style="{ width: '44rpx', height: '44rpx', filter: iconFilter, opacity: 0.8 }"></image>
         </button>
         <view class="flex items-center gap-1">
           <view class="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
@@ -270,7 +276,7 @@ onPageScroll((e) => {
         <view :class="['flex items-center justify-between border-y py-4 transition-colors', isEyeProtection ? 'border-theme-main' : 'border-theme-main']">
           <view class="flex items-center gap-3">
             <view class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <u-icon name="edit-pen" color="#f9d406" size="32rpx"></u-icon>
+              <image :src="getFullImageUrl('/static/icons/actions/edit.svg')" :style="{ width: '32rpx', height: '32rpx', filter: iconFilter }"></image>
             </view>
             <view>
               <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">{{ news.author || 'Football AI' }}</text>
@@ -283,28 +289,28 @@ onPageScroll((e) => {
       <!-- Article Body -->
       <!-- AI Smart Summary / Impact -->
       <view v-if="news.summary || news.impact || isImpactLoading" 
-            class="mb-8 p-4 rounded-xl border transition-all duration-500 overflow-hidden relative" 
+            class="mb-8 p-4 rounded-xl border transition-all duration-500 overflow-hidden relative ai-impact-section" 
             :class="[
               isEyeProtection ? 'bg-primary/5 border-primary/20' : 'bg-white/5 border-white/10',
               isImpactExpanded || isImpactLoading ? 'max-h-none' : 'max-h-[220rpx]',
               isImpactExpanded ? 'pb-12' : ''
             ]">
-        <view class="flex items-center gap-2 mb-3">
-          <u-icon v-if="isImpactLoading" name="star-fill" color="#D4AF37" size="32rpx" class="animate-spin"></u-icon>
-          <text v-else class="material-symbols-outlined text-primary animate-pulse" style="font-size: 36rpx;">auto_awesome</text>
+        <view class="flex items-center gap-2 mb-3 ai-title-row">
+          <image v-if="isImpactLoading" :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" class="w-8 h-8 animate-spin" :style="{ filter: iconFilter }"></image>
+          <image v-else :src="getFullImageUrl('/static/icons/actions/auto_awesome.svg')" class="w-9 h-9 animate-pulse" :style="{ filter: iconFilter }"></image>
           <text class="text-sm font-bold text-primary">{{ isImpactLoading ? 'AI 正在深度思考...' : 'AI 深度点评' }}</text>
         </view>
         
-        <view v-if="isImpactLoading" class="flex flex-col gap-3 py-2">
+        <view v-if="isImpactLoading" class="flex flex-col gap-3 py-2 ai-loading-skeleton">
           <view class="skeleton-line w-full h-3 rounded bg-white/10 animate-pulse"></view>
           <view class="skeleton-line w-[90%] h-3 rounded bg-white/10 animate-pulse"></view>
           <view class="skeleton-line w-[95%] h-3 rounded bg-white/10 animate-pulse"></view>
         </view>
 
-        <view v-else-if="news.impact" class="impact-content-wrapper" :class="{'line-clamp-2 opacity-50': !isImpactExpanded}">
+        <view v-else-if="news.impact" class="impact-content-wrapper ai-content-left" :class="{'line-clamp-2 opacity-50': !isImpactExpanded}">
           <rich-text :nodes="renderedImpact" :class="['text-sm leading-relaxed transition-colors markdown-body', isEyeProtection ? 'text-gray-700' : 'text-gray-300']"></rich-text>
         </view>
-        <text v-else-if="news.summary" :class="['text-sm leading-relaxed transition-colors line-clamp-2', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
+        <text v-else-if="news.summary" :class="['text-sm leading-relaxed transition-colors line-clamp-2 ai-summary-left', isEyeProtection ? 'text-gray-700' : 'text-gray-300']">
           {{ news.summary }}
         </text>
 
@@ -318,7 +324,7 @@ onPageScroll((e) => {
               @click="toggleImpact">
           <view class="flex items-center gap-1 mb-2 py-1.5 px-4 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 active:scale-95 transition-transform">
             <text class="text-[20rpx] font-bold text-primary">{{ isImpactExpanded ? '收起全文' : '点击展开深度点评' }}</text>
-            <u-icon :name="isImpactExpanded ? 'arrow-up' : 'arrow-down'" color="#D4AF37" size="20rpx"></u-icon>
+            <image :src="isImpactExpanded ? getFullImageUrl('/static/icons/actions/arrow_up.svg') : getFullImageUrl('/static/icons/actions/arrow_down.svg')" :style="{ width: '20rpx', height: '20rpx', filter: iconFilter }"></image>
           </view>
         </view>
       </view>
@@ -342,7 +348,7 @@ onPageScroll((e) => {
       
       <!-- Favorite -->
       <view @click="toggleFavorite" class="flex flex-col items-center gap-0.5 transition-colors cursor-pointer" :class="isFavorited ? 'text-red-500' : (isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary')">
-        <u-icon :name="isFavorited ? 'heart-fill' : 'heart'" :color="isFavorited ? '#ef4444' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')" size="40rpx"></u-icon>
+        <image :src="isFavorited ? getFullImageUrl('/static/icons/actions/heart_fill.svg') : getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
         <text class="text-[10px] font-medium">{{ isFavorited ? '已收藏' : '收藏' }}</text>
       </view>
 
@@ -350,7 +356,7 @@ onPageScroll((e) => {
 
       <!-- Font Size -->
       <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
-        <text class="material-symbols-outlined" :style="{fontSize: '40rpx', color: isEyeProtection ? '#4B5563' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')}">format_size</text>
+        <image :src="getFullImageUrl('/static/icons/actions/font_size.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
         <text class="text-[10px] font-medium">字号</text>
       </view>
 
@@ -358,7 +364,7 @@ onPageScroll((e) => {
 
       <!-- Eye Protection -->
       <view @click="toggleEyeProtection" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-primary' : 'text-theme-secondary hover:text-primary']">
-        <u-icon :name="isEyeProtection ? 'eye-fill' : 'eye'" :color="isEyeProtection ? '#f9d406' : (themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563')" size="40rpx"></u-icon>
+        <image :src="isEyeProtection ? getFullImageUrl('/static/icons/actions/eye_fill.svg') : getFullImageUrl('/static/icons/actions/eye.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
         <text class="text-[10px] font-medium">{{ isEyeProtection ? '日间' : '护眼' }}</text>
       </view>
 
@@ -366,7 +372,7 @@ onPageScroll((e) => {
 
       <!-- Share -->
       <view @click="handleShare" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
-        <u-icon name="share" :color="themeStore.theme === 'dark' ? '#9CA3AF' : '#4B5563'" size="40rpx"></u-icon>
+        <image :src="getFullImageUrl('/static/icons/actions/share.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
         <text class="text-[10px] font-medium">转发</text>
       </view>
     </view>
@@ -383,6 +389,24 @@ onPageScroll((e) => {
 </style>
 
 <style scoped>
+.ai-impact-section {
+  text-align: left !important;
+  display: block !important;
+}
+
+.ai-title-row {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.ai-content-left, .ai-summary-left, .ai-loading-skeleton {
+  text-align: left !important;
+  width: 100% !important;
+}
+
 .markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3) {
   font-weight: bold;
   margin-top: 16rpx;

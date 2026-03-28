@@ -9,7 +9,17 @@ export { getFullImageUrl }
  */
 export const formatTime = (time) => {
   if (!time) return ''
-  const date = new Date(time.replace('T', ' '))
+  // 已经是格式化好的时间描述
+  if (typeof time === 'string' && (time.includes('前') || time.includes('刚刚'))) {
+    return time
+  }
+  
+  const date = new Date(time.toString().replace('T', ' '))
+  // 检查无效日期
+  if (isNaN(date.getTime())) {
+    return time.toString()
+  }
+  
   const now = new Date()
   const diff = now - date
   
@@ -22,7 +32,7 @@ export const formatTime = (time) => {
   if (diff < day) return Math.floor(diff / hour) + '小时前'
   if (diff < 7 * day) return Math.floor(diff / day) + '天前'
   
-  return time.substring(0, 10)
+  return time.toString().substring(0, 10)
 }
 
 /**

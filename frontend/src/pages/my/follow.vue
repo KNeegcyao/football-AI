@@ -4,13 +4,13 @@
     <view class="header-sticky" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="header-content">
         <view class="header-left" @click="goBack">
-          <text class="material-symbols-outlined text-slate-100">arrow_back_ios_new</text>
+          <text class="material-icons text-slate-100" style="font-size: 48rpx;">arrow_back</text>
         </view>
         <view class="header-center">
           <text class="text-lg font-bold tracking-tight">关注与粉丝</text>
         </view>
         <view class="header-right">
-          <text class="material-symbols-outlined text-slate-100">search</text>
+          <text class="material-icons text-slate-100" style="font-size: 48rpx;">search</text>
         </view>
       </view>
     </view>
@@ -55,14 +55,14 @@
               mode="aspectFill"
             ></image>
             <view v-if="user.isVerified" class="verified-badge">
-              <text class="material-symbols-outlined verified-icon">check</text>
+              <text class="material-icons verified-icon" style="font-size: 24rpx;">check</text>
             </view>
           </view>
           
           <view class="user-info">
             <view class="name-row">
               <text class="nickname">{{ user.nickname }}</text>
-              <text v-if="user.isVerified" class="material-symbols-outlined verified-tag">verified</text>
+              <text v-if="user.isVerified" class="material-icons verified-tag" style="font-size: 32rpx; color: #f2b90d;">verified</text>
             </view>
             <text class="bio">{{ user.bio || '暂无简介' }}</text>
           </view>
@@ -80,7 +80,7 @@
         <!-- Loading & Empty States -->
         <u-loadmore :status="loadStatus" color="#64748b" margin-top="40" margin-bottom="40" />
         <view class="empty-state" v-if="userList.length === 0 && loadStatus !== 'loading'">
-          <text class="material-symbols-outlined empty-icon">group</text>
+          <text class="material-icons empty-icon" style="font-size: 120rpx;">group</text>
           <text>暂无{{ currentTab === 0 ? '关注' : '粉丝' }}</text>
         </view>
       </view>
