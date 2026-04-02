@@ -1,17 +1,21 @@
 <template>
-  <view class="page-container min-h-screen font-display" :class="themeClass">
-    <!-- Top Navigation Header -->
-    <view class="header-sticky bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="header-content">
+  <view class="page-container font-display" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 顶部导航栏 -->
+    <view class="header-container">
+      <!-- Status Bar Placeholder -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+      <!-- Header (Aligned with index.vue) -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
         <view class="header-left" v-if="isOthersProfile" @click="goBack">
-          <text class="material-symbols-outlined text-2xl text-theme-main">arrow_back</text>
+          <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">arrow_back</text>
         </view>
-        <view class="header-center">
-          <text class="text-lg font-bold text-theme-main">{{ userInfo.nickname }}的战术板</text>
+        <view class="header-center" :class="{ 'center-with-back': isOthersProfile }">
+          <text class="logo-text text-theme-main">{{ userInfo.nickname }}的战术板</text>
         </view>
         <view class="header-right" v-if="!isOthersProfile">
-          <button class="action-icon-btn bg-theme-secondary" @click="goToSettings">
-            <text class="material-symbols-outlined text-2xl text-theme-main">settings</text>
+          <button class="action-btn" @click="goToSettings">
+            <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">settings</text>
           </button>
         </view>
         <view class="header-right" v-else>
@@ -21,12 +25,14 @@
       </view>
     </view>
 
-    <scroll-view scroll-y class="main-content" @scrolltolower="loadMore">
+    <view class="main-content">
+      <!-- 移除 header-placeholder，因为 header-container 已经占位 -->
+      
       <!-- Profile Header Section -->
       <view class="profile-header">
         <view class="cover-image-container" @click="chooseCover">
           <view class="cover-overlay"></view>
-          <image v-if="userInfo.cover" class="cover-image" :src="userInfo.cover" mode="aspectFill"></image>
+          <image v-if="userInfo.cover" class="cover-image" :src="getFullImageUrl(userInfo.cover)" mode="aspectFill"></image>
           <view v-else class="cover-placeholder bg-theme-secondary"></view>
         </view>
         
@@ -43,27 +49,28 @@
               <view v-if="Number(userInfo.level) === 5" class="frame-glow-lv5-bg"></view>
 
               <view class="avatar-wrapper border-2 border-white/20">
-                <image class="avatar-img" :src="userInfo.avatar" mode="aspectFill" @click="chooseAvatar"></image>
+                <image class="avatar-img" :src="getFullImageUrl(userInfo.avatar)" mode="aspectFill" @click="chooseAvatar"></image>
               </view>
 
               <!-- 头像框装饰层 -->
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="Number(userInfo.level) === 2">
-                  <text class="material-symbols-outlined frame-deco deco-tl">sports_soccer</text>
-                  <text class="material-symbols-outlined frame-deco deco-bl">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-tl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-bl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 4" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <text v-if="Number(userInfo.level) === 4" class="material-icons top-crown" style="font-size: 48rpx; color: #FACC15;">verified</text>
                 
                 <!-- Lv.5 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 5" class="material-symbols-outlined top-crown">workspace_premium</text>
+                <text v-if="Number(userInfo.level) === 5" class="material-icons top-crown" style="font-size: 48rpx; color: #f2b90d;">verified</text>
               </view>
               
-              <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + userInfo.level">
-                <text class="material-symbols-outlined badge-icon">workspace_premium</text>
-                <text class="badge-text">LV.{{ userInfo.level }}</text>
+              <!-- 等级标识 -->
+              <view class="level-badge" @click="goToLevelDetail" :class="'lv-badge-' + (userInfo.level || 1)">
+                <text class="material-icons badge-icon" style="font-size: 32rpx; margin-right: 4rpx; color: white;">verified</text>
+                <text class="badge-text">LV.{{ userInfo.level || 1 }}</text>
               </view>
             </view>
           </view>
@@ -71,7 +78,7 @@
           <view class="identity-info">
             <view class="name-row">
               <text class="nickname">{{ userInfo.nickname }}</text>
-              <text class="material-symbols-outlined text-primary text-xl">verified</text>
+              <text class="material-icons" style="font-size: 44rpx; margin-left: 8rpx; color: #f2b90d;">verified</text>
             </view>
             
             <!-- 层次感称号标签 -->
@@ -96,7 +103,7 @@
         <template v-else>
           <button class="btn-primary" @click="handleFollow">关注</button>
           <button class="btn-secondary" @click="handleMessage">
-            <text class="material-symbols-outlined" style="font-size: 32rpx; margin-right: 8rpx;">chat_bubble</text>
+            <text class="material-icons" style="font-size: 44rpx; margin-right: 8rpx; color: var(--text-main);">chat_bubble</text>
             <text>私信</text>
           </button>
         </template>
@@ -140,13 +147,13 @@
               <view class="post-text-side">
                 <text class="post-title text-theme-main">{{ post.title }}</text>
                 <text class="post-excerpt text-theme-secondary">{{ post.content }}</text>
-                <view class="post-meta">
+      <view class="post-meta">
                   <view class="meta-item text-theme-secondary">
-                    <text class="material-symbols-outlined text-sm">favorite</text>
+                    <text class="material-icons" style="font-size: 44rpx;">favorite</text>
                     <text>{{ formatStats(post.likes) }}</text>
                   </view>
                   <view class="meta-item text-theme-secondary">
-                    <text class="material-symbols-outlined text-sm">chat_bubble</text>
+                    <text class="material-icons" style="font-size: 44rpx;">chat_bubble</text>
                     <text>{{ post.commentCount }}</text>
                   </view>
                   <text class="post-time text-theme-secondary">{{ formatTime(post.createTime) }}</text>
@@ -158,7 +165,7 @@
           
           <u-loadmore :status="loadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="posts.length > 0" />
           <view class="empty-state" v-if="posts.length === 0 && !loading">
-            <text class="material-symbols-outlined empty-icon text-theme-secondary">description</text>
+            <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">description</text>
             <text class="text-theme-secondary">暂无动态</text>
           </view>
         </view>
@@ -184,11 +191,11 @@
                   <text class="post-excerpt text-theme-secondary">{{ item.content }}</text>
                   <view class="post-meta">
                     <view class="meta-item text-theme-secondary">
-                      <text class="material-symbols-outlined text-sm">favorite</text>
+                      <text class="material-icons" style="font-size: 44rpx;">favorite</text>
                       <text>{{ formatStats(item.likes) }}</text>
                     </view>
                     <view class="meta-item text-theme-secondary">
-                      <text class="material-symbols-outlined text-sm">chat_bubble</text>
+                      <text class="material-icons" style="font-size: 44rpx;">chat_bubble</text>
                       <text>{{ item.commentCount }}</text>
                     </view>
                     <text class="post-time text-theme-secondary">{{ formatTime(item.createTime) }}</text>
@@ -226,14 +233,14 @@
           
           <u-loadmore :status="favLoadStatus" :color="themeStore.theme === 'dark' ? '#64748b' : '#94a3b8'" v-if="getCurrentFavList().length > 0" />
           <view class="empty-state" v-if="getCurrentFavList().length === 0 && !favLoading">
-            <text class="material-symbols-outlined empty-icon text-theme-secondary">bookmark</text>
+            <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">bookmark</text>
             <text class="text-theme-secondary">暂无{{ favSubTabs[currentFavSubTab] }}收藏</text>
           </view>
         </view>
         
         <!-- 相册 (Tab 2) -->
         <view v-else-if="currentProfileTab === 2" class="empty-state">
-          <text class="material-symbols-outlined empty-icon text-theme-secondary">photo_library</text>
+          <text class="material-icons empty-icon text-theme-secondary" style="font-size: 80rpx;">photo_library</text>
           <text class="text-theme-secondary">暂无相册</text>
         </view>
       </view>
@@ -241,17 +248,14 @@
       <view class="footer-info">
         <text class="version-text text-theme-secondary">PitchPulse v2.4.0 (Build 503)</text>
       </view>
-    </scroll-view>
-
-    <!-- Bottom Navigation Bar -->
-    <view class="tab-bar bg-tab-bar border-theme-main">
-      <view v-for="(tab, index) in mainTabs" :key="index" class="tab-item" :class="{ active: currentMainTab === index }"
-        @tap="handleMainTabClick(index)">
-        <u-icon :name="tab.icon" :color="currentMainTab === index ? '#f9d406' : themeStore.theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'" size="24"></u-icon>
-        <text class="tab-text" :class="currentMainTab === index ? 'text-[#f9d406]' : 'text-theme-secondary'">{{ tab.text }}</text>
-      </view>
+      
+      <!-- 底部占位：适配底部导航栏，避免内容被遮挡。高度与 CustomTabBar.vue 中的 .tab-bar 保持一致 -->
+      <view class="bottom-placeholder" :style="{ height: isOthersProfile ? 'env(safe-area-inset-bottom)' : 'calc(110rpx + env(safe-area-inset-bottom))' }"></view>
     </view>
-    
+
+    <!-- 底部导航栏 -->
+    <CustomTabBar v-if="!isOthersProfile" :currentTab="4" />
+
     <!-- Logout Modal -->
     <u-modal
       :show="showLogoutModal"
@@ -269,20 +273,15 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { userApi, fileApi, postApi, favoriteApi, playerApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
-const currentMainTab = ref(3)
-const mainTabs = [
-  { text: '首页', icon: 'home', path: 'pages/index/index' },
-  { text: '赛程', icon: 'calendar', path: 'pages/schedule/schedule' },
-  { text: '社区', icon: 'chat', path: 'pages/community/community' },
-  { text: '我的', icon: 'account', path: 'pages/my/my' }
-]
+
 
 const currentProfileTab = ref(0)
 const profileTabs = ref([
@@ -420,31 +419,17 @@ onShow(() => {
     return
   }
   
-  // 强制刷新主页标识
-  currentMainTab.value = 3
+
   
   loadUserProfile(options.userId)
 })
 
-// 定义一个统一的头像处理函数
-const getAvatarUrl = (avatar, type = 'avatar') => {
-  if (!avatar) {
-    return type === 'avatar' ? '/static/soccer-logo.png' : ''
+// 使用统一的 getFullImageUrl 处理图片 URL
+const getAvatarUrl = (path, type = 'avatar') => {
+  if (!path) {
+    return getFullImageUrl(type === 'avatar' ? '/static/soccer-logo.png' : '')
   }
-  
-  // 处理后端返回的带 /uploads/ 的各种路径 (包括 localhost, 127.0.0.1 或旧 IP)
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  
-  // 如果已经是完整 URL 且不含 /uploads/，则直接返回
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  
-  // 如果是相对路径
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(path)
 }
 
 const loadUserProfile = async (userId) => {
@@ -525,7 +510,7 @@ const loadPosts = async () => {
         id: item.id,
         title: item.title,
         content: item.content,
-        image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
+        image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
         createTime: item.createTime,
         likes: item.likes || 0,
         commentCount: item.commentCount || 0
@@ -585,7 +570,7 @@ const loadFavorites = async () => {
           id: item.id,
           title: item.title,
           content: stripHtml(item.content),
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
           createTime: item.createTime,
           likes: item.likes || 0,
           commentCount: item.commentCount || 0
@@ -604,7 +589,7 @@ const loadFavorites = async () => {
           id: item.id,
           title: item.title,
           content: stripHtml(item.summary || item.content).substring(0, 100),
-          image: item.image ? fileApi.getFileUrl(item.image) : '',
+          image: item.image ? getFullImageUrl(item.image) : '',
           createTime: item.createTime
         }))
         favoriteNews.value = favPage.value === 1 ? newData : [...favoriteNews.value, ...newData]
@@ -683,12 +668,6 @@ const goToPlayerDetail = (id) => {
   uni.navigateTo({ url: `/pages/player-detail/player-detail?id=${id}` })
 }
 
-const handleMainTabClick = (index) => {
-  const tab = mainTabs[index]
-  if (currentMainTab.value === index) return
-  uni.switchTab({ url: '/' + tab.path })
-}
-
 const handleFollow = () => {
   uni.showToast({ title: '关注成功', icon: 'success' })
 }
@@ -743,10 +722,17 @@ const chooseCover = () => {
 const uploadFile = (path, type) => {
   uni.showLoading({ title: '上传中...' })
   console.log('开始上传文件:', path, '类型:', type)
+  
+  // 如果是头像上传，使用专门的用户头像上传接口，该接口会自动更新数据库
+  const uploadUrl = type === 'avatar' 
+    ? (userApi.uploadAvatarUrl.startsWith('/') ? userApi.uploadAvatarUrl : '/' + userApi.uploadAvatarUrl)
+    : (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl)
+
   uni.uploadFile({
-    url: BASE_URL + (fileApi.uploadUrl.startsWith('/') ? fileApi.uploadUrl : '/' + fileApi.uploadUrl),
+    url: BASE_URL + uploadUrl,
     filePath: path,
     name: 'file',
+    formData: { type }, // 保持原有 formData 兼容性
     header: { 
       'Authorization': 'Bearer ' + uni.getStorageSync('token'),
       'Accept': 'application/json'
@@ -763,26 +749,32 @@ const uploadFile = (path, type) => {
       }
       try {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
-        if (data.code === 200 || data.code === 0) {
-          const fileUrl = data.data?.url || data.data || data.url
-          if (fileUrl) {
-            updateProfile({ [type]: fileUrl })
-          } else {
-            uni.showToast({ title: '返回数据中未找到文件路径', icon: 'none' })
+        if (data.code === 200) {
+          const url = data.data
+          if (type === 'avatar') {
+            userInfo.value.avatar = getFullImageUrl(url)
+            uni.showToast({ title: '头像更新成功', icon: 'success' })
+          } else if (type === 'cover') {
+            userInfo.value.cover = getFullImageUrl(url)
+            // 如果封面也需要同步更新到数据库，后续可以添加专门接口
+            // 目前假设 cover 只是上传并返回 URL，由保存按钮统一提交
+            uni.showToast({ title: '封面上传成功', icon: 'success' })
           }
         } else {
           uni.showToast({ title: data.msg || '上传失败', icon: 'none' })
         }
       } catch (e) {
-        console.error('解析上传响应失败:', e, '原始数据:', res.data)
-        uni.showToast({ title: '服务器响应格式错误', icon: 'none' })
+        console.error('解析上传响应失败:', e)
+        uni.showToast({ title: '解析响应失败', icon: 'none' })
       }
     },
     fail: (err) => {
       console.error('上传文件失败:', err)
-      uni.showToast({ title: '上传失败: ' + (err.errMsg || '网络错误'), icon: 'none' })
+      uni.showToast({ title: '网络请求失败', icon: 'none' })
     },
-    complete: () => uni.hideLoading()
+    complete: () => {
+      uni.hideLoading()
+    }
   })
 }
 
@@ -814,44 +806,87 @@ const formatStats = (num) => {
 .page-container {
   display: flex;
   flex-direction: column;
-  background-color: #12110a;
+  background-color: var(--bg-main);
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+  
+  /* #ifdef H5 */
+  max-width: 500px;
+  /* #endif */
 }
 
-.header-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: rgba(18, 17, 10, 0.8);
+.header-container {
+  background-color: var(--nav-bar-bg);
   backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+  width: 100%;
 }
 
-.header-content {
-  height: 120rpx;
+.status-bar {
+  height: var(--status-bar-height);
+  width: 100%;
+}
+
+.nav-bar {
+  height: 100rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40rpx;
+  padding: 0 32rpx;
+  width: 100%;
 }
 
-.action-icon-btn {
+.header-left, .header-right {
+  width: 100rpx;
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  &.center-with-back {
+    margin-right: 0;
+  }
+}
+
+.logo-text {
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+
+.action-btn {
   background: none;
   border: none;
   padding: 0;
   margin: 0;
-  color: #f2b90d;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
   &::after { border: none; }
 }
 
 .main-content {
-  flex: 1;
-  height: 0;
+  width: 100%;
 }
 
-  .profile-header {
+.bottom-placeholder {
+  width: 100%;
+  pointer-events: none;
+}
+
+.profile-header {
     position: relative;
     overflow: hidden;
 
@@ -904,7 +939,7 @@ const formatStats = (num) => {
         align-items: center;
         justify-content: center;
         overflow: visible;
-        z-index: 10;
+        z-index: 50;
         width: 224rpx;
         height: 224rpx;
         border-radius: 50%;
@@ -1006,12 +1041,68 @@ const formatStats = (num) => {
 
 .progress-ring-box {
   position: relative;
-  width: 224rpx;
-  height: 224rpx;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
+  z-index: 50;
+}
+
+.level-badge {
+  position: absolute;
+  bottom: 0;
+  right: -10rpx;
+  z-index: 100;
+
+  /* 1. 放弃 min-width，直接给固定宽度 */
+  width: 100rpx; /* 稍微增加宽度，确保内容不溢出 */
+  height: 36rpx; /* 稍微增加高度，视觉比例更好 */
+
+  /* 2. 确保背景和边框正确 */
+  background-color: #f2b90d; /* 兜底背景色 */
+  background: linear-gradient(135deg, #f2b90d, #f9d406);
+  border: 4rpx solid #1a1a1a;
+  border-radius: 100rpx;
+
+  /* 3. 强制内部内容水平垂直居中 */
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0;
+  white-space: nowrap;
+  pointer-events: auto;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+  overflow: visible !important;
+
+  .badge-icon {
+    font-size: 24rpx !important;
+    font-weight: normal !important;
+    color: #000000 !important;
+    margin: 0 2rpx 0 0 !important;
+    line-height: 1;
+    position: relative; /* 启用 z-index */
+    transform: translateY(1rpx);
+    z-index: 110;
+  }
+
+  .badge-text {
+    font-size: 18rpx !important;
+    font-weight: 900 !important;
+    color: #000000 !important;
+    line-height: 1;
+    margin: 0 !important;
+    position: relative; /* 启用 z-index */
+    transform: translateY(2rpx);
+    z-index: 110;
+  }
+
+  &.lv-badge-5 {
+    background: linear-gradient(90deg, #f2b90d, #fff) !important;
+    box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6) !important;
+  }
 }
 
 .progress-ring {
@@ -1161,40 +1252,6 @@ const formatStats = (num) => {
   box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.4);
 }
 
-.level-badge {
-  position: absolute;
-  bottom: -4rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
-  color: #000000;
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
-  z-index: 40;
-  white-space: nowrap;
-  border: 2rpx solid #1e293b;
-
-  .badge-icon {
-    font-size: 22rpx !important;
-    font-weight: bold;
-  }
-
-  .badge-text {
-    font-size: 20rpx;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  &.lv-badge-5 {
-    background: linear-gradient(90deg, #f2b90d, #fff);
-    box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6);
-  }
-}
 
 .stats-container {
   display: flex;
@@ -1274,7 +1331,7 @@ const formatStats = (num) => {
 
 .tabs-sticky {
   position: sticky;
-  top: 88rpx;
+  top: 0;
   z-index: 90;
   background-color: var(--nav-bar-bg);
   backdrop-filter: blur(20px);
@@ -1284,7 +1341,7 @@ const formatStats = (num) => {
 .tabs-content {
   display: flex;
   padding: 0 32rpx;
-  border-bottom: 1px solid rgba(242, 185, 13, 0.1);
+  border-bottom: 1rpx solid var(--border-main);
 }
 
 .tab-item {
@@ -1378,7 +1435,7 @@ const formatStats = (num) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 128rpx 0;
+  padding: 40rpx 0;
   color: #64748b;
   gap: 16rpx;
 }
@@ -1386,23 +1443,29 @@ const formatStats = (num) => {
 .empty-icon {
   font-size: 96rpx;
   opacity: 0.2;
-}.footer-info {
-    padding: 64rpx 0 160rpx; /* 确保内容不被 120rpx 的导航栏遮挡 */
-    text-align: center;
-  }
+}
+
+.footer-info {
+  padding: 20rpx 0 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
 
   /* 收藏二级分类样式 */
   .fav-sub-tabs {
     display: flex;
     padding: 20rpx 32rpx;
     gap: 20rpx;
-    background-color: #12110a;
+    background-color: var(--bg-main);
     
     .sub-tab-item {
       padding: 12rpx 32rpx;
       border-radius: 30rpx;
-      background-color: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.6);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
       font-size: 24rpx;
       transition: all 0.3s;
       
@@ -1422,13 +1485,14 @@ const formatStats = (num) => {
     padding: 20rpx 32rpx;
     
     .player-card {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: var(--card-bg);
       border-radius: 16rpx;
       padding: 24rpx 16rpx;
       display: flex;
       flex-direction: column;
       align-items: center;
       transition: all 0.3s;
+      border: 1rpx solid var(--border-main);
       
       &:active {
         background-color: rgba(255, 255, 255, 0.1);
@@ -1461,94 +1525,10 @@ const formatStats = (num) => {
     }
   }
 
-  .version-text {
+.version-text {
   font-size: 20rpx;
-  color: #334155;
-  letter-spacing: 4rpx;
-  text-transform: uppercase;
-}
-
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  
-  /* #ifdef H5 */
-  max-width: 500px;
-  /* #endif */
-  
-  height: 120rpx; /* 统一高度为 120rpx */
-  background-color: rgba(26, 24, 17, 0.98); /* 统一深色背景 */
-  backdrop-filter: blur(20px); /* 开启毛玻璃效果 */
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  
-  /* 适配安全区域 */
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-  
-  z-index: 9999;
-  box-sizing: border-box;
-}
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  
-  .tab-text {
-    font-size: 20rpx;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-  }
-  
-  &.active {
-    .tab-text {
-      color: #f9d406; /* 选中颜色统一为金黄色 */
-      font-weight: 700;
-    }
-  }
-}
-
-/* Material Icons Support */
-.material-symbols-outlined {
-  font-family: 'MaterialIcons' !important;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  direction: ltr;
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes gold-pulse {
-  0% { transform: scale(1); border-color: #FACC15; }
-  50% { transform: scale(1.02); border-color: #FFF176; box-shadow: 0 0 20rpx #FACC15; }
-  100% { transform: scale(1); border-color: #FACC15; }
-}
-
-@keyframes frame-breath {
-  0% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
-  50% { box-shadow: 0 0 25rpx rgba(242, 185, 13, 0.5); }
-  100% { box-shadow: 0 0 10rpx rgba(242, 185, 13, 0.2); }
+  color: #64748b;
+  letter-spacing: 2rpx;
+  opacity: 0.6;
 }
 </style>

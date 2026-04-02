@@ -284,7 +284,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { communityApi, fileApi, postApi, matchApi, playerApi } from '@/api/index';
+import { communityApi, postApi, matchApi, playerApi } from '@/api/index';
+import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -337,10 +338,10 @@ const loadMatches = async () => {
     const res = await matchApi.getByTeam(circleId.value);
     matches.value = res.map(match => {
       if (match.homeTeam && match.homeTeam.logoUrl) {
-        match.homeTeam.logoUrl = fileApi.getFileUrl(match.homeTeam.logoUrl);
+        match.homeTeam.logoUrl = getFullImageUrl(match.homeTeam.logoUrl);
       }
       if (match.awayTeam && match.awayTeam.logoUrl) {
-        match.awayTeam.logoUrl = fileApi.getFileUrl(match.awayTeam.logoUrl);
+        match.awayTeam.logoUrl = getFullImageUrl(match.awayTeam.logoUrl);
       }
       return match;
     });
@@ -509,7 +510,7 @@ onLoad((options) => {
     circleMembers.value = formatCount(memberCount.value);
   }
   if (options.image) {
-    circleImage.value = fileApi.getFileUrl(decodeURIComponent(options.image));
+    circleImage.value = getFullImageUrl(decodeURIComponent(options.image));
   }
   
   // Get system info for status bar
@@ -542,7 +543,7 @@ const fetchCircleDetail = async () => {
     const team = await communityApi.getCircleDetail(circleId.value);
     if (team) {
       circleName.value = team.name;
-      circleImage.value = fileApi.getFileUrl(team.logoUrl);
+      circleImage.value = getFullImageUrl(team.logoUrl);
       
       // 更新成员数与在线人数（确保使用详情接口返回的真实实时数据）
       memberCount.value = team.followerCount || 0;
@@ -552,7 +553,7 @@ const fetchCircleDetail = async () => {
       // 使用后端简介或回退到本地配置
       const config = circleConfigs[team.name] || circleConfigs['皇家马德里'];
       circleDesc.value = team.description || team.englishName || config.desc || '暂无简介'; 
-      heroImage.value = team.stadiumBgUrl ? fileApi.getFileUrl(team.stadiumBgUrl) : config.hero;
+      heroImage.value = team.stadiumBgUrl ? getFullImageUrl(team.stadiumBgUrl) : config.hero;
       
       if (!team.description && circleConfigs[team.name]) {
         circleDesc.value = circleConfigs[team.name].desc;
@@ -614,15 +615,15 @@ const loadPosts = async () => {
           userId: post.userId,
           title: post.title,
           content: post.content,
-          image: postImages.length > 0 ? fileApi.getFileUrl(postImages[0]) : '', 
-          images: postImages.length > 0 ? postImages.map(img => fileApi.getFileUrl(img)) : [],
+          image: postImages.length > 0 ? getFullImageUrl(postImages[0]) : '', 
+          images: postImages.length > 0 ? postImages.map(img => getFullImageUrl(img)) : [],
           likes: post.likes || 0,
           isLiked: post.isLiked || false,
           isFollowing: false, // Default to false as list API might not return it
           comments: post.commentCount || 0,
           shares: 0, 
           userName: post.userName || '未知用户', 
-          userAvatar: post.userAvatar ? fileApi.getFileUrl(post.userAvatar) : '/static/default-avatar.png', 
+          userAvatar: post.userAvatar ? getFullImageUrl(post.userAvatar) : '/static/default-avatar.png', 
           time: new Date(post.createdAt).toLocaleDateString()
         };
       });

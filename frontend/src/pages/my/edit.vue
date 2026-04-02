@@ -1,18 +1,18 @@
 <template>
   <view class="page-container min-h-screen font-display pb-12 max-w-[500px] mx-auto shadow-2xl relative" :class="themeClass">
     <!-- Header -->
-    <view class="fixed top-0 left-0 right-0 z-[999] px-4 pt-12 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix header-bg">
-      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white active:bg-white/10" @click="goBack">
-        <text class="material-icons-round" style="font-size: 24px;">arrow_back</text>
+    <view class="fixed top-0 left-0 right-0 z-[999] px-4 pb-4 flex flex-row items-center justify-between border-b border-white/5 shadow-md h5-header-fix header-bg" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-theme-main active:bg-white/10" @click="goBack">
+        <text class="material-icons" style="font-size: 48rpx;">arrow_back</text>
       </view>
-      <text class="text-xl font-bold tracking-tight text-white">编辑资料</text>
-      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white active:bg-white/10" @click="loadProfile">
-        <text class="material-icons-round" style="font-size: 20px;">refresh</text>
+      <text class="text-xl font-bold tracking-tight text-theme-main">编辑资料</text>
+      <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-theme-main active:bg-white/10" @click="loadProfile">
+        <text class="material-icons" style="font-size: 44rpx;">refresh</text>
       </view>
     </view>
 
     <!-- Content -->
-    <view class="px-6 pt-[120px]">
+    <view class="px-6" :style="{ paddingTop: 'calc(' + statusBarHeight + 'px + 120rpx)' }">
       <!-- Avatar Section -->
       <view class="flex flex-col items-center mb-8">
         <view class="w-24 h-24 rounded-full border-2 border-[#f9d406] overflow-hidden bg-[#2C2C2C] mb-4 relative active:opacity-80" @click="chooseAvatar">
@@ -103,10 +103,12 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi } from '@/api'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 const isEmail = (email) => {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
 }
@@ -148,16 +150,22 @@ const loadProfile = async () => {
     console.log('用户资料加载成功:', res)
     if (res) {
       // Create a new object to ensure reactivity triggers
+      // Ensure currentAvatarPath stores a relative path if it contains /uploads/
+      let avatarPath = res.avatar || ''
+      if (avatarPath.includes('/uploads/')) {
+        avatarPath = avatarPath.substring(avatarPath.indexOf('/uploads/'))
+      }
+      
       const newData = {
         nickname: res.nickname || '',
         phone: res.phone || res.username || '',
         email: res.email || '',
-        avatar: res.avatar ? fileApi.getFileUrl(res.avatar) : '',
+        avatar: res.avatar ? getFullImageUrl(res.avatar) : '',
         bio: res.bio || ''
       }
       console.log('设置表单数据:', newData)
       form.value = newData
-      currentAvatarPath.value = res.avatar || ''
+      currentAvatarPath.value = avatarPath
     } else {
       console.error('用户资料为空')
       uni.showToast({ title: '未获取到用户资料', icon: 'none' })
@@ -189,8 +197,9 @@ const uploadAvatar = (filePath) => {
   uni.showLoading({ title: '上传头像...' })
   const token = uni.getStorageSync('token')
   
+  // 使用专门的用户头像上传接口，该接口会自动更新数据库
   uni.uploadFile({
-    url: 'http://192.168.5.6:8080/api/files/upload',
+    url: BASE_URL + (userApi.uploadAvatarUrl.startsWith('/') ? userApi.uploadAvatarUrl : '/' + userApi.uploadAvatarUrl),
     filePath: filePath,
     name: 'file',
     header: {
@@ -202,11 +211,10 @@ const uploadAvatar = (filePath) => {
           const data = JSON.parse(res.data)
           if (data.code === 200) {
             const newAvatarUrl = data.data
-            // Update form immediately for preview
-            const fullUrl = fileApi.getFileUrl(newAvatarUrl)
-            form.value.avatar = fullUrl
+            // 更新预览
+            form.value.avatar = getFullImageUrl(newAvatarUrl)
             currentAvatarPath.value = newAvatarUrl 
-            uni.showToast({ title: '头像上传成功', icon: 'success' })
+            uni.showToast({ title: '头像上传并同步成功', icon: 'success' })
           } else {
             uni.showToast({ title: data.msg || '上传失败', icon: 'none' })
           }

@@ -1,20 +1,37 @@
 <template>
   <view class="container" :class="themeClass">
     <!-- 自定义导航栏 -->
-    <view class="custom-navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="navbar-inner">
-        <view class="left" @click="goBack">
-          <u-icon name="arrow-left" color="var(--text-main)" size="22"></u-icon>
+    <view class="navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
+      <view class="nav-left" @click="goBack">
+        <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '48rpx' }">arrow_back</text>
+      </view>
+      <view class="nav-center">
+        <text class="page-title text-theme-main">消息通知</text>
+      </view>
+      <view class="nav-right">
+        <view class="action-btn bg-theme-secondary" @click="markAllRead" title="一键清理">
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '44rpx' }">cleaning_services</text>
         </view>
-        <view class="center">
-          <text class="brand-text text-theme-main">PITCHPULSE</text>
+        <view class="action-btn bg-theme-secondary" @click="showSettings = true">
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '44rpx' }">settings</text>
         </view>
-        <view class="right" :style="{ paddingRight: navbarPaddingRight + 'px' }">
-          <view class="icon-btn bg-theme-secondary" @click="markAllRead" title="全部已读">
-            <u-icon name="order" color="var(--text-main)" size="24"></u-icon>
-          </view>
-          <view class="icon-btn bg-theme-secondary" title="设置">
-            <u-icon name="setting" color="var(--text-main)" size="24"></u-icon>
+      </view>
+    </view>
+
+    <!-- 设置弹窗 -->
+    <view class="settings-modal" v-if="showSettings" @click="showSettings = false">
+      <view class="modal-content bg-theme-main" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title text-theme-main">通知设置</text>
+          <text class="material-icons close-btn text-theme-secondary" @click="showSettings = false">close</text>
+        </view>
+        <view class="settings-list">
+          <view class="settings-item border-theme-main">
+            <view class="item-left">
+              <text class="item-title text-theme-main">消息提醒</text>
+              <text class="item-desc text-theme-secondary">关闭后APP首页将不再进行数字提醒</text>
+            </view>
+            <switch :checked="enableNotification" @change="toggleNotification" color="#f2b90d" />
           </view>
         </view>
       </view>
@@ -24,19 +41,19 @@
     <section class="category-section">
       <view class="category-item" @click="filterByType('reply')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-emerald">
-          <u-icon name="chat" color="#10b981" size="28"></u-icon>
+          <text class="material-icons" style="color: #10b981; font-size: 56rpx;">chat</text>
         </view>
         <text class="label text-theme-secondary">回复与@</text>
       </view>
       <view class="category-item" @click="filterByType('like')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-rose">
-          <u-icon name="thumb-up" color="#f43f5e" size="28"></u-icon>
+          <text class="material-icons" style="color: #f43f5e; font-size: 56rpx;">thumb_up</text>
         </view>
         <text class="label text-theme-secondary">收到喜欢</text>
       </view>
       <view class="category-item" @click="filterByType('follow')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-sky">
-          <u-icon name="account" color="#0ea5e9" size="28"></u-icon>
+          <text class="material-icons" style="color: #0ea5e9; font-size: 56rpx;">person_add</text>
         </view>
         <text class="label text-theme-secondary">新增粉丝</text>
       </view>
@@ -78,7 +95,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useChatStore } from '@/store/chat';
 import { useThemeStore } from '@/store/theme';
-import { fileApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request.js';
 import { onPullDownRefresh, onLoad } from '@dcloudio/uni-app';
 
 const chatStore = useChatStore();
@@ -88,6 +105,8 @@ const themeClass = computed(() => `theme-${themeStore.theme}`);
 const navbarPaddingRight = ref(16);
 const statusBarHeight = ref(0);
 const sessions = computed(() => chatStore.sessions);
+const showSettings = ref(false);
+const enableNotification = computed(() => chatStore.enableNotification);
 
 onLoad(() => {
   const systemInfo = uni.getSystemInfoSync();
@@ -142,7 +161,7 @@ const filterByType = (type) => {
 };
 
 const getAvatarUrl = (url) => {
-  return fileApi.getFileUrl(url) || '/static/default-avatar.png';
+  return getFullImageUrl(url) || '/static/default-avatar.png';
 };
 
 const formatMessage = (content) => {
@@ -180,6 +199,10 @@ const goBack = () => {
   uni.navigateBack();
 };
 
+const toggleNotification = (e) => {
+  chatStore.setNotification(e.detail.value);
+};
+
 const handleSessionClick = (session) => {
   const otherNickname = encodeURIComponent(session.otherNickname || '');
   const otherAvatar = encodeURIComponent(session.otherAvatar || '');
@@ -197,59 +220,114 @@ const handleSessionClick = (session) => {
 }
 
 /* 自定义导航栏样式 */
-.custom-navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    min-height: 100rpx;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10rpx 32rpx;
+    backdrop-filter: blur(10px);
 
-  .navbar-inner {
-    height: 60px; /* 从 44px 增加到 56px */
+  .nav-left {
     display: flex;
     align-items: center;
-    padding: 0 0 0 12rpx; /* 左边保持 32rpx，右边缩小到 24rpx */
+    justify-content: flex-start;
+    flex: 1;
+  }
 
-    .left {
-      display: flex;
-      align-items: center;
-      min-width: 80rpx; /* 缩小左侧宽度以腾出空间 */
+  .nav-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 2;
+    
+    .page-title {
+      font-size: 34rpx;
+      font-weight: 600;
     }
+  }
 
-    .center {
-      flex: 1;
+  .nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    gap: 24rpx;
+  }
+  
+  .action-btn {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 20rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &:active {
+      opacity: 0.7;
+    }
+  }
+}
+
+/* 设置弹窗样式 */
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  
+  .modal-content {
+    width: 100%;
+    border-radius: 40rpx 40rpx 0 0;
+    padding: 40rpx;
+    padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+    
+    .modal-header {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40rpx;
       
-      .brand-text {
-        font-size: 38rpx; /* 稍微调大字体 */
-        font-weight: 800;
-        letter-spacing: 2rpx;
-        margin-left: 20rpx; /* 稍微向右偏移，以平衡视觉中心 */
-        
-        &::after {
-          content: 'PULSE';
-          color: $pitch-pulse-primary;
-        }
+      .modal-title {
+        font-size: 34rpx;
+        font-weight: 700;
+      }
+      
+      .close-btn {
+        font-size: 48rpx;
+        padding: 10rpx;
       }
     }
-
-    .right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12rpx; /* 缩小按钮之间的间距 */
-      min-width: 180rpx; /* 增加右侧最小宽度，确保按钮不被挤压 */
-    }
     
-    .icon-btn {
-      width: 80rpx; /* 从 64rpx 增加到 80rpx */
-      height: 80rpx; /* 从 64rpx 增加到 80rpx */
-      border-radius: 20rpx; /* 稍微调圆一点 */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      &:active {
-        opacity: 0.7;
+    .settings-list {
+      .settings-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30rpx 0;
+        
+        .item-left {
+          display: flex;
+          flex-direction: column;
+          gap: 8rpx;
+          
+          .item-title {
+            font-size: 30rpx;
+            font-weight: 500;
+          }
+          
+          .item-desc {
+            font-size: 24rpx;
+            opacity: 0.8;
+          }
+        }
       }
     }
   }

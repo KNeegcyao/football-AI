@@ -1,9 +1,9 @@
 <template>
   <view :class="['container', themeClass]">
     <!-- Navigation Bar -->
-    <view :class="['nav-bar', 'bg-nav-bar']" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+    <view :class="['nav-bar', 'bg-nav-bar']" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#000'" size="24"></u-icon>
+        <text class="material-icons text-theme-main" :style="{ fontSize: '48rpx' }">arrow_back</text>
       </view>
       <text class="nav-title text-theme-main">我的收藏</text>
       <view class="nav-right"></view>
@@ -29,11 +29,11 @@
                 <view class="post-stats">
                   <text class="post-time text-theme-secondary">{{ formatTime(post.createTime) }}</text>
                   <view class="stat-item">
-                    <u-icon name="thumb-up" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="28rpx"></u-icon>
+                    <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37', fontSize: '32rpx' }">thumb_up</text>
                     <text class="stat-num text-theme-secondary">{{ post.likes || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="chat" :color="themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37'" size="28rpx"></u-icon>
+                    <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#f9d406' : '#D4AF37', fontSize: '32rpx' }">chat</text>
                     <text class="stat-num text-theme-secondary">{{ post.commentCount || 0 }}</text>
                   </view>
                 </view>
@@ -75,14 +75,14 @@
             <text class="player-name text-theme-main">{{ player.name }}</text>
             <text class="player-team text-theme-secondary">{{ player.teamName }}</text>
           </view>
-          <u-icon name="arrow-right" :color="themeStore.theme === 'dark' ? '#666' : '#999'" size="20"></u-icon>
+          <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">chevron_right</text>
         </view>
         <u-loadmore :status="loadStatus" :lineColor="themeStore.theme === 'dark' ? '#333' : '#eee'" :color="themeStore.theme === 'dark' ? '#999' : '#666'" />
       </view>
       
       <!-- Empty State -->
       <view class="empty-state" v-else-if="!loading && ((currentTab === 0 && posts.length === 0) || (currentTab === 1 && newsList.length === 0) || (currentTab === 2 && playerList.length === 0))">
-        <u-icon name="star" :color="themeStore.theme === 'dark' ? '#666' : '#ccc'" size="60"></u-icon>
+        <text class="material-icons text-theme-secondary" style="font-size: 80rpx;">star_border</text>
         <text class="empty-text text-theme-secondary">暂无收藏</text>
       </view>
       
@@ -97,12 +97,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { favoriteApi, fileApi, playerApi } from '@/api';
+import { favoriteApi, playerApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request.js';
 import { useThemeStore } from '@/store/theme';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
 
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 const currentTab = ref(0);
 const navbarPaddingRight = ref(0);
 const tabList = [
@@ -184,8 +186,8 @@ const loadData = async () => {
           id: item.id,
           title: item.title,
           content: item.content,
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-          userAvatar: item.userAvatar ? fileApi.getFileUrl(item.userAvatar) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '',
           userName: item.userName,
           createTime: item.createTime,
           likes: item.likes,
@@ -212,7 +214,7 @@ const loadData = async () => {
         const newNews = res.records.map(item => ({
           id: item.id,
           title: item.title,
-          coverUrl: item.coverUrl ? fileApi.getFileUrl(item.coverUrl) : '',
+          coverUrl: item.coverUrl ? getFullImageUrl(item.coverUrl) : '',
           category: getCategoryName(item.categoryId),
           createTime: item.createTime || item.publishTime
         }));
@@ -253,7 +255,7 @@ const loadData = async () => {
               return {
                 id: p.id,
                 name: p.name,
-                photo: fileApi.getFileUrl(p.photo) || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+                photo: getFullImageUrl(p.photo) || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
                 teamName: p.teamName || '未知球队'
               };
             }
@@ -349,13 +351,12 @@ const formatTime = (time) => {
 }
 
 .nav-bar {
-  height: 44px;
-  padding-top: var(--status-bar-height);
+  height: 100rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 32rpx;
+  padding-right: 32rpx;
   background-color: var(--nav-bar-bg);
   position: sticky;
   top: 0;

@@ -15,9 +15,9 @@ public class Knife4jConfig {
                 .info(new Info()
                         .title("Soccer Forum API")
                         .version("1.0.0")
-                        .description("Soccer Forum后端接口开发文档")
+                        .description("Soccer Forum 后端接口文档")
                         .contact(new Contact()
-                                .name("翎羽")
+                                .name("张超")
                                 .email("zhangchao2903@163.com")));
     }
 }

@@ -14,6 +14,7 @@ export function createApp() {
   
   app.config.globalProperties.$request = request
   app.config.globalProperties.$utils = utils
+  app.config.globalProperties.$OSS_URL = 'https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/'
   
   return {
     app,

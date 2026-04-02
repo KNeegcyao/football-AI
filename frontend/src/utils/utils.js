@@ -1,15 +1,6 @@
-import { BASE_URL } from './request'
+import { BASE_URL, getFullImageUrl } from './request'
 
-/**
- * 获取完整图片 URL
- * @param {string} url 
- * @returns {string}
- */
-export const getFullImageUrl = (url) => {
-  if (!url) return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'
-  if (url.startsWith('http')) return url
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
+export { getFullImageUrl }
 
 /**
  * 格式化时间
@@ -18,7 +9,17 @@ export const getFullImageUrl = (url) => {
  */
 export const formatTime = (time) => {
   if (!time) return ''
-  const date = new Date(time.replace('T', ' '))
+  // 已经是格式化好的时间描述
+  if (typeof time === 'string' && (time.includes('前') || time.includes('刚刚'))) {
+    return time
+  }
+  
+  const date = new Date(time.toString().replace('T', ' '))
+  // 检查无效日期
+  if (isNaN(date.getTime())) {
+    return time.toString()
+  }
+  
   const now = new Date()
   const diff = now - date
   
@@ -31,7 +32,7 @@ export const formatTime = (time) => {
   if (diff < day) return Math.floor(diff / hour) + '小时前'
   if (diff < 7 * day) return Math.floor(diff / day) + '天前'
   
-  return time.substring(0, 10)
+  return time.toString().substring(0, 10)
 }
 
 /**

@@ -1,11 +1,11 @@
 <template>
   <view class="page-container min-h-screen flex flex-col font-display" :class="themeClass">
     <!-- Header -->
-    <view class="sticky top-0 z-50 px-4 pt-12 pb-4 flex flex-row items-center border-b border-white/5 header-bg">
+    <view class="sticky top-0 z-50 px-4 pb-4 flex flex-row items-center border-b border-white/5 header-bg" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 mr-2">
-        <text class="material-icons-round" style="font-size: 24px;">chevron_left</text>
+        <text class="material-icons text-theme-main" :style="{ fontSize: '48rpx' }">arrow_back</text>
       </view>
-      <text class="text-xl font-bold tracking-tight text-white">帮助与支持</text>
+      <text class="text-xl font-bold tracking-tight text-theme-main">帮助与支持</text>
     </view>
 
     <scroll-view scroll-y class="flex-1 px-4 py-6">
@@ -16,9 +16,9 @@
           <view v-for="(item, index) in faqs" :key="index" @click="toggleFaq(index)" 
                 class="w-full p-4 bg-white/5 rounded-xl border border-white/5 transition-all">
             <view class="flex flex-row items-center justify-between">
-              <text class="font-medium pr-4">{{ item.question }}</text>
-              <text class="material-icons-round text-gray-400 transition-transform duration-300" 
-                    :style="{ transform: item.active ? 'rotate(180deg)' : 'rotate(0deg)' }">expand_more</text>
+              <text class="font-medium pr-4 text-white">{{ item.question }}</text>
+              <text class="material-icons text-gray-400 transition-transform duration-300" 
+                    :style="{ transform: item.active ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '44rpx' }">expand_more</text>
             </view>
             <view v-if="item.active" class="mt-3 pt-3 border-t border-white/5 text-sm text-gray-400 leading-relaxed">
               {{ item.answer }}
@@ -45,16 +45,16 @@
         <view class="grid grid-cols-2 gap-3">
           <view class="p-4 bg-white/5 rounded-xl border border-white/5 flex flex-col items-center gap-2">
             <view class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#f9d406]">
-              <text class="material-icons-round" style="font-size: 20px;">mail</text>
+              <text class="material-icons" style="font-size: 44rpx;">mail</text>
             </view>
-            <text class="text-xs font-medium">官方邮箱</text>
+            <text class="text-xs font-medium text-white">官方邮箱</text>
             <text class="text-[10px] text-gray-500">support@pitchpulse.com</text>
           </view>
           <view class="p-4 bg-white/5 rounded-xl border border-white/5 flex flex-col items-center gap-2">
             <view class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#f9d406]">
-              <text class="material-icons-round" style="font-size: 20px;">qr_code_2</text>
+              <text class="material-icons" style="font-size: 44rpx;">qr_code_2</text>
             </view>
-            <text class="text-xs font-medium">公众号</text>
+            <text class="text-xs font-medium text-white">公众号</text>
             <text class="text-[10px] text-gray-500">搜索 PitchPulse</text>
           </view>
         </view>
@@ -70,6 +70,7 @@ import { useThemeStore } from '@/store/theme'
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 const feedback = ref('')
 const faqs = ref([
   { 
@@ -145,7 +146,7 @@ const submitFeedback = () => {
     color: var(--text-secondary) !important;
   }
   
-  .border-white/5 {
+  .border-white\/5 {
     border-color: #E5E7EB !important;
   }
 }

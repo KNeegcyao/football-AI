@@ -1,9 +1,9 @@
 <template>
   <view class="page-container min-h-screen flex flex-col font-display" :class="themeClass">
     <!-- Header -->
-    <view class="sticky top-0 z-50 backdrop-blur-md px-4 pt-12 pb-4 flex flex-row items-center border-b border-theme-main bg-theme-main/95">
+    <view class="sticky top-0 z-50 backdrop-blur-md px-4 pb-4 flex flex-row items-center border-b border-theme-main bg-theme-main/95" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full bg-theme-secondary mr-2">
-        <text class="material-icons-round text-theme-main" style="font-size: 24px;">chevron_left</text>
+        <text class="material-icons text-theme-main" :style="{ fontSize: '48rpx' }">arrow_back</text>
       </view>
       <text class="text-xl font-bold tracking-tight text-theme-main">外观主题</text>
     </view>
@@ -28,7 +28,7 @@
                 class="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
                 :class="theme.bgColor"
               >
-                <text class="material-icons-round" :class="theme.iconColor" style="font-size: 20px;">{{ theme.icon }}</text>
+                <text class="material-icons" :class="theme.iconColor" style="font-size: 44rpx;">{{ theme.icon }}</text>
               </view>
               <view>
                 <text class="font-medium block text-theme-main">{{ theme.name }}</text>
@@ -39,7 +39,7 @@
               class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
               :class="themeStore.theme === theme.id ? 'border-[#f9d406] bg-[#f9d406]' : 'border-white/20'"
             >
-              <text v-if="themeStore.theme === theme.id" class="material-icons-round text-[#1A1811]" style="font-size: 16px; font-weight: bold;">done</text>
+              <text v-if="themeStore.theme === theme.id" class="material-icons text-[#1A1811]" style="font-size: 32rpx; font-weight: bold;">done</text>
             </view>
           </view>
         </view>
@@ -55,11 +55,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useThemeStore } from '@/store/theme';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 
 const themes = [
   {

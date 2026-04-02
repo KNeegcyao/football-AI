@@ -7,10 +7,35 @@ export const useChatStore = defineStore('chat', {
     connected: false,
     sessions: [],
     messages: {}, // { sessionId: [messages] }
-    currentSessionId: null
+    currentSessionId: null,
+    enableNotification: uni.getStorageSync('enableNotification') !== false // 默认为 true
   }),
 
+  getters: {
+    totalUnreadCount: (state) => {
+      if (!state.enableNotification) return 0
+      return state.sessions.reduce((sum, session) => sum + (session.unreadCount || 0), 0)
+    }
+  },
+
   actions: {
+    setNotification(enable) {
+      this.enableNotification = enable
+      uni.setStorageSync('enableNotification', enable)
+      if (!enable) {
+        // 关闭时清除首页数字提醒
+        uni.removeTabBarBadge({ index: 3 }).catch(() => {})
+      } else {
+        // 开启时如果未读数大于0，重新设置数字提醒
+        const count = this.totalUnreadCount
+        if (count > 0) {
+          uni.setTabBarBadge({
+            index: 3,
+            text: count > 99 ? '99+' : count.toString()
+          }).catch(() => {})
+        }
+      }
+    },
     connect() {
       if (this.socket || this.connected) {
         console.log('WebSocket is already connected or connecting')
@@ -118,6 +143,16 @@ export const useChatStore = defineStore('chat', {
       try {
         const res = await chatApi.getSessions()
         this.sessions = res || []
+        // 每次获取会话列表后更新首页数字提醒
+        const totalUnread = this.totalUnreadCount
+        if (totalUnread > 0) {
+          uni.setTabBarBadge({
+            index: 3,
+            text: totalUnread > 99 ? '99+' : totalUnread.toString()
+          }).catch(() => {})
+        } else {
+          uni.removeTabBarBadge({ index: 3 }).catch(() => {})
+        }
       } catch (e) {
         console.error('Fetch sessions failed:', e)
       }

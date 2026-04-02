@@ -110,7 +110,7 @@ import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useChatStore } from '@/store/chat';
 import { useThemeStore } from '@/store/theme';
 import { chatApi, fileApi, userApi } from '@/api';
-import { BASE_URL } from '@/utils/request';
+import { BASE_URL, getFullImageUrl } from '@/utils/request';
 import { formatChatMessageTime } from '@/utils/utils';
 
 const chatStore = useChatStore();
@@ -125,20 +125,7 @@ const currentUserId = ref(null);
 const currentUserAvatar = ref('/static/soccer-logo.png');
 
 const getAvatarUrl = (avatar) => {
-  if (!avatar) return '/static/soccer-logo.png';
-  
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  
-  if (avatar.startsWith('/static')) return avatar;
-  
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(avatar) || '/static/soccer-logo.png';
 };
 
 const onAvatarError = (senderId) => {

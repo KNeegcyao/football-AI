@@ -2,10 +2,11 @@ package com.soccer.forum.service.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soccer.forum.domain.entity.ChatMessage;
-import com.soccer.forum.service.security.model.LoginUser;
-import com.soccer.forum.service.service.ChatMessageService;
-import com.soccer.forum.service.utils.JwtUtils;
-import lombok.extern.slf4j.Slf4j;
+import com.soccer.forum.service.modules.user.model.LoginUser;
+import com.soccer.forum.service.modules.community.service.ChatMessageService;
+import com.soccer.forum.service.security.utils.JwtUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -18,11 +19,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    // 在线用户会话管理 Key: userId, Value: session
+    private static final Logger log = LoggerFactory.getLogger(ChatWebSocketHandler.class);
+
+    // 存储用户会话 Key: userId, Value: session
     private static final Map<Long, WebSocketSession> SESSIONS = new ConcurrentHashMap<>();
 
     @Autowired
@@ -39,7 +41,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("WebSocket 尝试连接, session: {}, query: {}", session.getId(), session.getUri().getQuery());
+        log.info("WebSocket 连接建立, session: {}, query: {}", session.getId(), session.getUri().getQuery());
         Long userId = getUserId(session);
         if (userId != null) {
             SESSIONS.put(userId, session);
@@ -66,15 +68,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 保存消息到数据库
         ChatMessage chatMessage = messageService.sendMessage(senderId, receiverId, content, type);
 
-        // 推送给接收者
+        // 发送给接收者
         WebSocketSession receiverSession = SESSIONS.get(receiverId);
         if (receiverSession != null && receiverSession.isOpen()) {
             receiverSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else {
-            log.info("接收者 {} 不在线，消息已存库", receiverId);
+            log.info("用户 {} 不在线，消息已存储", receiverId);
         }
         
-        // 推送回执给发送者 (包含消息ID和时间)
+        // 发送客户端确认 (返回消息ID和时间)
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
     }
 
@@ -92,11 +94,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 从 query string 获取 token
         String query = session.getUri().getQuery();
         if (query != null && query.contains("token=")) {
-            String token = query.split("token=")[1].split("&")[0];
-            try {
-                return jwtUtils.getUserIdFromToken(token);
-            } catch (Exception e) {
-                return null;
+            String[] parts = query.split("token=");
+            if (parts.length > 1) {
+                String token = parts[1].split("&")[0];
+                if (token != null && !token.isEmpty()) {
+                    try {
+                        return jwtUtils.getUserIdFromToken(token);
+                    } catch (Exception e) {
+                        log.error("WebSocket 获取用户ID失败: {}", e.getMessage());
+                        return null;
+                    }
+                }
             }
         }
         return null;

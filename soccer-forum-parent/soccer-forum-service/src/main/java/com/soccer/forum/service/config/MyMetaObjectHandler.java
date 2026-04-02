@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * MyBatis Plus 自动填充处理器
- * 用于处理创建时间和更新时间的自动填充
+ * 用于创建和更新时填充时间字段
  */
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {

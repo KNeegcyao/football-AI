@@ -1,9 +1,9 @@
 package com.soccer.forum.service.security.filter;
 
-import com.soccer.forum.service.security.model.LoginUser;
-import com.soccer.forum.service.service.TeamFollowService;
-import com.soccer.forum.service.service.TeamService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.modules.user.model.LoginUser;
+import com.soccer.forum.service.modules.match.service.TeamFollowService;
+import com.soccer.forum.service.modules.match.service.TeamService;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,10 +66,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    // 异步更新在线人数（续命）
+                    // 异步更新用户关注球队的在线人数
                     if (userDetails instanceof LoginUser) {
                         Long userId = ((LoginUser) userDetails).getUser().getId();
-                        // 这里可以考虑频率控制，但目前先简单实现
+                        // 这里可以优化为批量处理，但目前先简单实现
                         new Thread(() -> {
                             try {
                                 java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(userId);

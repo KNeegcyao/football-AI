@@ -25,7 +25,7 @@ public class Match {
     private LocalDateTime matchTime;
     @Schema(description = "场馆")
     private String venue;
-    @Schema(description = "状态 (0:未开始, 1:进行中, 2:已结束, 3:延期)")
+    @Schema(description = "状态(0:未开始 1:进行中 2:已结束 3:延期)")
     private Integer status;
     @Schema(description = "主队得分")
     private Integer homeScore;
@@ -39,6 +39,13 @@ public class Match {
     private Long liveTextId;
     @Schema(description = "实时比赛时间")
     private String liveTime;
+
+    @Schema(description = "AI预测主胜率")
+    private Double homeWinProb;
+    @Schema(description = "AI预测平局率")
+    private Double drawProb;
+    @Schema(description = "AI预测客胜率")
+    private Double awayWinProb;
 
     @TableField(value = "created_at")
     @Schema(description = "创建时间")
@@ -74,6 +81,14 @@ public class Match {
     public void setLiveTextId(Long liveTextId) { this.liveTextId = liveTextId; }
     public String getLiveTime() { return liveTime; }
     public void setLiveTime(String liveTime) { this.liveTime = liveTime; }
+
+    public Double getHomeWinProb() { return homeWinProb; }
+    public void setHomeWinProb(Double homeWinProb) { this.homeWinProb = homeWinProb; }
+    public Double getDrawProb() { return drawProb; }
+    public void setDrawProb(Double drawProb) { this.drawProb = drawProb; }
+    public Double getAwayWinProb() { return awayWinProb; }
+    public void setAwayWinProb(Double awayWinProb) { this.awayWinProb = awayWinProb; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

@@ -8,11 +8,11 @@
       <!-- Header Navigation -->
       <view class="navbar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
         <view class="nav-btn-glass" @click="goBack">
-          <text class="material-icons nav-icon">arrow_back_ios_new</text>
+          <text class="material-icons nav-icon" style="font-size: 44rpx;">arrow_back</text>
         </view>
         <view class="nav-actions">
           <view class="nav-btn-glass" @click="toggleFavorite">
-            <text class="material-icons nav-icon" :class="{ active: isFavorited }">
+            <text class="material-icons nav-icon" :class="{ active: isFavorited }" style="font-size: 48rpx;">
               {{ isFavorited ? 'favorite' : 'favorite_border' }}
             </text>
           </view>
@@ -51,21 +51,35 @@
       </view>
 
       <!-- Quick Info Strips -->
-      <view class="quick-info-grid">
-        <view class="info-box">
-          <text class="material-icons info-icon">straighten</text>
-          <text class="info-value">{{ player.height || '--' }}</text>
-          <text class="info-label">身高</text>
+      <view class="quick-info-row glass-card">
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <text class="material-icons info-icon" style="font-size: 44rpx;">straighten</text>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">身高</text>
+            <text class="info-value">{{ player.height || '--' }}</text>
+          </view>
         </view>
-        <view class="info-box">
-          <text class="material-icons info-icon">monitor_weight</text>
-          <text class="info-value">{{ player.weight || '--' }}</text>
-          <text class="info-label">体重</text>
+        <view class="info-divider"></view>
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <text class="material-icons info-icon" style="font-size: 44rpx;">monitor_weight</text>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">体重</text>
+            <text class="info-value">{{ player.weight || '--' }}</text>
+          </view>
         </view>
-        <view class="info-box">
-          <text class="material-icons info-icon">cake</text>
-          <text class="info-value">{{ player.age || '--' }}岁</text>
-          <text class="info-label">年龄</text>
+        <view class="info-divider"></view>
+        <view class="info-item-flat">
+          <view class="info-icon-wrapper">
+            <text class="material-icons info-icon" style="font-size: 44rpx;">cake</text>
+          </view>
+          <view class="info-content-flat">
+            <text class="info-label">年龄</text>
+            <text class="info-value">{{ player.age || '--' }}岁</text>
+          </view>
         </view>
       </view>
 
@@ -131,7 +145,8 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { playerApi, fileApi, favoriteApi } from '@/api/index';
+import { playerApi, favoriteApi } from '@/api/index';
+import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
@@ -280,7 +295,7 @@ const loadPlayerDetail = async (id) => {
         marketValue: p.proposedMarketValue ? ('€' + (p.proposedMarketValue / 1000000).toFixed(1) + 'M') : '--',
         photo: p.photo || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
         teamName: formatTeamName(stats.team?.name || p.teamName || p.team?.name),
-        teamLogo: fileApi.getFileUrl(stats.team?.logo || p.teamLogo) || '/static/default-team.png',
+        teamLogo: getFullImageUrl(stats.team?.logo || p.teamLogo) || '/static/default-team.png',
         position: stats.games?.position || p.position || '未知',
         number: stats.games?.number || p.jerseyNumber || '--',
         appearences: stats.games?.appearences || 0,
@@ -551,42 +566,74 @@ $text-gray: #9ca3af;
   }
 }
 
-/* Quick Info Grid */
-.quick-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 24px 16px 0;
+/* Quick Info Row */
+.quick-info-row {
+  margin: 24rpx 32rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 16rpx;
+  box-sizing: border-box;
 }
 
-.info-box {
-  background: var(--bg-main);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--border-main);
+.info-item-flat {
+  flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row; 
   align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  min-width: 0;
+  padding: 10rpx;
+  box-sizing: border-box;
+}
+
+.info-icon-wrapper {
+  width: 64rpx;
+  height: 64rpx;
+  background: rgba(242, 13, 51, 0.1); /* 使用 #f20d33 的透明背景 */
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .info-icon {
-  color: $primary;
-  font-size: 24px;
-  margin-bottom: 4px;
+  color: #f20d33;
+  font-size: 44rpx !important;
+  line-height: 1;
 }
 
-.info-value {
-  color: var(--text-main);
-  font-weight: bold;
-  font-size: 16px;
+.info-content-flat {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  gap: 4rpx;
 }
 
 .info-label {
   color: var(--text-secondary);
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: bold;
-  margin-top: 2px;
+  font-size: 20rpx;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.info-value {
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 26rpx;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.info-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: var(--border-main);
+  opacity: 0.3;
 }
 
 /* Section Common */

@@ -3,12 +3,10 @@
     <!-- Navbar with Search -->
     <view class="navbar bg-nav-bar border-b border-theme-main" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <view class="nav-btn-glass">
-          <u-icon name="arrow-left" :color="themeStore.theme === 'dark' ? '#fff' : '#000'" size="20"></u-icon>
-        </view>
+        <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#fff' : '#000', fontSize: '48rpx' }">arrow_back</text>
       </view>
       <view class="search-box bg-theme-secondary border-theme-main">
-        <u-icon name="search" :color="themeStore.theme === 'dark' ? 'rgba(156, 163, 175, 0.4)' : 'rgba(0, 0, 0, 0.3)'" size="18"></u-icon>
+        <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? 'rgba(156, 163, 175, 0.4)' : 'rgba(0, 0, 0, 0.3)', fontSize: '40rpx' }">search</text>
         <input 
           class="search-input" 
           type="text" 
@@ -20,7 +18,7 @@
           :focus="autoFocus"
         />
         <view v-if="keyword" class="clear-btn" @click="clearSearch">
-          <u-icon name="close" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#666'" size="16"></u-icon>
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#9ca3af' : '#666', fontSize: '40rpx' }">close</text>
         </view>
       </view>
       <view class="nav-right" @click="handleSearch">
@@ -39,7 +37,7 @@
 
         <!-- Empty State -->
         <view v-else-if="searched && results.length === 0" class="empty-state">
-          <u-icon name="search" :color="themeStore.theme === 'dark' ? '#374151' : '#e2e8f0'" size="60"></u-icon>
+          <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#374151' : '#e2e8f0', fontSize: '120rpx' }">search</text>
           <text class="empty-text">未找到相关内容</text>
           <text class="empty-subtext">换个关键词试试吧</text>
         </view>
@@ -99,15 +97,15 @@
               
               <view class="post-footer-stats">
                 <view class="interaction-item">
-                  <u-icon name="heart" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
+                  <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#9ca3af' : '#64748b', fontSize: '36rpx' }">favorite_border</text>
                   <text>{{ item.likes || 0 }}</text>
                 </view>
                 <view class="interaction-item">
-                  <u-icon name="chat" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
+                  <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#9ca3af' : '#64748b', fontSize: '36rpx' }">chat_bubble_outline</text>
                   <text>{{ item.commentCount || 0 }}</text>
                 </view>
                 <view class="interaction-item">
-                  <u-icon name="share-square" size="18" :color="themeStore.theme === 'dark' ? '#9ca3af' : '#64748b'"></u-icon>
+                  <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#9ca3af' : '#64748b', fontSize: '36rpx' }">share</text>
                   <text>{{ item.shares || 0 }}</text>
                 </view>
               </view>
@@ -124,11 +122,11 @@
                 <text class="summary-text text-secondary">{{ item.summary || item.content }}</text>
                 <view class="card-footer">
                   <view class="stat-item" v-if="item.author">
-                    <u-icon name="account" size="14" :color="themeStore.theme === 'dark' ? '#6b7280' : '#64748b'"></u-icon>
+                    <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#6b7280' : '#64748b', fontSize: '28rpx' }">person_outline</text>
                     <text>{{ item.author }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="eye" size="14" :color="themeStore.theme === 'dark' ? '#6b7280' : '#64748b'"></u-icon>
+                    <text class="material-icons" :style="{ color: themeStore.theme === 'dark' ? '#6b7280' : '#64748b', fontSize: '28rpx' }">visibility</text>
                     <text>{{ item.viewCount || item.views || 0 }}</text>
                   </view>
                 </view>
@@ -149,7 +147,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { searchApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 
 const themeStore = useThemeStore()
@@ -336,14 +334,7 @@ const formatTime = (timeStr) => {
   return timeStr.split(' ')[0]
 }
 
-const getFullImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('/static/') && !url.startsWith('/static/teams/')) {
-      return url
-  }
-  if (url.startsWith('http')) return url
-  return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-}
+
 </script>
 
 <style lang="scss" scoped>
@@ -360,41 +351,36 @@ const getFullImageUrl = (url) => {
 .navbar {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  height: 100rpx;
+  box-sizing: content-box;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .nav-left {
-  margin-right: 12px;
-}
-
-.nav-btn-glass {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--bg-secondary);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
 }
 
 .search-box {
   flex: 1;
-  height: 38px;
-  border-radius: 20px;
+  height: 72rpx;
+  border-radius: 36rpx;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  margin-right: 12px;
+  padding: 0 24rpx;
+  margin-right: 24rpx;
   transition: all 0.3s ease;
   background-color: var(--bg-secondary);
   border: 1rpx solid var(--border-main);
 
   &:focus-within {
-    border-color: rgba($pitch-pulse-primary, 0.5);
-    box-shadow: 0 0 10px rgba($pitch-pulse-primary, 0.1);
+    border-color: $pitch-pulse-primary;
   }
 }
 

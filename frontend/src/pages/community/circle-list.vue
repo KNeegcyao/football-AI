@@ -12,7 +12,7 @@
     <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
       <view class="circle-list">
         <view class="circle-item" v-for="(circle, index) in circles" :key="index" @click="navigateToCircle(circle)">
-          <image class="circle-avatar" :src="fileApi.getFileUrl(circle.image) || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
+          <image class="circle-avatar" :src="getFullImageUrl(circle.image) || '/static/soccer-logo.png'" mode="aspectFill" @error="circle.image = '/static/soccer-logo.png'"></image>
           <view class="circle-info">
             <text class="circle-name">{{ circle.name }}</text>
             <text class="circle-members">{{ circle.members }} 成员</text>
@@ -35,7 +35,7 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
 import request from '@/utils/request';
-import { fileApi } from '@/api/index';
+import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);

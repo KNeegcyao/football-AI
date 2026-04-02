@@ -46,7 +46,7 @@ public class RedisConfig {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         // 设置可见性
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // 启用默认类型信息，以便反序列化时知道具体类型
+        // 开启默认类型信息，以便反序列化时知道具体类型
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance, 
                 ObjectMapper.DefaultTyping.NON_FINAL

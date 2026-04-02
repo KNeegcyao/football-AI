@@ -13,7 +13,7 @@
       <view class="header bg-nav-bar border-b border-theme-main">
         <view class="header-left">
           <view class="back-btn" @click="goBack">
-            <text class="material-icons" :style="{ fontSize: '24px', color: 'var(--text-main)' }">arrow_back_ios_new</text>
+            <image :src="getFullImageUrl('/static/icons/actions/arrow_left.svg')" :style="{ width: '48rpx', height: '48rpx', filter: iconFilter, opacity: 0.8 }"></image>
           </view>
         </view>
         <view class="header-center">
@@ -26,13 +26,13 @@
             <view class="avatar-container">
               <image class="author-avatar bg-theme-secondary" :src="post.userAvatar" mode="aspectFill"></image>
               <view class="verified-badge">
-                <text class="material-icons" style="font-size: 6px; color: #fff;">bolt</text>
+                <image :src="getFullImageUrl('/static/icons/status/verified.svg')" :style="{ filter: iconFilter, width: '24rpx', height: '24rpx' }"></image>
               </view>
             </view>
             <view class="author-details">
               <view class="author-name-row">
                 <text class="author-name">{{ post.userName }}</text>
-                <text class="material-icons verified-icon">verified</text>
+                <image :src="getFullImageUrl('/static/icons/status/verified.svg')" class="verified-icon" :style="{ width: '24rpx', height: '24rpx', filter: iconFilter }"></image>
               </view>
               <text class="author-role">社区成员</text>
             </view>
@@ -84,8 +84,8 @@
                 hover-class="clickable-hover"
                 :hover-stay-time="100"
               ></image>
-              <view class="stack-count" style="background-color: #f2b90d; color: #000;">
-                <text class="material-icons" style="font-size: 12px;">thumb_up</text>
+              <view class="stack-count" style="background-color: #f2b90d; color: #000; display: flex; align-items: center; justify-content: center;">
+                <image :src="getFullImageUrl('/static/icons/status/thumb_up.svg')" style="width: 24rpx; height: 24rpx; filter: none;"></image>
               </view>
             </view>
             <view class="view-stats">
@@ -100,7 +100,7 @@
             <text class="comments-title">评论 ({{ post.commentCount || comments.length }})</text>
             <view class="sort-btn" @click="toggleSort">
               <text>{{ sortType === 'newest' ? '最新' : '最热' }}</text>
-              <text class="material-icons" style="font-size: 14px;">expand_more</text>
+              <image :src="getFullImageUrl('/static/icons/actions/arrow_down.svg')" :style="{ width: '28rpx', height: '28rpx', filter: iconFilter, opacity: 0.6 }"></image>
             </view>
           </view>
 
@@ -129,7 +129,7 @@
                 </view>
                 <view class="comment-actions">
                   <view class="action-item">
-                    <text class="material-icons" style="font-size: 14px;">favorite_border</text>
+                    <image :src="getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '28rpx', height: '28rpx', filter: iconFilter, opacity: 0.6 }"></image>
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
                   <text class="reply-btn" @click="handleReply(comment)">回复</text>
@@ -164,7 +164,7 @@
                       </view>
                       <view class="comment-actions">
                         <view class="action-item">
-                          <text class="material-icons" style="font-size: 12px;">favorite_border</text>
+                          <image :src="getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '24rpx', height: '24rpx', filter: iconFilter, opacity: 0.6 }"></image>
                           <text class="action-text">{{ reply.likes || 0 }}</text>
                         </view>
                         <text class="reply-btn" @click="handleReply(reply)">回复</text>
@@ -191,7 +191,7 @@
     <view class="bottom-bar-wrapper" v-if="post">
       <view class="reply-info bg-theme-secondary">
         <text class="reply-to">回复 @{{ replyTarget.userName }}</text>
-        <text class="material-icons cancel-reply" @click="cancelReply">close</text>
+        <image :src="getFullImageUrl('/static/icons/actions/close.svg')" class="cancel-reply" @click="cancelReply" :style="{ width: '32rpx', height: '32rpx', filter: iconFilter, opacity: 0.6 }"></image>
       </view>
       <view class="bottom-bar bg-nav-bar border-t border-theme-main">
         <input 
@@ -215,24 +215,20 @@
         
         <template v-else>
           <view class="action-btn" @click="handleLike">
-            <text class="material-icons" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
-              {{ post.isLiked ? 'thumb_up' : 'thumb_up_off_alt' }}
-            </text>
+            <image :src="post.isLiked ? getFullImageUrl('/static/icons/status/thumb_up.svg') : getFullImageUrl('/static/icons/status/thumb_up.svg')" :style="{ width: '40rpx', height: '40rpx', filter: post.isLiked ? 'none' : iconFilter, opacity: post.isLiked ? 1 : 0.8 }"></image>
             <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
               {{ post.likes || 0 }}
             </text>
           </view>
           <view class="action-btn" @click="handleFavorite">
-            <text class="material-icons" :style="{ color: post.isFavorited ? '#f2b90d' : 'var(--text-main)' }">
-              {{ post.isFavorited ? 'star' : 'star_border' }}
-            </text>
+            <image :src="post.isFavorited ? getFullImageUrl('/static/icons/actions/star_fill.svg') : getFullImageUrl('/static/icons/actions/star.svg')" :style="{ width: '44rpx', height: '44rpx', filter: post.isFavorited ? 'none' : iconFilter, opacity: post.isFavorited ? 1 : 0.8 }"></image>
           </view>
           <view class="action-btn">
-            <text class="material-icons" style="color: var(--text-main)">chat_bubble_outline</text>
+            <image :src="getFullImageUrl('/static/icons/actions/chat_bubble.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
             <text class="action-text" style="color: var(--text-main)">{{ post.commentCount || comments.length }}</text>
           </view>
           <view class="action-btn">
-            <text class="material-icons" style="color: var(--text-main)">share</text>
+            <image :src="getFullImageUrl('/static/icons/actions/share.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
           </view>
         </template>
       </view>
@@ -245,9 +241,15 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { postApi, fileApi, favoriteApi } from '@/api';
 import { useThemeStore } from '@/store/theme';
+import { getFullImageUrl } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
+
+const iconFilter = computed(() => {
+  return themeStore.theme === 'dark' ? 'invert(1) brightness(2)' : 'none';
+});
+
 const post = ref(null);
 const comments = ref([]);
 const postId = ref(null);
@@ -319,15 +321,15 @@ const loadPostDetail = async (id) => {
       }
       
       // Process image URLs
-      const processedImages = images.map(img => fileApi.getFileUrl(img));
+      const processedImages = images.map(img => getFullImageUrl(img));
       
       // Process avatar URL
-      const avatarUrl = data.userAvatar ? fileApi.getFileUrl(data.userAvatar) : '/static/soccer-logo.png';
+      const avatarUrl = data.userAvatar ? getFullImageUrl(data.userAvatar) : '/static/soccer-logo.png';
 
       // Process recent likes avatars
       const processedRecentLikes = (data.recentLikes || []).map(liker => ({
         ...liker,
-        avatar: liker.avatar ? fileApi.getFileUrl(liker.avatar) : '/static/soccer-logo.png'
+        avatar: liker.avatar ? getFullImageUrl(liker.avatar) : '/static/soccer-logo.png'
       }));
 
       post.value = {
@@ -371,13 +373,13 @@ const loadComments = async (id) => {
       comments.value = records.map(c => ({
         ...c,
         userName: c.nickname || 'Unknown User',
-        userAvatar: c.avatar ? fileApi.getFileUrl(c.avatar) : '/static/soccer-logo.png',
+        userAvatar: c.avatar ? getFullImageUrl(c.avatar) : '/static/soccer-logo.png',
         likes: c.likes || 0,
         // Map replies recursively if needed, but for now flat list or simple structure
         replies: (c.replies || []).map(r => ({
             ...r,
             userName: r.nickname || 'Unknown User',
-            userAvatar: r.avatar ? fileApi.getFileUrl(r.avatar) : '/static/soccer-logo.png',
+            userAvatar: r.avatar ? getFullImageUrl(r.avatar) : '/static/soccer-logo.png',
             likes: r.likes || 0,
             replyToUserName: r.replyToNickname // 映射后端字段
         }))

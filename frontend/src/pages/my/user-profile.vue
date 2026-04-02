@@ -1,13 +1,17 @@
 <template>
-  <view class="page-container min-h-screen font-display" :class="themeClass">
-    <!-- Top Navigation Header -->
-    <view class="header-sticky" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="header-content">
+  <view class="page-container min-h-screen font-display" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
+    <!-- 固定顶部容器 -->
+    <view class="fixed-header">
+      <!-- Status Bar Placeholder -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+      <!-- Header (Aligned with my.vue) -->
+      <view class="nav-bar bg-nav-bar border-b border-theme-main">
         <view class="header-left" @click="goBack">
-          <text class="material-icons text-2xl">arrow_back</text>
+          <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">arrow_back</text>
         </view>
-        <view class="header-center">
-          <text class="text-lg font-bold">{{ userInfo.nickname }}的战术板</text>
+        <view class="header-center center-with-back">
+          <text class="logo-text text-theme-main">{{ userInfo.nickname }}的战术板</text>
         </view>
         <view class="header-right">
           <!-- 占位，保持中间标题居中 -->
@@ -17,6 +21,9 @@
     </view>
 
     <scroll-view scroll-y class="main-content" @scrolltolower="loadMore">
+      <!-- 顶部占位 -->
+      <view class="header-placeholder"></view>
+      
       <!-- Profile Header Section -->
       <view class="profile-header">
         <view class="cover-image-container">
@@ -44,19 +51,20 @@
               <view class="avatar-frame" :class="'frame-lv' + userInfo.level">
                 <!-- Lv.2 足球装饰 (左上+左下) -->
                 <template v-if="Number(userInfo.level) === 2">
-                  <text class="material-icons frame-deco deco-tl">sports_soccer</text>
-                  <text class="material-icons frame-deco deco-bl">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-tl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
+                  <text class="material-icons frame-deco deco-bl" style="font-size: 44rpx; color: #B45309;">sports_soccer</text>
                 </template>
                 
                 <!-- Lv.4 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 4" class="material-icons top-crown">workspace_premium</text>
+                <text v-if="Number(userInfo.level) === 4" class="material-icons top-crown" style="font-size: 48rpx; color: #FACC15;">verified</text>
                 
                 <!-- Lv.5 皇冠装饰 (正上方) -->
-                <text v-if="Number(userInfo.level) === 5" class="material-icons top-crown">workspace_premium</text>
+                <text v-if="Number(userInfo.level) === 5" class="material-icons top-crown" style="font-size: 48rpx; color: #f2b90d;">verified</text>
               </view>
               
+              <!-- 等级标识 -->
               <view class="level-badge" :class="'lv-badge-' + userInfo.level">
-                <text class="material-icons badge-icon">workspace_premium</text>
+                <text class="material-icons badge-icon" style="font-size: 28rpx; margin-right: 4rpx; color: white;">verified</text>
                 <text class="badge-text">LV.{{ userInfo.level }}</text>
               </view>
             </view>
@@ -65,7 +73,7 @@
           <view class="identity-info">
             <view class="name-row">
               <text class="nickname">{{ userInfo.nickname }}</text>
-              <text class="material-icons text-white/90 text-xl">verified</text>
+              <text class="material-icons" style="font-size: 44rpx; margin-left: 8rpx; color: #f2b90d;">verified</text>
             </view>
             
             <!-- 层次感称号标签 -->
@@ -87,7 +95,7 @@
           {{ isFollowing ? '已关注' : '关注' }}
         </button>
         <button class="btn-secondary" @click="handleMessage">
-          <text class="material-icons" style="font-size: 32rpx; margin-right: 8rpx;">chat_bubble_outline</text>
+          <text class="material-icons" style="font-size: 44rpx; margin-right: 8rpx;">chat_bubble</text>
           <text>私信</text>
         </button>
       </view>
@@ -131,16 +139,16 @@
                 <text class="post-title">{{ post.title }}</text>
                 <text class="post-excerpt">{{ post.content }}</text>
                 <view class="post-meta">
-                  <view class="meta-item">
-                    <text class="material-icons text-sm">favorite</text>
-                    <text>{{ formatStats(post.likes) }}</text>
+                    <view class="meta-item">
+                      <text class="material-icons" style="font-size: 44rpx;">favorite</text>
+                      <text>{{ formatStats(post.likes) }}</text>
+                    </view>
+                    <view class="meta-item">
+                      <text class="material-icons" style="font-size: 44rpx;">chat_bubble</text>
+                      <text>{{ post.commentCount }}</text>
+                    </view>
+                    <text class="post-time">{{ formatTime(post.createTime) }}</text>
                   </view>
-                  <view class="meta-item">
-                    <text class="material-icons text-sm">chat_bubble</text>
-                    <text>{{ post.commentCount }}</text>
-                  </view>
-                  <text class="post-time">{{ formatTime(post.createTime) }}</text>
-                </view>
               </view>
               <image v-if="post.image" class="post-image" :src="post.image" mode="aspectFill"></image>
             </view>
@@ -153,8 +161,8 @@
           </view>
         </view>
         
-        <!-- 相册 (Tab 2) -->
-        <view v-else-if="currentProfileTab === 2" class="empty-state">
+        <!-- 相册 (Tab 1) -->
+        <view v-else-if="currentProfileTab === 1" class="empty-state">
           <text class="material-icons empty-icon">photo_library</text>
           <text>暂无相册</text>
         </view>
@@ -163,6 +171,9 @@
       <view class="footer-info">
         <text class="version-text">PitchPulse v2.4.0 (Build 503)</text>
       </view>
+
+      <!-- 底部占位 -->
+      <view class="bottom-placeholder"></view>
     </scroll-view>
   </view>
 </template>
@@ -172,7 +183,7 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useThemeStore } from '@/store/theme'
 import { userApi, fileApi, postApi, favoriteApi, playerApi, relationshipApi } from '@/api'
-import { BASE_URL } from '@/utils/request'
+import { BASE_URL, getFullImageUrl } from '@/utils/request'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -269,14 +280,7 @@ const getAvatarUrl = (avatar, type = 'avatar') => {
   if (!avatar) {
     return type === 'avatar' ? '/static/soccer-logo.png' : ''
   }
-  if (avatar.includes('/uploads/')) {
-    const relativePath = avatar.substring(avatar.indexOf('/uploads/'))
-    return fileApi.getFileUrl(relativePath)
-  }
-  if (avatar.startsWith('http')) {
-    return avatar
-  }
-  return fileApi.getFileUrl(avatar)
+  return getFullImageUrl(avatar)
 }
 
 const loadUserProfile = async (userId) => {
@@ -349,8 +353,8 @@ const loadPosts = async () => {
         id: item.id,
         title: item.title,
         content: item.content,
-        image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-        createTime: item.createdAt,
+        image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
+        createTime: item.createTime || item.createdAt,
         likes: item.likes || 0,
         commentCount: item.commentCount || 0
       }))
@@ -437,29 +441,75 @@ const formatStats = (num) => {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
-}
+  height: 100vh;
 
-.header-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: var(--nav-bar-bg);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid var(--border-main);
-}
+  .fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--nav-bar-bg);
+    backdrop-filter: blur(20px);
+    
+    /* #ifdef H5 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    /* #endif */
+  }
 
-.header-content {
-  height: 120rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 40rpx;
-  color: var(--text-main);
-}
+  .status-bar {
+    height: var(--status-bar-height);
+    width: 100%;
+  }
 
-.main-content {
-  flex: 1;
-  height: 0;
+  .nav-bar {
+    height: 100rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32rpx;
+    width: 100%;
+  }
+
+  .header-placeholder {
+    height: calc(var(--status-bar-height) + 100rpx);
+    width: 100%;
+  }
+
+  .header-left, .header-right {
+    width: 100rpx;
+    display: flex;
+    align-items: center;
+  }
+
+  .header-right {
+    justify-content: flex-end;
+  }
+
+  .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    &.center-with-back {
+      margin-right: 0;
+    }
+  }
+
+  .logo-text {
+    font-size: 34rpx;
+    font-weight: 800;
+    letter-spacing: 2rpx;
+  }
+
+  .main-content {
+    flex: 1;
+    height: 0;
+  }
 }
 
   .profile-header {
@@ -636,7 +686,8 @@ const formatStats = (num) => {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
-    z-index: 10;
+    z-index: 25;
+    pointer-events: none;
     
     circle {
       fill: transparent;
@@ -700,7 +751,7 @@ const formatStats = (num) => {
       
       .frame-deco {
         position: absolute;
-        font-size: 32rpx;
+        font-size: 44rpx;
         color: #B45309;
         text-shadow: 0 0 6rpx rgba(0, 0, 0, 0.5);
         z-index: 40;
@@ -735,7 +786,7 @@ const formatStats = (num) => {
         top: -30rpx;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 44rpx;
+        font-size: 48rpx;
         color: #FACC15;
         text-shadow: 0 0 10rpx rgba(250, 204, 21, 0.5);
         z-index: 40;
@@ -752,7 +803,7 @@ const formatStats = (num) => {
         top: -34rpx;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 56rpx;
+        font-size: 48rpx;
         color: #f2b90d;
         text-shadow: 0 0 20rpx rgba(242, 185, 13, 0.8), 0 0 40rpx rgba(0, 0, 0, 0.5);
         z-index: 40;
@@ -780,36 +831,50 @@ const formatStats = (num) => {
 
   .level-badge {
     position: absolute;
-    bottom: -4rpx;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
-    color: #000000;
-    padding: 4rpx 16rpx;
-    border-radius: 999rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
-    z-index: 40;
+    bottom: 0;
+    right: -10rpx;
+    z-index: 100;
+    width: 100rpx;
+    height: 36rpx;
+    background-color: #f2b90d;
+    background: linear-gradient(135deg, #f2b90d, #f9d406);
+    border: 4rpx solid #1a1a1a;
+    border-radius: 100rpx;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0;
     white-space: nowrap;
-    border: 2rpx solid #1e293b;
+    pointer-events: auto;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+    overflow: visible !important;
 
     .badge-icon {
-      font-size: 22rpx !important;
-      font-weight: bold;
+      font-size: 28rpx !important;
+      font-weight: normal !important;
+      color: #000000 !important;
+      margin: 0 2rpx 0 0 !important;
+      line-height: 1;
+      position: relative;
+      transform: translateY(1rpx);
+      z-index: 110;
     }
 
     .badge-text {
-      font-size: 20rpx;
-      font-weight: 800;
+      font-size: 18rpx !important;
+      font-weight: 900 !important;
+      color: #000000 !important;
       line-height: 1;
+      margin: 0 !important;
+      position: relative;
+      transform: translateY(2rpx);
+      z-index: 110;
     }
 
     &.lv-badge-5 {
-      background: linear-gradient(90deg, #f2b90d, #fff);
-      box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6);
+      background: linear-gradient(90deg, #f2b90d, #fff) !important;
+      box-shadow: 0 0 15rpx rgba(242, 185, 13, 0.6) !important;
     }
   }
 
@@ -891,7 +956,7 @@ const formatStats = (num) => {
 
 .tabs-sticky {
   position: sticky;
-  top: 120rpx;
+  top: calc(var(--status-bar-height) + 100rpx);
   z-index: 90;
   background-color: var(--nav-bar-bg);
   backdrop-filter: blur(20px);
@@ -1013,7 +1078,7 @@ const formatStats = (num) => {
   color: var(--text-secondary);
   
   .empty-icon {
-    font-size: 100rpx;
+    font-size: 110rpx;
     margin-bottom: 20rpx;
     opacity: 0.3;
   }
@@ -1023,17 +1088,21 @@ const formatStats = (num) => {
   }
 }
 
-.footer-info {
-  padding: 60rpx 0 100rpx;
-  display: flex;
-  justify-content: center;
-  
-  .version-text {
-    font-size: 22rpx;
-    color: var(--text-secondary);
-    opacity: 0.5;
-  }
+.bottom-placeholder {
+  height: calc(32rpx + env(safe-area-inset-bottom));
+  width: 100%;
 }
+
+.footer-info {
+    padding: 40rpx 0 0;
+    text-align: center;
+    
+    .version-text {
+      font-size: 22rpx;
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+  }
 
 /* 浅色模式适配 */
 .theme-light {

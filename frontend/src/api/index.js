@@ -47,7 +47,7 @@ export const communityApi = {
   /**
    * 获取趋势话题
    */
-  getTrendTopics: () => request.get('/api/community/topics/trending'),
+  getTrendTopics: (params) => request.get('/api/community/topics/trending', params),
 
   /**
    * 获取圈子详情
@@ -170,6 +170,147 @@ export const searchApi = {
 }
 
 /**
+ * AI 相关接口
+ */
+export const aiApi = {
+  /**
+   * 获取新闻摘要 (自动生成并持久化)
+   */
+  getNewsSummary: (id) => request.post(`/api/ai/news/${id}/summary`),
+  
+  /**
+   * 获取新闻深度点评 (实时生成)
+   */
+  getNewsImpact: (id) => request.post(`/api/ai/news/${id}/impact`),
+
+  /**
+   * 足球规则问答 (RAG)
+   */
+  askRule: (data) => request.post('/api/ai/qa/rule', data),
+
+  /**
+   * 通用智能对话 (RAG)
+   */
+  chat: (data) => request.post('/api/ai/chat', data),
+
+  /**
+   * 生成机智回复
+   */
+  generateComment: (data) => request.post('/api/ai/comment/generate', data),
+
+  /**
+   * 战术深度分析
+   */
+  analyzeTactics: (data) => request.post('/api/ai/tactics/analyze', data),
+
+  /**
+   * 球队/球星数据智能查询 (Tool)
+   */
+  queryData: (data) => request.post('/api/ai/query/data', data),
+
+  /**
+   * 胜率预测
+   */
+  predictMatch: (data) => request.post('/api/ai/match/predict', data),
+
+  /**
+   * 赛后战报生成
+   */
+  generateMatchReport: (data) => request.post('/api/ai/match/report', data)
+}
+
+/**
+ * Dify AI 原生接口 (文件/任务管理)
+ */
+export const difyApi = {
+  /**
+   * 上传文件 (目前仅支持图片)
+   * @param {String} filePath 文件临时路径
+   * @param {String} user 用户标识
+   */
+  uploadFile: (filePath, user) => {
+    return new Promise((resolve, reject) => {
+      const token = uni.getStorageSync('token')
+      uni.uploadFile({
+        url: `${BASE_URL}/api/ai/files/upload`,
+        filePath: filePath,
+        name: 'file',
+        formData: { user },
+        header: {
+          'Authorization': token ? (token.startsWith('Bearer ') ? token : `Bearer ${token}`) : ''
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            try {
+              const data = JSON.parse(res.data)
+              resolve(data.code === 200 || data.code === 0 ? data.data : data)
+            } catch (e) {
+              resolve(res.data)
+            }
+          } else {
+            reject(new Error('上传失败'))
+          }
+        },
+        fail: reject
+      })
+    })
+  },
+
+  /**
+   * 获取文件预览 URL
+   * @param {String} fileId 文件 ID
+   */
+  getFilePreviewUrl: (fileId) => `${BASE_URL}/api/ai/files/${fileId}/preview`,
+
+  /**
+   * 停止响应
+   * @param {String} taskId 任务 ID
+   * @param {String} user 用户标识
+   */
+  stopResponse: (taskId, user) => request.post(`/api/ai/chat-messages/${taskId}/stop`, { user }),
+
+  /**
+   * 获取会话历史消息
+   * @param {String} conversationId 会话 ID
+   * @param {String} user 用户标识
+   * @param {String} firstId 当前页第一条聊天记录的 ID
+   * @param {Number} limit 一次请求返回多少条聊天记录
+   */
+  getMessages: (conversationId, user, firstId = null, limit = 20) => {
+    const params = {
+      conversation_id: conversationId,
+      user,
+      limit
+    }
+    if (firstId && firstId !== 'null') params.first_id = firstId
+    return request.get('/api/ai/messages', params)
+  },
+
+  /**
+   * 获取会话列表
+   * @param {String} user 用户标识
+   * @param {String} lastId 当前页最后面一条记录的 ID
+   * @param {Number} limit 一次请求返回多少条记录
+   */
+  getConversations: (user, lastId = null, limit = 20) => {
+    return request.get('/api/ai/conversations', {
+      user,
+      last_id: lastId,
+      limit
+    })
+  },
+
+  /**
+   * 删除会话
+   * @param {String} conversationId 会话 ID
+   * @param {String} user 用户标识
+   */
+  deleteConversation: (conversationId, user) => {
+    return request.delete(`/api/ai/conversations/${conversationId}`, { user })
+  }
+}
+
+/**
  * 赛事相关接口
  */
 export const matchApi = {
@@ -186,7 +327,12 @@ export const matchApi = {
   /**
    * 获取指定球队的赛事
    */
-  getByTeam: (teamId) => request.get(`/api/matches/team/${teamId}`)
+  getByTeam: (teamId) => request.get(`/api/matches/team/${teamId}`),
+
+  /**
+   * AI 胜率预测
+   */
+  predict: (data) => request.post('/api/ai/match/predict', data)
 }
 
 /**
@@ -270,6 +416,11 @@ export const userApi = {
    * 更新个人资料
    */
   updateProfile: (data) => request.put('/api/users/profile', data),
+
+  /**
+   * 上传头像 (直接更新到数据库)
+   */
+  uploadAvatarUrl: '/api/user/avatar/upload',
 
   /**
    * 修改密码
@@ -365,19 +516,7 @@ export const fileApi = {
   /**
    * 获取完整的文件访问路径
    */
-  getFileUrl: (url) => {
-    if (!url) return ''
-    if (url.startsWith('http')) {
-      // 如果 URL 包含 /uploads/，强制使用当前的 BASE_URL 重新拼接，
-      // 以防止后端返回了错误的 IP (如 localhost 或 127.0.0.1)
-      if (url.includes('/uploads/')) {
-        const relativePath = url.substring(url.indexOf('/uploads/'))
-        return BASE_URL + relativePath
-      }
-      return url
-    }
-    return BASE_URL + (url.startsWith('/') ? url : '/' + url)
-  }
+  getFileUrl: (url) => getFullImageUrl(url)
 }
 
 /**

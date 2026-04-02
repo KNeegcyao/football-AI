@@ -1,9 +1,9 @@
 <template>
   <view class="container" :class="themeClass">
     <!-- Navigation Bar -->
-    <view class="nav-bar" :style="{ paddingRight: navbarPaddingRight + 'px' }">
+    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px', paddingRight: navbarPaddingRight + 'px' }">
       <view class="nav-left" @click="goBack">
-        <u-icon name="arrow-left" color="#fff" size="24"></u-icon>
+        <text class="material-icons text-theme-main" :style="{ fontSize: '48rpx' }">arrow_back</text>
       </view>
       <text class="nav-title">我的发布</text>
       <view class="nav-right"></view>
@@ -23,11 +23,11 @@
                 <view class="post-stats">
                   <text class="post-time">{{ formatTime(post.createTime) }}</text>
                   <view class="stat-item">
-                    <u-icon name="thumb-up" color="#f9d406" size="28rpx"></u-icon>
+                    <text class="material-icons" style="color: #f9d406; font-size: 32rpx;">thumb_up</text>
                     <text class="stat-num">{{ post.likes || 0 }}</text>
                   </view>
                   <view class="stat-item">
-                    <u-icon name="chat" color="#f9d406" size="28rpx"></u-icon>
+                    <text class="material-icons" style="color: #f9d406; font-size: 32rpx;">chat</text>
                     <text class="stat-num">{{ post.commentCount || 0 }}</text>
                   </view>
                 </view>
@@ -44,7 +44,7 @@
       
       <!-- Empty State -->
       <view class="empty-state" v-else-if="!loading">
-        <u-icon name="file-text" color="#666" size="60"></u-icon>
+        <text class="material-icons text-theme-secondary" style="font-size: 80rpx;">description</text>
         <text class="empty-text">暂无发布</text>
       </view>
       
@@ -60,11 +60,13 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
-import { postApi, fileApi } from '@/api';
+import { postApi } from '@/api';
+import { getFullImageUrl } from '@/utils/request';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
 
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 44);
 const posts = ref([]);
 const navbarPaddingRight = ref(0);
 const loading = ref(false);
@@ -146,8 +148,8 @@ const loadPosts = async () => {
           id: item.id,
           title: item.title,
           content: item.content,
-          image: item.images && item.images.length > 0 ? fileApi.getFileUrl(item.images[0]) : '',
-          userAvatar: item.userAvatar ? fileApi.getFileUrl(item.userAvatar) : '',
+          image: item.images && item.images.length > 0 ? getFullImageUrl(item.images[0]) : '',
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '',
           userName: item.userName,
           createTime: item.createTime,
           likes: item.likes,
@@ -244,13 +246,12 @@ const formatTime = (time) => {
 }
 
 .nav-bar {
-  height: 44px;
-  padding-top: var(--status-bar-height);
+  height: 100rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 32rpx;
+  padding-right: 32rpx;
   background-color: #1A1811;
   position: sticky;
   top: 0;
@@ -397,9 +398,6 @@ const formatTime = (time) => {
   .nav-bar {
     background-color: var(--bg-main);
     border-bottom: 1px solid var(--border-main);
-    .u-icon {
-      color: var(--text-main) !important;
-    }
     .nav-title {
       color: var(--text-main);
     }

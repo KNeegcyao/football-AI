@@ -1,9 +1,9 @@
 package com.soccer.forum.service.config;
 
 import com.soccer.forum.service.security.filter.JwtAuthenticationTokenFilter;
-import com.soccer.forum.service.service.TeamFollowService;
-import com.soccer.forum.service.service.TeamService;
-import com.soccer.forum.service.utils.JwtUtils;
+import com.soccer.forum.service.modules.match.service.TeamFollowService;
+import com.soccer.forum.service.modules.match.service.TeamService;
+import com.soccer.forum.service.security.utils.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import com.soccer.forum.service.security.handler.AuthenticationEntryPointImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -28,13 +28,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint unauthorizedHandler;
+    private final AuthenticationEntryPointImpl unauthorizedHandler;
     private final JwtUtils jwtUtils;
     private final TeamService teamService;
     private final TeamFollowService teamFollowService;
 
     public SecurityConfig(UserDetailsService userDetailsService, 
-                          AuthenticationEntryPoint unauthorizedHandler,
+                          AuthenticationEntryPointImpl unauthorizedHandler,
                           JwtUtils jwtUtils,
                           TeamService teamService,
                           TeamFollowService teamFollowService) {
@@ -58,7 +58,7 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error", "/ws/chat/**").permitAll()
+                .requestMatchers("/api/auth/**", "/error", "/ws/chat/**", "/api/ai/**").permitAll()
                 .requestMatchers("/api/players/sync/**", "/api/players/sync-sportapi/**", "/api/players/sync-scorers").permitAll()
                 // Explicitly allow list endpoints to ensure access
                 .requestMatchers("/api/news/list", "/api/players/list", "/api/teams/list").permitAll()
