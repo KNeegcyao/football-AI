@@ -1,5 +1,5 @@
 <template>
-  <view class="container" :class="themeClass">
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <view class="header-wrapper">
       <view class="status-bar bg-nav-bar"></view>
       
@@ -116,6 +116,15 @@ import { formatChatMessageTime } from '@/utils/utils';
 const chatStore = useChatStore();
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
+
+const statusBarHeight = ref(20);
+
+onMounted(() => {
+  const sysInfo = uni.getSystemInfoSync();
+  if (sysInfo.statusBarHeight) {
+    statusBarHeight.value = sysInfo.statusBarHeight;
+  }
+});
 
 const sessionId = ref(null);
 const otherUserId = ref(null);

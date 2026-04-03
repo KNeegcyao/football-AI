@@ -315,9 +315,16 @@ const isJoined = ref(false);
 const currentUserId = ref(null);
 
 onMounted(() => {
-  const userInfo = uni.getStorageSync('userInfo');
-  if (userInfo && userInfo.id) {
-    currentUserId.value = userInfo.id;
+  const userInfoStr = uni.getStorageSync('userInfo');
+  if (userInfoStr) {
+    try {
+      const userInfo = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+      if (userInfo && userInfo.id) {
+        currentUserId.value = userInfo.id;
+      }
+    } catch (e) {
+      console.error('Failed to parse userInfo', e);
+    }
   }
 });
 

@@ -1,5 +1,5 @@
 <template>
-  <view class="container" :class="themeClass">
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <view class="status-bar"></view>
     <view class="header">
       <view class="back-btn" @click="goBack">
@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
 import request from '@/utils/request';
@@ -39,6 +39,15 @@ import { getFullImageUrl } from '@/utils/request.js';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
+
+const statusBarHeight = ref(20);
+
+onMounted(() => {
+  const sysInfo = uni.getSystemInfoSync();
+  if (sysInfo.statusBarHeight) {
+    statusBarHeight.value = sysInfo.statusBarHeight;
+  }
+});
 
 const circles = ref([]);
 const page = ref(1);

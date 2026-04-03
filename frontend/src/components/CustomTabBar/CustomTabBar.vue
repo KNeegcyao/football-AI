@@ -96,6 +96,7 @@ const handleTabClick = (index) => {
   padding-bottom: env(safe-area-inset-bottom); 
   box-sizing: content-box; 
   transition: all 0.3s ease;
+  box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.15); /* 添加顶部阴影增加立体感 */
 }
 
 .tab-item {
@@ -163,7 +164,7 @@ const handleTabClick = (index) => {
   }
   
   &.active {
-    .material-icons {
+    &:not(.center-item) .material-icons {
       color: var(--accent-color) !important; /* 使用主题强调色 */
       text-shadow: 0 0 10rpx rgba(249, 212, 6, 0.3); /* 选中的图标微光 */
     }

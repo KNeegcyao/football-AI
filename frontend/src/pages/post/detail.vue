@@ -1,5 +1,5 @@
 <template>
-  <view class="container" :class="themeClass">
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <!-- Status Bar -->
     <view class="status-bar bg-nav-bar"></view>
 
@@ -13,7 +13,7 @@
       <view class="header bg-nav-bar border-b border-theme-main">
         <view class="header-left">
           <view class="back-btn" @click="goBack">
-            <image :src="getFullImageUrl('/static/icons/actions/arrow_left.svg')" :style="{ width: '48rpx', height: '48rpx', filter: iconFilter, opacity: 0.8 }"></image>
+            <image :src="getFullImageUrl('/static/icons/actions/arrow_back.svg')" :style="{ width: '48rpx', height: '48rpx', filter: iconFilter, opacity: 0.8 }"></image>
           </view>
         </view>
         <view class="header-center">
@@ -25,14 +25,11 @@
           >
             <view class="avatar-container">
               <image class="author-avatar bg-theme-secondary" :src="post.userAvatar" mode="aspectFill"></image>
-              <view class="verified-badge">
-                <image :src="getFullImageUrl('/static/icons/status/verified.svg')" :style="{ filter: iconFilter, width: '24rpx', height: '24rpx' }"></image>
-              </view>
             </view>
             <view class="author-details">
               <view class="author-name-row">
                 <text class="author-name">{{ post.userName }}</text>
-                <image :src="getFullImageUrl('/static/icons/status/verified.svg')" class="verified-icon" :style="{ width: '24rpx', height: '24rpx', filter: iconFilter }"></image>
+                <image :src="getFullImageUrl('/static/icons/status/verified.svg')" class="verified-icon" :style="{ width: '14px', height: '14px', filter: iconFilter }"></image>
               </view>
               <text class="author-role">社区成员</text>
             </view>
@@ -98,9 +95,45 @@
         <view class="comments-section">
           <view class="comments-header">
             <text class="comments-title">评论 ({{ post.commentCount || comments.length }})</text>
-            <view class="sort-btn" @click="toggleSort">
-              <text>{{ sortType === 'newest' ? '最新' : '最热' }}</text>
-              <image :src="getFullImageUrl('/static/icons/actions/arrow_down.svg')" :style="{ width: '28rpx', height: '28rpx', filter: iconFilter, opacity: 0.6 }"></image>
+            <view class="header-actions">
+              <view class="sort-btn" @click="toggleSort">
+                <text>{{ sortType === 'newest' ? '最新 ▼' : '最热 ▼' }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- AI Summary Box (Minimal Design) -->
+          <view v-if="aiSummaryResult || summarizingAi" class="ai-summary-card">
+            <view class="ai-summary-header">
+              <view class="ai-avatar">
+                <svg class="ai-avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                </svg>
+              </view>
+              <text class="ai-title-text">AI 总结</text>
+            </view>
+
+            <view class="ai-summary-body">
+              <view v-if="summarizingAi" class="ai-loading-skeleton">
+                <view class="skeleton-line" style="width: 100%;"></view>
+                <view class="skeleton-line" style="width: 85%;"></view>
+                <view class="skeleton-line" style="width: 60%;"></view>
+              </view>
+              <template v-else>
+                <view class="ai-content-wrapper" @click="aiSummaryExpanded = !aiSummaryExpanded">
+                  <text class="ai-text" :class="{ 'collapsed': !aiSummaryExpanded }">{{ aiSummaryResult }}</text>
+                </view>
+              </template>
+            </view>
+            
+            <view class="ai-summary-footer" v-if="!summarizingAi">
+              <text class="ai-footer-text">内容由 AI 生成</text>
+              <view v-if="aiSummaryResult.length > 60" class="ai-expand-trigger" @click="aiSummaryExpanded = !aiSummaryExpanded">
+                <text>{{ aiSummaryExpanded ? '收起' : '展开' }}</text>
+                <view class="expand-icon-svg" :class="{ 'rotated': aiSummaryExpanded }">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </view>
+              </view>
             </view>
           </view>
 
@@ -128,8 +161,8 @@
                   <text class="comment-text">{{ comment.content }}</text>
                 </view>
                 <view class="comment-actions">
-                  <view class="action-item">
-                    <image :src="getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '28rpx', height: '28rpx', filter: iconFilter, opacity: 0.6 }"></image>
+                  <view class="action-item" @click="likeComment(comment)">
+                    <image :src="getFullImageUrl('/static/icons/status/favorite.svg')" :style="{ width: '28rpx', height: '28rpx', filter: iconFilter, opacity: 0.6 }"></image>
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
                   <text class="reply-btn" @click="handleReply(comment)">回复</text>
@@ -163,10 +196,10 @@
                         </text>
                       </view>
                       <view class="comment-actions">
-                        <view class="action-item">
-                          <image :src="getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '24rpx', height: '24rpx', filter: iconFilter, opacity: 0.6 }"></image>
-                          <text class="action-text">{{ reply.likes || 0 }}</text>
-                        </view>
+                          <view class="action-item" @click="likeComment(reply)">
+                            <image :src="getFullImageUrl('/static/icons/status/favorite.svg')" :style="{ width: '24rpx', height: '24rpx', filter: iconFilter, opacity: 0.6 }"></image>
+                            <text class="action-text">{{ reply.likes || 0 }}</text>
+                          </view>
                         <text class="reply-btn" @click="handleReply(reply)">回复</text>
                       </view>
                     </view>
@@ -214,21 +247,24 @@
         </button>
         
         <template v-else>
-          <view class="action-btn" @click="handleLike">
-            <image :src="post.isLiked ? getFullImageUrl('/static/icons/status/thumb_up.svg') : getFullImageUrl('/static/icons/status/thumb_up.svg')" :style="{ width: '40rpx', height: '40rpx', filter: post.isLiked ? 'none' : iconFilter, opacity: post.isLiked ? 1 : 0.8 }"></image>
-            <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
-              {{ post.likes || 0 }}
-            </text>
+          <view class="action-btn ai-btn" @click="generateAiComment" :class="{ 'disabled': generatingAi }">
+            <text style="font-size: 16px; margin-right: 2px;">🤖</text>
+            <text class="action-text" style="color: #f2b90d; font-size: 13px; font-weight: 600;">AI评论</text>
           </view>
-          <view class="action-btn" @click="handleFavorite">
-            <image :src="post.isFavorited ? getFullImageUrl('/static/icons/actions/star_fill.svg') : getFullImageUrl('/static/icons/actions/star.svg')" :style="{ width: '44rpx', height: '44rpx', filter: post.isFavorited ? 'none' : iconFilter, opacity: post.isFavorited ? 1 : 0.8 }"></image>
-          </view>
-          <view class="action-btn">
-            <image :src="getFullImageUrl('/static/icons/actions/chat_bubble.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
-            <text class="action-text" style="color: var(--text-main)">{{ post.commentCount || comments.length }}</text>
-          </view>
-          <view class="action-btn">
-            <image :src="getFullImageUrl('/static/icons/actions/share.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
+          <view class="action-icons-group">
+            <view class="action-btn" @click="handleLike">
+              <image :src="post.isLiked ? getFullImageUrl('/static/icons/status/thumb_up.svg') : getFullImageUrl('/static/icons/status/thumb_up.svg')" :style="{ width: '22px', height: '22px', filter: post.isLiked ? 'none' : iconFilter, opacity: post.isLiked ? 1 : 0.8 }"></image>
+              <text class="action-text" :style="{ color: post.isLiked ? '#f2b90d' : 'var(--text-main)' }">
+                {{ post.likes || 0 }}
+              </text>
+            </view>
+            <view class="action-btn" @click="handleFavorite">
+              <image :src="post.isFavorited ? getFullImageUrl('/static/icons/actions/star_fill.svg') : getFullImageUrl('/static/icons/actions/star.svg')" :style="{ width: '24px', height: '24px', filter: post.isFavorited ? 'none' : iconFilter, opacity: post.isFavorited ? 1 : 0.8 }"></image>
+            </view>
+            <view class="action-btn">
+              <image :src="getFullImageUrl('/static/icons/actions/chat_bubble.svg')" :style="{ width: '22px', height: '22px', filter: iconFilter, opacity: 0.8 }"></image>
+              <text class="action-text" style="color: var(--text-main)">{{ post.commentCount || comments.length }}</text>
+            </view>
           </view>
         </template>
       </view>
@@ -239,7 +275,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { postApi, fileApi, favoriteApi } from '@/api';
+import { postApi, fileApi, favoriteApi, aiApi } from '@/api';
 import { useThemeStore } from '@/store/theme';
 import { getFullImageUrl } from '@/utils/request';
 
@@ -258,23 +294,40 @@ const sortType = ref('newest'); // newest, hottest
 const isFollowing = ref(false);
 const commentText = ref('');
 const submitting = ref(false);
+const generatingAi = ref(false);
+const summarizingAi = ref(false);
+const aiSummaryResult = ref('');
+const aiSummaryExpanded = ref(false);
 const scrollTarget = ref('');
 const targetId = ref(null);
 const replyTarget = ref(null); // { id, userName }
 const currentUserId = ref(null);
+const statusBarHeight = ref(20);
 
 onMounted(() => {
-  const userInfo = uni.getStorageSync('userInfo');
-  if (userInfo && userInfo.id) {
-    currentUserId.value = userInfo.id;
+  const userInfoStr = uni.getStorageSync('userInfo');
+  if (userInfoStr) {
+    try {
+      const userInfo = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+      if (userInfo && userInfo.id) {
+        currentUserId.value = userInfo.id;
+      }
+    } catch (e) {
+      console.error('Failed to parse userInfo', e);
+    }
+  }
+  const sysInfo = uni.getSystemInfoSync();
+  if (sysInfo.statusBarHeight) {
+    statusBarHeight.value = sysInfo.statusBarHeight;
   }
 });
 
 const categoryText = computed(() => {
   if (!post.value) return '# 足球';
-  if (post.value.topicName) return `# ${post.value.topicName}`;
-  if (post.value.circleName) return `# ${post.value.circleName}`;
-  return post.value.category || '# 足球';
+  let text = post.value.topicName || post.value.circleName || post.value.category || '足球';
+  // 确保只有一个 #
+  text = text.replace(/^#\s*/, '');
+  return `# ${text}`;
 });
 
 const goBack = () => {
@@ -399,6 +452,11 @@ const loadComments = async (id) => {
           }, 500);
         });
       }
+      
+      // Auto trigger AI summary if there are comments and not already generated
+      if (comments.value.length > 0 && !aiSummaryResult.value && !summarizingAi.value) {
+        summarizeComments();
+      }
     }
   } catch (error) {
     console.error('Failed to load comments:', error);
@@ -479,6 +537,85 @@ const submitComment = async () => {
   }
 };
 
+const generateAiComment = async () => {
+  if (generatingAi.value) return;
+  
+  if (!post.value || !post.value.content) {
+    uni.showToast({ title: '帖子内容为空，无法生成', icon: 'none' });
+    return;
+  }
+
+  generatingAi.value = true;
+  uni.showLoading({ title: 'AI思考中...' });
+  try {
+    let targetContent = post.value.content;
+    
+    // 如果是回复某人，可以将回复对象的评论内容加上，让AI更有针对性
+    // 这里简单起见，目前直接根据帖子内容生成
+    const res = await aiApi.generateComment({ content: targetContent });
+    
+    if (res) {
+      // 成功生成后，将内容填入输入框，让用户确认后再发送
+      commentText.value = res;
+      uni.showToast({ title: '已生成', icon: 'success' });
+    } else {
+      uni.showToast({ title: '生成失败，请重试', icon: 'none' });
+    }
+  } catch (error) {
+    console.error('AI comment generation failed:', error);
+    uni.showToast({ title: '生成失败，请重试', icon: 'none' });
+  } finally {
+    generatingAi.value = false;
+    uni.hideLoading();
+  }
+};
+
+const summarizeComments = async () => {
+  if (summarizingAi.value) return;
+  if (!comments.value || comments.value.length === 0) {
+    return;
+  }
+
+  summarizingAi.value = true;
+  aiSummaryResult.value = '';
+  
+  try {
+    // 提取所有评论内容，限制数量避免超出token限制
+    const commentTexts = comments.value.slice(0, 30).map(c => c.content);
+    
+    const res = await aiApi.analyzeComments(commentTexts);
+    if (res) {
+      aiSummaryResult.value = res;
+    }
+  } catch (error) {
+    console.error('AI comment summarization failed:', error);
+  } finally {
+    summarizingAi.value = false;
+  }
+};
+
+const likeComment = async (comment) => {
+  try {
+    const res = await postApi.like({
+      targetId: comment.id,
+      targetType: 2 // 2 for comment
+    });
+    
+    if (res && res.liked !== undefined) {
+      if (res.liked) {
+        comment.likes = (comment.likes || 0) + 1;
+        uni.showToast({ title: '已点赞', icon: 'none' });
+      } else {
+        comment.likes = Math.max(0, (comment.likes || 1) - 1);
+        uni.showToast({ title: '已取消', icon: 'none' });
+      }
+    }
+  } catch (error) {
+    console.error('Comment like failed:', error);
+    uni.showToast({ title: '操作失败', icon: 'none' });
+  }
+};
+
 const handleLike = async () => {
   if (!post.value) return;
   try {
@@ -540,8 +677,16 @@ const navigateToProfile = (userId) => {
     return;
   }
   
-  const userInfo = uni.getStorageSync('userInfo');
-  const currentUserId = userInfo?.id;
+  const userInfoStr = uni.getStorageSync('userInfo');
+  let currentUserId = null;
+  if (userInfoStr) {
+    try {
+      const userInfoObj = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+      currentUserId = userInfoObj?.id;
+    } catch (e) {
+      console.error('Failed to parse userInfo', e);
+    }
+  }
   console.log('Current logged-in userId:', currentUserId);
   
   // 如果是当前用户，使用 switchTab 跳转到 TabBar 的“我的”页面
@@ -645,20 +790,6 @@ onLoad((options) => {
   border: 1px solid var(--border-main);
 }
 
-.verified-badge {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background-color: #f2b90d;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--bg-main);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .author-details {
   display: flex;
   flex-direction: column;
@@ -722,8 +853,8 @@ onLoad((options) => {
   font-size: 12px;
   font-weight: 600;
   background-color: rgba(242, 185, 13, 0.15);
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 .time {
@@ -734,7 +865,7 @@ onLoad((options) => {
 .article-title {
   font-size: 20px;
   font-weight: bold;
-  line-height: 1.25;
+  line-height: 1.4;
   margin-bottom: 12px;
   color: var(--text-main);
   display: block;
@@ -745,9 +876,9 @@ onLoad((options) => {
 }
 
 .body-text {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-main);
-  line-height: 1.625;
+  line-height: 1.6;
 }
 
 .read-more {
@@ -798,9 +929,9 @@ onLoad((options) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-top: 1px solid var(--border-main);
-  border-bottom: 1px solid var(--border-main);
+  padding: 16px 0;
+  margin-top: 8px;
+  border-top: 1px solid rgba(150, 150, 150, 0.1);
 }
 
 .avatar-stack {
@@ -852,11 +983,12 @@ onLoad((options) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 24px;
 }
 
 .comments-title {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-main);
 }
 
@@ -866,6 +998,222 @@ onLoad((options) => {
   gap: 4px;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.jd-ai-summary-container {
+  margin: 0 16px 24px;
+  padding: 16px;
+  background-color: #fcfaff;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 43, 226, 0.1);
+}
+
+.theme-dark .jd-ai-summary-container {
+  background-color: rgba(40, 35, 55, 0.5);
+  border-color: rgba(138, 43, 226, 0.2);
+}
+
+/* AI Summary Card (Minimal Design) */
+.ai-summary-card {
+  margin: 12px 16px 24px;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.theme-dark .ai-summary-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ai-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background-color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  animation: pulseAvatar 2s infinite alternate;
+}
+
+.theme-dark .ai-avatar {
+  background-color: #f8fafc;
+}
+
+.ai-avatar-icon {
+  color: #ffffff;
+  width: 14px;
+  height: 14px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+.theme-dark .ai-avatar-icon {
+  color: #0f172a;
+}
+
+.ai-title-text {
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.theme-dark .ai-title-text {
+  background: linear-gradient(90deg, #60a5fa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.ai-summary-body {
+  margin-bottom: 12px;
+}
+
+.ai-content-wrapper {
+  position: relative;
+}
+
+.ai-text {
+  font-size: 14px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  transition: all 0.3s ease;
+  
+  /* Cool animated gradient text */
+  background: linear-gradient(120deg, #1e293b, #3b82f6, #8b5cf6, #1e293b);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientShine 6s ease infinite, fadeInUp 0.6s ease-out forwards;
+}
+
+.theme-dark .ai-text {
+  background: linear-gradient(120deg, #f8fafc, #60a5fa, #c084fc, #f8fafc);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.ai-text.collapsed {
+  -webkit-line-clamp: 4;
+}
+
+@keyframes pulseAvatar {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  100% { transform: scale(1.05); box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.1); }
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+
+@keyframes gradientShine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  background-color: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-dark .skeleton-line {
+  background-color: #334155;
+}
+
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+.theme-dark .skeleton-line::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.ai-summary-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-footer-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.theme-dark .ai-footer-text {
+  color: #64748b;
+}
+
+.ai-expand-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.theme-dark .ai-expand-trigger {
+  color: #94a3b8;
+}
+
+.expand-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.expand-icon-svg.rotated {
+  transform: rotate(180deg);
 }
 
 .comments-list {
@@ -889,7 +1237,7 @@ onLoad((options) => {
 }
 
 .comment-item.nested {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .comment-avatar {
@@ -910,18 +1258,22 @@ onLoad((options) => {
 .comment-bubble {
   padding: 12px;
   border-radius: 12px;
-  border-top-left-radius: 0;
+  border-top-left-radius: 4px;
+  border: 1px solid rgba(150, 150, 150, 0.1);
 }
 
 .comment-bubble.semi-transparent {
-  padding: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
+  border: 1px solid rgba(150, 150, 150, 0.05);
 }
 
 .comment-user-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .comment-username {
@@ -938,6 +1290,7 @@ onLoad((options) => {
 .comment-text {
   font-size: 14px;
   color: var(--text-main);
+  line-height: 1.5;
 }
 
 .highlight-text {
@@ -947,6 +1300,7 @@ onLoad((options) => {
 .reply-label {
   color: #f2b90d;
   font-size: 13px;
+  font-weight: 500;
   margin-right: 4px;
 }
 
@@ -962,6 +1316,7 @@ onLoad((options) => {
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 4px 0;
   color: var(--text-secondary);
 }
 
@@ -981,9 +1336,9 @@ onLoad((options) => {
 }
 
 .nested-replies {
-  margin-top: 16px;
-  border-left: 2px solid var(--border-main);
-  padding-left: 16px;
+  margin-top: 12px;
+  border-left: 2px solid rgba(150, 150, 150, 0.15);
+  padding-left: 12px;
 }
 
 .bottom-bar-wrapper {
@@ -1022,13 +1377,22 @@ onLoad((options) => {
 }
 
 .bottom-bar {
-  height: 60px;
+  height: 64px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
   padding-bottom: env(safe-area-inset-bottom);
   gap: 12px;
+  border-top: 1px solid rgba(150, 150, 150, 0.1);
+  background: rgba(var(--bg-nav-bar-rgb), 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.action-icons-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .action-btn {
@@ -1037,13 +1401,26 @@ onLoad((options) => {
   gap: 4px;
 }
 
+.ai-btn {
+  background: linear-gradient(135deg, rgba(242, 185, 13, 0.2), rgba(242, 185, 13, 0.05));
+  border: 1px solid rgba(242, 185, 13, 0.3);
+  border-radius: 16px;
+  padding: 4px 10px;
+}
+
+.action-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .action-text {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .comment-input {
   flex: 1;
+  background-color: rgba(150, 150, 150, 0.1) !important;
   border-radius: 20px;
   padding: 8px 16px;
   color: var(--text-main);

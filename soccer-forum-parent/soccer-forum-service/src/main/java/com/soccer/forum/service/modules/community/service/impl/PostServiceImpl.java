@@ -30,6 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.soccer.forum.service.modules.ai.service.FanAgentService;
+import org.springframework.context.annotation.Lazy;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -63,8 +66,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final FavoriteMapper favoriteMapper;
     private final NotificationService notificationService;
     private final ExperienceService experienceService;
+    private final FanAgentService fanAgentService;
 
-    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper, NotificationService notificationService, ExperienceService experienceService) {
+    public PostServiceImpl(PostMapper postMapper, UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, LikeService likeService, TopicMapper topicMapper, TeamMapper teamMapper, FavoriteMapper favoriteMapper, NotificationService notificationService, ExperienceService experienceService, @Lazy FanAgentService fanAgentService) {
         this.postMapper = postMapper;
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
@@ -74,6 +78,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         this.favoriteMapper = favoriteMapper;
         this.notificationService = notificationService;
         this.experienceService = experienceService;
+        this.fanAgentService = fanAgentService;
     }
 
     /**
@@ -148,6 +153,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 // 目前 Topic 确定有，先确认 Topic 更新
             }
         }
+
+        // 触发虚拟球迷互动体
+        fanAgentService.generateCommentsForNewPost(post.getId(), req.getContent());
 
         return post.getId();
     }

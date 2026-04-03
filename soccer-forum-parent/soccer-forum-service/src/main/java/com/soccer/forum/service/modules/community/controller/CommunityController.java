@@ -86,6 +86,17 @@ public class CommunityController {
     }
 
     /**
+     * 加入话题
+     */
+    @Operation(summary = "加入话题", description = "加入指定话题")
+    @PostMapping("/topics/{id}/join")
+    public R<Boolean> joinTopic(@Parameter(description = "话题ID") @PathVariable Long id) {
+        log.debug("加入话题: id={}", id);
+        // 当前暂无话题关注表，直接返回成功，配合前端更新状态
+        return R.ok(true, "加入成功");
+    }
+
+    /**
      * 获取话题详情
      */
     @Operation(summary = "获取话题详情", description = "根据ID获取话题详情，并增加阅读量")

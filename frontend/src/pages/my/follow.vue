@@ -121,8 +121,17 @@ onLoad((options) => {
   }
   if (options.userId) {
     userId.value = options.userId
-    const userInfo = uni.getStorageSync('userInfo')
-    isSelf.value = !userId.value || userId.value === userInfo?.id
+    const userInfoStr = uni.getStorageSync('userInfo');
+    let currentUserId = null;
+    if (userInfoStr) {
+      try {
+        const userInfo = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+        currentUserId = userInfo?.id;
+      } catch (e) {
+        console.error('Failed to parse userInfo', e);
+      }
+    }
+    isSelf.value = !userId.value || userId.value == currentUserId
   }
   
   loadStats()

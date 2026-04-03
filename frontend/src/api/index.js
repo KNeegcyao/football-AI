@@ -214,9 +214,14 @@ export const aiApi = {
   predictMatch: (data) => request.post('/api/ai/match/predict', data),
 
   /**
-   * 赛后战报生成
+   * 生成赛后深度战报
    */
-  generateMatchReport: (data) => request.post('/api/ai/match/report', data)
+  generateMatchReport: (data) => request.post('/api/ai/match/report', data),
+
+  /**
+   * 评论情感分析/总结
+   */
+  analyzeComments: (data) => request.post('/api/ai/comment/analyze', data)
 }
 
 /**

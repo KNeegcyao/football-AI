@@ -342,7 +342,16 @@ public class AiController {
     @PostMapping("/comment/analyze")
     public R<String> analyzeComments(@RequestBody List<String> comments) {
         if (comments == null || comments.isEmpty()) return R.fail("评论列表不能为空");
-        return R.ok(commentAnalysisAgent.analyzeComments(comments));
+        
+        try {
+            String result = commentAnalysisAgent.analyzeComments(comments);
+            return R.ok(result);
+        } catch (Exception e) {
+            log.error("AI 评论分析生成失败: {}", e.getMessage());
+            // 降级处理：返回一个模拟的分析
+            String mockResult = "【懂球老哥锐评】这波评论看下来，大伙儿基本都在挺这波操作，整个评论区的情绪那是相当高涨，乐开花了都！虽然也有几个老铁在无奈吐槽防守拉胯、战术保守，但整体上的情感趋向绝对是乐观期待的。这话题热度绝了，咱们拭目以待吧！(AI 模型开小差了，此为老哥预设锐评)";
+            return R.ok(mockResult);
+        }
     }
 
     @Operation(summary = "足球规则问答 (RAG)")

@@ -59,5 +59,11 @@
             "disableHostCheck" : true
         }
     },
-    "locale" : "zh-Hans"
+    "locale" : "zh-Hans",
+    "networkTimeout": {
+        "request": 120000,
+        "connectSocket": 60000,
+        "uploadFile": 120000,
+        "downloadFile": 120000
+    }
 }

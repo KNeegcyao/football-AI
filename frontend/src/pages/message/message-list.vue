@@ -1,5 +1,5 @@
 <template>
-  <view class="container" :class="themeClass">
+  <view class="container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <view class="status-bar"></view>
     
     <!-- Header -->
@@ -60,6 +60,15 @@ import { fileApi } from '@/api';
 
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
+
+const statusBarHeight = ref(20);
+
+onMounted(() => {
+  const sysInfo = uni.getSystemInfoSync();
+  if (sysInfo.statusBarHeight) {
+    statusBarHeight.value = sysInfo.statusBarHeight;
+  }
+});
 
 const chatStore = useChatStore();
 const loading = ref(false);

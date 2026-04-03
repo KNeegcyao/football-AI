@@ -130,7 +130,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                .eq(Comment::getStatus, 1);
         
         if ("hottest".equalsIgnoreCase(req.getSort())) {
-            wrapper.orderByDesc(Comment::getLikes);
+            wrapper.orderByDesc(Comment::getLikes).orderByDesc(Comment::getCreatedAt);
         } else {
             wrapper.orderByDesc(Comment::getCreatedAt);
         }

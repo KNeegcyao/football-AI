@@ -329,9 +329,10 @@ def fetch_matches_from_api(days_back=0, days_ahead=7):
     headers = {'X-Auth-Token': API_KEY}
     all_matches = []
     
-    # 获取指定范围内的赛程
-    date_from = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
-    date_to = (datetime.now() + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+    # 动态获取当前日期的范围
+    now = datetime.now()
+    date_from = (now - timedelta(days=days_back)).strftime('%Y-%m-%d')
+    date_to = (now + timedelta(days=days_ahead)).strftime('%Y-%m-%d')
     
     print(f"正在按联赛逐个获取赛程 (五大联赛+欧冠): {date_from} 到 {date_to}...")
     
@@ -484,6 +485,8 @@ def sync_schedule(days_back=0, days_ahead=3):
                 
                 comp_name = LEAGUES.get(match['competition']['code'], match['competition']['name'])
                 match_time_utc = match['utcDate'].replace('Z', '')
+                
+                # 将 UTC 时间转为北京时间 (UTC+8)
                 match_time = datetime.strptime(match_time_utc, "%Y-%m-%dT%H:%M:%S") + timedelta(hours=8)
                 
                 home_team_id = ensure_team(cursor, match['homeTeam'])
@@ -499,63 +502,33 @@ def sync_schedule(days_back=0, days_ahead=3):
                 }
                 status = status_map.get(api_status, 0)
                 
-                # 智能状态补偿: 
-                # 规则1: 只要过了开始时间 且在 135 分钟内，且 API 说是 TIMED，强制设为进行中 (status=1)
-                # 规则2: 只要过了开始时间 且超过 135 分钟，且 API 还没说是 FINISHED，强制设为已结束 (status=2)
-                now = datetime.now()
-                if status == 0: # 原本是即将开始
-                    if now >= match_time:
-                        if now <= (match_time + timedelta(minutes=135)):
-                            print(f"  [智能补偿] 比赛 {match['homeTeam'].get('name')} 已经开始，强制设为进行中")
-                            status = 1
-                        else:
-                            print(f"  [智能补偿] 比赛 {match['homeTeam'].get('name')} 已经结束(超时补偿)，强制设为已结束")
-                            status = 2
-                elif status == 1: # 原本是进行中
-                    if now > (match_time + timedelta(minutes=135)):
-                        print(f"  [智能补偿] 比赛 {match['homeTeam'].get('name')} 进行时间过长，强制设为已结束")
-                        status = 2
-                
                 # 获取比分
                 score_data = match.get('score', {})
                 full_time = score_data.get('fullTime', {})
-                half_time = score_data.get('halfTime', {})
-                regular_time = score_data.get('regularTime', {}) # 增加常规时间校验
-                
                 home_score = full_time.get('home')
                 away_score = full_time.get('away')
 
-                # 多级比分抓取策略
-                if home_score is None or away_score is None:
-                    # 尝试常规时间
-                    if regular_time.get('home') is not None:
-                        home_score = regular_time.get('home')
-                        away_score = regular_time.get('away')
-                        print(f"  [调试] 从 regularTime 获取比分: {home_score}:{away_score}")
-                    # 尝试半场时间
-                    elif half_time.get('home') is not None:
-                        home_score = half_time.get('home')
-                        away_score = half_time.get('away')
-                        print(f"  [调试] 从 halfTime 获取比分: {home_score}:{away_score}")
-
-                # 只有当 API 明确给出了非空比分，或者比赛已结束且我们确实没拿到比分时，才进行赋值
-                # 如果数据库里已经有比分了，且 API 返回 None，我们选择保持现状（不覆盖）
-                # 逻辑: 只有当拿到的比分不是 None 时才更新，否则保留数据库原值
-                if status in [1, 2]:
-                    # 检查数据库当前值
-                    cursor.execute("SELECT home_score, away_score FROM matches WHERE home_team_id = %s AND away_team_id = %s AND ABS(TIMESTAMPDIFF(HOUR, match_time, %s)) < 12", (home_team_id, away_team_id, match_time))
-                    current = cursor.fetchone()
+                # 核心修正：智能状态与比分处理
+                now = datetime.now()
+                
+                # 如果比赛时间还没到（未来的比赛），强制设为“未开始”，且比分必须清空
+                if match_time > now:
+                    status = 0
+                    home_score = None
+                    away_score = None
+                    print(f"  [智能处理] 比赛 {match['homeTeam'].get('name')} 是未来的比赛，设为未开始并清空比分")
+                else:
+                    # 如果比赛已经过了开始时间
+                    if status == 0: # API 说是即将开始，但时间已过
+                        if now <= (match_time + timedelta(minutes=135)):
+                            status = 1 # 设为进行中
+                        else:
+                            status = 2 # 设为已结束
                     
-                    if current:
-                        # 如果 API 给的比分是 None，但数据库已经有值了，我们保持现状
-                        if home_score is None and current['home_score'] is not None:
-                            home_score = current['home_score']
-                        if away_score is None and current['away_score'] is not None:
-                            away_score = current['away_score']
-                    
-                    # 兜底：如果最终还是 None，设为 0
-                    if home_score is None: home_score = 0
-                    if away_score is None: away_score = 0
+                    # 只有在比赛已经开始或结束时，才处理比分兜底
+                    if status in [1, 2]:
+                        if home_score is None: home_score = 0
+                        if away_score is None: away_score = 0
                 
                 # 查重逻辑增强：不仅检查相同时间，还检查相同对阵的 ID，防止异步更新时产生新记录
                 cursor.execute("""
