@@ -145,6 +145,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(loginBody.getPassword()));
         user.setNickname(loginBody.getNickname() != null ? loginBody.getNickname() : "User_" + System.currentTimeMillis());
         user.setBio("此人没有留下任何足迹...");
+        user.setAvatar("/static/default-avatar.png");
         
         if (loginBody.getEmail() != null && !loginBody.getEmail().isEmpty()) {
             user.setEmail(loginBody.getEmail());
@@ -291,6 +292,7 @@ public class AuthServiceImpl implements AuthService {
             // 设置随机密码
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString().substring(0, 8)));
             user.setNickname("User_" + phone.substring(phone.length() - 4));
+            user.setAvatar("/static/default-avatar.png");
             user.setRole(UserRole.USER);
             user.setStatus(UserStatus.NORMAL);
             userMapper.insert(user);

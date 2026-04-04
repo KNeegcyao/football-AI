@@ -199,7 +199,7 @@ const userInfo = ref({
   id: '',
   nickname: '加载中...',
   username: '',
-  avatar: '/static/soccer-logo.png',
+  avatar: '/static/default-avatar.png',
   cover: '',
   level: 1,
   levelTitle: '新秀观察员 | 足球爱好者',

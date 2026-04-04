@@ -409,6 +409,13 @@ const loadTopicDetail = async (id) => {
         viewCount: data.viewCount || 0,
         postCount: data.postCount || 0
       }
+      
+      // 如果之前没有标题，用返回的标题更新，并触发加载帖子
+      if (!topicTitle.value && data.title) {
+        topicTitle.value = data.title.replace(/^#|#$/g, '');
+        topicInfo.value.title = topicTitle.value;
+        loadPosts(topicTitle.value);
+      }
     }
   } catch (error) {
     console.error('获取话题详情失败:', error)
@@ -568,7 +575,7 @@ const handleLike = async (post) => {
 
 const getRandomAvatar = () => {
   const avatars = [
-    '/static/soccer-logo.png',
+    '/static/default-avatar.png',
     '/static/teams/generic_stadium.jpg',
     '/static/default-team.png'
   ];

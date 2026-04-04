@@ -107,6 +107,24 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public java.util.Map<Integer, Long> getUnreadCountByType(Long userId) {
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Notification> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        queryWrapper.select("type", "count(*) as count")
+                .eq("user_id", userId)
+                .eq("is_read", 0)
+                .groupBy("type");
+        
+        List<java.util.Map<String, Object>> maps = notificationMapper.selectMaps(queryWrapper);
+        java.util.Map<Integer, Long> result = new java.util.HashMap<>();
+        for (java.util.Map<String, Object> map : maps) {
+            Integer type = ((Number) map.get("type")).intValue();
+            Long count = ((Number) map.get("count")).longValue();
+            result.put(type, count);
+        }
+        return result;
+    }
+
+    @Override
     public Page<Notification> getNotificationPage(Long userId, Integer page, Integer size, List<Integer> types) {
         Page<Notification> p = new Page<>(page, size);
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<Notification>()
@@ -140,6 +158,20 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setIsRead(1);
         notificationMapper.update(notification, new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getUserId, userId)
+                .eq(Notification::getIsRead, 0));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markAsReadByType(Long userId, List<Integer> types) {
+        if (types == null || types.isEmpty()) {
+            return;
+        }
+        Notification notification = new Notification();
+        notification.setIsRead(1);
+        notificationMapper.update(notification, new LambdaQueryWrapper<Notification>()
+                .eq(Notification::getUserId, userId)
+                .in(Notification::getType, types)
                 .eq(Notification::getIsRead, 0));
     }
 

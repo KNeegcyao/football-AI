@@ -80,7 +80,7 @@
         <!-- 聊天记录 -->
         <view v-for="(msg, index) in chatList" :key="index" :class="['message', msg.role]">
           <view class="avatar-box" v-if="msg.role === 'assistant'">
-            <image src="/static/soccer-logo.png" mode="aspectFit" class="avatar-img"></image>
+            <image src="/static/default-avatar.png" mode="aspectFit" class="avatar-img"></image>
           </view>
           <view class="avatar-box" v-else>
             <image :src="userAvatar" mode="aspectFill" class="avatar-img" @error="handleAvatarError"></image>
@@ -97,7 +97,7 @@
         <!-- 加载中动画 -->
         <view class="message assistant" v-if="isLoading">
           <view class="avatar-box">
-            <image src="/static/soccer-logo.png" mode="aspectFit" class="avatar-img"></image>
+            <image src="/static/default-avatar.png" mode="aspectFit" class="avatar-img"></image>
           </view>
           <view class="msg-bubble loading-bubble">
             <text class="loading-dot">.</text>

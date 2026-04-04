@@ -225,7 +225,7 @@
           <!-- 球员收藏列表 -->
           <view v-else-if="currentFavSubTab === 2" class="player-grid">
             <view v-for="(player, index) in favoritePlayers" :key="player.id" class="player-card bg-card border border-theme-main" @click="goToPlayerDetail(player.id)">
-              <image class="player-avatar" :src="player.avatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
+              <image class="player-avatar" :src="player.avatar || '/static/default-avatar.png'" mode="aspectFill"></image>
               <text class="player-name text-theme-main">{{ player.name }}</text>
               <text class="player-position text-theme-secondary">{{ player.position }}</text>
             </view>
@@ -437,7 +437,7 @@ onShow(() => {
 // 使用统一的 getFullImageUrl 处理图片 URL
 const getAvatarUrl = (path, type = 'avatar') => {
   if (!path) {
-    return getFullImageUrl(type === 'avatar' ? '/static/soccer-logo.png' : '')
+    return getFullImageUrl(type === 'avatar' ? '/static/default-avatar.png' : '')
   }
   return getFullImageUrl(path)
 }

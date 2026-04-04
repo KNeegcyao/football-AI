@@ -42,18 +42,21 @@
       <view class="category-item" @click="filterByType('reply')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-emerald">
           <text class="material-icons" style="color: #10b981; font-size: 56rpx;">chat</text>
+          <view class="category-badge" v-if="unreadCounts.reply > 0">{{ unreadCounts.reply > 99 ? '99+' : unreadCounts.reply }}</view>
         </view>
         <text class="label text-theme-secondary">回复与@</text>
       </view>
       <view class="category-item" @click="filterByType('like')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-rose">
           <text class="material-icons" style="color: #f43f5e; font-size: 56rpx;">thumb_up</text>
+          <view class="category-badge" v-if="unreadCounts.like > 0">{{ unreadCounts.like > 99 ? '99+' : unreadCounts.like }}</view>
         </view>
         <text class="label text-theme-secondary">收到喜欢</text>
       </view>
       <view class="category-item" @click="filterByType('follow')">
         <view class="icon-wrapper bg-theme-secondary border-theme-main bg-sky">
           <text class="material-icons" style="color: #0ea5e9; font-size: 56rpx;">person_add</text>
+          <view class="category-badge" v-if="unreadCounts.follow > 0">{{ unreadCounts.follow > 99 ? '99+' : unreadCounts.follow }}</view>
         </view>
         <text class="label text-theme-secondary">新增粉丝</text>
       </view>
@@ -78,7 +81,7 @@
           <!-- 消息正文 -->
           <view class="message-row">
             <text class="desc-text text-theme-secondary">{{ formatMessage(item.lastMessage) }}</text>
-            <view class="unread-badge" v-if="item.unreadCount > 0">{{ item.unreadCount }}</view>
+            <view class="unread-badge" v-if="item.unreadCount > 0">{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</view>
           </view>
         </view>
       </view>
@@ -96,7 +99,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useChatStore } from '@/store/chat';
 import { useThemeStore } from '@/store/theme';
 import { getFullImageUrl } from '@/utils/request.js';
-import { onPullDownRefresh, onLoad } from '@dcloudio/uni-app';
+import request from '@/utils/request';
+import { onPullDownRefresh, onLoad, onShow } from '@dcloudio/uni-app';
 
 const chatStore = useChatStore();
 const themeStore = useThemeStore();
@@ -107,6 +111,12 @@ const statusBarHeight = ref(0);
 const sessions = computed(() => chatStore.sessions);
 const showSettings = ref(false);
 const enableNotification = computed(() => chatStore.enableNotification);
+
+const unreadCounts = ref({
+  reply: 0,
+  like: 0,
+  follow: 0
+});
 
 onLoad(() => {
   const systemInfo = uni.getSystemInfoSync();
@@ -124,8 +134,32 @@ onLoad(() => {
   // #endif
 });
 
+onShow(() => {
+  fetchUnreadCounts();
+});
+
+const fetchUnreadCounts = async () => {
+  try {
+    const res = await request.get('/api/notifications/unread-count-by-type');
+    if (res) {
+      // 后端类型: 1=点赞帖子, 2=点赞评论, 3=评论帖子, 4=回复评论, 5=关注, 6=@提及
+      const likeCount = (res[1] || 0) + (res[2] || 0);
+      const replyCount = (res[3] || 0) + (res[4] || 0) + (res[6] || 0);
+      const followCount = (res[5] || 0);
+      
+      unreadCounts.value = {
+        like: likeCount,
+        reply: replyCount,
+        follow: followCount
+      };
+    }
+  } catch (e) {
+    console.error('获取分类未读消息数失败:', e);
+  }
+};
+
 onPullDownRefresh(() => {
-  fetchSessions().finally(() => {
+  Promise.all([fetchSessions(), fetchUnreadCounts()]).finally(() => {
     uni.stopPullDownRefresh();
   });
 });
@@ -134,8 +168,29 @@ const fetchSessions = () => {
   return chatStore.fetchSessions();
 };
 
-const filterByType = (type) => {
+const filterByType = async (type) => {
   console.log('filterByType:', type);
+
+  // 点击时标记该分类的消息为已读
+  const typeMap = {
+    reply: '3,4,6', // 评论帖子, 回复评论, @提及
+    like: '1,2',    // 点赞帖子, 点赞评论
+    follow: '5'     // 关注
+  };
+  if (typeMap[type]) {
+    try {
+      await request.put('/api/notifications/read-by-type', { types: typeMap[type] }, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      // 乐观更新本地未读数量
+      unreadCounts.value[type] = 0;
+    } catch (e) {
+      console.error('标记已读失败:', e);
+    }
+  }
+
   const routes = {
     reply: '/pages/community/reply-detail',
     like: '/pages/community/like-detail',
@@ -347,6 +402,7 @@ const handleSessionClick = (session) => {
     gap: 16rpx;
 
     .icon-wrapper {
+      position: relative;
       width: 100rpx;
       height: 100rpx;
       border-radius: 24rpx;
@@ -354,6 +410,21 @@ const handleSessionClick = (session) => {
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
+
+      .category-badge {
+        position: absolute;
+        top: -10rpx;
+        right: -10rpx;
+        background-color: #ef4444;
+        color: #ffffff;
+        font-size: 20rpx;
+        font-weight: bold;
+        padding: 4rpx 10rpx;
+        border-radius: 20rpx;
+        min-width: 28rpx;
+        text-align: center;
+        border: 4rpx solid var(--bg-main);
+      }
 
       &:active {
         transform: scale(0.95);

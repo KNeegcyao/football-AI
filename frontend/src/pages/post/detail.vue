@@ -377,12 +377,12 @@ const loadPostDetail = async (id) => {
       const processedImages = images.map(img => getFullImageUrl(img));
       
       // Process avatar URL
-      const avatarUrl = data.userAvatar ? getFullImageUrl(data.userAvatar) : '/static/soccer-logo.png';
+      const avatarUrl = data.userAvatar ? getFullImageUrl(data.userAvatar) : '/static/default-avatar.png';
 
       // Process recent likes avatars
       const processedRecentLikes = (data.recentLikes || []).map(liker => ({
         ...liker,
-        avatar: liker.avatar ? getFullImageUrl(liker.avatar) : '/static/soccer-logo.png'
+        avatar: liker.avatar ? getFullImageUrl(liker.avatar) : '/static/default-avatar.png'
       }));
 
       post.value = {
@@ -426,13 +426,13 @@ const loadComments = async (id) => {
       comments.value = records.map(c => ({
         ...c,
         userName: c.nickname || 'Unknown User',
-        userAvatar: c.avatar ? getFullImageUrl(c.avatar) : '/static/soccer-logo.png',
+        userAvatar: c.avatar ? getFullImageUrl(c.avatar) : '/static/default-avatar.png',
         likes: c.likes || 0,
         // Map replies recursively if needed, but for now flat list or simple structure
         replies: (c.replies || []).map(r => ({
             ...r,
             userName: r.nickname || 'Unknown User',
-            userAvatar: r.avatar ? getFullImageUrl(r.avatar) : '/static/soccer-logo.png',
+            userAvatar: r.avatar ? getFullImageUrl(r.avatar) : '/static/default-avatar.png',
             likes: r.likes || 0,
             replyToUserName: r.replyToNickname // 映射后端字段
         }))

@@ -314,7 +314,7 @@ public class CommunityController {
                     if (av != null && !av.isEmpty()) {
                         realAvatars.add(av);
                     } else {
-                        realAvatars.add("/static/default-team.png");
+                        realAvatars.add("/static/default-avatar.png");
                     }
                 }
             }

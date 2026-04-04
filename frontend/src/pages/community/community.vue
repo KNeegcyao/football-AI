@@ -19,7 +19,7 @@
           </view>
           <view class="action-btn" @click="handleNotification">
             <text class="material-icons" style="font-size: 48rpx; color: var(--text-main);">notifications</text>
-            <view class="notification-badge" v-if="unreadCount > 0">{{ unreadCount }}</view>
+            <view class="notification-badge" v-if="totalUnread > 0">{{ totalUnread > 99 ? '99+' : totalUnread }}</view>
           </view>
         </view>
       </view>
@@ -97,7 +97,7 @@
                 
                 <view class="trend-avatars" v-if="trend.activeUsers && trend.activeUsers.length > 0">
                   <view class="avatar-group">
-                    <image v-for="(user, idx) in trend.activeUsers.slice(0, 3)" :key="idx" :src="getFullImageUrl(user.avatar) || '/static/soccer-logo.png'" class="mini-avatar" mode="aspectFill"></image>
+                    <image v-for="(user, idx) in trend.activeUsers.slice(0, 3)" :key="idx" :src="getFullImageUrl(user.avatar) || '/static/default-avatar.png'" class="mini-avatar" mode="aspectFill"></image>
                     <view class="mini-avatar-count" v-if="trend.activeUsers.length > 3">
                       <text class="count-text">+{{ trend.activeUsers.length - 3 }}</text>
                     </view>
@@ -109,9 +109,6 @@
                   <text class="meta-time">{{ formatTime(trend.createTime) }}</text>
                 </view>
               </view>
-
-              <button class="btn-join" v-if="!trend.isJoined" @click.stop="joinTopic(trend)">加入</button>
-              <button class="btn-explore" v-else @click.stop="navigateToTopic(trend)">查看</button>
             </view>
           </template>
         </view>
@@ -149,6 +146,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
+import { useChatStore } from '@/store/chat';
 import request from '@/utils/request';
 import { getFullImageUrl } from '@/utils/request.js';
 import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue';
@@ -156,6 +154,7 @@ import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue';
 const themeStore = useThemeStore();
 const themeClass = computed(() => `theme-${themeStore.theme}`);
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight);
+const chatStore = useChatStore();
 
 // 数据状态
 const hotCircles = ref([]);
@@ -165,6 +164,8 @@ const loading = ref(false);
 const page = ref(1);
 const totalPages = ref(1);
 const pageSize = ref(10);
+
+const totalUnread = computed(() => unreadCount.value + chatStore.totalUnreadCount);
 
 // 获取热门圈子
 const fetchHotCircles = async () => {
@@ -250,21 +251,8 @@ const navigateToCircle = (circle) => {
 
 const navigateToTopic = (topic) => {
   uni.navigateTo({
-    url: `/pages/community/topic-detail?id=${topic.id}`
+    url: `/pages/community/topic-detail?id=${topic.id}&title=${encodeURIComponent(topic.title)}`
   });
-};
-
-const joinTopic = async (topic) => {
-  try {
-    const res = await request.post(`/api/community/topics/${topic.id}/join`);
-    if (res !== undefined) {
-      uni.showToast({ title: '加入成功', icon: 'success' });
-      topic.isJoined = true;
-    }
-  } catch (e) {
-    console.error('加入话题失败:', e);
-    uni.showToast({ title: '加入失败', icon: 'none' });
-  }
 };
 
 const formatTime = (time) => {
@@ -298,7 +286,7 @@ onShow(() => {
 
 const fetchUnreadCount = async () => {
   try {
-    const res = await request.get('/api/community/notifications/unread-count');
+    const res = await request.get('/api/notifications/unread-count');
     unreadCount.value = res || 0;
   } catch (e) {
     console.error('获取未读消息失败:', e);

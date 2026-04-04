@@ -32,7 +32,7 @@
                   </view>
                 </view>
                 <view class="post-author-info">
-                  <image class="post-author-avatar" :src="post.userAvatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
+                  <image class="post-author-avatar" :src="post.userAvatar || '/static/default-avatar.png'" mode="aspectFill"></image>
                   <text class="post-author-name">{{ post.userName }}</text>
                 </view>
               </view>
