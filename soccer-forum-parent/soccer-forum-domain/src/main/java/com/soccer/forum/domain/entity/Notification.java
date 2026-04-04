@@ -20,7 +20,7 @@ public class Notification implements Serializable {
     private Long userId;
     @Schema(description = "触发通知的用户ID")
     private Long fromUserId;
-    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:关注, 6:@提及, 7:私信)")
+    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:关注, 6:@提及, 8:系统通知)")
     private Integer type;
     @Schema(description = "目标ID (帖子ID或评论ID或消息ID)")
     private Long targetId;
@@ -41,7 +41,7 @@ public class Notification implements Serializable {
     @Schema(description = "触发通知的用户ID")
     public Long getFromUserId() { return fromUserId; }
     public void setFromUserId(Long fromUserId) { this.fromUserId = fromUserId; }
-    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:系统通知)")
+    @Schema(description = "类型 (1:点赞帖子, 2:点赞评论, 3:评论帖子, 4:回复评论, 5:关注, 6:@提及, 8:系统通知)")
     public Integer getType() { return type; }
     public void setType(Integer type) { this.type = type; }
     @Schema(description = "目标ID (帖子ID或评论ID)")

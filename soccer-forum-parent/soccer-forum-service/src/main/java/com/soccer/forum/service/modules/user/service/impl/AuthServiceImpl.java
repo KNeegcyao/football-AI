@@ -6,6 +6,7 @@ import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.domain.enums.UserRole;
 import com.soccer.forum.domain.enums.UserStatus;
 import com.soccer.forum.service.modules.user.mapper.UserMapper;
+import com.soccer.forum.service.modules.system.service.NotificationService;
 import com.soccer.forum.service.modules.user.model.LoginBody;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.user.service.AuthService;
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final StringRedisTemplate redisTemplate;
     private final TeamService teamService;
     private final TeamFollowService teamFollowService;
+    private final NotificationService notificationService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager, 
                            JwtUtils jwtUtils, 
@@ -53,7 +55,8 @@ public class AuthServiceImpl implements AuthService {
                            PasswordEncoder passwordEncoder,
                            StringRedisTemplate redisTemplate,
                            TeamService teamService,
-                           TeamFollowService teamFollowService) {
+                           TeamFollowService teamFollowService,
+                           NotificationService notificationService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
@@ -61,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
         this.redisTemplate = redisTemplate;
         this.teamService = teamService;
         this.teamFollowService = teamFollowService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -162,6 +166,9 @@ public class AuthServiceImpl implements AuthService {
         
         userMapper.insert(user);
         log.info("用户注册成功: id={}, username={}", user.getId(), user.getUsername());
+        
+        // 发送欢迎系统通知
+        notificationService.sendNotification(user.getId(), 0L, 8, user.getId(), "欢迎加入SoccaHub！这里是所有足球爱好者的家园。在这里，你可以关注你喜欢的球队、与其他球迷交流战术、分享你的观点。请先去个人中心完善你的资料吧！");
     }
 
     /**
@@ -296,6 +303,9 @@ public class AuthServiceImpl implements AuthService {
             user.setRole(UserRole.USER);
             user.setStatus(UserStatus.NORMAL);
             userMapper.insert(user);
+            
+            // 发送欢迎系统通知
+            notificationService.sendNotification(user.getId(), 0L, 8, user.getId(), "欢迎加入SoccaHub！这里是所有足球爱好者的家园。在这里，你可以关注你喜欢的球队、与其他球迷交流战术、分享你的观点。请先去个人中心完善你的资料吧！");
         } else {
             // 如果用户状态不正常
             if (user.getStatus() != UserStatus.NORMAL) {

@@ -208,6 +208,13 @@ public class NotificationController {
         return R.ok();
     }
 
+    @Operation(summary = "发送系统通知 (仅供测试或管理员使用)")
+    @PostMapping("/system")
+    public R<Void> sendSystemNotification(@RequestParam Long userId, @RequestParam String content) {
+        notificationService.sendNotification(userId, 0L, 8, userId, content);
+        return R.ok();
+    }
+
     @Operation(summary = "删除通知")
     @DeleteMapping("/{id}")
     public R<Void> delete(@Parameter(description = "通知ID") @PathVariable Long id, 

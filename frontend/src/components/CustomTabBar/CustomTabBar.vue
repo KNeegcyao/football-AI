@@ -11,7 +11,10 @@
           <text class="tab-text center-text">{{ tab.text }}</text>
         </view>
         <template v-else>
-          <text class="material-icons" :style="{ fontSize: '52rpx' }">{{ tab.icon }}</text>
+          <view class="icon-wrapper" style="position: relative; display: flex; align-items: center; justify-content: center;">
+            <text class="material-icons" :style="{ fontSize: '52rpx' }">{{ tab.icon }}</text>
+            <view class="badge" v-if="tab.path === 'pages/community/community' && totalUnread > 0">{{ totalUnread > 99 ? '99+' : totalUnread }}</view>
+          </view>
           <text class="tab-text">{{ tab.text }}</text>
         </template>
       </view>
@@ -20,11 +23,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
+import { useChatStore } from '@/store/chat'
+import request from '@/utils/request'
 
 const themeStore = useThemeStore()
+const chatStore = useChatStore()
+
+const systemUnreadCount = ref(0)
+const totalUnread = computed(() => systemUnreadCount.value + chatStore.totalUnreadCount)
+
+const fetchSystemUnreadCount = async () => {
+  try {
+    const res = await request.get('/api/notifications/unread-count')
+    systemUnreadCount.value = res || 0
+  } catch (e) {
+    systemUnreadCount.value = 0
+  }
+}
+
+onMounted(() => {
+  fetchSystemUnreadCount()
+  uni.$on('refreshSystemUnread', fetchSystemUnreadCount)
+})
+
+onUnmounted(() => {
+  uni.$off('refreshSystemUnread', fetchSystemUnreadCount)
+})
 
 const props = defineProps({
   currentTab: {
@@ -194,6 +221,24 @@ const handleTabClick = (index) => {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.badge {
+  position: absolute;
+  top: -6rpx;
+  right: -16rpx;
+  background-color: #ff4d4f;
+  color: white;
+  font-size: 20rpx;
+  padding: 0 8rpx;
+  height: 30rpx;
+  line-height: 30rpx;
+  border-radius: 15rpx;
+  min-width: 30rpx;
+  text-align: center;
+  box-sizing: border-box;
+  font-weight: bold;
+  border: 2rpx solid var(--tab-bar-bg);
 }
 
 @keyframes pulse {

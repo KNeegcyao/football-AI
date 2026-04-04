@@ -26,7 +26,7 @@ export const authApi = {
    * 发送验证码
    * @param {Object} data { phone }
    */
-  sendCode: (data) => request.post('/api/auth/send-code', data),
+  sendCode: (data) => request.post('/api/auth/code', data),
 
   /**
    * 验证码登录
