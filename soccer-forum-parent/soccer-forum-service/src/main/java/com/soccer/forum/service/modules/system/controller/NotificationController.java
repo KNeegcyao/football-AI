@@ -50,6 +50,12 @@ public class NotificationController {
         return R.ok(notificationService.getUnreadCount(loginUser.getUser().getId()));
     }
 
+    @Operation(summary = "获取分类未读消息数量")
+    @GetMapping("/unread-count-by-type")
+    public R<Map<Integer, Long>> getUnreadCountByType(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        return R.ok(notificationService.getUnreadCountByType(loginUser.getUser().getId()));
+    }
+
     @Operation(summary = "分页获取通知列表")
     @GetMapping
     public R<Page<NotificationResp>> list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
@@ -179,6 +185,33 @@ public class NotificationController {
     @PutMapping("/read-all")
     public R<Void> readAll(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
         notificationService.markAllAsRead(loginUser.getUser().getId());
+        return R.ok();
+    }
+
+    @Operation(summary = "按类型标记为已读")
+    @PutMapping("/read-by-type")
+    public R<Void> readByType(@Parameter(description = "类型列表，逗号分隔", required = true) @RequestParam String types,
+                              @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        List<Integer> typeList = new ArrayList<>();
+        if (types != null && !types.isEmpty()) {
+            for (String t : types.split(",")) {
+                try {
+                    typeList.add(Integer.parseInt(t.trim()));
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }
+        }
+        if (!typeList.isEmpty()) {
+            notificationService.markAsReadByType(loginUser.getUser().getId(), typeList);
+        }
+        return R.ok();
+    }
+
+    @Operation(summary = "发送系统通知 (仅供测试或管理员使用)")
+    @PostMapping("/system")
+    public R<Void> sendSystemNotification(@RequestParam Long userId, @RequestParam String content) {
+        notificationService.sendNotification(userId, 0L, 8, userId, content);
         return R.ok();
     }
 

@@ -16,6 +16,11 @@ public interface NotificationService {
     long getUnreadCount(Long userId);
 
     /**
+     * 获取分类未读消息数量
+     */
+    java.util.Map<Integer, Long> getUnreadCountByType(Long userId);
+
+    /**
      * 分页查询通知
      */
     Page<Notification> getNotificationPage(Long userId, Integer page, Integer size, List<Integer> types);
@@ -29,6 +34,11 @@ public interface NotificationService {
      * 全部标记为已读
      */
     void markAllAsRead(Long userId);
+
+    /**
+     * 根据类型将消息标记为已读
+     */
+    void markAsReadByType(Long userId, List<Integer> types);
 
     /**
      * 删除通知

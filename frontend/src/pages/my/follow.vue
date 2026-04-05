@@ -51,7 +51,7 @@
           <view class="avatar-container">
             <image 
               class="avatar-image" 
-              :src="user.avatar || '/static/soccer-logo.png'" 
+              :src="user.avatar || '/static/default-avatar.png'" 
               mode="aspectFill"
             ></image>
             <view v-if="user.isVerified" class="verified-badge">

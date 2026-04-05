@@ -116,12 +116,12 @@ public class AuthController {
      */
     @Operation(summary = "发送验证码", description = "发送手机验证码")
     @PostMapping("/code")
-    public R<Void> sendCode(@RequestBody Map<String, String> body) {
+    public R<String> sendCode(@RequestBody Map<String, String> body) {
         String phone = body.get("phone");
         log.info("收到发送验证码请求: 手机号={}", phone);
         String code = authService.sendCode(phone);
         log.info("验证码发送成功: 手机号={}, 验证码={}", phone, code);
-        return R.ok(null, "验证码已发送");
+        return R.ok(code, "验证码已发送");
     }
 
     /**

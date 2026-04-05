@@ -202,11 +202,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 获取用户信息
         User user = userMapper.selectById(post.getUserId());
         String nickname = "未知用户";
-        String avatar = "";
+        String avatar = "/static/default-avatar.png";
         
         if (user != null) {
             nickname = user.getNickname();
-            avatar = user.getAvatar();
+            if (org.springframework.util.StringUtils.hasText(user.getAvatar())) {
+                avatar = user.getAvatar();
+            }
         }
         
         PostDetailResp resp = PostDetailResp.fromPost(post, nickname, avatar);
@@ -383,7 +385,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         List<PostDetailResp> resps = page.getRecords().stream().map(post -> {
             User user = userMap.get(post.getUserId());
             String nickname = (user != null) ? user.getNickname() : "未知用户";
-            String avatar = (user != null) ? user.getAvatar() : "";
+            String avatar = "/static/default-avatar.png";
+            if (user != null && org.springframework.util.StringUtils.hasText(user.getAvatar())) {
+                avatar = user.getAvatar();
+            }
             
             PostDetailResp resp = PostDetailResp.fromPost(post, nickname, avatar);
             

@@ -318,7 +318,7 @@ const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight)
 const liveMatches = ref([])
 const upcomingMatches = ref([])
 const finishedMatches = ref([])
-const userAvatar = ref('/static/soccer-logo.png')
+const userAvatar = ref('/static/default-avatar.png')
 const navbarPaddingRight = ref(16) // 默认 16px
 
 const showAiModal = ref(false)
@@ -521,14 +521,14 @@ const dates = ref([])
   let refreshTimer = null
 
 const handleAvatarError = () => {
-  userAvatar.value = '/static/soccer-logo.png'
+  userAvatar.value = '/static/default-avatar.png'
 }
 
 const getUserProfile = async () => {
   try {
     const token = uni.getStorageSync('token')
     if (!token) {
-      userAvatar.value = '/static/soccer-logo.png'
+      userAvatar.value = '/static/default-avatar.png'
       return
     }
     const res = await userApi.getProfile()
@@ -537,11 +537,11 @@ const getUserProfile = async () => {
     if (userData && userData.avatar) {
       userAvatar.value = getFullImageUrl(userData.avatar)
     } else {
-      userAvatar.value = '/static/soccer-logo.png'
+      userAvatar.value = '/static/default-avatar.png'
     }
   } catch (e) {
     console.error('获取用户信息失败:', e)
-    userAvatar.value = '/static/soccer-logo.png'
+    userAvatar.value = '/static/default-avatar.png'
   }
 }
 

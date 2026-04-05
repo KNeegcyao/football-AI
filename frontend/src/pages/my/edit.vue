@@ -16,7 +16,7 @@
       <!-- Avatar Section -->
       <view class="flex flex-col items-center mb-8">
         <view class="w-24 h-24 rounded-full border-2 border-[#f9d406] overflow-hidden bg-[#2C2C2C] mb-4 relative active:opacity-80" @click="chooseAvatar">
-          <image class="w-full h-full" :src="form.avatar || '/static/soccer-logo.png'" mode="aspectFill"></image>
+          <image class="w-full h-full" :src="form.avatar || '/static/default-avatar.png'" mode="aspectFill"></image>
         </view>
         <text class="text-sm text-gray-400">点击更换头像</text>
       </view>

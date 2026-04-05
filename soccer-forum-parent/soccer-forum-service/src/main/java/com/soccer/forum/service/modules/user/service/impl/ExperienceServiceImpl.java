@@ -106,9 +106,9 @@ public class ExperienceServiceImpl implements ExperienceService {
             user.setLevel(nextLevel);
             log.info("用户升级: userId={}, oldLevel={}, newLevel={}", user.getId(), currentLevel, nextLevel);
             
-            // 发送系统通知 (类型 1 代表系统通知/等级奖励)
+            // 发送系统通知 (类型 8 代表系统通知/等级奖励)
             String title = getLevelTitle(nextLevel);
-            notificationService.sendNotification(user.getId(), 0L, 1, user.getId(), 
+            notificationService.sendNotification(user.getId(), 0L, 8, user.getId(), 
                     String.format("恭喜！您已升级到 LV.%d，获得称号：%s", nextLevel, title));
             
             // 递归检查是否能连升多级

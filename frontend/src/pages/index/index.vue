@@ -161,7 +161,7 @@ import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight)
-const userAvatar = ref('/static/soccer-logo.png')
+const userAvatar = ref('/static/default-avatar.png')
 const navbarPaddingRight = ref(16) // 默认 16px
 const fontLoaded = ref(false)
 
@@ -188,25 +188,25 @@ const checkFontLoaded = () => {
 }
 
 const handleAvatarError = () => {
-  userAvatar.value = '/static/soccer-logo.png'
+  userAvatar.value = '/static/default-avatar.png'
 }
 
 const getUserProfile = async () => {
   try {
     const token = uni.getStorageSync('token')
     if (!token) {
-      userAvatar.value = '/static/soccer-logo.png'
+      userAvatar.value = '/static/default-avatar.png'
       return
     }
     const res = await userApi.getProfile()
     if (res && res.avatar) {
       userAvatar.value = getFullImageUrl(res.avatar)
     } else {
-      userAvatar.value = '/static/soccer-logo.png'
+      userAvatar.value = '/static/default-avatar.png'
     }
   } catch (e) {
     console.error('获取用户信息失败:', e)
-    userAvatar.value = '/static/soccer-logo.png'
+    userAvatar.value = '/static/default-avatar.png'
   }
 }
 
@@ -386,7 +386,7 @@ const loadData = async () => {
           aiSummary: item.summary,
           showSummary: false,
           userName: authorName,
-          userAvatar: getFullImageUrl('/static/soccer-logo.png')
+          userAvatar: getFullImageUrl('/static/default-avatar.png')
         }
       })
       
@@ -419,7 +419,7 @@ const loadData = async () => {
           collections: Math.floor((item.likes || 0) / 3) + (item.commentCount || 0),
           isAi: false,
           userName: item.userName || '未知用户',
-          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '/static/soccer-logo.png'
+          userAvatar: item.userAvatar ? getFullImageUrl(item.userAvatar) : '/static/default-avatar.png'
         }))
       }
     }

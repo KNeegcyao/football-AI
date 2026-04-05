@@ -129,19 +129,19 @@ onMounted(() => {
 const sessionId = ref(null);
 const otherUserId = ref(null);
 const otherUserNickname = ref('');
-const otherUserAvatar = ref('/static/soccer-logo.png');
+const otherUserAvatar = ref('/static/default-avatar.png');
 const currentUserId = ref(null);
-const currentUserAvatar = ref('/static/soccer-logo.png');
+const currentUserAvatar = ref('/static/default-avatar.png');
 
 const getAvatarUrl = (avatar) => {
-  return getFullImageUrl(avatar) || '/static/soccer-logo.png';
+  return getFullImageUrl(avatar) || '/static/default-avatar.png';
 };
 
 const onAvatarError = (senderId) => {
   if (Number(senderId) === Number(currentUserId.value)) {
-    currentUserAvatar.value = '/static/soccer-logo.png';
+    currentUserAvatar.value = '/static/default-avatar.png';
   } else {
-    otherUserAvatar.value = '/static/soccer-logo.png';
+    otherUserAvatar.value = '/static/default-avatar.png';
   }
 };
 
@@ -184,7 +184,7 @@ onLoad(async (options) => {
     currentUserId.value = userInfo.id;
     currentUserAvatar.value = getAvatarUrl(userInfo.avatar);
     
-    if (!userInfo.avatar || currentUserAvatar.value === '/static/soccer-logo.png') {
+    if (!userInfo.avatar || currentUserAvatar.value === '/static/default-avatar.png') {
       userApi.getProfile().then(res => {
         if (res && res.avatar) {
           currentUserAvatar.value = getAvatarUrl(res.avatar);
