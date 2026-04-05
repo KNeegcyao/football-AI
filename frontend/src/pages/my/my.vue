@@ -29,14 +29,14 @@
       <!-- 移除 header-placeholder，因为 header-container 已经占位 -->
       
       <!-- Profile Header Section -->
-      <view class="profile-header">
+      <view class="profile-header anim-fade-in">
         <view class="cover-image-container" @click="chooseCover">
           <view class="cover-overlay"></view>
           <image v-if="userInfo.cover" class="cover-image" :src="getFullImageUrl(userInfo.cover)" mode="aspectFill"></image>
           <view v-else class="cover-placeholder bg-theme-secondary"></view>
         </view>
         
-        <view class="profile-info-card">
+        <view class="profile-info-card anim-slide-up stagger-1">
           <view class="avatar-section">
             <view class="progress-ring-box">
               <svg class="progress-ring" viewBox="0 0 112 112">
@@ -95,14 +95,14 @@
         </view>
       </view>
 
-      <view class="action-buttons-row">
+      <view class="action-buttons-row anim-slide-up stagger-2">
         <template v-if="!isOthersProfile">
-          <button class="btn-primary" @click="goToEdit">编辑资料</button>
-          <button class="btn-secondary" @click="logout">退出登录</button>
+          <button class="btn-primary" hover-class="btn-active" @click="goToEdit">编辑资料</button>
+          <button class="btn-secondary" hover-class="btn-active" @click="logout">退出登录</button>
         </template>
         <template v-else>
-          <button class="btn-primary" @click="handleFollow">关注</button>
-          <button class="btn-secondary" @click="handleMessage">
+          <button class="btn-primary" hover-class="btn-active" @click="handleFollow">关注</button>
+          <button class="btn-secondary" hover-class="btn-active" @click="handleMessage">
             <text class="material-icons" style="font-size: 44rpx; margin-right: 8rpx; color: var(--text-main);">chat_bubble</text>
             <text>私信</text>
           </button>
@@ -110,12 +110,12 @@
       </view>
 
       <!-- Stats Section -->
-      <view class="stats-container">
-        <view class="stat-item" @click="goToFollow('following')">
+      <view class="stats-container anim-slide-up stagger-3">
+        <view class="stat-item" hover-class="btn-active" @click="goToFollow('following')">
           <text class="stat-value">{{ formatStats(userInfo.stats.following) }}</text>
           <text class="stat-label">关注</text>
         </view>
-        <view class="stat-item" @click="goToFollow('followers')">
+        <view class="stat-item" hover-class="btn-active" @click="goToFollow('followers')">
           <text class="stat-value">{{ formatStats(userInfo.stats.followers) }}</text>
           <text class="stat-label">粉丝</text>
         </view>
@@ -126,7 +126,7 @@
       </view>
 
       <!-- Tabs Navigation -->
-      <view class="tabs-sticky bg-nav-bar border-b border-theme-main">
+      <view class="tabs-sticky bg-nav-bar border-b border-theme-main anim-slide-up stagger-4">
         <view class="tabs-content">
           <view v-for="(tab, index) in profileTabs" :key="index" 
                 class="tab-item" 

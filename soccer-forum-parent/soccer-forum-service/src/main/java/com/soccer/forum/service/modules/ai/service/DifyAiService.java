@@ -23,6 +23,12 @@ import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.context.annotation.Lazy;
+import com.soccer.forum.service.modules.community.service.ChatMessageService;
 
 @Service
 public class DifyAiService {
@@ -38,11 +44,43 @@ public class DifyAiService {
 
     private final RestTemplate restTemplate;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Lazy
+    @Autowired
+    private ChatMessageService chatMessageService;
+
     public DifyAiService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(10000); // 10秒连接超时
         factory.setReadTimeout(120000);   // 120秒读取超时 (AI 分析图片可能很慢)
         this.restTemplate = new RestTemplate(factory);
+    }
+
+    /**
+     * 官方助手异步回复
+     */
+    public void asyncReplyAsOfficialAssistant(Long userId, String userMessage) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                String cacheKey = "official_dify_session:" + userId;
+                String conversationId = redisTemplate.opsForValue().get(cacheKey);
+                
+                DifyChatResponse response = this.chat(userMessage, conversationId, String.valueOf(userId), null);
+                
+                if (response != null && response.getConversation_id() != null) {
+                    redisTemplate.opsForValue().set(cacheKey, response.getConversation_id(), 7, TimeUnit.DAYS);
+                }
+                
+                if (response != null && response.getAnswer() != null) {
+                    chatMessageService.sendMessage(1L, userId, response.getAnswer(), 1);
+                }
+            } catch (Exception e) {
+                log.error("官方助手自动回复失败, userId={}", userId, e);
+                chatMessageService.sendMessage(1L, userId, "抱歉，官方助手目前线路繁忙，请稍后再试。", 1);
+            }
+        });
     }
 
     public DifyChatResponse chat(String message, String conversationId, String userId, List<Map<String, Object>> files) {
@@ -96,7 +134,10 @@ public class DifyAiService {
 
                                 try {
                                     JsonNode node = objectMapper.readTree(jsonStr);
-                                    String event = node.path("event").asText();
+                                    String event = "";
+                                    if (node.has("event")) {
+                                        event = node.get("event").asText();
+                                    }
                                     
                                     // 记录会话和任务 ID
                                     if (node.has("conversation_id")) finalConversationId = node.get("conversation_id").asText();
@@ -104,27 +145,37 @@ public class DifyAiService {
 
                                     // --- 核心内容提取策略 ---
                                     // 1. 优先提取标准 answer 字段 (适用于 message, agent_message, agent_thought 等多数事件)
-                                    String answer = node.path("answer").asText();
+                                    String answer = "";
+                                    if (node.has("answer")) {
+                                        answer = node.get("answer").asText();
+                                    }
                                     
                                     // 2. 兼容 text_chunk 或 delta 模式 (某些模型或流式配置下使用)
                                     if (answer == null || answer.isEmpty()) {
-                                        answer = node.path("text").asText();
+                                        if (node.has("text")) {
+                                            answer = node.get("text").asText();
+                                        }
                                     }
                                     
                                     // 3. 兼容 delta 结构 (如 {"event": "text_chunk", "delta": {"text": "..."}})
                                     if ((answer == null || answer.isEmpty()) && node.has("delta")) {
-                                        answer = node.path("delta").path("text").asText();
+                                        JsonNode deltaNode = node.get("delta");
+                                        if (deltaNode != null && deltaNode.has("text")) {
+                                            answer = deltaNode.get("text").asText();
+                                        }
                                     }
 
                                     // 聚合有效内容
-                                    if (answer != null && !answer.isEmpty()) {
+                                    if (answer != null && !answer.isEmpty() && !"null".equals(answer)) {
                                         fullAnswer.append(answer);
                                     }
 
                                     // 处理错误事件
                                     if ("error".equals(event)) {
-                                        String errMsg = node.path("message").asText();
-                                        int errCode = node.path("code").asInt();
+                                        String errMsg = "";
+                                        if (node.has("message")) errMsg = node.get("message").asText();
+                                        int errCode = 0;
+                                        if (node.has("code")) errCode = node.get("code").asInt();
                                         log.error("Dify 转发过程中收到错误事件: [{}] {}", errCode, errMsg);
                                         // 如果已经有内容了，在后面追加错误提示；如果没有，则直接设为错误
                                         if (fullAnswer.length() > 0) fullAnswer.append("\n[中断: ").append(errMsg).append("]");
@@ -132,8 +183,8 @@ public class DifyAiService {
                                     }
                                     
                                     // 打印调试信息（可选，为了不刷屏，仅在没拿到内容时记录关键事件）
-                                    if (fullAnswer.length() == 0) {
-                                        log.info("Dify 事件中: event={}, answer_present={}", event, (answer != null && !answer.isEmpty()));
+                                    if (fullAnswer.length() == 0 && !"message".equals(event) && !"agent_message".equals(event)) {
+                                        log.info("Dify 事件中: event={}, answer_present={}", event, (answer != null && !answer.isEmpty() && !"null".equals(answer)));
                                     }
 
                                 } catch (Exception e) {

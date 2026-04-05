@@ -200,16 +200,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new ServiceException(ServiceErrorCode.UNAUTHORIZED);
         }
 
+        Post post = postMapper.selectById(comment.getPostId());
+        
         if (!comment.getUserId().equals(userId) && !UserRole.ADMIN.equals(user.getRole())) {
-            log.warn("删除失败: 用户 {} 尝试删除非本人评论{}", userId, id);
-            throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+            // 允许帖子作者删除自己帖子下的评论
+            if (post == null || !post.getUserId().equals(userId)) {
+                log.warn("删除失败: 用户 {} 尝试删除非本人且非自己帖子下的评论{}", userId, id);
+                throw new ServiceException(ServiceErrorCode.FORBIDDEN);
+            }
         }
         
         comment.setStatus(0);
         commentMapper.updateById(comment);
         
         // 更新帖子评论数
-        Post post = postMapper.selectById(comment.getPostId());
         if (post != null && post.getCommentCount() > 0) {
             post.setCommentCount(post.getCommentCount() - 1);
             postMapper.updateById(post);

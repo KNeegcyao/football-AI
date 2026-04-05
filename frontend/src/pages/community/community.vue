@@ -31,21 +31,21 @@
     <!-- 主体内容滚动 -->
     <scroll-view scroll-y class="main-content-scroll" @scrolltolower="loadMore">
       <!-- 搜索栏 -->
-      <view class="search-section">
-        <view class="search-bar" @click="handleSearch">
+      <view class="search-section anim-fade-in">
+        <view class="search-bar" hover-class="btn-active" @click="handleSearch">
           <text class="material-icons" style="font-size: 44rpx; color: var(--text-secondary); margin-right: 16rpx;">search</text>
           <input type="text" class="search-input" placeholder="搜索话题、圈子或用户..." disabled />
         </view>
       </view>
 
       <!-- 热门圈子 -->
-      <view class="section">
+      <view class="section anim-slide-up stagger-1">
         <view class="section-header">
           <text class="section-title">热门圈子</text>
-          <text class="view-all" @click="viewAllCircles">查看全部</text>
+          <text class="view-all" hover-class="btn-active" @click="viewAllCircles">查看全部</text>
         </view>
         <view class="circles-grid">
-          <view class="circle-item" v-for="(circle, index) in hotCircles.slice(0, 4)" :key="circle.id" @click="navigateToCircle(circle)">
+          <view class="circle-item" hover-class="btn-active" :hover-start-time="20" :hover-stay-time="70" v-for="(circle, index) in hotCircles.slice(0, 4)" :key="circle.id" @click="navigateToCircle(circle)">
             <view class="circle-avatar-wrapper" :class="{ 
               'rank-1': index === 0,
               'rank-2': index === 1,
@@ -62,7 +62,7 @@
       </view>
 
       <!-- 热门话题 -->
-      <view class="section">
+      <view class="section anim-slide-up stagger-2">
         <view class="section-header">
           <view class="trending-badge">
             <text class="material-icons" style="font-size: 28rpx; color: #f9d406;">trending_up</text>
@@ -78,7 +78,7 @@
           </view>
 
           <!-- 空状态 -->
-          <view v-else-if="trends.length === 0" class="empty-state">
+          <view v-else-if="trends.length === 0" class="empty-state anim-fade-in">
             <text class="material-icons" style="font-size: 120rpx; color: var(--text-secondary); opacity: 0.2;">forum</text>
             <text class="empty-text">暂无热门话题</text>
             <text class="empty-sub">去其他圈子看看吧</text>
@@ -86,7 +86,7 @@
 
           <!-- 话题列表 -->
           <template v-else>
-            <view class="trend-item" v-for="trend in trends" :key="trend.id" @click="navigateToTopic(trend)">
+            <view class="trend-item anim-slide-up" :class="'stagger-' + ((index % 5) + 3)" hover-class="btn-active" :hover-start-time="20" :hover-stay-time="70" v-for="(trend, index) in trends" :key="trend.id" @click="navigateToTopic(trend)">
               <view class="trend-bg-icon">
                 <text class="material-icons" style="font-size: 160rpx; color: var(--text-main); opacity: 0.03;">{{ trend.icon || 'topic' }}</text>
               </view>

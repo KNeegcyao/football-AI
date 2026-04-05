@@ -90,13 +90,6 @@
       }
     },
     {
-      "path": "pages/community/system-detail",
-      "style": {
-        "navigationBarTitleText": "系统通知",
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/post/detail",
       "style": {
         "navigationBarTitleText": "帖子详情",

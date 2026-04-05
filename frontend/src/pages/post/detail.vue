@@ -12,7 +12,7 @@
       <!-- Header -->
       <view class="header bg-nav-bar border-b border-theme-main">
         <view class="header-left">
-          <view class="back-btn" @click="goBack">
+          <view class="back-btn" hover-class="btn-active" @click="goBack">
             <image :src="getFullImageUrl('/static/icons/actions/arrow_back.svg')" :style="{ width: '48rpx', height: '48rpx', filter: iconFilter, opacity: 0.8 }"></image>
           </view>
         </view>
@@ -55,7 +55,7 @@
 
       <scroll-view scroll-y class="content-scroll" :scroll-into-view="scrollTarget" :scroll-with-animation="true">
         <!-- Article Content -->
-        <view class="article">
+        <view class="article anim-fade-in stagger-1">
           <view class="article-meta">
             <text class="tag">{{ categoryText }}</text>
             <text class="time">{{ formatTime(post.createdAt) }}</text>
@@ -172,7 +172,7 @@
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
                   <text class="reply-btn" @click="handleReply(comment)">回复</text>
-                  <text class="reply-btn" v-if="isAdmin || comment.userId === currentUserId" @click="handleDeleteComment(comment.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
+                  <text class="reply-btn" v-if="isAdmin || comment.userId === currentUserId || (post && post.userId === currentUserId)" @click="handleDeleteComment(comment.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
                 </view>
 
                 <!-- Nested Replies -->
@@ -208,7 +208,7 @@
                             <text class="action-text">{{ reply.likes || 0 }}</text>
                           </view>
                         <text class="reply-btn" @click="handleReply(reply)">回复</text>
-                        <text class="reply-btn" v-if="isAdmin || reply.userId === currentUserId" @click="handleDeleteComment(reply.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
+                        <text class="reply-btn" v-if="isAdmin || reply.userId === currentUserId || (post && post.userId === currentUserId)" @click="handleDeleteComment(reply.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
                       </view>
                     </view>
                   </view>

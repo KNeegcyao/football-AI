@@ -143,16 +143,8 @@ export const useChatStore = defineStore('chat', {
       try {
         const res = await chatApi.getSessions()
         this.sessions = res || []
-        // 每次获取会话列表后更新首页数字提醒
-        const totalUnread = this.totalUnreadCount
-        if (totalUnread > 0) {
-          uni.setTabBarBadge({
-            index: 3,
-            text: totalUnread > 99 ? '99+' : totalUnread.toString()
-          }).catch(() => {})
-        } else {
-          uni.removeTabBarBadge({ index: 3 }).catch(() => {})
-        }
+        // 触发全局事件通知 CustomTabBar 等组件更新
+        uni.$emit('refreshSystemUnread')
       } catch (e) {
         console.error('Fetch sessions failed:', e)
       }
@@ -200,6 +192,7 @@ export const useChatStore = defineStore('chat', {
         const session = this.sessions.find(s => s.id === sessionId)
         if (session) {
           session.unreadCount = 0
+          uni.$emit('refreshSystemUnread')
         }
       }
     }

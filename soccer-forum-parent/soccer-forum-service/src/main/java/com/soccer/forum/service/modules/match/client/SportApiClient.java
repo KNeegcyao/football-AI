@@ -49,11 +49,8 @@ public class SportApiClient {
                 return objectMapper.readTree(response.getBody());
             }
         } catch (Exception e) {
-            if (e.getMessage().contains("429") || e.getMessage().contains("quota")) {
-                System.out.println("SportAPI quota exceeded (429). Using mock data for player " + playerId);
-                return getMockPlayer(playerId);
-            }
-            throw new RuntimeException("SportAPI调用失败: " + e.getMessage());
+            System.out.println("SportAPI调用失败或未配置 (" + e.getMessage() + "). Using mock data for player " + playerId);
+            return getMockPlayer(playerId);
         }
         return null;
     }
@@ -82,11 +79,8 @@ public class SportApiClient {
                 return objectMapper.readTree(response.getBody());
             }
         } catch (Exception e) {
-            if (e.getMessage().contains("429") || e.getMessage().contains("quota")) {
-                System.out.println("SportAPI quota exceeded (429). Using mock data for team " + teamId);
-                return getMockTeamPlayers(teamId);
-            }
-            throw new RuntimeException("SportAPI调用失败: " + e.getMessage());
+            System.out.println("SportAPI调用失败或未配置 (" + e.getMessage() + "). Using mock data for team " + teamId);
+            return getMockTeamPlayers(teamId);
         }
         return null;
     }

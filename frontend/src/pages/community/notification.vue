@@ -60,13 +60,6 @@
         </view>
         <text class="label text-theme-secondary">新增粉丝</text>
       </view>
-      <view class="category-item" @click="filterByType('system')">
-        <view class="icon-wrapper bg-theme-secondary border-theme-main bg-purple">
-          <text class="material-icons" style="color: #a855f7; font-size: 56rpx;">campaign</text>
-          <view class="category-badge" v-if="unreadCounts.system > 0">{{ unreadCounts.system > 99 ? '99+' : unreadCounts.system }}</view>
-        </view>
-        <text class="label text-theme-secondary">系统通知</text>
-      </view>
     </section>
 
     <view class="notification-list">
@@ -122,8 +115,7 @@ const enableNotification = computed(() => chatStore.enableNotification);
 const unreadCounts = ref({
   reply: 0,
   like: 0,
-  follow: 0,
-  system: 0
+  follow: 0
 });
 
 onLoad(() => {
@@ -150,17 +142,15 @@ const fetchUnreadCounts = async () => {
   try {
     const res = await request.get('/api/notifications/unread-count-by-type');
     if (res) {
-      // 后端类型: 1=点赞帖子, 2=点赞评论, 3=评论帖子, 4=回复评论, 5=关注, 6=@提及, 8=系统通知
+      // 后端类型: 1=点赞帖子, 2=点赞评论, 3=评论帖子, 4=回复评论, 5=关注, 6=@提及
       const likeCount = (res[1] || 0) + (res[2] || 0);
       const replyCount = (res[3] || 0) + (res[4] || 0) + (res[6] || 0);
       const followCount = (res[5] || 0);
-      const systemCount = (res[8] || 0);
       
       unreadCounts.value = {
         like: likeCount,
         reply: replyCount,
-        follow: followCount,
-        system: systemCount
+        follow: followCount
       };
     }
   } catch (e) {
@@ -185,8 +175,7 @@ const filterByType = async (type) => {
   const typeMap = {
     reply: '3,4,6', // 评论帖子, 回复评论, @提及
     like: '1,2',    // 点赞帖子, 点赞评论
-    follow: '5',    // 关注
-    system: '8'     // 系统通知
+    follow: '5'     // 关注
   };
   if (typeMap[type]) {
             try {
@@ -204,8 +193,7 @@ const filterByType = async (type) => {
   const routes = {
     reply: '/pages/community/reply-detail',
     like: '/pages/community/like-detail',
-    follow: '/pages/community/fan-detail',
-    system: '/pages/community/system-detail'
+    follow: '/pages/community/fan-detail'
   };
   const url = routes[type];
   if (url) {

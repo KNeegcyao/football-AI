@@ -11,10 +11,12 @@ import com.soccer.forum.service.modules.community.mapper.ChatMessageMapper;
 import com.soccer.forum.service.modules.community.service.ChatMessageService;
 import com.soccer.forum.service.modules.community.service.ChatSessionService;
 import com.soccer.forum.service.modules.user.service.UserRelationshipService;
+import com.soccer.forum.service.modules.ai.service.DifyAiService;
 import com.soccer.forum.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Lazy;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +28,10 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
     @Autowired
     private UserRelationshipService relationshipService;
+
+    @Lazy
+    @Autowired
+    private DifyAiService difyAiService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -49,6 +55,11 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
         // 更新会话最后一条消息
         sessionService.updateLastMessage(session.getId(), content, senderId);
+        
+        // 如果发给官方助手 (id=1)，则触发 AI 自动回复
+        if (Long.valueOf(1).equals(receiverId) && !Long.valueOf(1).equals(senderId)) {
+            difyAiService.asyncReplyAsOfficialAssistant(senderId, content);
+        }
         
         return message;
     }

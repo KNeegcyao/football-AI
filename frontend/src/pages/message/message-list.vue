@@ -16,14 +16,16 @@
     <!-- Conversation List -->
     <scroll-view scroll-y class="conversation-list" @scrolltolower="loadMore">
       <view 
-        class="conversation-item" 
-        v-for="item in conversations" 
+        class="conversation-item anim-slide-up" 
+        :class="'stagger-' + ((index % 10) + 1)"
+        hover-class="btn-active" :hover-start-time="20" :hover-stay-time="70"
+        v-for="(item, index) in conversations" 
         :key="item.id"
         @click="goToChat(item)"
       >
         <view class="avatar-wrapper">
           <image class="avatar" :src="item.otherAvatar || '/static/avatar/default.png'" mode="aspectFill"></image>
-          <view class="unread-badge" v-if="item.unreadCount > 0">
+          <view class="unread-badge anim-scale-in" v-if="item.unreadCount > 0">
             <text>{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</text>
           </view>
         </view>
@@ -39,12 +41,12 @@
         </view>
       </view>
 
-      <view v-if="conversations.length === 0 && !loading" class="empty-state">
+      <view v-if="conversations.length === 0 && !loading" class="empty-state anim-fade-in">
         <text class="material-icons empty-icon">mail_outline</text>
         <text>暂无私信对话</text>
       </view>
       
-      <view v-if="loading" class="loading-state">
+      <view v-if="loading" class="loading-state anim-fade-in">
         <text>加载中...</text>
       </view>
     </scroll-view>

@@ -102,6 +102,7 @@ public class NotificationServiceImpl implements NotificationService {
     public long getUnreadCount(Long userId) {
         Long count = notificationMapper.selectCount(new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getUserId, userId)
+                .ne(Notification::getType, 8) // 排除旧的系统通知
                 .eq(Notification::getIsRead, 0));
         return count != null ? count : 0L;
     }
@@ -132,6 +133,8 @@ public class NotificationServiceImpl implements NotificationService {
         
         if (types != null && !types.isEmpty()) {
             wrapper.in(Notification::getType, types);
+        } else {
+            wrapper.ne(Notification::getType, 8); // 排除旧的系统通知
         }
         
         return notificationMapper.selectPage(p, wrapper.orderByDesc(Notification::getCreatedAt));
@@ -158,6 +161,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setIsRead(1);
         notificationMapper.update(notification, new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getUserId, userId)
+                .ne(Notification::getType, 8) // 排除旧的系统通知
                 .eq(Notification::getIsRead, 0));
     }
 

@@ -19,6 +19,7 @@ import com.soccer.forum.service.modules.user.model.UserSimpleResp;
 import com.soccer.forum.service.modules.user.service.UserService;
 import com.soccer.forum.service.modules.community.service.CommentService;
 import com.soccer.forum.service.modules.community.service.PostService;
+import com.soccer.forum.service.modules.community.service.ChatMessageService;
 import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.domain.entity.Comment;
 import com.soccer.forum.domain.entity.Post;
@@ -36,12 +37,14 @@ public class NotificationController {
     private final UserService userService;
     private final CommentService commentService;
     private final PostService postService;
+    private final ChatMessageService chatMessageService;
 
-    public NotificationController(NotificationService notificationService, UserService userService, CommentService commentService, PostService postService) {
+    public NotificationController(NotificationService notificationService, UserService userService, CommentService commentService, PostService postService, ChatMessageService chatMessageService) {
         this.notificationService = notificationService;
         this.userService = userService;
         this.commentService = commentService;
         this.postService = postService;
+        this.chatMessageService = chatMessageService;
     }
 
     @Operation(summary = "获取未读消息数量")
@@ -53,7 +56,10 @@ public class NotificationController {
     @Operation(summary = "获取分类未读消息数量")
     @GetMapping("/unread-count-by-type")
     public R<Map<Integer, Long>> getUnreadCountByType(@Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
-        return R.ok(notificationService.getUnreadCountByType(loginUser.getUser().getId()));
+        Map<Integer, Long> counts = notificationService.getUnreadCountByType(loginUser.getUser().getId());
+        // 过滤掉旧的系统通知(type=8)，避免前端产生混淆
+        counts.remove(8);
+        return R.ok(counts);
     }
 
     @Operation(summary = "分页获取通知列表")
@@ -211,7 +217,8 @@ public class NotificationController {
     @Operation(summary = "发送系统通知 (仅供测试或管理员使用)")
     @PostMapping("/system")
     public R<Void> sendSystemNotification(@RequestParam Long userId, @RequestParam String content) {
-        notificationService.sendNotification(userId, 0L, 8, userId, content);
+        // 使用官方助手(id=1)发送私信替代旧的系统通知
+        chatMessageService.sendMessage(1L, userId, content, 1);
         return R.ok();
     }
 

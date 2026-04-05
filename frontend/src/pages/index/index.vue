@@ -45,14 +45,14 @@
       <view class="header-placeholder"></view>
       
       <!-- 英雄帖子卡片 -->
-      <view class="hero-card" @click="goToDetail(heroPost.id)">
+      <view class="hero-card anim-slide-up" hover-class="btn-active" :hover-start-time="20" :hover-stay-time="70" @click="goToDetail(heroPost.id)">
         <image class="hero-img" :src="heroPost.image" mode="aspectFill"></image>
         <view class="hero-overlay">
           <view class="tag-row">
             <text class="hero-tag">今日要闻</text>
             <text class="hero-subtag" v-if="heroPost.category">{{ heroPost.category }}</text>
             <!-- 英雄帖 AI 勋章 -->
-            <view class="ai-badge hero-ai-badge" v-if="heroPost.isAi" @click.stop="toggleHeroAiSummary">
+            <view class="ai-badge hero-ai-badge anim-scale-in stagger-2" v-if="heroPost.isAi" @click.stop="toggleHeroAiSummary">
               <text class="material-icons" style="font-size: 20rpx; color: #f9d406;">auto_awesome</text>
               <text class="ai-text">AI</text>
             </view>
@@ -78,7 +78,7 @@
       <!-- 英雄帖 AI 摘要 -->
       <view class="hero-ai-summary-container" v-if="heroPost.isAi" :class="{'visible': heroPost.showSummary}">
         <view class="ai-summary no-margin" v-if="heroPost.aiSummary" :class="{'ai-summary-visible': heroPost.showSummary}">
-          <view class="ai-summary-content bg-theme-secondary">
+          <view class="ai-summary-content bg-theme-secondary anim-fade-in">
             <view class="ai-summary-header">
               <text class="material-icons" style="font-size: 24rpx; color: #f9d406;">auto_awesome</text>
               <text class="ai-summary-label">AI 智能摘要</text>
@@ -91,13 +91,13 @@
       </view>
 
       <!-- 推荐列表 -->
-      <view class="section-header">
+      <view class="section-header anim-fade-in stagger-1">
         <text class="section-title text-theme-main">为你推荐</text>
-        <text class="view-all" @click="goToSearch">查看全部</text>
+        <text class="view-all" hover-class="btn-active" @click="goToSearch">查看全部</text>
       </view>
 
       <view class="post-list">
-        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item bg-card" @click="goToDetail(post.id)">
+        <view v-for="(post, index) in recommendPosts" :key="index" class="post-item bg-card anim-slide-up" :class="'stagger-' + ((index % 5) + 2)" hover-class="btn-active" :hover-start-time="20" :hover-stay-time="70" @click="goToDetail(post.id)">
           <view class="post-main">
             <view class="post-img-box">
               <image class="post-img" :src="post.image" mode="aspectFill"></image>

@@ -179,12 +179,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 1. 直接查数据库 (No Redis)
         Post post = postMapper.selectById(id);
         
-        if (post != null) {
+        if (post != null && Integer.valueOf(1).equals(post.getStatus())) {
             // 简单增加浏览量，直接写。
             post.setViews(post.getViews() + 1);
             postMapper.updateById(post);
         } else {
-            log.warn("获取帖子失败, 帖子不存在。id={}", id);
+            log.warn("获取帖子失败, 帖子不存在或已删除。id={}", id);
             throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
         return post;
