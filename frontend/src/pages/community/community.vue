@@ -257,7 +257,7 @@ const navigateToTopic = (topic) => {
 const joinTopic = async (topic) => {
   try {
     const res = await request.post(`/api/community/topics/${topic.id}/join`);
-    if (res) {
+    if (res !== undefined) {
       uni.showToast({ title: '加入成功', icon: 'success' });
       topic.isJoined = true;
     }

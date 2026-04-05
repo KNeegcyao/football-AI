@@ -45,11 +45,7 @@ const fontSizeLevel = ref(0)
 const isEyeProtection = ref(false)
 const fontClasses = ['text-base', 'text-lg', 'text-xl']
 
-const iconFilter = computed(() => {
-  // 在护眼模式下总是保持图标原始色（黑色），在深色背景下反色为白色
-  if (isEyeProtection.value) return 'none'
-  return themeStore.theme === 'dark' ? 'invert(1) brightness(2)' : 'none'
-})
+
 
 onLoad((options) => {
   if (options.id) {
@@ -244,7 +240,7 @@ onPageScroll((e) => {
     <header :class="['fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b h5-header-fix transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/80 border-black/5' : 'bg-nav-bar border-theme-main']">
       <view class="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
         <button @click="goBack" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors bg-transparent border-none">
-          <image :src="getFullImageUrl('/static/icons/actions/arrow_left.svg')" :style="{ width: '44rpx', height: '44rpx', filter: iconFilter, opacity: 0.8 }"></image>
+          <text class="material-icons text-primary" style="font-size: 44rpx; opacity: 0.8;">arrow_back</text>
         </button>
         <view class="flex items-center gap-1">
           <view class="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
@@ -276,7 +272,7 @@ onPageScroll((e) => {
         <view :class="['flex items-center justify-between border-y py-4 transition-colors', isEyeProtection ? 'border-theme-main' : 'border-theme-main']">
           <view class="flex items-center gap-3">
             <view class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <image :src="getFullImageUrl('/static/icons/actions/edit.svg')" :style="{ width: '32rpx', height: '32rpx', filter: iconFilter }"></image>
+              <text class="material-icons text-primary" style="font-size: 32rpx;">edit</text>
             </view>
             <view>
               <text :class="['text-sm font-semibold block transition-colors', isEyeProtection ? 'text-gray-900' : 'text-theme-main']">{{ news.author || 'Football AI' }}</text>
@@ -296,8 +292,8 @@ onPageScroll((e) => {
               isImpactExpanded ? 'pb-12' : ''
             ]">
         <view class="flex items-center gap-2 mb-3 ai-title-row">
-          <image v-if="isImpactLoading" :src="getFullImageUrl('/static/icons/actions/star_fill.svg')" class="w-8 h-8 animate-spin" :style="{ filter: iconFilter }"></image>
-          <image v-else :src="getFullImageUrl('/static/icons/actions/auto_awesome.svg')" class="w-9 h-9 animate-pulse" :style="{ filter: iconFilter }"></image>
+          <text v-if="isImpactLoading" class="material-icons text-primary animate-spin" style="font-size: 36rpx;">autorenew</text>
+          <text v-else class="material-icons text-primary animate-pulse" style="font-size: 36rpx;">auto_awesome</text>
           <text class="text-sm font-bold text-primary">{{ isImpactLoading ? 'AI 正在深度思考...' : 'AI 深度点评' }}</text>
         </view>
         
@@ -324,7 +320,7 @@ onPageScroll((e) => {
               @click="toggleImpact">
           <view class="flex items-center gap-1 mb-2 py-1.5 px-4 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 active:scale-95 transition-transform">
             <text class="text-[20rpx] font-bold text-primary">{{ isImpactExpanded ? '收起全文' : '点击展开深度点评' }}</text>
-            <image :src="isImpactExpanded ? getFullImageUrl('/static/icons/actions/arrow_up.svg') : getFullImageUrl('/static/icons/actions/arrow_down.svg')" :style="{ width: '20rpx', height: '20rpx', filter: iconFilter }"></image>
+            <text class="material-icons text-primary" style="font-size: 24rpx;">{{ isImpactExpanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</text>
           </view>
         </view>
       </view>
@@ -344,35 +340,35 @@ onPageScroll((e) => {
     </main>
 
     <!-- Bottom Action Bar (Floating) -->
-    <view :class="['fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 backdrop-blur-xl rounded-full border shadow-2xl flex items-center justify-around px-6 z-50 transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/90 border-black/10 shadow-gray-200/50' : 'bg-tab-bar border-theme-main']">
+    <view :class="['fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-14 backdrop-blur-xl rounded-full border shadow-2xl flex items-center justify-between px-8 z-50 transition-colors duration-300', isEyeProtection ? 'bg-[#f0ecd6]/90 border-black/10 shadow-gray-200/50' : 'bg-tab-bar border-theme-main']">
       
       <!-- Favorite -->
       <view @click="toggleFavorite" class="flex flex-col items-center gap-0.5 transition-colors cursor-pointer" :class="isFavorited ? 'text-red-500' : (isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary')">
-        <image :src="isFavorited ? getFullImageUrl('/static/icons/actions/heart_fill.svg') : getFullImageUrl('/static/icons/actions/heart.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
+        <text class="material-icons" style="font-size: 40rpx;">{{ isFavorited ? 'favorite' : 'favorite_border' }}</text>
         <text class="text-[10px] font-medium">{{ isFavorited ? '已收藏' : '收藏' }}</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
 
       <!-- Font Size -->
       <view @click="toggleFontSize" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
-        <image :src="getFullImageUrl('/static/icons/actions/font_size.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
+        <text class="material-icons" style="font-size: 40rpx;">format_size</text>
         <text class="text-[10px] font-medium">字号</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
 
       <!-- Eye Protection -->
       <view @click="toggleEyeProtection" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-primary' : 'text-theme-secondary hover:text-primary']">
-        <image :src="isEyeProtection ? getFullImageUrl('/static/icons/actions/eye_fill.svg') : getFullImageUrl('/static/icons/actions/eye.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
+        <text class="material-icons" style="font-size: 40rpx;">{{ isEyeProtection ? 'visibility_off' : 'visibility' }}</text>
         <text class="text-[10px] font-medium">{{ isEyeProtection ? '日间' : '护眼' }}</text>
       </view>
 
-      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-theme-main']"></view>
+      <view :class="['w-px h-6', isEyeProtection ? 'bg-black/10' : 'bg-white/10']"></view>
 
       <!-- Share -->
       <view @click="handleShare" :class="['flex flex-col items-center gap-0.5 transition-colors cursor-pointer', isEyeProtection ? 'text-gray-600 hover:text-primary' : 'text-theme-secondary hover:text-primary']">
-        <image :src="getFullImageUrl('/static/icons/actions/share.svg')" :style="{ width: '40rpx', height: '40rpx', filter: iconFilter, opacity: 0.8 }"></image>
+        <text class="material-icons" style="font-size: 40rpx;">share</text>
         <text class="text-[10px] font-medium">转发</text>
       </view>
     </view>

@@ -411,7 +411,17 @@ onShow(() => {
   const currentPage = pages[pages.length - 1]
   // 检查是否有 userId 参数，如果有则是查看别人主页
   const options = currentPage.options || {}
-  isOthersProfile.value = !!options.userId && options.userId !== uni.getStorageSync('userInfo')?.id
+  const userInfoStr = uni.getStorageSync('userInfo');
+  let currentUserId = null;
+  if (userInfoStr) {
+    try {
+      const userInfo = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+      currentUserId = userInfo?.id;
+    } catch (e) {
+      console.error('Failed to parse userInfo', e);
+    }
+  }
+  isOthersProfile.value = !!options.userId && options.userId !== currentUserId;
 
   const token = uni.getStorageSync('token')
   if (!token) {

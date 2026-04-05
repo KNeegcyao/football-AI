@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container" :class="themeClass">
+  <view class="page-container" :class="themeClass" :style="{ '--status-bar-height': statusBarHeight + 'px' }">
     <!-- Status Bar -->
     <view class="status-bar"></view>
 
@@ -177,6 +177,15 @@ const form = ref({
 const images = ref([]);
 const submitting = ref(false);
 const navbarPaddingRight = ref(16); // 默认 16px
+const statusBarHeight = ref(20);
+
+// 获取系统状态栏高度
+onMounted(() => {
+  const sysInfo = uni.getSystemInfoSync();
+  if (sysInfo.statusBarHeight) {
+    statusBarHeight.value = sysInfo.statusBarHeight;
+  }
+});
 const circleId = ref(null);
 const circleName = ref('');
 const topicId = ref(null);

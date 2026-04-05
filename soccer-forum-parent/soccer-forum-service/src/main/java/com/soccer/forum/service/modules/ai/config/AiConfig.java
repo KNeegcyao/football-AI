@@ -6,6 +6,7 @@ import com.soccer.forum.service.modules.ai.agent.DataQueryAgent;
 import com.soccer.forum.service.modules.ai.agent.MatchAnalysisAgent;
 import com.soccer.forum.service.modules.ai.agent.NewsSummaryAgent;
 import com.soccer.forum.service.modules.ai.agent.RuleQaAgent;
+import com.soccer.forum.service.modules.ai.agent.FanAgent;
 import com.soccer.forum.service.modules.ai.service.FootballAiService;
 import com.soccer.forum.service.modules.ai.tool.SoccerTools;
 import dev.langchain4j.data.segment.TextSegment;
@@ -206,6 +207,16 @@ public class AiConfig {
     @Bean
     public RuleQaAgent ruleQaAgent(ChatLanguageModel chatLanguageModel) {
         return AiServices.builder(RuleQaAgent.class)
+                .chatLanguageModel(chatLanguageModel)
+                .build();
+    }
+
+    /**
+     * 手动构建 FanAgent
+     */
+    @Bean
+    public FanAgent fanAgent(ChatLanguageModel chatLanguageModel) {
+        return AiServices.builder(FanAgent.class)
                 .chatLanguageModel(chatLanguageModel)
                 .build();
     }

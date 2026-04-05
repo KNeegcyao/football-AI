@@ -60,57 +60,92 @@
       <!-- 正在直播 -->
       <view class="section" v-if="liveMatches.length > 0">
         <view class="match-card live-card bg-card border-theme-main" v-for="match in liveMatches" :key="match.id">
-          <view class="live-badge">
-            <text class="live-text">LIVE {{ match.liveTime || match.matchMinute || "" }}</text>
-          </view>
-          <view class="card-body">
-            <view class="match-info">
+          <!-- 顶部装饰栏 -->
+          <view class="card-header-line">
+            <view class="competition-info">
+              <view class="ai-live-badge">
+                <text class="material-icons badge-icon">auto_awesome</text>
+                <text>AI LIVE</text>
+              </view>
               <text class="competition-text text-theme-secondary">{{ match.competitionName }} · {{ match.round }}</text>
             </view>
+            <view class="live-badge-gold">
+              <view class="live-dot-pulse"></view>
+              <text class="live-text">{{ match.liveTime || match.matchMinute || "" }}'</text>
+            </view>
+          </view>
+
+          <view class="card-body">
             <view class="teams-score">
-              <view class="team-side">
-                <view class="logo-container">
+              <!-- 主队 -->
+              <view class="team-side home">
+                <view class="logo-wrapper">
                   <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
                 </view>
                 <text class="team-name text-theme-main">{{ match.homeTeam?.name }}</text>
               </view>
+
+              <!-- 比分 -->
               <view class="score-center">
-                <view class="score-text text-theme-main">
-                  <text class="num">{{ match.homeScore }}</text>
-                  <text class="divider">-</text>
-                  <text class="num">{{ match.awayScore }}</text>
+                <view class="score-display">
+                  <text class="score-num home">{{ match.homeScore }}</text>
+                  <text class="score-divider">:</text>
+                  <text class="score-num away">{{ match.awayScore }}</text>
                 </view>
-                <view class="status-badge">
+                <view class="status-tag">
                   <text>{{ match.statusName || '进行中' }}</text>
                 </view>
               </view>
-              <view class="team-side">
-                <view class="logo-container">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
-              </view>
+
+              <!-- 客队 -->
+              <view class="team-side away">
+                <view class="logo-wrapper">
+                  <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
+                </view>
                 <text class="team-name text-theme-main">{{ match.awayTeam?.name }}</text>
               </view>
             </view>
           </view>
-          <view class="card-footer border-theme-main">
-            <view class="footer-left">
-              <text class="material-icons" style="font-size: 28rpx; margin-right: 8rpx; color: #4caf50;">play_circle</text>
-              <text class="footer-text text-theme-secondary">视频直播中</text>
-            </view>
-            <view class="footer-right" @click.stop="openAiAnalysis(match)">
-              <text class="ai-label text-theme-secondary">AI 预测:</text>
-              <view class="ai-probs">
-                <view class="prob-item">
-                  <text class="prob-label">主</text>
-                  <text class="prob-value">{{ Math.round((match.homeWinProb || 0) * 100) }}%</text>
+
+          <!-- AI 预测区域 -->
+          <view class="card-footer-ai-gold" @click.stop="openAiAnalysis(match)">
+            <view class="btn-inner">
+              <view class="ai-glow"></view>
+              <view class="ai-header">
+                <view class="ai-title">
+                  <text class="material-icons ai-spark">auto_awesome</text>
+                  <text class="ai-label">AI 实时胜率预测</text>
                 </view>
-                <view class="prob-item">
-                  <text class="prob-label">平</text>
-                  <text class="prob-value">{{ Math.round((match.drawProb || 0) * 100) }}%</text>
+                <view class="ai-action">
+                  <text>深度洞察</text>
+                  <text class="material-icons">chevron_right</text>
                 </view>
-                <view class="prob-item">
-                  <text class="prob-label">客</text>
-                  <text class="prob-value">{{ Math.round((match.awayWinProb || 0) * 100) }}%</text>
+              </view>
+              
+              <view class="ai-content">
+                <view class="ai-progress-bar">
+                  <view class="progress-segment home" :style="{ width: Math.round((match.homeWinProb || 0) * 100) + '%' }">
+                    <view class="glow-bar"></view>
+                  </view>
+                  <view class="progress-segment draw" :style="{ width: Math.round((match.drawProb || 0) * 100) + '%' }"></view>
+                  <view class="progress-segment away" :style="{ width: Math.round((match.awayWinProb || 0) * 100) + '%' }">
+                    <view class="glow-bar"></view>
+                  </view>
+                </view>
+                
+                <view class="ai-stats">
+                  <view class="stat-item">
+                    <text class="stat-label">主胜</text>
+                    <text class="stat-value home-text">{{ Math.round((match.homeWinProb || 0) * 100) }}%</text>
+                  </view>
+                  <view class="stat-item">
+                    <text class="stat-label">平局</text>
+                    <text class="stat-value draw-text">{{ Math.round((match.drawProb || 0) * 100) }}%</text>
+                  </view>
+                  <view class="stat-item">
+                    <text class="stat-label">客胜</text>
+                    <text class="stat-value away-text">{{ Math.round((match.awayWinProb || 0) * 100) }}%</text>
+                  </view>
                 </view>
               </view>
             </view>
@@ -124,8 +159,8 @@
         <view class="ai-modal-content bg-card border-theme-main">
           <view class="modal-header">
             <view class="header-title">
-              <text class="material-icons ai-icon">psychology</text>
-              <text class="title-text text-theme-main">AI 深度预测分析</text>
+              <text class="material-icons ai-icon">{{ aiModalIcon }}</text>
+              <text class="title-text text-theme-main">{{ aiModalTitle }}</text>
             </view>
             <view class="close-btn" @click="showAiModal = false">
               <text class="material-icons">close</text>
@@ -149,6 +184,9 @@
           </view>
         </view>
       </view>
+
+      <!-- AI 战报详情弹窗 -->
+      <AiReportPopup v-model:visible="showReportPopup" :loading="aiReportLoading" :data="reportData" />
 
       <!-- 即将开始 -->
       <view class="section" v-if="upcomingMatches.length > 0">
@@ -176,23 +214,19 @@
               <text class="mini-name text-theme-main">{{ match.awayTeam?.name }}</text>
             </view>
           </view>
-          <!-- 新增：AI 预测显示 -->
-          <view class="mini-footer" v-if="match.homeWinProb || match.drawProb || match.awayWinProb">
-            <view class="footer-right mini" @click.stop="openAiAnalysis(match)">
-              <text class="ai-label text-theme-secondary">AI 预测:</text>
-              <view class="ai-probs">
-                <view class="prob-item">
-                  <text class="prob-label">主</text>
-                  <text class="prob-value">{{ Math.round((match.homeWinProb || 0) * 100) }}%</text>
-                </view>
-                <view class="prob-item">
-                  <text class="prob-label">平</text>
-                  <text class="prob-value">{{ Math.round((match.drawProb || 0) * 100) }}%</text>
-                </view>
-                <view class="prob-item">
-                  <text class="prob-label">客</text>
-                  <text class="prob-value">{{ Math.round((match.awayWinProb || 0) * 100) }}%</text>
-                </view>
+          <!-- AI 预测：进度条样式 -->
+          <view class="mini-footer-ai-gold" v-if="match.homeWinProb || match.drawProb || match.awayWinProb" @click.stop="openAiAnalysis(match)">
+            <view class="ai-glow"></view>
+            <view class="ai-progress-container mini">
+              <view class="ai-progress-bar">
+                <view class="progress-segment home" :style="{ width: Math.round((match.homeWinProb || 0) * 100) + '%' }"></view>
+                <view class="progress-segment draw" :style="{ width: Math.round((match.drawProb || 0) * 100) + '%' }"></view>
+                <view class="progress-segment away" :style="{ width: Math.round((match.awayWinProb || 0) * 100) + '%' }"></view>
+              </view>
+              <view class="ai-labels-mini">
+                <text class="label-text home">主 {{ Math.round((match.homeWinProb || 0) * 100) }}%</text>
+                <text class="label-text draw">平 {{ Math.round((match.drawProb || 0) * 100) }}%</text>
+                <text class="label-text away">客 {{ Math.round((match.awayWinProb || 0) * 100) }}%</text>
               </view>
             </view>
           </view>
@@ -202,32 +236,50 @@
       <!-- 已完赛 -->
       <view class="section" v-if="finishedMatches.length > 0">
         <view class="section-title text-theme-secondary">已完赛</view>
-        <view class="match-card-mini finished bg-card border-theme-main" v-for="match in finishedMatches" :key="match.id">
-          <view class="mini-header">
-            <view class="header-left">
-              <view class="indicator"></view>
-              <text class="match-meta text-theme-secondary">{{ match.competitionName }} · {{ formatMatchTime(match.matchTime) }}</text>
+        <view class="match-card finished-card bg-card border-theme-main" v-for="match in finishedMatches" :key="match.id">
+          <!-- 顶部装饰栏 -->
+          <view class="card-header-line">
+            <view class="competition-info">
+              <view class="ai-insight-badge">
+                <text class="material-icons badge-icon">auto_awesome</text>
+                <text>AI ANALYSIS READY</text>
+              </view>
+              <text class="competition-text text-theme-secondary">{{ match.competitionName }} · {{ formatMatchDate(match.matchTime) }}</text>
+            </view>
+            <view class="status-tag finished">已完赛</view>
+          </view>
+
+          <view class="card-body">
+            <view class="teams-score-finished">
+              <view class="team home">
+                <view class="logo-box">
+                  <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
+                </view>
+                <text class="name">{{ match.homeTeam?.name }}</text>
+              </view>
+
+              <view class="score-box">
+                <text class="score-val" :class="{ 'home-win': match.homeScore > match.awayScore }">{{ match.homeScore }}</text>
+                <text class="score-sep">-</text>
+                <text class="score-val" :class="{ 'away-win': match.awayScore > match.homeScore }">{{ match.awayScore }}</text>
+              </view>
+
+              <view class="team away">
+                <view class="logo-box">
+                  <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
+                </view>
+                <text class="name">{{ match.awayTeam?.name }}</text>
+              </view>
             </view>
           </view>
-          <view class="mini-body">
-            <view class="mini-team">
-              <view class="mini-logo">
-                <image :src="getFullImageUrl(match.homeTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.homeTeam)"></image>
-              </view>
-              <view class="team-info">
-                <text class="mini-name text-theme-main">{{ match.homeTeam?.name }}</text>
-                <text class="finished-score text-theme-main">{{ match.homeScore }}</text>
-              </view>
-            </view>
-            <text class="vs-dash text-theme-secondary">-</text>
-            <view class="mini-team reverse">
-              <view class="mini-logo">
-                <image :src="getFullImageUrl(match.awayTeam?.logoUrl)" mode="aspectFit" @error="handleImageError(match.awayTeam)"></image>
-              </view>
-              <view class="team-info reverse">
-                <text class="mini-name text-theme-main">{{ match.awayTeam?.name }}</text>
-                <text class="finished-score text-theme-main" :class="{ 'muted': match.awayScore < match.homeScore }">{{ match.awayScore }}</text>
-              </view>
+
+          <!-- 赛事总结按钮区域 -->
+          <view class="card-footer-summary-gold" @click.stop="openMatchSummary(match)">
+            <view class="btn-inner">
+              <view class="ai-glow"></view>
+              <text class="material-icons ai-sparkle">psychology</text>
+              <text class="btn-text">查看 AI 深度战报总结</text>
+              <text class="material-icons arrow">chevron_right</text>
             </view>
           </view>
         </view>
@@ -254,10 +306,11 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
-import { matchApi, userApi } from '@/api'
+import { matchApi, userApi, aiApi } from '@/api'
 import { getFullImageUrl } from '@/utils/request'
 import { useThemeStore } from '@/store/theme'
 import CustomTabBar from '@/components/CustomTabBar/CustomTabBar.vue'
+import AiReportPopup from '@/components/AiReportPopup/AiReportPopup.vue'
 
 const themeStore = useThemeStore()
 const themeClass = computed(() => `theme-${themeStore.theme}`)
@@ -271,29 +324,194 @@ const navbarPaddingRight = ref(16) // 默认 16px
 const showAiModal = ref(false)
 const aiLoading = ref(false)
 const aiAnalysisResult = ref('')
+const aiModalTitle = ref('AI 深度预测分析')
+const aiModalIcon = ref('psychology')
+
+// 新增 AI 战报弹窗状态
+const showReportPopup = ref(false)
+const aiReportLoading = ref(false)
+const reportData = ref({})
 
 const openAiAnalysis = async (match) => {
-  showAiModal.value = true
-  aiLoading.value = true
-  aiAnalysisResult.value = ''
-  
+  // 提前准备好头部数据并打开弹窗显示 Loading 状态
+  reportData.value = {
+    homeName: match.homeTeam?.name,
+    homeLogo: match.homeTeam?.logoUrl,
+    homeScore: match.homeScore,
+    awayName: match.awayTeam?.name,
+    awayLogo: match.awayTeam?.logoUrl,
+    awayScore: match.awayScore,
+    matchTime: match.matchTime,
+    competition: match.competitionName,
+    round: match.round,
+    location: match.venueName || '未知场地',
+    date: formatMatchDate(match.matchTime),
+    statusName: `LIVE ${match.liveTime || match.matchMinute || ""}'`
+  }
+  showReportPopup.value = true
+  aiReportLoading.value = true
+
   try {
-    const res = await matchApi.predict({
-      teamA: match.homeTeam?.name || '主队',
-      teamB: match.awayTeam?.name || '客队',
-      recentForm: `${match.homeTeam?.name} 近期状态良好，${match.awayTeam?.name} 略有起伏。`
-    })
+    // 准备比赛数据，供 AI 实时分析
+    const matchData = `
+      赛事：${match.competitionName}
+      轮次：${match.round}
+      时间：${match.liveTime || match.matchMinute || ""}' (LIVE)
+      当前比分：${match.homeTeam?.name} ${match.homeScore} - ${match.awayScore} ${match.awayTeam?.name}
+      状态：正在进行中
+      主队：${match.homeTeam?.name}
+      客队：${match.awayTeam?.name}
+      主队实时胜率：${Math.round((match.homeWinProb || 0) * 100)}%
+      平局实时胜率：${Math.round((match.drawProb || 0) * 100)}%
+      客队实时胜率：${Math.round((match.awayWinProb || 0) * 100)}%
+    `.trim()
+
+    // 调用 AI 接口生成实时深度洞察
+    const res = await aiApi.generateMatchReport({ matchData })
     
-    if (res) {
-      aiAnalysisResult.value = res
-    } else {
-      aiAnalysisResult.value = 'AI 分析暂时不可用，请稍后再试。'
+    // 解析 AI 返回的内容
+    let aiReport = {}
+    try {
+      let jsonStr = typeof res === 'string' ? res : JSON.stringify(res)
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        aiReport = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('AI 实时分析解析失败，请稍后重试')
+      }
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError)
+      throw new Error('AI 实时分析解析失败，请稍后重试')
+    }
+
+    // 填充完整数据
+    reportData.value = {
+      ...reportData.value,
+      ...aiReport
+    }
+
+  } catch (e) {
+    console.error('AI Live Analysis failed:', e)
+    showReportPopup.value = false // 失败时关闭弹窗
+    uni.showToast({
+      title: e.message || 'AI 实时分析不可用，请稍后再试',
+      icon: 'none'
+    })
+  } finally {
+    aiReportLoading.value = false
+  }
+}
+
+const openMatchSummary = async (match) => {
+  // 提前准备好头部数据并打开弹窗显示 Loading 状态
+  reportData.value = {
+    homeName: match.homeTeam?.name,
+    homeLogo: match.homeTeam?.logoUrl,
+    homeScore: match.homeScore,
+    awayName: match.awayTeam?.name,
+    awayLogo: match.awayTeam?.logoUrl,
+    awayScore: match.awayScore,
+    matchTime: match.matchTime,
+    competition: match.competitionName,
+    round: match.round,
+    location: match.venueName || '未知场地',
+    date: formatMatchDate(match.matchTime),
+    statusName: '已完赛'
+  }
+  showReportPopup.value = true
+  aiReportLoading.value = true
+
+  try {
+    // 准备比赛数据，供 AI 分析 (增加更详细的上下文)
+    const matchData = `
+      赛事：${match.competitionName}
+      轮次：${match.round}
+      时间：${formatMatchDate(match.matchTime)}
+      地点：${match.venueName || '未知'}
+      比分：${match.homeTeam?.name} ${match.homeScore} - ${match.awayScore} ${match.awayTeam?.name}
+      状态：已完赛
+      主队：${match.homeTeam?.name}
+      客队：${match.awayTeam?.name}
+      ${match.events?.length > 0 ? '关键事件：' + match.events.map(e => `${e.minute}' ${e.playerName} (${e.teamType === 'home' ? '主队' : '客队'})`).join(', ') : ''}
+    `.trim()
+
+    // 调用 AI 接口生成战报
+    const res = await aiApi.generateMatchReport({ matchData })
+    
+    // 解析 AI 返回的内容 (request.js 已经处理了 code === 200，res 现在就是 data 字段，即 AI 返回的字符串)
+    let aiReport = {}
+    try {
+      // 增强型 JSON 解析逻辑：处理 AI 偶尔返回 Markdown 代码块的情况
+      let jsonStr = typeof res === 'string' ? res : JSON.stringify(res)
+      
+      // 尝试匹配 JSON 对象部分 (防止 AI 返回多余的文字或 Markdown 标签)
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0]
+      }
+      
+      aiReport = JSON.parse(jsonStr)
+    } catch (e) {
+      console.error('AI Report parse failed:', e, res)
+      throw new Error('AI 战报解析失败，请稍后重试')
+    }
+
+    // 填充基础信息并合并 AI 生成的内容
+    reportData.value = {
+      homeName: match.homeTeam?.name || '主队',
+      homeLogo: getFullImageUrl(match.homeTeam?.logoUrl),
+      homeScore: match.homeScore,
+      awayName: match.awayTeam?.name || '客队',
+      awayLogo: getFullImageUrl(match.awayTeam?.logoUrl),
+      awayScore: match.awayScore,
+      competition: match.competitionName || '英超',
+      round: match.round || '常规赛',
+      date: formatMatchDate(match.matchTime),
+      location: match.venueName || '体育场',
+      // AI 生成的内容，增加空值容错
+      summary: {
+        text: aiReport.summary?.text || `${match.homeTeam?.name} 与 ${match.awayTeam?.name} 联手奉献了一场精彩对决。`,
+        tone: aiReport.summary?.tone || '激烈对抗',
+        emoji: aiReport.summary?.emoji || '🔥'
+      },
+      insights: aiReport.insights || [
+        { title: '全场综述', description: '双方打出了极高的战术水准，场面非常胶着。' }
+      ],
+      attackArea: aiReport.attackArea || { home: 33, middle: 34, away: 33 },
+      mvp: {
+        name: aiReport.mvp?.name || '待定',
+        reason: aiReport.mvp?.reason || '全场表现最稳定的球员。'
+      },
+      darkHorse: {
+        name: aiReport.darkHorse?.name || '无',
+        reason: aiReport.darkHorse?.reason || '本场比赛暂无显著黑马。'
+      },
+      stats: {
+        homePossession: aiReport.stats?.homePossession || 50,
+        awayPossession: aiReport.stats?.awayPossession || 50,
+        homeShots: aiReport.stats?.homeShots || 0,
+        awayShots: aiReport.stats?.awayShots || 0,
+        homeXG: aiReport.stats?.homeXG || 0,
+        awayXG: aiReport.stats?.awayXG || 0,
+        homeTackles: aiReport.stats?.homeTackles || 0,
+        awayTackles: aiReport.stats?.awayTackles || 0,
+        homePassSuccess: aiReport.stats?.homePassSuccess || 0,
+        awayPassSuccess: aiReport.stats?.awayPassSuccess || 0
+      },
+      events: aiReport.events || (match.events || []),
+      engagement: {
+        voteTopic: aiReport.engagement?.voteTopic || '你对本场比赛的判罚有何看法？'
+      }
     }
   } catch (e) {
-    console.error('AI Prediction failed:', e)
-    aiAnalysisResult.value = '网络请求失败，请检查网络连接。'
+    console.error('获取 AI 战报失败:', e)
+    showReportPopup.value = false // 失败时关闭弹窗
+    uni.showToast({
+      title: '生成战报失败，请稍后重试',
+      icon: 'none'
+    })
   } finally {
-    aiLoading.value = false
+    aiReportLoading.value = false
   }
 }
 
@@ -565,23 +783,683 @@ onMounted(() => {
   /* #endif */
 }
 
+/* 赛程卡片基础样式重构 */
+.match-card {
+  margin: 24rpx;
+  border-radius: 32rpx;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.6);
+  border: 1rpx solid rgba(212, 175, 55, 0.1);
+  background: linear-gradient(180deg, rgba(30, 28, 20, 0.95), rgba(15, 15, 15, 0.98));
+
+  &.live-card {
+    border: 1rpx solid rgba(212, 175, 55, 0.4);
+    box-shadow: 0 12rpx 60rpx rgba(212, 175, 55, 0.15);
+    background: linear-gradient(180deg, rgba(30, 28, 20, 0.95), rgba(15, 15, 15, 1));
+    animation: goldBreathe 4s infinite ease-in-out;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.1), transparent 70%);
+      pointer-events: none;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2rpx;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+    }
+  }
+}
+
+.card-footer-summary {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.08), transparent);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(212, 175, 55, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(212, 175, 55, 0.15);
+  }
+
+  .summary-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+
+    .summary-icon {
+      font-size: 32rpx;
+      color: #d4af37;
+      animation: iconPulse 2s infinite;
+    }
+
+    .summary-label {
+      flex: 1;
+      font-size: 24rpx;
+      font-weight: 600;
+      color: #d4af37;
+      letter-spacing: 2rpx;
+    }
+
+    .chevron {
+      font-size: 28rpx;
+      color: #d4af37;
+      opacity: 0.5;
+    }
+  }
+}
+
+@keyframes iconPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.card-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx 16rpx;
+
+  .live-card & {
+    border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+    padding: 24rpx 32rpx;
+  }
+  
+  .competition-info {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+
+    .dot {
+      width: 6rpx;
+      height: 6rpx;
+      background: var(--text-theme-main);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+
+    .competition-text {
+      font-size: 22rpx;
+      letter-spacing: 1rpx;
+      text-transform: uppercase;
+    }
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 46, 99, 0.12);
+    padding: 8rpx 20rpx;
+    border-radius: 12rpx;
+    border: 1rpx solid rgba(255, 46, 99, 0.2);
+    box-shadow: 0 4rpx 12rpx rgba(255, 46, 99, 0.1);
+
+    .live-dot {
+      width: 12rpx;
+      height: 12rpx;
+      background: #ff2e63;
+      border-radius: 50%;
+      margin-right: 12rpx;
+      box-shadow: 0 0 12rpx #ff2e63;
+      animation: liveBreathe 1.5s infinite;
+    }
+
+    .live-text {
+      color: #ff2e63;
+      font-size: 22rpx;
+      font-weight: 900;
+      font-family: 'DIN Alternate', sans-serif;
+      letter-spacing: 1rpx;
+    }
+  }
+}
+
+@keyframes liveBreathe {
+  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 8rpx #ff2e63; }
+  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 20rpx #ff2e63; }
+  100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 8rpx #ff2e63; }
+}
+
+.card-footer-ai-gold {
+  margin: 0 24rpx 24rpx;
+  position: relative;
+  overflow: hidden;
+  border-radius: 24rpx;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .btn-inner {
+    padding: 24rpx;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.04));
+    border: 1rpx solid rgba(212, 175, 55, 0.2);
+    border-radius: 24rpx;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+  }
+
+  .ai-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent);
+    animation: aiSweep 3s infinite;
+    z-index: 1;
+  }
+
+  .ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24rpx;
+
+    .ai-title {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+
+      .ai-spark {
+        font-size: 32rpx;
+        color: #d4af37;
+        animation: aiSparkle 2s infinite;
+      }
+
+      .ai-label {
+        font-size: 24rpx;
+        font-weight: 800;
+        color: #d4af37;
+        letter-spacing: 1rpx;
+        text-transform: uppercase;
+      }
+    }
+
+    .ai-action {
+      display: flex;
+      align-items: center;
+      gap: 4rpx;
+      font-size: 20rpx;
+      color: #d4af37;
+      opacity: 0.7;
+      font-weight: 600;
+
+      .material-icons {
+        font-size: 24rpx;
+      }
+    }
+  }
+
+  .ai-content {
+    .ai-progress-bar {
+      height: 12rpx;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 100rpx;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 20rpx;
+      border: 1rpx solid rgba(255, 255, 255, 0.05);
+
+      .progress-segment {
+        height: 100%;
+        position: relative;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &.home {
+          background: linear-gradient(90deg, #ff4d4f, #ff7875);
+          .glow-bar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20rpx;
+            height: 100%;
+            background: rgba(255, 77, 79, 0.5);
+            filter: blur(4rpx);
+          }
+        }
+        &.draw { background: rgba(255, 255, 255, 0.15); }
+        &.away {
+          background: linear-gradient(90deg, #40a9ff, #69c0ff);
+          .glow-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20rpx;
+            height: 100%;
+            background: rgba(64, 169, 255, 0.5);
+            filter: blur(4rpx);
+          }
+        }
+      }
+    }
+
+    .ai-stats {
+      display: flex;
+      justify-content: space-between;
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4rpx;
+
+        .stat-label {
+          font-size: 18rpx;
+          color: rgba(212, 175, 55, 0.5);
+          font-weight: 600;
+        }
+
+        .stat-value {
+          font-size: 24rpx;
+          font-weight: 800;
+          font-family: 'DIN Alternate', sans-serif;
+          
+          &.home-text { color: #ff4d4f; }
+          &.draw-text { color: rgba(255, 255, 255, 0.6); }
+          &.away-text { color: #40a9ff; }
+        }
+      }
+    }
+  }
+}
+
+.card-body {
+  padding: 20rpx 40rpx 40rpx;
+
+  .teams-score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20rpx 0;
+
+    .live-card & {
+      padding: 32rpx 0;
+    }
+    
+    &.mini {
+      padding: 10rpx 0;
+      
+      .team-name {
+        font-size: 28rpx;
+      }
+      
+      .score-num {
+        font-size: 48rpx;
+      }
+    }
+
+    .team-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16rpx;
+      max-width: 220rpx;
+
+      .logo-wrapper {
+        width: 110rpx;
+        height: 110rpx;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+        padding: 16rpx;
+        box-shadow: inset 0 0 20rpx rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.small {
+          width: 80rpx;
+          height: 80rpx;
+          padding: 12rpx;
+        }
+
+        image {
+          width: 100%;
+          height: 100%;
+          filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.3));
+        }
+      }
+
+      .team-name {
+        font-size: 28rpx;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        letter-spacing: 0.5rpx;
+
+        .live-card & {
+          font-size: 26rpx;
+          color: #fff;
+        }
+      }
+    }
+
+    .score-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12rpx;
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+      font-family: 'DIN Alternate', sans-serif;
+
+      .score-num {
+        font-size: 64rpx;
+        font-weight: 800;
+        font-family: 'DIN Alternate', 'DINCondensed-Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        color: #fff;
+        text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+
+        .live-card & {
+          color: #fff;
+          text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.4);
+          animation: liveScoreBreathe 2s infinite ease-in-out;
+        }
+
+        &.winner {
+          color: #ff4d4f;
+          text-shadow: 0 0 15rpx rgba(255, 77, 79, 0.4);
+        }
+      }
+
+        .score-divider {
+          font-size: 40rpx;
+          opacity: 0.3;
+          font-weight: 400;
+          margin-top: -8rpx;
+        }
+      }
+
+      .status-tag {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 4rpx 20rpx;
+        border-radius: 100rpx;
+        font-size: 20rpx;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  }
+}
+
+/* 已完赛卡片重构 */
+.finished-card {
+  border: 1rpx solid rgba(212, 175, 55, 0.15);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, rgba(30, 28, 20, 0.8), rgba(20, 20, 20, 0.95));
+
+  .card-header-line {
+    border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+    padding: 24rpx 32rpx;
+    
+    .ai-insight-badge {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      background: rgba(212, 175, 55, 0.1);
+      padding: 4rpx 16rpx;
+      border-radius: 8rpx;
+      margin-right: 16rpx;
+      border: 1rpx solid rgba(212, 175, 55, 0.2);
+
+      .badge-icon {
+        font-size: 20rpx;
+        color: #d4af37;
+      }
+
+      text {
+        font-size: 18rpx;
+        color: #d4af37;
+        font-weight: 800;
+        letter-spacing: 1rpx;
+      }
+    }
+  }
+
+  .teams-score-finished {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10rpx 0;
+
+    .team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16rpx;
+
+      .logo-box {
+        width: 80rpx;
+        height: 80rpx;
+        padding: 12rpx;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+        border: 1rpx solid rgba(255, 255, 255, 0.05);
+        
+        image {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      .name {
+        font-size: 26rpx;
+        font-weight: 700;
+        color: #fff;
+      }
+    }
+
+    .score-box {
+      display: flex;
+      align-items: center;
+      gap: 24rpx;
+
+      .score-val {
+        font-size: 60rpx;
+        font-weight: 800;
+        font-family: 'DIN Alternate', sans-serif;
+        color: rgba(255, 255, 255, 0.3);
+
+        &.home-win, &.away-win {
+          color: #fff;
+          text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      .score-sep {
+        font-size: 32rpx;
+        color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .card-footer-summary-gold {
+    margin: 0 24rpx 24rpx;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20rpx;
+
+    .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24rpx;
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+      border: 1rpx solid rgba(212, 175, 55, 0.2);
+      border-radius: 20rpx;
+      position: relative;
+      z-index: 2;
+
+      .ai-sparkle {
+        font-size: 32rpx;
+        color: #d4af37;
+        margin-right: 16rpx;
+        animation: aiSparkle 2s infinite;
+      }
+
+      .btn-text {
+        font-size: 24rpx;
+        font-weight: 700;
+        color: #d4af37;
+        letter-spacing: 1rpx;
+      }
+
+      .arrow {
+        font-size: 32rpx;
+        color: #d4af37;
+        opacity: 0.5;
+        margin-left: 8rpx;
+      }
+    }
+
+    .ai-glow {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+      animation: aiSweep 3s infinite;
+    }
+  }
+}
+
+@keyframes aiSparkle {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.live-badge-gold {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 16rpx;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1rpx solid rgba(212, 175, 55, 0.3);
+  border-radius: 100rpx;
+  backdrop-filter: blur(4px);
+
+  .live-dot-pulse {
+    width: 10rpx;
+    height: 10rpx;
+    background: #ff4d4f;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 12rpx #ff4d4f;
+    animation: livePulse 1.5s infinite;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -4rpx;
+      left: -4rpx;
+      right: -4rpx;
+      bottom: -4rpx;
+      border: 2rpx solid #ff4d4f;
+      border-radius: 50%;
+      animation: liveRipple 1.5s infinite;
+    }
+  }
+
+  .live-text {
+    font-size: 20rpx;
+    font-weight: 900;
+    color: #d4af37;
+    font-family: 'DIN Alternate', sans-serif;
+    letter-spacing: 0.5rpx;
+  }
+}
+
+.ai-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 12rpx;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+  border-radius: 8rpx;
+  margin-right: 12rpx;
+  border-left: 4rpx solid #d4af37;
+
+  .badge-icon {
+    font-size: 20rpx;
+    color: #d4af37;
+    animation: aiSparkle 2s infinite;
+  }
+
+  text {
+    font-size: 16rpx;
+    font-weight: 900;
+    color: #d4af37;
+    letter-spacing: 1rpx;
+  }
+}
+
+@keyframes livePulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes liveRipple {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes aiSparkle {
+  0% { transform: scale(1) rotate(0); opacity: 0.8; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 0.8; }
+}
+
+@keyframes aiSweep {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes goldBreathe {
+  0% { border-color: rgba(212, 175, 55, 0.2); box-shadow: 0 0 10rpx rgba(212, 175, 55, 0.05); }
+  50% { border-color: rgba(212, 175, 55, 0.5); box-shadow: 0 0 25rpx rgba(212, 175, 55, 0.2); }
+  100% { border-color: rgba(212, 175, 55, 0.2); box-shadow: 0 0 10rpx rgba(212, 175, 55, 0.05); }
+}
+
+@keyframes liveScoreBreathe {
+  0% { opacity: 0.8; text-shadow: 0 0 10rpx rgba(255, 255, 255, 0.2); }
+  50% { opacity: 1; text-shadow: 0 0 25rpx rgba(255, 255, 255, 0.5); }
+  100% { opacity: 0.8; text-shadow: 0 0 10rpx rgba(255, 255, 255, 0.2); }
+}
+
 .header-placeholder {
   height: calc(var(--status-bar-height) + 100rpx + 260rpx); /* statusBarHeight + nav-bar(100rpx) + calendar(260rpx) */
   width: 100%;
-}
-
-.no-match {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 100rpx 0;
-  
-  .no-match-text {
-    margin-top: 20rpx;
-    font-size: 28rpx;
-    color: var(--text-secondary);
-  }
 }
 
 /* AI Modal Styles */
@@ -909,35 +1787,27 @@ onMounted(() => {
   }
 }
 
-.match-card {
-  background-color: var(--card-bg);
-  border-radius: 32rpx;
-  border: 1px solid var(--border-main);
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 24rpx;
+.live-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #4a0404;
+  padding: 8rpx 24rpx;
+  border-bottom-left-radius: 24rpx;
 
-  .live-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: #4a0404;
-    padding: 8rpx 24rpx;
-    border-bottom-left-radius: 24rpx;
-
-    .live-text {
-      font-size: 20rpx;
-      font-weight: 700;
-      color: #fff;
-      text-transform: uppercase;
-      animation: pulse 2s infinite;
-    }
+  .live-text {
+    font-size: 20rpx;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
   }
+}
 
-  .card-body {
-    padding: 40rpx;
+.card-body {
+  padding: 40rpx;
 
-    .match-info {
+  .match-info {
       margin-bottom: 32rpx;
       .competition-text {
         font-size: 24rpx;
@@ -1099,135 +1969,181 @@ onMounted(() => {
       }
     }
   }
-}
 
-.mini-footer {
-    padding: 0 40rpx 24rpx;
-    display: flex;
-    justify-content: flex-end;
-  }
-
+  /* 迷你卡片 AI 样式 */
   .match-card-mini {
-  background-color: var(--card-bg);
+  margin: 20rpx 24rpx;
+  background: linear-gradient(180deg, rgba(30, 28, 20, 0.9), rgba(15, 15, 15, 0.98));
   border-radius: 24rpx;
-  padding: 32rpx;
-  border: 1px solid var(--border-main);
-  margin-bottom: 24rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(212, 175, 55, 0.1);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 
   .mini-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24rpx;
+    margin-bottom: 20rpx;
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 16rpx;
+      gap: 12rpx;
 
       .indicator {
-        width: 8rpx;
-        height: 32rpx;
-        background-color: var(--accent-color);
-        border-radius: 999rpx;
+        width: 4rpx;
+        height: 20rpx;
+        background: #d4af37;
+        border-radius: 4rpx;
+        opacity: 0.5;
       }
 
       .match-meta {
-        font-size: 24rpx;
-        color: var(--text-secondary);
+        font-size: 22rpx;
+        color: rgba(255, 255, 255, 0.5);
       }
     }
   }
 
   .mini-body {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    padding: 10rpx 0;
 
     .mini-team {
+      flex: 1;
       display: flex;
       align-items: center;
       gap: 16rpx;
-      flex: 1;
-      overflow: hidden;
+      max-width: 40%;
+
+      &.reverse {
+        flex-direction: row-reverse;
+      }
 
       .mini-logo {
-        width: 80rpx;
-        height: 80rpx;
-        background-color: #fff;
-        border-radius: 50%;
-        padding: 6rpx;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-
+        width: 50rpx;
+        height: 50rpx;
+        filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.3));
         image {
-          width: 60rpx;
-          height: 60rpx;
+          width: 100%;
+          height: 100%;
         }
       }
 
       .mini-name {
         font-size: 26rpx;
-        font-weight: 600;
-        color: var(--text-main);
+        font-weight: 700;
+        color: #fff;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        flex: 1;
-      }
-
-      &.reverse {
-        flex-direction: row-reverse;
-        text-align: right;
       }
     }
 
     .vs-text {
-      font-size: 24rpx;
-      color: var(--text-secondary);
-      font-family: monospace;
-      margin: 0 20rpx;
-      flex-shrink: 0;
+      font-size: 20rpx;
+      font-weight: 900;
+      color: rgba(212, 175, 55, 0.3);
+      font-style: italic;
+    }
+  }
+}
+
+.mini-footer-ai-gold {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.03));
+  border: 1rpx solid rgba(212, 175, 55, 0.15);
+  border-radius: 16rpx;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+
+  .ai-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.08), transparent);
+    animation: aiSweep 3s infinite;
+  }
+
+  .ai-progress-container {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ai-progress-bar {
+    height: 10rpx;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 100rpx;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 16rpx;
+    border: 1rpx solid rgba(255, 255, 255, 0.05);
+
+    .progress-segment {
+      height: 100%;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+
+      &.home { 
+        background: linear-gradient(90deg, #ff4d4f, #ff7875);
+      }
+      &.draw { background: rgba(255, 255, 255, 0.1); }
+      &.away { 
+        background: linear-gradient(90deg, #40a9ff, #69c0ff);
+      }
     }
   }
 
-  &.finished {
-    opacity: 1;
-    .mini-header .header-left .indicator {
-      background-color: var(--border-main);
-    }
+  .ai-labels-mini {
+    display: flex;
+    justify-content: space-between;
     
-    .finished-score {
-      font-size: 32rpx;
+    .label-text {
+      font-size: 18rpx;
       font-weight: 800;
-      color: var(--accent-color);
+      font-family: 'DIN Alternate', sans-serif;
+      letter-spacing: 0.5rpx;
       
-      &.muted {
-        color: var(--text-secondary);
-      }
-    }
-
-    .vs-dash {
-      font-size: 24rpx;
-      color: var(--text-secondary);
-      margin: 0 20rpx;
-      flex-shrink: 0;
-    }
-
-    .team-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4rpx;
-      flex: 1;
-      overflow: hidden;
-
-      &.reverse {
-        align-items: flex-end;
-      }
+      &.home { color: #ff7875; }
+      &.draw { color: rgba(255, 255, 255, 0.5); }
+      &.away { color: #69c0ff; }
     }
   }
+}
+
+.no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  opacity: 0.5;
+  
+  .no-match-text {
+    margin-top: 24rpx;
+    font-size: 26rpx;
+    letter-spacing: 2rpx;
+  }
+}
+
+@keyframes breathe {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15rpx rgba(255, 77, 79, 0.6); }
+  100% { opacity: 0.4; transform: scale(0.9); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; text-shadow: 0 0 15rpx rgba(255, 215, 0, 0.8); }
+  100% { transform: scale(1); opacity: 0.8; }
 }
 
 /* 底部导航占位 */
