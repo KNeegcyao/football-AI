@@ -29,6 +29,10 @@ import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import lombok.extern.slf4j.Slf4j;
+import com.soccer.forum.domain.enums.UserRole;
+
+@Slf4j
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
@@ -190,7 +194,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (comment == null) {
             throw new ServiceException(ServiceErrorCode.COMMENT_NOT_FOUND);
         }
-        if (!comment.getUserId().equals(userId)) {
+        
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new ServiceException(ServiceErrorCode.UNAUTHORIZED);
+        }
+
+        if (!comment.getUserId().equals(userId) && !UserRole.ADMIN.equals(user.getRole())) {
+            log.warn("删除失败: 用户 {} 尝试删除非本人评论{}", userId, id);
             throw new ServiceException(ServiceErrorCode.FORBIDDEN);
         }
         

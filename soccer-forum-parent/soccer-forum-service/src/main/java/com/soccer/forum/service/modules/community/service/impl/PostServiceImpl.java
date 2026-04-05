@@ -1,9 +1,11 @@
 package com.soccer.forum.service.modules.community.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.soccer.forum.common.enums.ServiceErrorCode;
 import com.soccer.forum.common.exception.ServiceException;
+import com.soccer.forum.domain.enums.UserRole;
 import com.soccer.forum.domain.entity.Favorite;
 import com.soccer.forum.domain.entity.Post;
 import com.soccer.forum.service.modules.user.mapper.FavoriteMapper;
@@ -466,14 +468,24 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (post == null) {
             throw new ServiceException(ServiceErrorCode.POST_NOT_FOUND);
         }
-        if (!post.getUserId().equals(userId)) {
+        
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new ServiceException(ServiceErrorCode.UNAUTHORIZED);
+        }
+
+        if (!post.getUserId().equals(userId) && !UserRole.ADMIN.equals(user.getRole())) {
             log.warn("删除失败: 用户 {} 尝试删除非本人帖子{}", userId, id);
             throw new ServiceException(ServiceErrorCode.FORBIDDEN);
         }
         
         post.setStatus(0); // 0: Deleted
         post.setUpdatedAt(LocalDateTime.now());
-        postMapper.updateById(post);
+        // mybatis-plus 可能会有 logic delete 冲突，我们使用 updateById，但最好用 update 方法显式设置
+        postMapper.update(null, new LambdaUpdateWrapper<Post>()
+                .set(Post::getStatus, 0)
+                .set(Post::getUpdatedAt, LocalDateTime.now())
+                .eq(Post::getId, id));
         
         // 清除缓存
         String cacheKey = "post:detail:" + id;

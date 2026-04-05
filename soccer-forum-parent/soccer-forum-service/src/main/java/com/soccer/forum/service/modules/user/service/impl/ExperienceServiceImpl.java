@@ -7,7 +7,7 @@ import com.soccer.forum.domain.entity.User;
 import com.soccer.forum.service.modules.user.mapper.ExperienceRecordMapper;
 import com.soccer.forum.service.modules.user.mapper.UserMapper;
 import com.soccer.forum.service.modules.user.service.ExperienceService;
-import com.soccer.forum.service.modules.system.service.NotificationService;
+import com.soccer.forum.service.modules.community.service.ChatMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,17 +31,17 @@ public class ExperienceServiceImpl implements ExperienceService {
 
     private final UserMapper userMapper;
     private final ExperienceRecordMapper experienceRecordMapper;
-    private final NotificationService notificationService;
+    private final ChatMessageService chatMessageService;
 
     // 等级经验配置 (每级所需总经验 = 等级 * 100)
     // Lv1: 0, Lv2: 100, Lv3: 200, Lv4: 300, Lv5: 400
     private static final int EXP_PER_LEVEL = 100;
     private static final int MAX_LEVEL = 5;
 
-    public ExperienceServiceImpl(UserMapper userMapper, ExperienceRecordMapper experienceRecordMapper, NotificationService notificationService) {
+    public ExperienceServiceImpl(UserMapper userMapper, ExperienceRecordMapper experienceRecordMapper, ChatMessageService chatMessageService) {
         this.userMapper = userMapper;
         this.experienceRecordMapper = experienceRecordMapper;
-        this.notificationService = notificationService;
+        this.chatMessageService = chatMessageService;
     }
 
     @Override
@@ -108,8 +108,7 @@ public class ExperienceServiceImpl implements ExperienceService {
             
             // 发送系统通知 (类型 8 代表系统通知/等级奖励)
             String title = getLevelTitle(nextLevel);
-            notificationService.sendNotification(user.getId(), 0L, 8, user.getId(), 
-                    String.format("恭喜！您已升级到 LV.%d，获得称号：%s", nextLevel, title));
+            chatMessageService.sendMessage(1L, user.getId(), "恭喜您，您的等级已提升至 Lv." + nextLevel + "！继续活跃获取更多经验值吧！", 1);
             
             // 递归检查是否能连升多级
             checkLevelUp(user, nextLevel, newExp);

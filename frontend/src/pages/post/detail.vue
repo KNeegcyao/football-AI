@@ -36,6 +36,12 @@
           </view>
         </view>
         <view class="header-right">
+          <text 
+            v-if="isAdmin || post.userId === currentUserId"
+            class="delete-btn" 
+            @click="handleDeletePost"
+            style="color: #ff4d4f; font-size: 28rpx; margin-right: 20rpx;"
+          >删除帖子</text>
           <button 
             v-if="post.userId !== currentUserId"
             class="follow-btn" 
@@ -166,6 +172,7 @@
                     <text class="action-text">{{ comment.likes || 0 }}</text>
                   </view>
                   <text class="reply-btn" @click="handleReply(comment)">回复</text>
+                  <text class="reply-btn" v-if="isAdmin || comment.userId === currentUserId" @click="handleDeleteComment(comment.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
                 </view>
 
                 <!-- Nested Replies -->
@@ -201,6 +208,7 @@
                             <text class="action-text">{{ reply.likes || 0 }}</text>
                           </view>
                         <text class="reply-btn" @click="handleReply(reply)">回复</text>
+                        <text class="reply-btn" v-if="isAdmin || reply.userId === currentUserId" @click="handleDeleteComment(reply.id)" style="color: #ff4d4f; margin-left: 20rpx;">删除</text>
                       </view>
                     </view>
                   </view>
@@ -302,6 +310,7 @@ const scrollTarget = ref('');
 const targetId = ref(null);
 const replyTarget = ref(null); // { id, userName }
 const currentUserId = ref(null);
+const isAdmin = ref(false);
 const statusBarHeight = ref(20);
 
 onMounted(() => {
@@ -311,6 +320,7 @@ onMounted(() => {
       const userInfo = typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
       if (userInfo && userInfo.id) {
         currentUserId.value = userInfo.id;
+        isAdmin.value = userInfo.role === 'ADMIN';
       }
     } catch (e) {
       console.error('Failed to parse userInfo', e);
@@ -614,6 +624,53 @@ const likeComment = async (comment) => {
     console.error('Comment like failed:', error);
     uni.showToast({ title: '操作失败', icon: 'none' });
   }
+};
+
+const handleDeletePost = () => {
+  if (!post.value) return;
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这篇帖子吗？删除后将无法恢复。',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await postApi.deletePost(post.value.id);
+          uni.showToast({ title: '删除成功', icon: 'success' });
+          setTimeout(() => {
+            goBack();
+          }, 1500);
+        } catch (error) {
+          console.error('Delete post failed:', error);
+          uni.showToast({ title: '删除失败', icon: 'none' });
+        }
+      }
+    }
+  });
+};
+
+const handleDeleteComment = (commentId) => {
+  if (!commentId) return;
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这条评论吗？删除后将无法恢复。',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await postApi.deleteComment(commentId);
+          uni.showToast({ title: '删除成功', icon: 'success' });
+          // 重新加载评论列表
+          await loadComments(postId.value);
+          // 更新评论数
+          if (post.value) {
+            post.value.commentCount = Math.max(0, (post.value.commentCount || 1) - 1);
+          }
+        } catch (error) {
+          console.error('Delete comment failed:', error);
+          uni.showToast({ title: '删除失败', icon: 'none' });
+        }
+      }
+    }
+  });
 };
 
 const handleLike = async () => {

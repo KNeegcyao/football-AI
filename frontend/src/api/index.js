@@ -113,9 +113,19 @@ export const postApi = {
   createComment: (data) => request.post('/api/comments', data),
 
   /**
+   * 删除评论
+   */
+  deleteComment: (id) => request.delete(`/api/comments/${id}`),
+
+  /**
    * 发布帖子
    */
   create: (data) => request.post('/api/posts', data),
+
+  /**
+   * 删除帖子
+   */
+  deletePost: (id) => request.delete(`/api/posts/${id}`),
 
   /**
    * 点赞/取消点赞
