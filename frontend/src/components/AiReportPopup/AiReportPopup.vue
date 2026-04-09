@@ -43,7 +43,7 @@
           <view class="ai-scanner">
             <view class="scan-line"></view>
           </view>
-          <text class="loading-text ai-blink">AI 正在深度解析局势，请稍候...</text>
+          <text class="loading-text ai-blink">{{ data.isPrediction ? 'AI 正在进行赛前推演，请稍候...' : 'AI 正在深度解析局势，请稍候...' }}</text>
           
           <!-- 骨架占位 -->
           <view class="skeleton-section">
@@ -63,7 +63,7 @@
         <view class="section summary-section">
           <view class="section-title">
             <text class="material-icons title-icon">psychology</text>
-            <text>AI 核心简评</text>
+            <text>{{ data.isPrediction ? 'AI 赛前预测' : 'AI 核心简评' }}</text>
             <view class="tone-tag" v-if="data.summary?.tone">
               <text class="tone-emoji">{{ data.summary?.emoji || '⚽' }}</text>
               <text>{{ data.summary?.tone }}</text>
@@ -75,7 +75,7 @@
             <view class="quote-icon right">”</view>
           </view>
           <view class="summary-card empty-state" v-else>
-            <text class="summary-text opacity-50">AI 正在深度复盘本场对决的每一个瞬间...</text>
+            <text class="summary-text opacity-50">{{ data.isPrediction ? 'AI 正在深度预测本场对决的可能走向...' : 'AI 正在深度复盘本场对决的每一个瞬间...' }}</text>
           </view>
         </view>
 
@@ -83,7 +83,7 @@
         <view class="section tactical-section" v-if="data.insights && data.insights.length > 0">
           <view class="section-title">
             <text class="material-icons title-icon">insights</text>
-            <text>战术洞察</text>
+            <text>{{ data.isPrediction ? '战术预测' : '战术洞察' }}</text>
           </view>
           <view class="insight-list">
             <view v-for="(insight, index) in data.insights" :key="index" class="insight-item card-glass">
@@ -118,12 +118,12 @@
         <view class="section player-section" v-if="data.mvp?.name || data.darkHorse?.name">
           <view class="section-title">
             <text class="material-icons title-icon">stars</text>
-            <text>关键球员</text>
+            <text>{{ data.isPrediction ? '预测关键球员' : '关键球员' }}</text>
           </view>
           <view class="player-cards">
             <view class="player-card mvp gold-border-breathe card-glass" v-if="data.mvp?.name">
               <view class="player-header">
-                <view class="badge mvp">MVP</view>
+                <view class="badge mvp">{{ data.isPrediction ? '预测焦点' : 'MVP' }}</view>
                 <text class="player-name">{{ data.mvp.name }}</text>
               </view>
               <view class="player-reason-box">
@@ -132,7 +132,7 @@
             </view>
             <view class="player-card sleeper card-glass" v-if="data.darkHorse?.name">
               <view class="player-header">
-                <view class="badge sleeper">黑马</view>
+                <view class="badge sleeper">{{ data.isPrediction ? '潜在奇兵' : '黑马' }}</view>
                 <text class="player-name">{{ data.darkHorse.name }}</text>
               </view>
               <view class="player-reason-box">
@@ -142,8 +142,8 @@
           </view>
         </view>
 
-        <!-- 5. Visual Stats: 数据对比 -->
-        <view class="section stats-section">
+        <!-- 5. Visual Stats: 数据对比 (赛前预测不展示) -->
+        <view class="section stats-section" v-if="!data.isPrediction && (data.events?.length > 0 || Object.keys(data.stats || {}).length > 0)">
           <view class="section-title">
             <text class="material-icons title-icon">analytics</text>
             <text>核心统计</text>
@@ -201,12 +201,12 @@
           <view class="vote-card gold-border-breathe card-glass">
             <view class="vote-header">
               <text class="material-icons vote-icon">poll</text>
-              <text class="vote-question">{{ data.engagement?.voteTopic || '本场比赛 AI 战报是否客观？' }}</text>
+              <text class="vote-question">{{ data.engagement?.voteTopic || (data.isPrediction ? '你认同 AI 的赛前预测吗？' : '本场比赛 AI 战报是否客观？') }}</text>
             </view>
             <view class="vote-btns">
               <view class="vote-btn-gold" @click="handleVote('support')">
                 <text class="material-icons">thumb_up</text>
-                <text>非常犀利</text>
+                <text>{{ data.isPrediction ? '非常认同' : '非常犀利' }}</text>
               </view>
               <view class="vote-btn-outline" @click="handleVote('oppose')">
                 <text class="material-icons">feedback</text>
@@ -219,7 +219,7 @@
             <view class="share-btn-premium" @click="handleShare">
               <view class="ai-glow"></view>
               <text class="material-icons">auto_awesome</text>
-              <text>生成 AI 深度战报海报</text>
+              <text>{{ data.isPrediction ? '生成 AI 赛前预测海报' : '生成 AI 深度战报海报' }}</text>
               <text class="material-icons">chevron_right</text>
             </view>
           </view>
@@ -251,6 +251,7 @@ const props = defineProps({
   data: {
     type: Object,
     default: () => ({
+      isPrediction: false,
       homeName: '',
       homeLogo: '',
       homeScore: 0,
@@ -377,7 +378,7 @@ const handleShare = async () => {
     // 触发下载或保存操作
     const link = document.createElement('a');
     link.href = imgDataUrl;
-    link.download = `AI深度战报-${props.data.homeName}-vs-${props.data.awayName}.png`;
+    link.download = `${props.data.isPrediction ? 'AI赛前预测' : 'AI深度战报'}-${props.data.homeName}-vs-${props.data.awayName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

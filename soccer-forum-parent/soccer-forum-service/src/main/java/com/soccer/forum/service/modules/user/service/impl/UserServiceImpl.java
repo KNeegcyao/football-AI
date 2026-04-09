@@ -64,9 +64,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(Post::getUserId, userId));
         stats.setPostCount(postCount);
 
-        // 2. 收藏帖子数
+        // 2. 收藏帖子数（过滤掉无效记录）
         Long favoriteCount = favoriteMapper.selectCount(new LambdaQueryWrapper<Favorite>()
-                .eq(Favorite::getUserId, userId));
+                .eq(Favorite::getUserId, userId)
+                .and(w -> w.isNotNull(Favorite::getPostId)
+                        .or().isNotNull(Favorite::getNewsId)
+                        .or().isNotNull(Favorite::getPlayerId)));
         stats.setFavoriteCount(favoriteCount);
 
         // 3. 收获点赞(该用户发布的所有帖子收到的点赞总和)

@@ -68,7 +68,8 @@ public class Player {
     private BigDecimal marketValue;
 
     @Schema(description = "状态 (active, injured, suspended)")
-    private String status;
+    @TableField("status")
+    private String playerStatus;
 
     @Schema(description = "合同到期日")
     private LocalDate contractUntil;
@@ -167,8 +168,8 @@ public class Player {
     public void setMarketValue(BigDecimal marketValue) { this.marketValue = marketValue; }
 
     @Schema(description = "状态 (active, injured, suspended)")
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getPlayerStatus() { return playerStatus; }
+    public void setPlayerStatus(String playerStatus) { this.playerStatus = playerStatus; }
 
     @Schema(description = "合同到期日")
     public LocalDate getContractUntil() { return contractUntil; }

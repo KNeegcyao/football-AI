@@ -162,6 +162,41 @@ public class UserRelationshipServiceImpl extends ServiceImpl<UserRelationshipMap
     }
 
     @Override
+    public IPage<UserFollowResp> getBlacklist(Long userId, Page<UserRelationship> page) {
+        LambdaQueryWrapper<UserRelationship> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRelationship::getFollowerId, userId)
+               .eq(UserRelationship::getIsBlacklisted, 1)
+               .orderByDesc(UserRelationship::getCreatedAt);
+        
+        IPage<UserRelationship> relationshipPage = this.page(page, wrapper);
+        IPage<UserFollowResp> resultPage = new Page<>(relationshipPage.getCurrent(), relationshipPage.getSize(), relationshipPage.getTotal());
+        
+        List<Long> blacklistedIds = relationshipPage.getRecords().stream()
+                .map(UserRelationship::getFollowingId)
+                .collect(Collectors.toList());
+        
+        if (blacklistedIds.isEmpty()) {
+            return resultPage;
+        }
+        
+        List<User> users = userService.listByIds(blacklistedIds);
+        List<UserFollowResp> records = users.stream().map(user -> {
+            UserFollowResp resp = new UserFollowResp(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getNickname(),
+                    user.getAvatar(),
+                    user.getBio(),
+                    false
+            );
+            return resp;
+        }).collect(Collectors.toList());
+        
+        resultPage.setRecords(records);
+        return resultPage;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void setBlacklist(Long userId, Long otherUserId, Boolean isBlacklist) {
         UserRelationship relationship = this.getOne(new LambdaQueryWrapper<UserRelationship>()

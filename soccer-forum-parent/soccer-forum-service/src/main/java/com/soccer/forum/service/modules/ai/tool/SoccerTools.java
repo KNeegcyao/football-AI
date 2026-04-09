@@ -140,7 +140,7 @@ public class SoccerTools {
                         m.getHomeTeam() != null ? m.getHomeTeam().getName() : "未知", 
                         m.getAwayTeam() != null ? m.getAwayTeam().getName() : "未知", 
                         m.getMatchTime(), 
-                        m.getStatus() == 1 ? "进行中" : (m.getStatus() == 2 ? "已结束" : "未开始")))
+                        m.getMatchStatus() == 1 ? "进行中" : (m.getMatchStatus() == 2 ? "已结束" : "未开始")))
                 .collect(Collectors.joining("\n"));
     }
 }

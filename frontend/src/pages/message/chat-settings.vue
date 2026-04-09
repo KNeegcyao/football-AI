@@ -5,7 +5,7 @@
     <!-- Header -->
     <view class="header bg-nav-bar border-b border-theme-main">
       <view class="header-left" @click="goBack">
-        <text class="material-icons">arrow_back_ios_new</text>
+        <text class="material-icons">arrow_back</text>
       </view>
       <view class="header-center">
         <text class="title">聊天详情</text>
@@ -46,6 +46,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useThemeStore } from '@/store/theme';
+import { useChatStore } from '@/store/chat';
 import { chatApi } from '@/api';
 
 const themeStore = useThemeStore();
@@ -101,7 +102,8 @@ const onTopChange = async (e) => {
       icon: 'none'
     });
     // 通知列表刷新
-    uni.$emit('refreshChatSessions');
+    const chatStore = useChatStore();
+    chatStore.fetchSessions();
   } catch (e) {
     console.error('设置置顶失败:', e);
     // 恢复状态
@@ -118,6 +120,9 @@ const onMuteChange = async (e) => {
       title: isMute.value ? '已开启免打扰' : '已关闭免打扰',
       icon: 'none'
     });
+    // 通知列表刷新
+    const chatStore = useChatStore();
+    chatStore.fetchSessions();
   } catch (e) {
     console.error('设置免打扰失败:', e);
     isMute.value = !newValue;

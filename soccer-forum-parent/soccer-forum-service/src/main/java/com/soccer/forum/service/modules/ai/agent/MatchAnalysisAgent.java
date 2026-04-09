@@ -21,16 +21,12 @@ public interface MatchAnalysisAgent {
             "  \"attackArea\": { \"home\": 主队左路攻击占比, \"middle\": 中路占比, \"away\": 客队右路攻击占比 },\n" +
             "  \"mvp\": { \"name\": \"球员名\", \"reason\": \"毒舌理由\" },\n" +
             "  \"darkHorse\": { \"name\": \"球员名\", \"reason\": \"理由\" },\n" +
-            "  \"stats\": {\n" +
-            "    \"homePossession\": 50, \"awayPossession\": 50,\n" +
-            "    \"homeShots\": 12, \"awayShots\": 10,\n" +
-            "    \"homeXG\": 1.5, \"awayXG\": 1.2,\n" +
-            "    \"homeTackles\": 15, \"awayTackles\": 14,\n" +
-            "    \"homePassSuccess\": 85, \"awayPassSuccess\": 84\n" +
-            "  },\n" +
-            "  \"events\": [ { \"minute\": 分钟, \"playerName\": \"进球者\", \"teamType\": \"home 或 away\" } ],\n" +
+            "  \"stats\": { \"homePossession\": 50, \"awayPossession\": 50, \"homeShots\": 12, \"awayShots\": 10, \"homeXG\": 1.5, \"awayXG\": 1.2, \"homeTackles\": 15, \"awayTackles\": 14, \"homePassSuccess\": 85, \"awayPassSuccess\": 84 },\n" +
+            "  \"events\": [ { \"minute\": 10, \"playerName\": \"球员\", \"teamType\": \"home/away\" } ],\n" +
             "  \"engagement\": { \"voteTopic\": \"生成的争议话题投票\" }\n" +
             "}\n" +
+            "3. 如果输入中提供了“真实技术统计(stats)”和“真实关键事件(events)”，请务必原样解析并填充到 JSON 的 stats 和 events 字段中，并基于这些真实数据进行分析。绝对不要自己编造或凭空捏造数据！如果没有真实数据，你可以根据比分和球队特点合理推测（不要包含无效值）。\n" +
+            "4. 极其重要：当前年份为 2026 年，为了避免由于你的模型训练数据滞后而产生错误的球员信息（如姆巴佩在巴黎、本泽马在皇马等），在未开赛的赛前预测或缺乏真实名单的情况下，绝对不要在返回的 JSON 中提及任何真实的球员名字！对于 mvp 和 darkHorse 字段的 name，请使用“主队核心前锋”、“客队边锋”、“中场大师”等泛指代词！如果输入中没有明确提供球员名字，一律禁止你自己编造！\n" +
             "请直接输出 JSON 字符串，不要输出任何非 JSON 的字符！")
     String generateReport(@UserMessage String matchData);
 

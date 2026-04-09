@@ -5,7 +5,7 @@
     <!-- Header -->
     <view class="header">
       <view class="header-left" @click="goBack">
-        <text class="material-icons">arrow_back_ios_new</text>
+        <text class="material-icons">arrow_back</text>
       </view>
       <view class="header-center">
         <text class="title">私信</text>
@@ -25,15 +25,19 @@
       >
         <view class="avatar-wrapper">
           <image class="avatar" :src="item.otherAvatar || '/static/avatar/default.png'" mode="aspectFill"></image>
-          <view class="unread-badge anim-scale-in" v-if="item.unreadCount > 0">
+          <view class="unread-badge anim-scale-in" v-if="item.unreadCount > 0 && !item.isMute">
             <text>{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</text>
           </view>
+          <view class="unread-dot anim-scale-in" v-if="item.unreadCount > 0 && item.isMute"></view>
         </view>
         
         <view class="content-wrapper">
           <view class="top-row">
             <text class="nickname">{{ item.otherNickname || '用户' }}</text>
-            <text class="time">{{ formatTime(item.lastMessageTime) }}</text>
+            <view class="time-wrapper">
+              <text class="material-icons mute-icon" v-if="item.isMute">notifications_off</text>
+              <text class="time">{{ formatTime(item.lastMessageTime) }}</text>
+            </view>
           </view>
           <view class="bottom-row">
             <text class="last-msg">{{ item.lastMessage }}</text>
@@ -197,6 +201,17 @@ const goBack = () => {
       padding: 0 4px;
       border: 2px solid #0f172a;
     }
+
+    .unread-dot {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      background-color: #ef4444;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #0f172a;
+    }
   }
   
   .content-wrapper {
@@ -222,10 +237,21 @@ const goBack = () => {
         white-space: nowrap;
       }
       
-      .time {
-        font-size: 12px;
-        color: #64748b;
-        margin-left: 8px;
+      .time-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .mute-icon {
+          font-size: 14px;
+          color: #64748b;
+          opacity: 0.8;
+        }
+
+        .time {
+          font-size: 12px;
+          color: #64748b;
+        }
       }
     }
     

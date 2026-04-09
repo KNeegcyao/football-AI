@@ -14,7 +14,11 @@ export const useChatStore = defineStore('chat', {
   getters: {
     totalUnreadCount: (state) => {
       if (!state.enableNotification) return 0
-      return state.sessions.reduce((sum, session) => sum + (session.unreadCount || 0), 0)
+      return state.sessions.reduce((sum, session) => {
+        // 如果开启了免打扰，不计入全局未读数
+        if (session.isMute) return sum
+        return sum + (session.unreadCount || 0)
+      }, 0)
     }
   },
 
@@ -105,14 +109,15 @@ export const useChatStore = defineStore('chat', {
       const currentUserId = userInfo ? userInfo.id : null
       
       // 更新消息列表
-      if (!this.messages[sessionId]) {
-        this.messages[sessionId] = []
-      }
+      const currentMessages = this.messages[sessionId] || []
       
-      // 避免重复添加 (特别是发送者的回执消息)
-      const isDuplicate = this.messages[sessionId].some(m => m.id === message.id)
+      // 避免重复添加
+      const isDuplicate = currentMessages.some(m => m.id === message.id)
       if (!isDuplicate) {
-        this.messages[sessionId].push(message)
+        this.messages = {
+          ...this.messages,
+          [sessionId]: [...currentMessages, message]
+        }
       }
 
       // 如果不是当前正在聊天的会话，且消息是发给我的，增加未读数
@@ -153,13 +158,14 @@ export const useChatStore = defineStore('chat', {
     async fetchMessages(sessionId, page = 1) {
       try {
         const res = await chatApi.getMessages(sessionId, { page, size: 20 })
+        console.log('Fetch messages response:', JSON.stringify(res))
         if (res && res.records) {
           // 后端返回的是按时间倒序，前端显示需要正序
           const newMessages = res.records.reverse()
           if (page === 1) {
-            this.messages[sessionId] = newMessages
+            this.messages = { ...this.messages, [sessionId]: newMessages }
           } else {
-            this.messages[sessionId] = [...newMessages, ...this.messages[sessionId]]
+            this.messages = { ...this.messages, [sessionId]: [...newMessages, ...(this.messages[sessionId] || [])] }
           }
           return res
         }

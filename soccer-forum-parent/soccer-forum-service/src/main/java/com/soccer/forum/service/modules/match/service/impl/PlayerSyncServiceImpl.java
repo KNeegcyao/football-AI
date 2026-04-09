@@ -270,7 +270,14 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
 
     @Override
     public JsonNode getPlayerDetailJson(Long id) {
-        Player player = playerMapper.selectById(id);
+        // 先尝试通过 api_id 查询
+        Player player = playerMapper.selectByApiId(id.intValue());
+                
+        // 如果找不到，再尝试通过主键 id 查询
+        if (player == null) {
+            player = playerMapper.selectByPrimaryKey(id);
+        }
+        
         if (player == null) {
             return null;
         }
@@ -297,7 +304,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
                     } else {
                         syncPlayerFromSportApi(player.getApiId());
                         // 重新加载
-                        player = playerMapper.selectById(id);
+                        player = playerMapper.selectByPrimaryKey(player.getId());
                     }
                 } catch (Exception e) {
                     log.error("自动同步失败", e);
@@ -343,7 +350,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         if (player.getMarketValue() != null) {
              playerNode.put("proposedMarketValue", player.getMarketValue());
         }
-        playerNode.put("status", player.getStatus());
+        playerNode.put("status", player.getPlayerStatus());
 
         // 球队信息
         if (player.getCurrentTeamId() != null) {
@@ -495,7 +502,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         
         if (playerInfo.hasNonNull("injured")) {
             boolean injured = playerInfo.get("injured").asBoolean();
-            player.setStatus(injured ? "injured" : "active");
+            player.setPlayerStatus(injured ? "injured" : "active");
         }
         
         if (stats != null) {
@@ -520,8 +527,8 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         }
         
         // 默认状态
-        if (player.getStatus() == null) {
-            player.setStatus("active");
+        if (player.getPlayerStatus() == null) {
+            player.setPlayerStatus("active");
         }
 
         if (isNew) {
@@ -632,7 +639,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         playerObj.put("weight", p.getWeight());
         playerObj.put("preferredFoot", p.getPreferredFoot());
         playerObj.put("contractUntil", p.getContractUntil() != null ? p.getContractUntil().toString() : null);
-        playerObj.put("status", p.getStatus());
+        playerObj.put("status", p.getPlayerStatus());
         playerObj.put("proposedMarketValue", p.getMarketValue() != null ? p.getMarketValue().toString() : null);
         
         // Stats
@@ -860,9 +867,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
         }
         
         // 1. Try DB first
-        List<Player> dbPlayers = playerMapper.selectList(new LambdaQueryWrapper<Player>()
-                .eq(Player::getCurrentTeamId, teamId)
-                .orderByAsc(Player::getJerseyNumber));
+        List<Player> dbPlayers = playerMapper.selectByTeamId(teamId);
         
         if (dbPlayers != null && !dbPlayers.isEmpty()) {
             return convertPlayersToSportApiJson(dbPlayers, team);
@@ -885,9 +890,7 @@ public class PlayerSyncServiceImpl implements PlayerSyncService {
                 log.info("On-demand sync result: {}", result);
                 
                 // Re-fetch from DB
-                dbPlayers = playerMapper.selectList(new LambdaQueryWrapper<Player>()
-                        .eq(Player::getCurrentTeamId, teamId)
-                        .orderByAsc(Player::getJerseyNumber));
+                dbPlayers = playerMapper.selectByTeamId(teamId);
                 
                 if (dbPlayers != null && !dbPlayers.isEmpty()) {
                     return convertPlayersToSportApiJson(dbPlayers, team);

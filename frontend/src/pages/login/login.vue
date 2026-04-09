@@ -22,7 +22,7 @@
           ></image>
         </view>
         <view class="branding-box">
-        <text class="brand-name italic">Socca<text class="highlight">Hub</text></text>
+        <text class="brand-name italic">Pitch<text class="highlight">Pulse</text></text>
         <text class="brand-tagline">AI Powered Football Community</text>
       </view>
       </view>

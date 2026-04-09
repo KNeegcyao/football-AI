@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soccer.forum.domain.entity.ChatMessage;
 import com.soccer.forum.service.modules.user.model.LoginUser;
 import com.soccer.forum.service.modules.community.service.ChatMessageService;
+import com.soccer.forum.service.modules.community.service.ChatSessionService;
 import com.soccer.forum.service.security.utils.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private ChatMessageService messageService;
+
+    @Autowired
+    private ChatSessionService sessionService;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -65,19 +69,43 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String content = payload.get("content").toString();
         Integer type = (Integer) payload.getOrDefault("type", 0);
 
-        // 保存消息到数据库
-        ChatMessage chatMessage = messageService.sendMessage(senderId, receiverId, content, type);
+        try {
+            // 保存消息到数据库
+            ChatMessage chatMessage = messageService.sendMessage(senderId, receiverId, content, type);
 
-        // 发送给接收者
-        WebSocketSession receiverSession = SESSIONS.get(receiverId);
-        if (receiverSession != null && receiverSession.isOpen()) {
-            receiverSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-        } else {
-            log.info("用户 {} 不在线，消息已存储", receiverId);
+            // 发送给接收者
+            WebSocketSession receiverSession = SESSIONS.get(receiverId);
+            if (receiverSession != null && receiverSession.isOpen()) {
+                receiverSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            } else {
+                log.info("用户 {} 不在线，消息已存储", receiverId);
+            }
+            
+            // 发送客户端确认 (返回消息ID和时间)
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+        } catch (com.soccer.forum.common.exception.ServiceException e) {
+            log.warn("发送消息失败: {}", e.getMessage());
+            // 构造失败的消息实体返回给发送者
+            ChatMessage failedMessage = new ChatMessage();
+            failedMessage.setId(-System.currentTimeMillis()); // 临时ID
+            
+            // 获取 sessionId
+            com.soccer.forum.domain.entity.ChatSession sessionObj = sessionService.getOrCreateSession(senderId, receiverId);
+            failedMessage.setSessionId(sessionObj.getId());
+            
+            failedMessage.setSenderId(senderId);
+            failedMessage.setReceiverId(receiverId);
+            failedMessage.setContent(content);
+            failedMessage.setType(type);
+            failedMessage.setStatus(3); // 3 表示发送失败
+            failedMessage.setCreatedAt(java.time.LocalDateTime.now());
+            
+            // 将 errorMsg 附加到 JSON 中
+            Map<String, Object> errorPayload = objectMapper.convertValue(failedMessage, Map.class);
+            errorPayload.put("errorMsg", e.getMessage());
+            
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(errorPayload)));
         }
-        
-        // 发送客户端确认 (返回消息ID和时间)
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(chatMessage)));
     }
 
     @Override

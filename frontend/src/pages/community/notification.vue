@@ -63,7 +63,13 @@
     </section>
 
     <view class="notification-list">
-      <view class="notification-item border-theme-main" v-for="(item, index) in sessions" :key="index" @click="handleSessionClick(item)">
+      <view 
+        class="notification-item border-theme-main" 
+        :class="{ 'is-top': item.isTop }"
+        v-for="(item, index) in sessions" 
+        :key="index" 
+        @click="handleSessionClick(item)"
+      >
         <!-- 头像区域 -->
         <view class="avatar-box">
           <image :src="getAvatarUrl(item.otherAvatar)" class="avatar-img border-theme-main bg-theme-secondary" mode="aspectFill"></image>
@@ -74,6 +80,7 @@
           <view class="header-row">
             <view class="user-info">
               <text class="nickname text-theme-main">{{ item.otherNickname || '用户' }}</text>
+              <view class="top-badge" v-if="item.isTop">置顶</view>
             </view>
             <text class="time text-theme-secondary">{{ formatTime(item.lastMessageTime) }}</text>
           </view>
@@ -81,7 +88,11 @@
           <!-- 消息正文 -->
           <view class="message-row">
             <text class="desc-text text-theme-secondary">{{ formatMessage(item.lastMessage) }}</text>
-            <view class="unread-badge" v-if="item.unreadCount > 0">{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</view>
+            <view class="badge-area">
+              <text class="material-icons mute-icon" v-if="item.isMute">notifications_off</text>
+              <view class="unread-badge" v-if="item.unreadCount > 0 && !item.isMute">{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</view>
+              <view class="unread-dot" v-if="item.unreadCount > 0 && item.isMute"></view>
+            </view>
           </view>
         </view>
       </view>
@@ -449,11 +460,16 @@ const handleSessionClick = (session) => {
 }
 
 .notification-list {
-  padding: 0 40rpx 40rpx;
+  padding: 0 0 40rpx;
   
   .notification-item {
     display: flex;
-    padding: 32rpx 0;
+    padding: 32rpx 40rpx;
+    transition: background-color 0.2s;
+    
+    &.is-top {
+      background-color: rgba(249, 212, 6, 0.05); // 轻微的强调色背景
+    }
     
     &:active {
       opacity: 0.7;
@@ -493,6 +509,15 @@ const handleSessionClick = (session) => {
             font-size: 30rpx;
             font-weight: 700;
           }
+          
+          .top-badge {
+            font-size: 20rpx;
+            color: #f9d406;
+            border: 2rpx solid rgba(249, 212, 6, 0.5);
+            padding: 2rpx 8rpx;
+            border-radius: 6rpx;
+            line-height: 1.2;
+          }
         }
         
         .time {
@@ -512,21 +537,42 @@ const handleSessionClick = (session) => {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          flex: 1;
         }
         
-        .unread-badge {
-          min-width: 32rpx;
-          height: 32rpx;
-          padding: 0 8rpx;
-          background-color: $pitch-pulse-primary;
-          border-radius: 16rpx;
-          color: #000;
-          font-size: 20rpx;
-          font-weight: bold;
+        .badge-area {
           display: flex;
           align-items: center;
-          justify-content: center;
-          box-shadow: 0 0 10rpx rgba($pitch-pulse-primary, 0.5);
+          gap: 12rpx;
+          flex-shrink: 0;
+
+          .mute-icon {
+            font-size: 32rpx;
+            color: var(--text-secondary);
+            opacity: 0.6;
+          }
+
+          .unread-badge {
+            min-width: 32rpx;
+            height: 32rpx;
+            padding: 0 8rpx;
+            background-color: $pitch-pulse-primary;
+            border-radius: 16rpx;
+            color: #000;
+            font-size: 20rpx;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10rpx rgba($pitch-pulse-primary, 0.5);
+          }
+
+          .unread-dot {
+            width: 16rpx;
+            height: 16rpx;
+            background-color: #ef4444; // 红色小圆点
+            border-radius: 50%;
+          }
         }
       }
     }

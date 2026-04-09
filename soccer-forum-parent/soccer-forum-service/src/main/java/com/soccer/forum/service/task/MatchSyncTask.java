@@ -27,6 +27,12 @@ public class MatchSyncTask {
     @Value("${match.crawler.script-path:D:/project/football/scripts/live_crawler.py}")
     private String crawlerPath;
 
+    @Value("${match.stats.script-path:D:/project/football/scripts/fetch_match_stats.py}")
+    private String statsScriptPath;
+
+    @Value("${news.script-path:D:/project/football/scripts/fetch_news.py}")
+    private String newsScriptPath;
+
     @Value("${match.sync.python-path:python}")
     private String pythonPath;
 
@@ -48,6 +54,24 @@ public class MatchSyncTask {
     public void syncMatchData() {
         log.info("开始执行赛事全量 API 同步任务...");
         executePythonScript(scriptPath, "API全量同步");
+    }
+
+    /**
+     * 每天凌晨 3:00 执行一次完赛真实数据统计与关键事件同步
+     */
+    @Scheduled(cron = "0 0 3 * * ?")
+    public void syncMatchStats() {
+        log.info("开始执行完赛数据真实统计同步...");
+        executePythonScript(statsScriptPath, "完赛真实数据同步");
+    }
+
+    /**
+     * 每天凌晨 4:00 执行一次新闻抓取
+     */
+    @Scheduled(cron = "0 0 4 * * ?")
+    public void syncNews() {
+        log.info("开始执行足球新闻同步...");
+        executePythonScript(newsScriptPath, "足球新闻同步");
     }
 
     /**

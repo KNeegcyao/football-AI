@@ -45,6 +45,36 @@ const fontSizeLevel = ref(0)
 const isEyeProtection = ref(false)
 const fontClasses = ['text-base', 'text-lg', 'text-xl']
 
+const formattedContent = computed(() => {
+  if (!news.value.content) return ''
+  let html = news.value.content
+  html = html.replace(/<img([^>]*)>/gi, (match, p1) => {
+    const dataSrcMatch = p1.match(/data-src="([^"]+)"/)
+    let newSrc = ''
+    if (dataSrcMatch) {
+      newSrc = dataSrcMatch[1]
+    }
+    const srcMatch = p1.match(/src="([^"]+)"/)
+    
+    let attrs = p1
+    if (newSrc) {
+      if (srcMatch) {
+        attrs = attrs.replace(srcMatch[0], `src="${newSrc}"`)
+      } else {
+        attrs += ` src="${newSrc}"`
+      }
+    }
+    
+    if (attrs.includes('style="')) {
+      attrs = attrs.replace(/style="/, 'style="max-width:100%;height:auto;border-radius:8px;margin:10px 0;')
+    } else {
+      attrs += ' style="max-width:100%;height:auto;border-radius:8px;margin:10px 0;"'
+    }
+    return `<img ${attrs}>`
+  })
+  return html
+})
+
 
 
 onLoad((options) => {
@@ -326,7 +356,7 @@ onPageScroll((e) => {
       </view>
 
       <article :class="['article-content prose max-w-none transition-colors duration-300', isEyeProtection ? 'prose-stone text-gray-800' : 'prose-invert text-theme-main', fontClasses[fontSizeLevel]]">
-        <rich-text :nodes="news.content"></rich-text>
+        <rich-text :nodes="formattedContent"></rich-text>
       </article>
 
       <!-- End of Article Decorator -->

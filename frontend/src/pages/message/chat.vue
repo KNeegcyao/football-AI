@@ -6,10 +6,10 @@
       <!-- Header -->
       <view class="header bg-nav-bar border-b border-theme-main">
         <view class="header-left" @click="goBack">
-          <text class="material-icons">arrow_back_ios_new</text>
+          <text class="material-icons">arrow_back</text>
         </view>
         <view class="header-center">
-          <text class="username">{{ otherUserNickname || '对话中' }}</text>
+          <text class="username">{{ otherUserNickname || '对话中' }} ({{ messages.length }})</text>
         </view>
         <view class="header-right" @click="showActionSheet">
           <text class="material-icons">more_horiz</text>
@@ -38,6 +38,7 @@
             mode="aspectFill"
             @error="onAvatarError(msg.senderId)"
           ></image>
+          
           <view class="message-bubble shadow-sm">
             <text v-if="Number(msg.type) === 0" class="message-text">{{ msg.content }}</text>
             <image 
@@ -47,6 +48,11 @@
               mode="widthFix" 
               @click="previewImage(msg.content)"
             ></image>
+          </view>
+
+          <!-- 失败状态提示 -->
+          <view class="message-status" v-if="Number(msg.senderId) === Number(currentUserId) && Number(msg.status) === 3" @click="showErrorMsg(msg)">
+            <text class="material-icons text-danger">error</text>
           </view>
         </view>
       </view>
@@ -363,6 +369,13 @@ const showActionSheet = () => {
     url: `/pages/message/chat-settings?userId=${otherUserId.value}`
   });
 };
+
+const showErrorMsg = (msg) => {
+  uni.showToast({
+    title: msg.errorMsg || '发送失败',
+    icon: 'none'
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -375,7 +388,7 @@ const showActionSheet = () => {
 .container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   background-color: var(--bg-main);
   color: var(--text-main);
   transition: all 0.3s;
@@ -454,12 +467,26 @@ const showActionSheet = () => {
 .message-item {
   display: flex;
   margin-bottom: 20px;
+  align-items: flex-start;
   
   .avatar {
     width: 40px;
     height: 40px;
     border-radius: 20px;
     margin-right: 12px;
+    flex-shrink: 0;
+  }
+  
+  .message-status {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+    margin-top: 10px;
+    
+    .material-icons {
+      color: #ef4444;
+      font-size: 20px;
+    }
   }
   
   .message-bubble {
@@ -494,6 +521,11 @@ const showActionSheet = () => {
     .avatar {
       margin-right: 0;
       margin-left: 12px;
+    }
+
+    .message-status {
+      margin-right: 8px;
+      margin-left: 0;
     }
 
     .message-bubble {
@@ -655,6 +687,63 @@ const showActionSheet = () => {
   }
   .header .material-icons {
     color: #333 !important;
+  }
+}
+
+// 深色模式全局强制匹配
+.theme-dark {
+  --bg-main: #000000;
+  --bg-nav-bar: #1a1a1a;
+  --bg-secondary: #1a1a1a;
+  --text-main: #ffffff;
+  --text-secondary: #888888;
+  --border-main: rgba(255, 255, 255, 0.05);
+
+  background-color: var(--bg-main) !important;
+
+  .container {
+    background-color: var(--bg-main) !important;
+  }
+
+  .status-bar, .header {
+    background-color: var(--bg-nav-bar) !important;
+    border-bottom: 1px solid var(--border-main);
+  }
+
+  .message-list {
+    background-color: var(--bg-main) !important;
+  }
+
+  .message-item:not(.message-me) {
+    .message-bubble {
+      background-color: var(--bg-secondary);
+      color: var(--text-main);
+    }
+  }
+
+  .time-separator text {
+    background-color: #1a1a1a;
+    color: #888888;
+  }
+
+  .input-wrapper {
+    background-color: var(--bg-secondary) !important;
+    .chat-input {
+      color: var(--text-main);
+    }
+  }
+
+  .send-btn:not(.send-btn-active) {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+  }
+
+  .header .username {
+    color: var(--text-main);
+  }
+
+  .header .material-icons {
+    color: var(--text-main) !important;
   }
 }
 </style>

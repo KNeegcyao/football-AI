@@ -468,7 +468,8 @@ export const relationshipApi = {
   follow: (userId) => request.post(`/api/relationships/follow/${userId}`),
   unfollow: (userId) => request.post(`/api/relationships/unfollow/${userId}`),
   getFollowing: (params) => request.get('/api/relationships/following', params),
-  getFollowers: (params) => request.get('/api/relationships/followers', params)
+  getFollowers: (params) => request.get('/api/relationships/followers', params),
+  getBlacklist: (params) => request.get('/api/relationships/blacklist', params)
 }
 
 /**
@@ -504,20 +505,20 @@ export const chatApi = {
   getSessionSettings: (otherUserId) => request.get(`/api/chat/settings/${otherUserId}`),
 
   /**
-   * 设置置顶
-   */
-  setTop: (sessionId, isTop) => request.post(`/api/chat/settings/top/${sessionId}`, null, { params: { isTop } }),
+     * 设置置顶
+     */
+    setTop: (sessionId, isTop) => request.post(`/api/chat/settings/top/${sessionId}?isTop=${isTop}`),
 
-  /**
-   * 设置免打扰
-   */
-  setMute: (sessionId, isMute) => request.post(`/api/chat/settings/mute/${sessionId}`, null, { params: { isMute } }),
+    /**
+     * 设置免打扰
+     */
+    setMute: (sessionId, isMute) => request.post(`/api/chat/settings/mute/${sessionId}?isMute=${isMute}`),
 
-  /**
-   * 设置黑名单
-   */
-  setBlacklist: (otherUserId, isBlacklist) => request.post(`/api/chat/settings/blacklist/${otherUserId}`, null, { params: { isBlacklist } })
-}
+    /**
+     * 设置黑名单
+     */
+    setBlacklist: (otherUserId, isBlacklist) => request.post(`/api/chat/settings/blacklist/${otherUserId}?isBlacklist=${isBlacklist}`)
+  }
 
 /**
  * 文件上传相关接口

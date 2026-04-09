@@ -142,7 +142,7 @@
       <view class="content-feed">
         <!-- 动态列表 (Tab 0) -->
         <view v-if="currentProfileTab === 0">
-          <view v-for="(post, index) in posts" :key="post.id" class="post-card bg-card border border-theme-main" @click="goToPostDetail(post.id)">
+          <view v-for="(post, index) in posts" :key="post.id" class="post-card bg-card border border-theme-main anim-scale-in hover-scale" :style="{ animationDelay: (index * 0.1) + 's' }" @click="goToPostDetail(post.id)">
             <view class="post-content-row">
               <view class="post-text-side">
                 <text class="post-title text-theme-main">{{ post.title }}</text>
@@ -184,7 +184,7 @@
 
           <!-- 帖子收藏列表 -->
           <view v-if="currentFavSubTab === 0">
-            <view v-for="(item, index) in favorites" :key="item.id" class="post-card bg-card border border-theme-main" @click="goToPostDetail(item.id)">
+            <view v-for="(item, index) in favorites" :key="item.id" class="post-card bg-card border border-theme-main anim-scale-in hover-scale" :style="{ animationDelay: (index * 0.1) + 's' }" @click="goToPostDetail(item.id)">
               <view class="post-content-row">
                 <view class="post-text-side">
                   <text class="post-title text-theme-main">{{ item.title }}</text>
@@ -257,15 +257,23 @@
     <CustomTabBar v-if="!isOthersProfile" :currentTab="4" />
 
     <!-- Logout Modal -->
-    <u-modal
-      :show="showLogoutModal"
-      title="退出登录"
-      content="确定要退出当前账号吗？"
-      showCancelButton
-      confirmColor="#f2b90d"
-      @confirm="confirmLogout"
-      @cancel="showLogoutModal = false"
-    ></u-modal>
+    <view v-if="showLogoutModal" class="fixed inset-0 z-[100] flex items-center justify-center px-6">
+      <view class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showLogoutModal = false"></view>
+      <view class="relative w-full bg-theme-main border border-theme-main rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <view class="p-6">
+          <text class="text-xl font-bold text-center block text-theme-main mb-2">退出登录</text>
+          <text class="text-sm text-theme-secondary text-center block mb-8 px-4">确定要退出当前账号吗？</text>
+          <view class="flex flex-row gap-3">
+            <view @click="showLogoutModal = false" class="flex-1 py-3 bg-theme-secondary rounded-xl flex items-center justify-center border border-theme-main">
+              <text class="text-theme-main font-medium">取消</text>
+            </view>
+            <view @click="confirmLogout" class="flex-1 py-3 bg-[#f2b90d] rounded-xl flex items-center justify-center shadow-lg shadow-[#f2b90d]/20">
+              <text class="text-[#1A1811] font-bold">确定</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -624,6 +632,8 @@ const loadFavorites = async () => {
                   p = playerDetailRes.player
                 } else if (playerDetailRes.response && playerDetailRes.response.length > 0) {
                   p = playerDetailRes.response[0].player
+                } else if (playerDetailRes.data && playerDetailRes.data.player) {
+                  p = playerDetailRes.data.player
                 }
                 
                 if (p) {

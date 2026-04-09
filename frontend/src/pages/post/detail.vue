@@ -98,7 +98,7 @@
         </view>
 
         <!-- Comments -->
-        <view class="comments-section">
+        <view class="comments-section anim-slide-up stagger-2">
           <view class="comments-header">
             <text class="comments-title">评论 ({{ post.commentCount || comments.length }})</text>
             <view class="header-actions">
@@ -144,7 +144,7 @@
           </view>
 
           <view class="comments-list">
-            <view class="comment-item" v-for="(comment, index) in comments" :key="index" :id="'comment-' + comment.id" :class="{ 'highlight': comment.id == targetId }">
+            <view class="comment-item anim-fade-in" v-for="(comment, index) in comments" :key="index" :id="'comment-' + comment.id" :class="{ 'highlight': comment.id == targetId }" :style="{ animationDelay: (index * 0.1) + 's' }">
               <image 
                 class="comment-avatar bg-theme-secondary" 
                 :src="comment.userAvatar" 

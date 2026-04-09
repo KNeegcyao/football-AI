@@ -168,4 +168,21 @@ public class UserRelationshipController {
         Long currentUserId = loginUser != null ? loginUser.getUser().getId() : null;
         return R.ok(relationshipService.getFollowersList(userId, new Page<>(page, size), currentUserId));
     }
+
+    /**
+     * 分页获取当前用户的黑名单列表。
+     *
+     * @param page      页码
+     * @param size      每页大小
+     * @param loginUser 当前登录用户
+     * @return 黑名单列表分页数据
+     */
+    @Operation(summary = "获取当前用户的黑名单列表")
+    @GetMapping("/blacklist")
+    public R<IPage<UserFollowResp>> getBlacklist(@RequestParam(defaultValue = "1") Integer page,
+                                               @RequestParam(defaultValue = "20") Integer size,
+                                               @Parameter(hidden = true) @AuthenticationPrincipal LoginUser loginUser) {
+        Long currentUserId = loginUser.getUser().getId();
+        return R.ok(relationshipService.getBlacklist(currentUserId, new Page<>(page, size)));
+    }
 }

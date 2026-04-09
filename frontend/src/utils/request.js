@@ -4,7 +4,7 @@
  */
 
 // 开发环境服务器地址 (优先从环境变量获取，否则使用 localhost)
-const BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:8080' 
+const BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'http://192.168.5.29:8080' 
 
 // 阿里云 OSS 基础地址 (请根据实际 Bucket 域名修改)
 const OSS_BASE_URL = import.meta.env.VITE_APP_OSS_BASE_URL || 'https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com'
@@ -63,25 +63,27 @@ export const getFullImageUrl = (path) => {
     return `${OSS_BASE_URL}/static/${subPath}`;
   }
   
-  // 4. 处理旧的上传资源：如果以 /uploads/ 开头，将其映射到 OSS 对应的业务目录
+  // 4. 处理旧的上传资源：如果以 /uploads/ 开头，直接拼接 BASE_URL (如果是本地文件的话)
   if (path.startsWith('/uploads/')) {
-    const subPath = path.substring('/uploads/'.length);
-    const url = `${OSS_BASE_URL}/${subPath}`;
-    return url;
+    return BASE_URL + path;
   }
 
   // 5. 处理 OSS 中的业务目录 (avatar/, posts/, covers/ 等)
   const ossDirectories = ['avatar/', 'posts/', 'covers/'];
   if (ossDirectories.some(dir => path.startsWith(dir))) {
-    const url = `${OSS_BASE_URL}/${path}`;
-    return url;
+    // 检查是否已经是完整的 URL 或者以 /uploads/ 开头
+    if (path.startsWith('http') || path.startsWith('/uploads/')) {
+        return path;
+    }
+    // 如果是本地存储，我们可以直接加上 BASE_URL
+    // 为了简单，我们认为如果以 avatar/ 开头，且没有 http，拼接 BASE_URL + /uploads/
+    return `${BASE_URL}/uploads/${path}`;
   }
   
   // 6. 兼容处理包含 /uploads/ 的路径
   if (path.includes('/uploads/')) {
-    const relativePath = path.substring(path.indexOf('/uploads/') + '/uploads/'.length)
-    const url = `${OSS_BASE_URL}/${relativePath}`;
-    return url;
+    const relativePath = path.substring(path.indexOf('/uploads/'));
+    return BASE_URL + relativePath;
   }
 
   // 7. 其他相对路径拼接 BASE_URL

@@ -26,11 +26,20 @@ public class Match {
     @Schema(description = "场馆")
     private String venue;
     @Schema(description = "状态(0:未开始 1:进行中 2:已结束 3:延期)")
-    private Integer status;
+    @TableField("status")
+    @com.fasterxml.jackson.annotation.JsonProperty("status")
+    private Integer matchStatus;
     @Schema(description = "主队得分")
     private Integer homeScore;
     @Schema(description = "客队得分")
     private Integer awayScore;
+
+    @Schema(description = "比赛技术统计")
+    private String stats;
+
+    @Schema(description = "比赛关键事件")
+    private String events;
+
     @Schema(description = "轮次")
     private String round;
     @Schema(description = "转播地址")
@@ -67,12 +76,22 @@ public class Match {
     public void setMatchTime(LocalDateTime matchTime) { this.matchTime = matchTime; }
     public String getVenue() { return venue; }
     public void setVenue(String venue) { this.venue = venue; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
+    @com.fasterxml.jackson.annotation.JsonProperty("status")
+    public Integer getMatchStatus() { return matchStatus; }
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("status")
+    public void setMatchStatus(Integer matchStatus) { this.matchStatus = matchStatus; }
     public Integer getHomeScore() { return homeScore; }
     public void setHomeScore(Integer homeScore) { this.homeScore = homeScore; }
     public Integer getAwayScore() { return awayScore; }
     public void setAwayScore(Integer awayScore) { this.awayScore = awayScore; }
+
+    public String getStats() { return stats; }
+    public void setStats(String stats) { this.stats = stats; }
+
+    public String getEvents() { return events; }
+    public void setEvents(String events) { this.events = events; }
+
     public String getRound() { return round; }
     public void setRound(String round) { this.round = round; }
     public String getBroadcastUrl() { return broadcastUrl; }

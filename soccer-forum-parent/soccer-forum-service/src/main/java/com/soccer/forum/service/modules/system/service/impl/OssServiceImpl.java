@@ -8,9 +8,13 @@ import com.soccer.forum.service.config.OssConfig;
 import com.soccer.forum.service.modules.system.service.OssService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 @Service
 public class OssServiceImpl implements OssService {
@@ -19,6 +23,9 @@ public class OssServiceImpl implements OssService {
     private final OSS ossClient;
     private final OssConfig ossConfig;
 
+    @Value("${file.upload-path:./uploads}")
+    private String uploadPath;
+
     public OssServiceImpl(OSS ossClient, OssConfig ossConfig) {
         this.ossClient = ossClient;
         this.ossConfig = ossConfig;
@@ -26,6 +33,14 @@ public class OssServiceImpl implements OssService {
 
     @Override
     public String uploadFile(InputStream inputStream, String objectName) {
+        // 如果没有配置有效的 AK，或者配置的是 demo，则回退到本地存储
+        if (ossConfig.getAccessKeyId() == null || 
+            ossConfig.getAccessKeyId().isEmpty() || 
+            "demo".equals(ossConfig.getAccessKeyId())) {
+            
+            return saveToLocal(inputStream, objectName);
+        }
+
         try {
             log.info("开始上传文件到 OSS, objectName: {}", objectName);
             
@@ -71,6 +86,18 @@ public class OssServiceImpl implements OssService {
 
     @Override
     public String getFileUrl(String objectName) {
+        // 如果是本地上传，直接返回以 /uploads/ 开头的路径
+        if (ossConfig.getAccessKeyId() == null || 
+            ossConfig.getAccessKeyId().isEmpty() || 
+            "demo".equals(ossConfig.getAccessKeyId())) {
+            
+            // 前端已经配置了 baseUrl 拼接，所以只返回 /uploads/...
+            if (!objectName.startsWith("/")) {
+                objectName = "/" + objectName;
+            }
+            return "/uploads" + objectName;
+        }
+
         if (objectName == null || objectName.isEmpty()) {
             return "";
         }
@@ -94,5 +121,32 @@ public class OssServiceImpl implements OssService {
         }
         
         return String.format("https://%s.%s/%s", ossConfig.getBucketName(), endpoint, objectName);
+    }
+
+    private String saveToLocal(InputStream inputStream, String objectName) {
+        try {
+            log.info("回退为本地上传，保存到本地目录: {}", objectName);
+            
+            // 构建本地存储路径
+            File destFile = new File(uploadPath, objectName);
+            
+            // 确保父目录存在
+            File parentDir = destFile.getParentFile();
+            if (!parentDir.exists() && !parentDir.mkdirs()) {
+                throw new RuntimeException("无法创建本地上传目录: " + parentDir.getAbsolutePath());
+            }
+            
+            // 将输入流写入本地文件
+            Files.copy(inputStream, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            
+            log.info("本地上传成功: {}", destFile.getAbsolutePath());
+            
+            // 返回访问 URL（假设 WebConfig 将 /uploads/** 映射到了 uploadPath）
+            return getFileUrl(objectName);
+            
+        } catch (Exception e) {
+            log.error("本地文件上传失败, objectName: {}, 错误: {}", objectName, e.getMessage());
+            throw new RuntimeException("本地文件上传失败: " + e.getMessage(), e);
+        }
     }
 }

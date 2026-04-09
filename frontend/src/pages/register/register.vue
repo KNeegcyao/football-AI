@@ -1,136 +1,134 @@
 <template>
-  <view class="page-container bg-stadium-gradient min-h-screen flex flex-col font-display relative overflow-hidden max-w-[500px] mx-auto shadow-2xl">
-    <!-- Status Bar Spacer -->
-    <view class="h-12 w-full"></view>
-
-    <!-- Background Mock Image -->
-    <view class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      <view class="absolute top-0 right-0 w-[300px] h-[300px] bg-[#f20d33]/5 rounded-full blur-[100px]"></view>
-      <view class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#d4af37]/5 rounded-full blur-[120px]"></view>
+  <view class="page-container">
+    <!-- Background Layer -->
+    <view class="background-wrapper">
+      <image 
+        class="bg-image" 
+        src="https://cdn.jsdelivr.net/gh/KNeegcyao/picdemo/img/pexels-florian-thomschke-833330274-19436350.jpg" 
+        mode="aspectFill"
+      ></image>
+      <view class="bg-overlay"></view>
     </view>
 
-    <view class="flex-1 flex flex-col px-8 pb-10 z-10">
-      <!-- Header Section -->
-      <view class="mt-8 mb-12 text-center">
-        <view class="inline-block p-4 rounded-full bg-[#f20d33]/10 mb-6">
-          <text class="material-icons text-[#f20d33] text-4xl" style="font-size: 36px;">sports_soccer</text>
+    <!-- Content Layer -->
+    <view class="content-wrapper">
+      <!-- Header Section: Logo & Branding -->
+      <view class="header-section">
+        <view class="logo-box">
+          <image 
+            class="logo-image" 
+            src="https://ai-football-kneeg.oss-cn-beijing.aliyuncs.com/logo/logo.png" 
+            mode="aspectFit"
+          ></image>
         </view>
-        <text class="text-3xl font-bold text-[#d4af37] tracking-tight block">加入 PitchPulse</text>
-        <text class="mt-2 text-slate-400 text-sm block">开启你的 AI 足球社区之旅</text>
+        <view class="branding-box">
+          <text class="brand-name italic">Pitch<text class="highlight">Pulse</text></text>
+          <text class="brand-tagline">开启你的 AI 足球社区之旅</text>
+        </view>
       </view>
 
-      <!-- Registration Form -->
-      <view class="space-y-5">
-        <!-- Nickname Input (Added to match backend) -->
-        <view class="relative">
-          <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">badge</text>
-          </view>
-          <input 
-            v-model="form.nickname"
-            class="block w-full pl-12 pr-4 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent transition-all outline-none placeholder:text-slate-500 text-white h-12" 
-            placeholder="昵称" 
-            placeholder-class="text-slate-500"
-            type="text"
-          />
-        </view>
-
-        <!-- Email Input -->
-        <view class="relative mt-4">
-          <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">email</text>
-          </view>
-          <input 
-            v-model="form.email"
-            class="block w-full pl-12 pr-4 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent transition-all outline-none placeholder:text-slate-500 text-white h-12" 
-            placeholder="邮箱 (选填)" 
-            placeholder-class="text-slate-500"
-            type="text"
-          />
-        </view>
-
-        <!-- Phone Number Input -->
-        <view class="relative mt-4">
-          <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">smartphone</text>
-          </view>
-          <input 
-            v-model="form.username"
-            class="block w-full pl-12 pr-4 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent transition-all outline-none placeholder:text-slate-500 text-white h-12" 
-            placeholder="手机号" 
-            placeholder-class="text-slate-500"
-            type="number"
-            maxlength="11"
-          />
-        </view>
-
-        <!-- Verification Code Input -->
-        <view class="flex flex-row gap-3 mt-4">
-          <view class="relative flex-1">
-            <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-              <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">verified_user</text>
-            </view>
+      <!-- Registration Form Section -->
+      <view class="form-section">
+        <view class="input-group">
+          <!-- Nickname Input -->
+          <view class="input-item">
+            <text class="material-icons input-icon">badge</text>
             <input 
-              v-model="form.code"
-              class="block w-full pl-12 pr-4 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent outline-none placeholder:text-slate-500 text-white h-12" 
-              placeholder="验证码" 
-              placeholder-class="text-slate-500"
-              type="number"
-              maxlength="6"
+              v-model="form.nickname"
+              class="input-field"
+              placeholder="昵称" 
+              placeholder-class="input-placeholder"
+              type="text"
             />
           </view>
-          <button 
-            class="px-5 py-0 h-12 bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] font-semibold rounded-xl active:scale-95 transition-transform text-sm whitespace-nowrap flex items-center justify-center"
-            @click="getVerificationCode"
-            :disabled="countdown > 0"
-          >
-            {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-          </button>
-        </view>
 
-        <!-- Password Input -->
-        <view class="relative mt-4">
-          <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">lock_open</text>
+          <!-- Email Input -->
+          <view class="input-item mt-4">
+            <text class="material-icons input-icon">email</text>
+            <input 
+              v-model="form.email"
+              class="input-field"
+              placeholder="邮箱 (选填)" 
+              placeholder-class="input-placeholder"
+              type="text"
+            />
           </view>
-          <input 
-            v-model="form.password"
-            class="block w-full pl-12 pr-12 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent outline-none placeholder:text-slate-500 text-white h-12" 
-            placeholder="设置密码" 
-            placeholder-class="text-slate-500"
-            :password="!showPassword"
-            type="text"
-          />
-          <view class="absolute inset-y-0 right-0 pr-4 flex items-center h-full z-10" @click="togglePasswordVisibility">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
-          </view>
-        </view>
 
-        <!-- Confirm Password Input -->
-        <view class="relative mt-4">
-          <view class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full z-10">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">lock</text>
+          <!-- Phone Number Input -->
+          <view class="input-item mt-4">
+            <text class="material-icons input-icon">smartphone</text>
+            <input 
+              v-model="form.username"
+              class="input-field"
+              placeholder="手机号" 
+              placeholder-class="input-placeholder"
+              type="number"
+              maxlength="11"
+            />
           </view>
-          <input 
-            v-model="form.confirmPassword"
-            class="block w-full pl-12 pr-12 py-4 bg-[#221013] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#f20d33] focus:border-transparent outline-none placeholder:text-slate-500 text-white h-12" 
-            placeholder="确认密码" 
-            placeholder-class="text-slate-500"
-            :password="!showConfirmPassword"
-            type="text"
-          />
-          <view class="absolute inset-y-0 right-0 pr-4 flex items-center h-full z-10" @click="toggleConfirmPasswordVisibility">
-            <text class="material-icons text-slate-500 text-xl" style="font-size: 20px;">{{ showConfirmPassword ? 'visibility' : 'visibility_off' }}</text>
+
+          <!-- Verification Code Input -->
+          <view class="code-input-group mt-4">
+            <view class="input-item flex-1">
+              <text class="material-icons input-icon">security</text>
+              <input 
+                v-model="form.code"
+                class="input-field"
+                placeholder="验证码" 
+                placeholder-class="input-placeholder"
+                type="number"
+                maxlength="6"
+              />
+            </view>
+            <button 
+              class="send-code-btn"
+              @click="getVerificationCode"
+              :disabled="countdown > 0"
+            >
+              {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+            </button>
+          </view>
+
+          <!-- Password Input -->
+          <view class="input-item mt-4">
+            <text class="material-icons input-icon">lock_open</text>
+            <input 
+              v-model="form.password"
+              class="input-field"
+              placeholder="设置密码" 
+              placeholder-class="input-placeholder"
+              :password="!showPassword"
+              type="text"
+            />
+            <view class="password-toggle" @click="togglePasswordVisibility">
+              <text class="material-icons toggle-icon">{{ showPassword ? 'visibility' : 'visibility_off' }}</text>
+            </view>
+          </view>
+
+          <!-- Confirm Password Input -->
+          <view class="input-item mt-4">
+            <text class="material-icons input-icon">lock</text>
+            <input 
+              v-model="form.confirmPassword"
+              class="input-field"
+              placeholder="确认密码" 
+              placeholder-class="input-placeholder"
+              :password="!showConfirmPassword"
+              type="text"
+            />
+            <view class="password-toggle" @click="toggleConfirmPasswordVisibility">
+              <text class="material-icons toggle-icon">{{ showConfirmPassword ? 'visibility' : 'visibility_off' }}</text>
+            </view>
           </view>
         </view>
 
         <!-- Terms & Privacy -->
-        <view class="flex items-start gap-3 pt-2 mt-4">
+        <view class="agreement-box">
           <checkbox-group @change="handleAgreementChange">
-            <label class="flex items-center">
-              <checkbox value="agreed" :checked="isAgreed" color="#f20d33" style="transform:scale(0.7)" />
-              <view class="text-xs text-slate-400 leading-relaxed ml-2">
-                我已阅读并同意 <text class="text-[#d4af37]">《用户协议》</text> 与 <text class="text-[#d4af37]">《隐私政策》</text>
+            <label class="agreement-label">
+              <checkbox value="agreed" :checked="isAgreed" color="#f20d33" />
+              <view class="agreement-text">
+                已阅读并同意 <text class="link-highlight">《用户协议》</text> 与 <text class="link-highlight">《隐私政策》</text>
               </view>
             </label>
           </checkbox-group>
@@ -138,19 +136,19 @@
 
         <!-- Register Button -->
         <button 
-          class="w-full mt-6 py-4 bg-[#f20d33] text-white font-bold rounded-xl shadow-lg shadow-[#f20d33]/20 active:scale-[0.98] transition-all flex flex-row items-center justify-center gap-2 border-none h-12"
+          class="login-btn mt-6"
           @click="handleRegister"
           :loading="loading"
         >
-          <text>立即注册</text>
-          <text class="material-icons text-lg" style="font-size: 18px;">arrow_forward</text>
+          <text class="btn-text">立即注册</text>
+          <text class="material-icons btn-icon">arrow_forward</text>
         </button>
-      </view>
 
-      <!-- Secondary Actions -->
-      <view class="mt-auto pt-8 text-center flex justify-center">
-        <text class="text-slate-400 text-sm">已有账号？ </text>
-        <text class="text-[#f20d33] font-semibold ml-1" @click="goToLogin">立即登录</text>
+        <!-- Secondary Actions -->
+        <view class="nav-links justify-center mt-6">
+          <text class="link-text">已有账号？</text>
+          <text class="link-text highlight ml-1" @click="goToLogin">立即登录</text>
+        </view>
       </view>
     </view>
   </view>
@@ -303,9 +301,287 @@ const goToLogin = () => {
 }
 </script>
 
-<style>
-
-.bg-stadium-gradient {
-  background: radial-gradient(circle at top right, #2d1418 0%, #12080a 70%);
+<style lang="scss" scoped>
+.page-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #000;
 }
+
+.background-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+
+  .bg-image {
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+  }
+
+  .bg-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 60rpx;
+  width: 100%;
+
+  .logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200rpx;
+    height: 200rpx;
+    margin-bottom: 20rpx;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+
+    .logo-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      filter: drop-shadow(0 15rpx 30rpx rgba(0,0,0,0.8));
+    }
+  }
+
+  .branding-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: -10rpx;
+
+    .brand-name {
+      text-align: center;
+      font-size: 72rpx;
+      font-weight: 900;
+      color: #d4af37;
+      letter-spacing: -2rpx;
+      margin-bottom: 12rpx;
+      text-shadow: 0 4rpx 15rpx rgba(0,0,0,0.8);
+
+      .highlight {
+        color: #fff;
+        margin-left: 12rpx;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -4rpx;
+          left: 0;
+          width: 100%;
+          height: 4rpx;
+          background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+      }
+    }
+
+    .brand-tagline {
+      text-align: center;
+      font-size: 24rpx;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 600;
+      opacity: 0.9;
+    }
+  }
+}
+
+.form-section {
+  width: 100%;
+
+  .input-group {
+    margin-bottom: 40rpx;
+  }
+
+  .input-item {
+    width: 100%;
+    background-color: rgba(26, 13, 15, 0.6);
+    backdrop-filter: blur(20rpx);
+    border: 2rpx solid rgba(242, 13, 51, 0.2);
+    border-radius: 24rpx;
+    padding: 0 32rpx;
+    display: flex;
+    align-items: center;
+    height: 96rpx;
+    box-sizing: border-box;
+
+    .input-icon {
+      color: #94a3b8;
+      margin-right: 24rpx;
+      font-size: 44rpx;
+    }
+
+    .input-field {
+      flex: 1;
+      height: 100%;
+      color: #fff;
+      font-size: 28rpx;
+    }
+
+    .input-placeholder {
+      color: rgba(148, 163, 184, 0.5);
+    }
+  }
+
+  .code-input-group {
+    display: flex;
+    gap: 16rpx;
+    
+    .send-code-btn {
+      background-color: rgba(242, 13, 51, 0.1);
+      color: #f20d33;
+      font-size: 24rpx;
+      padding: 0 32rpx;
+      border-radius: 24rpx;
+      border: 2rpx solid rgba(242, 13, 51, 0.2);
+      height: 96rpx;
+      line-height: 96rpx;
+      min-width: 200rpx;
+      margin: 0;
+
+      &::after {
+        border: none;
+      }
+
+      &:active {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .password-toggle {
+    padding-left: 16rpx;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    .toggle-icon {
+      color: #94a3b8;
+      font-size: 44rpx;
+    }
+  }
+
+  .agreement-box {
+    margin-top: 32rpx;
+    padding: 0 16rpx;
+
+    .agreement-label {
+      display: flex;
+      align-items: center;
+    }
+
+    .agreement-text {
+      font-size: 24rpx;
+      color: #64748b;
+      margin-left: 16rpx;
+      line-height: 1.4;
+
+      .link-highlight {
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    padding: 0 8rpx;
+    margin-top: 24rpx;
+
+    &.justify-center {
+      justify-content: center;
+    }
+
+    .link-text {
+      font-size: 24rpx;
+      color: #94a3b8;
+
+      &.highlight {
+        color: #d4af37;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .login-btn {
+    width: 100%;
+    background-color: #f20d33;
+    color: #fff;
+    font-weight: bold;
+    height: 96rpx;
+    border-radius: 24rpx;
+    margin-top: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10rpx 30rpx rgba(242, 13, 51, 0.2);
+    border: none;
+
+    &::after {
+      border: none;
+    }
+
+    .btn-text {
+      font-size: 28rpx;
+      margin-right: 16rpx;
+    }
+
+    .btn-icon {
+      font-size: 44rpx;
+    }
+  }
+}
+
+/* Utils */
+.flex-1 { flex: 1; }
+.mt-4 { margin-top: 32rpx; }
+.mt-6 { margin-top: 48rpx; }
+.ml-1 { margin-left: 8rpx; }
+
+/* 小程序特定的 checkbox 样式覆盖 */
+/* #ifdef MP-WEIXIN */
+checkbox .wx-checkbox-input {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  background-color: transparent;
+  border: 2rpx solid #64748b;
+}
+checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+  background-color: #f20d33;
+  border-color: #f20d33;
+}
+checkbox .wx-checkbox-input.wx-checkbox-input-checked::before {
+  color: #fff;
+  font-size: 24rpx;
+}
+/* #endif */
 </style>

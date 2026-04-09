@@ -228,12 +228,19 @@
         "navigationBarTitleText": "聊天详情",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/profile/blacklist",
+      "style": {
+        "navigationBarTitleText": "黑名单",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
     "navigationStyle": "custom",
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "SoccaHub",
+    "navigationBarTitleText": "PitchPulse",
     "navigationBarBackgroundColor": "#1A1811",
     "backgroundColor": "#1A1811"
   },

@@ -17,6 +17,10 @@
             <text class="font-medium text-theme-main">修改密码</text>
             <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">chevron_right</text>
           </view>
+          <view @click="goToBlacklist" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
+            <text class="font-medium text-theme-main">黑名单管理</text>
+            <text class="material-icons text-theme-secondary" style="font-size: 44rpx;">chevron_right</text>
+          </view>
           <view @click="showDeleteAccountModal = true" class="w-full flex flex-row items-center justify-between p-4 bg-theme-secondary rounded-xl border border-theme-main hover:opacity-80 active:scale-[0.98] transition-all">
             <text class="font-medium text-theme-main">注销账号</text>
             <text class="text-xs text-theme-secondary mr-1">永久删除账号数据</text>
@@ -148,6 +152,12 @@ const goBack = () => {
 const goToTheme = () => {
   uni.navigateTo({
     url: '/pages/my/theme'
+  });
+};
+
+const goToBlacklist = () => {
+  uni.navigateTo({
+    url: '/pages/profile/blacklist'
   });
 };
 

@@ -36,6 +36,7 @@ public class Post implements Serializable {
     private Integer commentCount;
 
     @Schema(description = "状态 (1:正常 0:删除)")
+    @TableLogic(value = "1", delval = "0")
     private Integer status; // 1:正常 0:删除
 
     @Schema(description = "图片列表")

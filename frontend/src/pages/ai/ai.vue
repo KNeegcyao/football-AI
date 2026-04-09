@@ -78,7 +78,7 @@
     </view>
 
         <!-- 聊天记录 -->
-        <view v-for="(msg, index) in chatList" :key="index" :class="['message', msg.role]">
+        <view v-for="(msg, index) in chatList" :key="index" :class="['message', msg.role, 'anim-slide-up']" :style="{ animationDelay: (index * 0.1) + 's' }">
           <view class="avatar-box" v-if="msg.role === 'assistant'">
             <image src="/static/default-avatar.png" mode="aspectFit" class="avatar-img"></image>
           </view>

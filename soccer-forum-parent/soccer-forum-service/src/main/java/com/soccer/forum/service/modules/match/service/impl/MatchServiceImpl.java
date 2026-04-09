@@ -114,7 +114,7 @@ public class MatchServiceImpl implements MatchService {
         }
         
         if (status != null) {
-            query.eq(Match::getStatus, status);
+            query.eq(Match::getMatchStatus, status);
         }
         
         query.orderByAsc(Match::getMatchTime);
@@ -143,9 +143,7 @@ public class MatchServiceImpl implements MatchService {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
         
-        List<Match> matches = matchMapper.selectList(new LambdaQueryWrapper<Match>()
-                .between(Match::getMatchTime, startOfDay, endOfDay)
-                .orderByAsc(Match::getMatchTime));
+        List<Match> matches = matchMapper.selectMatchesByDateRange(startOfDay, endOfDay);
         
         return matches.stream()
                 .map(this::convertToVO)

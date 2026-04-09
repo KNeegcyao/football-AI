@@ -34,6 +34,14 @@ public class ChatController {
         return R.ok(sessionService.getUserSessions(loginUser.getUser().getId()));
     }
 
+    @Operation(summary = "获取会话详情消息列表(Test)")
+    @GetMapping("/messages/test/{sessionId}")
+    public R<IPage<ChatMessage>> getMessagesTest(@PathVariable Long sessionId,
+                                            @RequestParam(defaultValue = "1") Integer page,
+                                            @RequestParam(defaultValue = "20") Integer size) {
+        return R.ok(messageService.getSessionMessages(sessionId, new Page<>(page, size)));
+    }
+
     @Operation(summary = "获取会话详情消息列表")
     @GetMapping("/messages/{sessionId}")
     public R<IPage<ChatMessage>> getMessages(@PathVariable Long sessionId,

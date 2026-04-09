@@ -214,20 +214,13 @@
               <text class="mini-name text-theme-main">{{ match.awayTeam?.name }}</text>
             </view>
           </view>
-          <!-- AI 预测：进度条样式 -->
-          <view class="mini-footer-ai-gold" v-if="match.homeWinProb || match.drawProb || match.awayWinProb" @click.stop="openAiAnalysis(match)">
-            <view class="ai-glow"></view>
-            <view class="ai-progress-container mini">
-              <view class="ai-progress-bar">
-                <view class="progress-segment home" :style="{ width: Math.round((match.homeWinProb || 0) * 100) + '%' }"></view>
-                <view class="progress-segment draw" :style="{ width: Math.round((match.drawProb || 0) * 100) + '%' }"></view>
-                <view class="progress-segment away" :style="{ width: Math.round((match.awayWinProb || 0) * 100) + '%' }"></view>
-              </view>
-              <view class="ai-labels-mini">
-                <text class="label-text home">主 {{ Math.round((match.homeWinProb || 0) * 100) }}%</text>
-                <text class="label-text draw">平 {{ Math.round((match.drawProb || 0) * 100) }}%</text>
-                <text class="label-text away">客 {{ Math.round((match.awayWinProb || 0) * 100) }}%</text>
-              </view>
+          <!-- AI 预测：点击进入赛前深度预测 -->
+          <view class="card-footer-summary-gold" @click.stop="openAiAnalysis(match)">
+            <view class="btn-inner">
+              <view class="ai-glow"></view>
+              <text class="material-icons ai-sparkle">psychology</text>
+              <text class="btn-text">查看 AI 赛前深度预测</text>
+              <text class="material-icons arrow">chevron_right</text>
             </view>
           </view>
         </view>
@@ -333,6 +326,8 @@ const aiReportLoading = ref(false)
 const reportData = ref({})
 
 const openAiAnalysis = async (match) => {
+  const isUpcoming = match.status === 0
+
   // 提前准备好头部数据并打开弹窗显示 Loading 状态
   reportData.value = {
     homeName: match.homeTeam?.name,
@@ -346,24 +341,27 @@ const openAiAnalysis = async (match) => {
     round: match.round,
     location: match.venueName || '未知场地',
     date: formatMatchDate(match.matchTime),
-    statusName: `LIVE ${match.liveTime || match.matchMinute || ""}'`
+    statusName: isUpcoming ? '未开赛' : `LIVE ${match.liveTime || match.matchMinute || ""}'`,
+    isPrediction: isUpcoming,
+    isLive: !isUpcoming
   }
   showReportPopup.value = true
   aiReportLoading.value = true
 
   try {
-    // 准备比赛数据，供 AI 实时分析
+    // 准备比赛数据，供 AI 分析
     const matchData = `
       赛事：${match.competitionName}
       轮次：${match.round}
-      时间：${match.liveTime || match.matchMinute || ""}' (LIVE)
+      时间：${isUpcoming ? formatMatchDate(match.matchTime) : (match.liveTime || match.matchMinute || "") + "' (LIVE)"}
       当前比分：${match.homeTeam?.name} ${match.homeScore} - ${match.awayScore} ${match.awayTeam?.name}
-      状态：正在进行中
+      状态：${isUpcoming ? '未开赛 (请进行赛前胜负和战术预测分析)' : '正在进行中 (请进行实时战况深度分析)'}
       主队：${match.homeTeam?.name}
       客队：${match.awayTeam?.name}
       主队实时胜率：${Math.round((match.homeWinProb || 0) * 100)}%
       平局实时胜率：${Math.round((match.drawProb || 0) * 100)}%
       客队实时胜率：${Math.round((match.awayWinProb || 0) * 100)}%
+      注意：${isUpcoming ? '这是一场未开赛的比赛，请以“赛前预测”为基调。预测两队可能采取的战术，预测关键球员，并且 events 数组必须返回空。所有文案应为前瞻性质。非常重要提示：为了避免球员转会带来的信息滞后，在分析战术和预测关键球员时，绝对不要写出任何具体的球员名字（例如绝对不要出现姆巴佩、本泽马、梅西等真实姓名）！请一律使用“主队核心前锋”、“客队中场大师”、“主队主力门将”等位置代词来指代球员！' : '这是一场正在进行的比赛，请基于当前比分和实时胜率，输出实时战况分析。'}
     `.trim()
 
     // 调用 AI 接口生成实时深度洞察
@@ -384,10 +382,23 @@ const openAiAnalysis = async (match) => {
       throw new Error('AI 实时分析解析失败，请稍后重试')
     }
 
+    // 解析 events 数据
+    let parsedEvents = [];
+    if (aiReport.events && Array.isArray(aiReport.events)) {
+      parsedEvents = aiReport.events;
+    } else if (match.events) {
+      try {
+        parsedEvents = typeof match.events === 'string' ? JSON.parse(match.events) : match.events;
+      } catch (e) {
+        console.error('Failed to parse match.events:', e);
+      }
+    }
+
     // 填充完整数据
     reportData.value = {
       ...reportData.value,
-      ...aiReport
+      ...aiReport,
+      events: parsedEvents
     }
 
   } catch (e) {
@@ -416,7 +427,9 @@ const openMatchSummary = async (match) => {
     round: match.round,
     location: match.venueName || '未知场地',
     date: formatMatchDate(match.matchTime),
-    statusName: '已完赛'
+    statusName: '已完赛',
+    isPrediction: false,
+    isLive: false
   }
   showReportPopup.value = true
   aiReportLoading.value = true
@@ -432,7 +445,8 @@ const openMatchSummary = async (match) => {
       状态：已完赛
       主队：${match.homeTeam?.name}
       客队：${match.awayTeam?.name}
-      ${match.events?.length > 0 ? '关键事件：' + match.events.map(e => `${e.minute}' ${e.playerName} (${e.teamType === 'home' ? '主队' : '客队'})`).join(', ') : ''}
+      真实技术统计(stats): ${match.stats ? match.stats : '暂无'}
+      真实关键事件(events): ${match.events ? match.events : '暂无'}
     `.trim()
 
     // 调用 AI 接口生成战报
@@ -454,6 +468,18 @@ const openMatchSummary = async (match) => {
     } catch (e) {
       console.error('AI Report parse failed:', e, res)
       throw new Error('AI 战报解析失败，请稍后重试')
+    }
+
+    // 解析 events 数据
+    let parsedEvents = [];
+    if (aiReport.events && Array.isArray(aiReport.events)) {
+      parsedEvents = aiReport.events;
+    } else if (match.events) {
+      try {
+        parsedEvents = typeof match.events === 'string' ? JSON.parse(match.events) : match.events;
+      } catch (e) {
+        console.error('Failed to parse match.events:', e);
+      }
     }
 
     // 填充基础信息并合并 AI 生成的内容
@@ -498,7 +524,7 @@ const openMatchSummary = async (match) => {
         homePassSuccess: aiReport.stats?.homePassSuccess || 0,
         awayPassSuccess: aiReport.stats?.awayPassSuccess || 0
       },
-      events: aiReport.events || (match.events || []),
+      events: parsedEvents,
       engagement: {
         voteTopic: aiReport.engagement?.voteTopic || '你对本场比赛的判罚有何看法？'
       }
@@ -555,22 +581,6 @@ onShow(() => {
   uni.hideTabBar()
   getUserProfile()
 })
-
-const leagues = ref([
-  { id: 0, name: '全部', icon: 'sports_soccer' },
-  { id: 1, name: '中超', icon: 'flag' },
-  { id: 2, name: '英超', icon: 'military_tech' },
-  { id: 3, name: '西甲', icon: 'emoji_events' },
-  { id: 4, name: '德甲', icon: 'workspace_premium' },
-  { id: 5, name: '意甲', icon: 'stars' },
-  { id: 6, name: '法甲', icon: 'workspace_premium' },
-  { id: 7, name: '欧冠', icon: 'trophy' }
-])
-
-const currentLeague = ref(0)
-const selectedDate = ref(new Date().toISOString().split('T')[0])
-const matches = ref([])
-const loading = ref(false)
 
 // 初始化日期列表（前后3天）
 const initDates = () => {
@@ -784,6 +794,56 @@ onMounted(() => {
 }
 
 /* 赛程卡片基础样式重构 */
+.card-footer-summary-gold {
+  margin: 0 24rpx 24rpx;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20rpx;
+
+  .btn-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24rpx;
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+    border: 1rpx solid rgba(212, 175, 55, 0.2);
+    border-radius: 20rpx;
+    position: relative;
+    z-index: 2;
+
+    .ai-sparkle {
+      font-size: 32rpx;
+      color: #d4af37;
+      margin-right: 16rpx;
+      animation: aiSparkle 2s infinite;
+    }
+
+    .btn-text {
+      font-size: 24rpx;
+      font-weight: 700;
+      color: #d4af37;
+      letter-spacing: 1rpx;
+    }
+
+    .arrow {
+      font-size: 32rpx;
+      color: #d4af37;
+      opacity: 0.5;
+      margin-left: 8rpx;
+    }
+  }
+
+  .ai-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+    animation: aiSweep 3s infinite;
+  }
+}
+
 .match-card {
   margin: 24rpx;
   border-radius: 32rpx;
@@ -1299,56 +1359,6 @@ onMounted(() => {
       }
     }
   }
-
-  .card-footer-summary-gold {
-    margin: 0 24rpx 24rpx;
-    position: relative;
-    overflow: hidden;
-    border-radius: 20rpx;
-
-    .btn-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24rpx;
-      background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
-      border: 1rpx solid rgba(212, 175, 55, 0.2);
-      border-radius: 20rpx;
-      position: relative;
-      z-index: 2;
-
-      .ai-sparkle {
-        font-size: 32rpx;
-        color: #d4af37;
-        margin-right: 16rpx;
-        animation: aiSparkle 2s infinite;
-      }
-
-      .btn-text {
-        font-size: 24rpx;
-        font-weight: 700;
-        color: #d4af37;
-        letter-spacing: 1rpx;
-      }
-
-      .arrow {
-        font-size: 32rpx;
-        color: #d4af37;
-        opacity: 0.5;
-        margin-left: 8rpx;
-      }
-    }
-
-    .ai-glow {
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
-      animation: aiSweep 3s infinite;
-    }
-  }
 }
 
 @keyframes aiSparkle {
@@ -1458,7 +1468,7 @@ onMounted(() => {
 }
 
 .header-placeholder {
-  height: calc(var(--status-bar-height) + 100rpx + 260rpx); /* statusBarHeight + nav-bar(100rpx) + calendar(260rpx) */
+  height: calc(var(--status-bar-height) + 100rpx + 220rpx); /* statusBarHeight + nav-bar(100rpx) + calendar(220rpx) */
   width: 100%;
 }
 
@@ -1615,6 +1625,47 @@ onMounted(() => {
   width: 100%;
   border-bottom: 1rpx solid var(--border-main);
   background-color: #1a1811;
+  padding-bottom: 16rpx;
+}
+
+.league-selector {
+  width: 100%;
+  white-space: nowrap;
+  padding: 16rpx 24rpx;
+  box-sizing: border-box;
+
+  .league-list {
+    display: inline-flex;
+    padding-right: 48rpx; /* 留出右侧空间 */
+  }
+
+  .league-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12rpx 32rpx;
+    margin-right: 20rpx;
+    border-radius: 32rpx;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1rpx solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+
+    &.active {
+      background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%);
+      border-color: #d4af37;
+      box-shadow: 0 4rpx 16rpx rgba(212, 175, 55, 0.3);
+    }
+
+    .league-icon {
+      font-size: 28rpx;
+      margin-right: 8rpx;
+    }
+
+    .league-name {
+      font-size: 26rpx;
+      font-weight: 500;
+    }
+  }
 }
 
 .logo-area {

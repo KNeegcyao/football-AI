@@ -208,6 +208,9 @@ public class FavoriteServiceImpl implements FavoriteService {
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
         
+        // 如果有效帖子数量少于收藏记录数量，更新分页总数以反映真实的有效数量
+        long validTotal = favoritePage.getTotal() - (favoritePage.getRecords().size() - sortedPosts.size());
+        
         // 获取用户信息
         List<Long> userIds = sortedPosts.stream().map(Post::getUserId).collect(Collectors.toList());
         Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() :
@@ -255,7 +258,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         }).collect(Collectors.toList());
 
         Page<PostDetailResp> result = new Page<>(pageNum, pageSize);
-        result.setTotal(favoritePage.getTotal());
+        result.setTotal(validTotal);
         result.setRecords(respList);
         return result;
     }
@@ -289,8 +292,11 @@ public class FavoriteServiceImpl implements FavoriteService {
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
                 
+        // 如果有效新闻数量少于收藏记录数量，更新分页总数以反映真实的有效数量
+        long validTotal = favoritePage.getTotal() - (favoritePage.getRecords().size() - sortedNews.size());
+                
         Page<News> result = new Page<>(pageNum, pageSize);
-        result.setTotal(favoritePage.getTotal());
+        result.setTotal(validTotal);
         result.setRecords(sortedNews);
         return result;
     }

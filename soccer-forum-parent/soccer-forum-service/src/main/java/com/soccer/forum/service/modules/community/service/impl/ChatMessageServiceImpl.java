@@ -41,6 +41,11 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
             throw new ServiceException("消息发送失败，你已被对方加入黑名单");
         }
         
+        // 检查自己是否拉黑了对方
+        if (relationshipService.isBlacklisted(senderId, receiverId)) {
+            throw new ServiceException("消息发送失败，你已将对方加入黑名单");
+        }
+        
         ChatSession session = sessionService.getOrCreateSession(senderId, receiverId);
         
         ChatMessage message = new ChatMessage();
@@ -66,20 +71,14 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
     @Override
     public IPage<ChatMessage> getSessionMessages(Long sessionId, Page<ChatMessage> page) {
-        return this.page(page, new LambdaQueryWrapper<ChatMessage>()
-                .eq(ChatMessage::getSessionId, sessionId)
-                .orderByDesc(ChatMessage::getCreatedAt));
+        return this.baseMapper.getSessionMessagesBySessionId(page, sessionId);
     }
 
     @Override
     public void markAsRead(Long sessionId, Long receiverId) {
-        this.update(new LambdaUpdateWrapper<ChatMessage>()
-                .eq(ChatMessage::getSessionId, sessionId)
-                .eq(ChatMessage::getReceiverId, receiverId)
-                .eq(ChatMessage::getStatus, 0)
-                .set(ChatMessage::getStatus, 1));
-        
-        // 重置会话未读数
+        this.baseMapper.markAsReadByReceiver(sessionId, receiverId);
+
+        // 閲嶇疆浼氳瘽鏈鏁?
         sessionService.resetUnreadCount(sessionId, receiverId);
     }
 }
