@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soccer.forum.service.modules.admin.mapper.AdminDashboardMapper">
+
+    <select id="getDailyTrend" resultType="com.soccer.forum.service.modules.admin.dto.DailyTrendVO">
+        SELECT
+            d.date,
+            COALESCE(u.cnt, 0) AS newUsers,
+            COALESCE(p.cnt, 0) AS newPosts,
+            COALESCE(c.cnt, 0) AS newComments
+        FROM (
+            SELECT DATE_SUB(CURDATE(), INTERVAL n DAY) AS date
+            FROM (
+                SELECT 0 AS n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3
+                UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+            ) nums
+        ) d
+        LEFT JOIN (SELECT DATE(created_at) AS dt, COUNT(*) AS cnt FROM users WHERE status = 1 GROUP BY dt) u ON d.date = u.dt
+        LEFT JOIN (SELECT DATE(created_at) AS dt, COUNT(*) AS cnt FROM posts WHERE status = 0 GROUP BY dt) p ON d.date = p.dt
+        LEFT JOIN (SELECT DATE(created_at) AS dt, COUNT(*) AS cnt FROM comments WHERE status = 0 GROUP BY dt) c ON d.date = c.dt
+        ORDER BY d.date ASC
+        LIMIT #{days}
+    </select>
+</mapper>

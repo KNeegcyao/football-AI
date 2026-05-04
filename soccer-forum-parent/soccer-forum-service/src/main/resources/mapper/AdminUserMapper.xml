@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soccer.forum.service.modules.admin.mapper.AdminUserMapper">
+
+    <select id="selectUserPage" resultType="com.soccer.forum.service.modules.admin.dto.UserVO">
+        SELECT id, username, nickname, email, phone, avatar, role, status, level, experience, created_at, updated_at
+        FROM users
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (username LIKE CONCAT('%', #{keyword}, '%') OR nickname LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="role != null and role != ''">
+            AND role = #{role}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+</mapper>

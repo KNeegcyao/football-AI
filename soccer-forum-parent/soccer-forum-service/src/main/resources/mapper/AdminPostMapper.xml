@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soccer.forum.service.modules.admin.mapper.AdminPostMapper">
+
+    <select id="selectPostPage" resultType="com.soccer.forum.service.modules.admin.dto.PostVO">
+        SELECT p.id, p.title, p.content, p.user_id as author_id, p.views, p.likes, p.comment_count, p.status,
+               p.topic_id, p.images, p.created_at, u.nickname as author_name, t.title as topic_name
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        LEFT JOIN topics t ON p.topic_id = t.id
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%') OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND p.status = #{status}
+        </if>
+        <if test="topicId != null">
+            AND p.topic_id = #{topicId}
+        </if>
+        ORDER BY p.created_at DESC
+    </select>
+</mapper>
