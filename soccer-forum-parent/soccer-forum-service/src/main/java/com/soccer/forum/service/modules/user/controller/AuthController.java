@@ -47,11 +47,11 @@ public class AuthController {
      */
     @Operation(summary = "登录", description = "用户登录并获取Token")
     @PostMapping("/login")
-    public R<Map<String, String>> login(@Validated @RequestBody LoginBody loginBody) {
+    public R<Map<String, Object>> login(@Validated @RequestBody LoginBody loginBody) {
         log.info("收到用户登录请求: 用户名={}", loginBody.getUsername());
-        String token = authService.login(loginBody);
+        Map<String, Object> result = authService.loginWithInfo(loginBody);
         log.info("用户登录成功: 用户名={}", loginBody.getUsername());
-        return R.ok(Map.of("token", token), "登录成功");
+        return R.ok(result, "登录成功");
     }
 
     /**

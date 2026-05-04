@@ -23,6 +23,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 
@@ -84,10 +85,10 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginBody.getUsername(), loginBody.getPassword())
             );
-            
+
             log.debug("用户认证成功: {}", loginBody.getUsername());
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-            
+
             // 登录成功，更新该用户关注的所有圈子的在线人数
             try {
                 java.util.List<Long> followedTeamIds = teamFollowService.getFollowedTeamIds(loginUser.getUser().getId());
@@ -103,6 +104,23 @@ public class AuthServiceImpl implements AuthService {
             log.warn("用户认证失败: {}", loginBody.getUsername());
             throw new RuntimeException("用户名或密码错误");
         }
+    }
+
+    @Override
+    public Map<String, Object> loginWithInfo(LoginBody loginBody) {
+        String token = login(loginBody);
+        // 重新查询用户信息（login方法已经验证了用户存在）
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, loginBody.getUsername()));
+
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("token", token);
+        result.put("role", user.getRole() != null ? user.getRole().getCode() : "USER");
+        result.put("username", user.getUsername());
+        result.put("nickname", user.getNickname());
+        result.put("avatar", user.getAvatar());
+        result.put("id", user.getId());
+        return result;
     }
 
     /**

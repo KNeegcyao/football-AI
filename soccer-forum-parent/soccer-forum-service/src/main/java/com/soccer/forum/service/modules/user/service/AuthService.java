@@ -22,6 +22,14 @@ public interface AuthService {
     String login(LoginBody loginBody);
 
     /**
+     * 用户登录（返回完整用户信息）
+     *
+     * @param loginBody 登录请求参数（用户名、密码）
+     * @return 包含 token 和用户信息的 Map
+     */
+    java.util.Map<String, Object> loginWithInfo(LoginBody loginBody);
+
+    /**
      * 用户注册
      *
      * @param loginBody 注册请求参数（用户名、密码、昵称等）
